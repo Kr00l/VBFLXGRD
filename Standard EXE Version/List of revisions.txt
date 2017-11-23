@@ -1,0 +1,75 @@
+List of revisions:
+
+23-Nov-2017
+- Final tweak to run in the VBA environment. (meaningful for OCX only)
+
+22-Nov-2017
+- Minor internal improvements.
+
+18-Nov-2017
+- Bugfix for generic sorting.
+
+27-Oct-2017
+- Again minor tweaks to run better in the VBA environment. (meaningful for OCX only)
+
+20-Oct-2017
+- Minor tweaks to run better in the VBA environment. (meaningful for OCX only)
+
+26-Sep-2017
+- Included the BeforeMouseDown event.
+  The event is identical as in the MouseDown event, but an additional Cancel parameter allows you to prevent the default processing.
+
+22-Sep-2017
+- Minor bugfix in the internal GetHitTestInfo function.
+
+19-Sep-2017
+- Included the FormatString property.
+- Bugfix that the FixedAlignment returned not the ColAlignment when not preset.
+- FixedAlignment accepts now a value of -1 so that it is not preset anymore.
+
+17-Sep-2017
+- The Rows/Cols property can now be set lower or equal to the FixedRows/FixedCols property without raising an error.
+  Like in the MS(H)FlexGrid the FixedRows/FixedCols property will be adjusted then accordingly.
+
+02-Sep-2017
+- The Font property is not written to the property bag anymore when it equals to Ambient.Font.
+  Included new function OLEFontIsEqual in Common.bas.
+
+01-Sep-2017
+- Included the ClipSeparators property which enables to define two custom distinct characters to be used in clip strings.
+
+26-Aug-2017
+- Alpha (32bpp) icons in 'CellPicture' now drawn correctly per DrawIconEx instead of Picture.Render.
+
+07-Aug-2017
+- The HelpContextID and WhatsThisHelpID property is now also available when setting to a shadow object. ('Set' command)
+
+27-Jul-2017
+- Internal "DPI Aware" improvements.
+  Improved the functions PixelsPerDIP_X/PixelsPerDIP_Y in Common.bas.
+
+25-Jul-2017
+- Pixels in the property bag are now treated as DIPs. (Device-independent pixels)
+  There is no compatibility break in the property bag when there were saved at 100% (96) DPI.
+  Included new functions PixelsPerDIP_X/PixelsPerDIP_Y in Common.bas.
+  This "DPI Aware" enhancement affects the RowHeightMin/RowHeightMax and ColWidthMin/ColWidthMax property.
+
+24-Jul-2017
+- Included the EllipsisFormatFixed property which enables the setting to be differentiated between fixed and non-fixed cells.
+
+23-Jul-2017
+- Included the DataSource/DataMember property which allows to bind an Adodc control, DateEnvironment designer or ADODB.Recordset object.
+  A reference to the msdatsrc.tlb (pre-installed since Win2k) is required.
+  The new conditional compiliation constant 'ImplementDataSource' controls if the new feature is turned on.
+  If turned off the 'DataBindingBehavior' might be changed back from 'vbComplexBound' to 'vbNone'.
+
+13-Jul-2017
+- Major internal improvement in the VTableHandle.bas
+  It is necessary to replace also the control. (.ctl)
+  Improvement is that no workaround is necessary anymore when the control is embedded into another UserControl.
+
+21-Jun-2017
+- Included the Cell property which allows to get or set cell settings directly for an arbitrary cell or range of cells without selecting them.
+
+14-Jun-2017
+- First release.
