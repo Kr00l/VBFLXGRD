@@ -4876,17 +4876,19 @@ If PropFillStyle = FlexFillStyleSingle Then
                 .FontItalic = PropFont.Italic
                 .FontStrikeThrough = PropFont.Strikethrough
                 .FontUnderline = PropFont.Underline
-                .FontCharset = PropFont.Charset
             Else
                 .FontSize = PropFontFixed.Size
                 .FontBold = PropFontFixed.Bold
                 .FontItalic = PropFontFixed.Italic
                 .FontStrikeThrough = PropFontFixed.Strikethrough
                 .FontUnderline = PropFontFixed.Underline
-                .FontCharset = PropFontFixed.Charset
             End If
         End If
-        .FontName = Value
+        Dim TempFont As StdFont
+        Set TempFont = New StdFont
+        TempFont.Name = Value
+        .FontName = TempFont.Name
+        .FontCharset = TempFont.Charset
     Else
         .FontName = vbNullString
     End If
@@ -5637,8 +5639,10 @@ If VBFlexGridHandle <> 0 And VBFlexGridNoRedraw = False Then
     If VBFlexGridDesignMode = False Then
         InvalidateRect VBFlexGridHandle, ByVal 0&, 1
         If UpdateNow = True Then UpdateWindow VBFlexGridHandle
+        If VBFlexGridAlignable = False Then UserControl.Refresh
+    Else
+        UserControl.Refresh
     End If
-    UserControl.Refresh
 End If
 End Sub
 
