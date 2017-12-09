@@ -5629,7 +5629,6 @@ If VBFlexGridHandle <> 0 And VBFlexGridNoRedraw = False Then
     If VBFlexGridDesignMode = False Then
         InvalidateRect VBFlexGridHandle, ByVal 0&, 1
         If UpdateNow = True Then UpdateWindow VBFlexGridHandle
-        If VBFlexGridAlignable = False Then UserControl.Refresh
     Else
         UserControl.Refresh
     End If
