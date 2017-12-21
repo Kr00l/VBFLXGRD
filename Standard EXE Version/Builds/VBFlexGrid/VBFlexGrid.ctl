@@ -8975,9 +8975,11 @@ Select Case wMsg
         End If
     Case WM_MOUSEWHEEL
         If VBFlexGridWheelScrollLines > 0 Then
-            Dim WheelDelta As Long, WheelDeltaPerLine As Long
-            WheelDelta = HiWord(wParam)
+            Static WheelDelta As Long, LastWheelDelta As Long
+            If Sgn(HiWord(wParam)) <> Sgn(LastWheelDelta) Then WheelDelta = 0
+            WheelDelta = WheelDelta + HiWord(wParam)
             If Abs(WheelDelta) >= 120 Then
+                Dim WheelDeltaPerLine As Long
                 WheelDeltaPerLine = (WheelDelta / VBFlexGridWheelScrollLines)
                 If Sgn(WheelDelta) = -1 Then
                     While WheelDelta <= WheelDeltaPerLine
@@ -8990,7 +8992,9 @@ Select Case wMsg
                         WheelDelta = WheelDelta - WheelDeltaPerLine
                     Wend
                 End If
+                WheelDelta = 0
             End If
+            LastWheelDelta = HiWord(wParam)
             WindowProcControl = 0
             Exit Function
         End If
