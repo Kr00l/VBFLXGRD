@@ -746,6 +746,7 @@ Private VBFlexGridMouseOver As Boolean
 Private VBFlexGridDesignMode As Boolean
 Private VBFlexGridRTLLayout As Boolean, VBFlexGridRTLReading As Boolean
 Private VBFlexGridAlignable As Boolean
+Private VBFlexGridSort As FlexSortConstants
 Private DispIDMousePointer As Long
 
 #If ImplementDataSource = True Then
@@ -804,7 +805,6 @@ Private PropEllipsisFormat As FlexEllipsisFormatConstants
 Private PropEllipsisFormatFixed As FlexEllipsisFormatConstants
 Private PropRedraw As Boolean
 Private PropDoubleBuffer As Boolean
-Private PropSort As FlexSortConstants
 Private PropTabBehavior As FlexTabBehaviorConstants
 Private PropWrapCellBehavior As FlexWrapCellBehaviorConstants
 Private PropShowInfoTips As Boolean
@@ -1023,7 +1023,6 @@ PropEllipsisFormat = FlexEllipsisFormatNone
 PropEllipsisFormatFixed = FlexEllipsisFormatNone
 PropRedraw = True
 PropDoubleBuffer = True
-PropSort = FlexSortNone
 PropTabBehavior = FlexTabControls
 PropWrapCellBehavior = FlexWrapNone
 PropShowInfoTips = False
@@ -1101,7 +1100,6 @@ PropEllipsisFormat = .ReadProperty("EllipsisFormat", FlexEllipsisFormatNone)
 PropEllipsisFormatFixed = .ReadProperty("EllipsisFormatFixed", FlexEllipsisFormatNone)
 PropRedraw = .ReadProperty("Redraw", True)
 PropDoubleBuffer = .ReadProperty("DoubleBuffer", True)
-PropSort = .ReadProperty("Sort", FlexSortNone)
 PropTabBehavior = .ReadProperty("TabBehavior", FlexTabControls)
 PropWrapCellBehavior = .ReadProperty("WrapCellBehavior", FlexWrapNone)
 PropShowInfoTips = .ReadProperty("ShowInfoTips", False)
@@ -1175,7 +1173,6 @@ With PropBag
 .WriteProperty "EllipsisFormatFixed", PropEllipsisFormatFixed, FlexEllipsisFormatNone
 .WriteProperty "Redraw", PropRedraw, True
 .WriteProperty "DoubleBuffer", PropDoubleBuffer, True
-.WriteProperty "Sort", PropSort, FlexSortNone
 .WriteProperty "TabBehavior", PropTabBehavior, FlexTabControls
 .WriteProperty "WrapCellBehavior", PropWrapCellBehavior, FlexWrapNone
 .WriteProperty "ShowInfoTips", PropShowInfoTips, False
@@ -2799,8 +2796,8 @@ End Property
 Public Property Let Sort(ByVal Value As FlexSortConstants)
 Select Case Value
     Case FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort
-        PropSort = Value
-        If PropSort = FlexSortNone Then Exit Property
+        VBFlexGridSort = Value
+        If VBFlexGridSort = FlexSortNone Then Exit Property
         If (VBFlexGridRow < 0 Or VBFlexGridRowSel < 0) Or (VBFlexGridCol < 0 Or VBFlexGridColSel < 0) Then
             ' Error shall not be raised. Do nothing in this case.
             Exit Property
@@ -8651,7 +8648,7 @@ j = 0
 Dst = Left
 Do While i <= Right And j <= UBound(Temp)
     Cmp = Empty
-    If PropSort <> FlexSortUseColSort Then Sort = PropSort Else Sort = VBFlexGridColsInfo(Col).Sort
+    If VBFlexGridSort <> FlexSortUseColSort Then Sort = VBFlexGridSort Else Sort = VBFlexGridColsInfo(Col).Sort
     Select Case Sort
         Case FlexSortGenericAscending, FlexSortGenericDescending
             If Not IsNumeric(Data(i).Cols(Col).Text) Or Not IsNumeric(Temp(j).Cols(Col).Text) Then
