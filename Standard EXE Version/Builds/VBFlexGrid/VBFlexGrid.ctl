@@ -5519,6 +5519,30 @@ End If
 End With
 End Function
 
+Public Function TextWidth(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Long
+Attribute TextWidth.VB_Description = "Returns the text width of the given string using the font of the current or an arbitrary cell (row/col subscripts)."
+If Row < -1 Then Err.Raise 380
+If Col < -1 Then Err.Raise 380
+If Row = -1 Then Row = VBFlexGridRow
+If Col = -1 Then Col = VBFlexGridCol
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+Dim Pixels As Long
+Pixels = GetTextSize(Row, Col, Text).CX
+If Pixels > 0 Then TextWidth = UserControl.ScaleX(Pixels, vbPixels, vbTwips)
+End Function
+
+Public Function TextHeight(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Long
+Attribute TextHeight.VB_Description = "Returns the text height of the given string using the font of the current or an arbitrary cell (row/col subscripts)."
+If Row < -1 Then Err.Raise 380
+If Col < -1 Then Err.Raise 380
+If Row = -1 Then Row = VBFlexGridRow
+If Col = -1 Then Col = VBFlexGridCol
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+Dim Pixels As Long
+Pixels = GetTextSize(Row, Col, Text).CY
+If Pixels > 0 Then TextHeight = UserControl.ScaleY(Pixels, vbPixels, vbTwips)
+End Function
+
 Public Property Get Picture() As IPictureDisp
 Attribute Picture.VB_Description = "Returns a picture of the flex grid control, suitable for printing, saving to disk, copying to the clipboard, or assigning to a different control."
 Attribute Picture.VB_MemberFlags = "400"
@@ -6439,7 +6463,23 @@ If VBFlexGridHandle <> 0 Then
             Set TempFont = Nothing
         End If
         End With
-        GetTextExtentPoint32 hDC, ByVal StrPtr(Text), Len(Text), GetTextSize
+        Dim Pos1 As Long, Pos2 As Long, Temp As String, Size As SIZEAPI
+        If InStr(Text, vbCrLf) Then Text = Replace$(Text, vbCrLf, vbCr)
+        If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbCr)
+        Do
+            Pos1 = InStr(Pos1 + 1, Text, vbCr)
+            If Pos1 > 0 Then
+                Temp = Mid$(Text, Pos2 + 1, Pos1 - Pos2 - 1)
+            Else
+                Temp = Mid$(Text, Pos2 + 1)
+            End If
+            GetTextExtentPoint32 hDC, ByVal StrPtr(Temp), Len(Temp), Size
+            With GetTextSize
+            .CY = .CY + Size.CY
+            If Size.CX > .CX Then .CX = Size.CX
+            End With
+            Pos2 = Pos1
+        Loop Until Pos1 = 0
         ReleaseDC VBFlexGridHandle, hDC
         If hFontTemp <> 0 Then DeleteObject hFontTemp
     End If
