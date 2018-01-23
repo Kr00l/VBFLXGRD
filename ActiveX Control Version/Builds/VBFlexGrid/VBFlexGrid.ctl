@@ -6449,7 +6449,23 @@ If VBFlexGridHandle <> 0 Then
             Set TempFont = Nothing
         End If
         End With
-        GetTextExtentPoint32 hDC, ByVal StrPtr(Text), Len(Text), GetTextSize
+        Dim Pos1 As Long, Pos2 As Long, Temp As String, Size As SIZEAPI
+        If InStr(Text, vbCrLf) Then Text = Replace$(Text, vbCrLf, vbCr)
+        If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbCr)
+        Do
+            Pos1 = InStr(Pos1 + 1, Text, vbCr)
+            If Pos1 > 0 Then
+                Temp = Mid$(Text, Pos2 + 1, Pos1 - Pos2 - 1)
+            Else
+                Temp = Mid$(Text, Pos2 + 1)
+            End If
+            GetTextExtentPoint32 hDC, ByVal StrPtr(Temp), Len(Temp), Size
+            With GetTextSize
+            .CY = .CY + Size.CY
+            If Size.CX > .CX Then .CX = Size.CX
+            End With
+            Pos2 = Pos1
+        Loop Until Pos1 = 0
         ReleaseDC VBFlexGridHandle, hDC
         If hFontTemp <> 0 Then DeleteObject hFontTemp
     End If
