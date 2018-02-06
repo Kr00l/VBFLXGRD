@@ -1,4 +1,9 @@
 # VBFLXGRD
 VB FlexGrid Control (Replacement of the MSFlexGrid control)
 
-http://www.vbforums.com/showthread.php?855931-VB6-ActiveX-VBFlexGrid-%28Replacement-of-the-MSFlexGrid-control%29&p=5236525#post5236525
+This project is intended to replace the MSFlexGrid control for VB6.
+
+http://www.vbforums.com/showthread.php?848839-VBFlexGrid-Control-(Replacement-of-the-MSFlexGrid-control)
+
+List of enhancements and improvements in relation to the MSFlexGrid and/or MSHFlexGrid control:
+http://www.vbforums.com/showthread.php?848839-VBFlexGrid-Control-(Replacement-of-the-MSFlexGrid-control)&p=5179231&viewfull=1#post5179231
