@@ -396,12 +396,15 @@ FontStrikeThrough As Boolean
 FontUnderline As Boolean
 FontCharset As Integer
 End Type
+Private Const RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH As Long = 4
+Private Const ROWINFO_HEIGHT_SPACING_DIP As Long = 3
 Private Type TROWINFO
 Height As Long
 Data As Long
 Hidden As Boolean
 Merge As Boolean
 End Type
+Private Const COLINFO_WIDTH_SPACING_DIP As Long = 6
 Private Type TCOLINFO
 Width As Long
 Data As Long
@@ -1554,8 +1557,8 @@ If hDCScreen <> 0 Then
     Dim TM As TEXTMETRIC
     If VBFlexGridFontHandle <> 0 Then SelectObject hDCScreen, VBFlexGridFontHandle
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
-        VBFlexGridDefaultRowHeight = TM.TMHeight + (3 * PixelsPerDIP_Y())
-        VBFlexGridDefaultColWidth = VBFlexGridDefaultRowHeight * 4
+        VBFlexGridDefaultRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+        VBFlexGridDefaultColWidth = VBFlexGridDefaultRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
     ReleaseDC 0, hDCScreen
 End If
@@ -1574,8 +1577,8 @@ If hDCScreen <> 0 Then
     Dim TM As TEXTMETRIC
     If VBFlexGridFontHandle <> 0 Then SelectObject hDCScreen, VBFlexGridFontHandle
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
-        VBFlexGridDefaultRowHeight = TM.TMHeight + (3 * PixelsPerDIP_Y())
-        VBFlexGridDefaultColWidth = VBFlexGridDefaultRowHeight * 4
+        VBFlexGridDefaultRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+        VBFlexGridDefaultColWidth = VBFlexGridDefaultRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
     ReleaseDC 0, hDCScreen
 End If
@@ -1613,8 +1616,8 @@ Else
         Dim TM As TEXTMETRIC
         If VBFlexGridFontFixedHandle <> 0 Then SelectObject hDCScreen, VBFlexGridFontFixedHandle
         If GetTextMetrics(hDCScreen, TM) <> 0 Then
-            VBFlexGridDefaultFixedRowHeight = TM.TMHeight + (3 * PixelsPerDIP_Y())
-            VBFlexGridDefaultFixedColWidth = VBFlexGridDefaultFixedRowHeight * 4
+            VBFlexGridDefaultFixedRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+            VBFlexGridDefaultFixedColWidth = VBFlexGridDefaultFixedRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
         End If
         ReleaseDC 0, hDCScreen
     End If
@@ -1634,8 +1637,8 @@ If hDCScreen <> 0 Then
     Dim TM As TEXTMETRIC
     If VBFlexGridFontFixedHandle <> 0 Then SelectObject hDCScreen, VBFlexGridFontFixedHandle
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
-        VBFlexGridDefaultFixedRowHeight = TM.TMHeight + (3 * PixelsPerDIP_Y())
-        VBFlexGridDefaultFixedColWidth = VBFlexGridDefaultFixedRowHeight * 4
+        VBFlexGridDefaultFixedRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+        VBFlexGridDefaultFixedColWidth = VBFlexGridDefaultFixedRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
     ReleaseDC 0, hDCScreen
 End If
@@ -2946,7 +2949,7 @@ If Not PropFormatString = vbNullString Then
             FormatCol = PropFormatString
         End If
         Dim Pos1 As Long, Pos2 As Long, Temp As String, Spacing As Long
-        Spacing = (6 * PixelsPerDIP_X())
+        Spacing = (COLINFO_WIDTH_SPACING_DIP * PixelsPerDIP_X())
         If Not FormatCol = vbNullString Then
             Dim iCol As Long
             Do
