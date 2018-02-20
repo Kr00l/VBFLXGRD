@@ -9029,13 +9029,13 @@ Select Case wMsg
         KeyCode = wParam And &HFF&
         If wMsg = WM_KEYDOWN Then
             RaiseEvent KeyDown(KeyCode, GetShiftStateFromMsg())
-            Dim Msg As TMSG
-            Const PM_NOREMOVE As Long = &H0
-            If PeekMessage(Msg, hWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE) <> 0 Then VBFlexGridCharCodeCache = Msg.wParam
-            Call ProcessKeyDown(KeyCode, GetShiftStateFromMsg())
         ElseIf wMsg = WM_KEYUP Then
             RaiseEvent KeyUp(KeyCode, GetShiftStateFromMsg())
         End If
+        Dim Msg As TMSG
+        Const PM_NOREMOVE As Long = &H0
+        If PeekMessage(Msg, hWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE) <> 0 Then VBFlexGridCharCodeCache = Msg.wParam
+        If wMsg = WM_KEYDOWN Then Call ProcessKeyDown(KeyCode, GetShiftStateFromMsg())
         wParam = KeyCode
     Case WM_CHAR
         Dim KeyChar As Integer
