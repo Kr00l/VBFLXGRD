@@ -1,5 +1,8 @@
 List of revisions:
 
+20-Feb-2018
+- Unicode support when generating ASCII key combos, e.g. ALT + 3333.
+
 11-Feb-2018
 - Included the AutoSize method.
 
