@@ -1,5 +1,8 @@
 List of revisions:
 
+04-Mar-2018
+- Bugfix in VTableHandle.bas related to 25-Feb-2018 update. (concerns unload stability in IDE only)
+
 25-Feb-2018
 - Major internal improvement in the VTableHandle.bas concerning IOleInPlaceActiveObject.
 
