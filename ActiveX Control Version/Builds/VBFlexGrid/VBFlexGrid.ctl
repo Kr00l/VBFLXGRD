@@ -2805,19 +2805,30 @@ Select Case Value
             ' Error shall not be raised. Do nothing in this case.
             Exit Property
         End If
-        Dim SelRange As TSELRANGE, i As Long
+        Dim SelRange As TSELRANGE, iCol As Long, Sort As FlexSortConstants
         Call GetSelRangeStruct(SelRange)
         ' The keys used for sorting are determined by the Col and ColSel properties.
         ' To specify the range to be sorted, set the Row and RowSel properties.
         ' Sorting is always done in a left-to-right direction. (Technically the sorting is performed from right-to-left)
-        For i = SelRange.RightCol To SelRange.LeftCol Step -1
-            ' MergeSort is used as it is a 'stable sort' algorithm.
-            If VBFlexGridRow = VBFlexGridRowSel Then
-                Call MergeSortRec(PropFixedRows, PropRows - 1, i, VBFlexGridCells.Rows())
+        For iCol = SelRange.RightCol To SelRange.LeftCol Step -1
+            If VBFlexGridSort <> FlexSortUseColSort Then Sort = VBFlexGridSort Else Sort = VBFlexGridColsInfo(iCol).Sort
+            ' MergeSort/BubbleSort are used as they are 'stable sort' algorithms.
+            If Sort <> FlexSortCustom Then
+                ' MergeSort is used for automatic sorting as it is fast and reliable.
+                If VBFlexGridRow = VBFlexGridRowSel Then
+                    Call MergeSortRec(PropFixedRows, PropRows - 1, iCol, VBFlexGridCells.Rows(), Sort)
+                Else
+                    Call MergeSortRec(SelRange.TopRow, SelRange.BottomRow, iCol, VBFlexGridCells.Rows(), Sort)
+                End If
             Else
-                Call MergeSortRec(SelRange.TopRow, SelRange.BottomRow, i, VBFlexGridCells.Rows())
+                ' BubbleSort is used for custom sorting as row1/row2 for text matrix must be meaningful in the 'Compare' event.
+                If VBFlexGridRow = VBFlexGridRowSel Then
+                    Call BubbleSortIter(PropFixedRows, PropRows - 1, iCol, VBFlexGridCells.Rows())
+                Else
+                    Call BubbleSortIter(SelRange.TopRow, SelRange.BottomRow, iCol, VBFlexGridCells.Rows())
+                End If
             End If
-        Next i
+        Next iCol
         Dim RCP As TROWCOLPARAMS
         With RCP
         .Mask = RCPM_TOPROW
@@ -8653,9 +8664,9 @@ If VBFlexGridHandle <> 0 And VBFlexGridToolTipHandle <> 0 Then
 End If
 End Sub
 
-Private Sub InplaceMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TCOLS)
+Private Sub InplaceMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TCOLS, ByVal Sort As FlexSortConstants)
 Dim Temp() As TCOLS, Cmp As Long, Dst As Long
-Dim i As Long, j As Long, Sort As FlexSortConstants
+Dim i As Long, j As Long
 Dim Dbl1 As Double, Dbl2 As Double
 ReDim Temp(Middle - Left) As TCOLS
 j = 0
@@ -8667,7 +8678,6 @@ j = 0
 Dst = Left
 Do While i <= Right And j <= UBound(Temp)
     Cmp = Empty
-    If VBFlexGridSort <> FlexSortUseColSort Then Sort = VBFlexGridSort Else Sort = VBFlexGridColsInfo(Col).Sort
     Select Case Sort
         Case FlexSortGenericAscending, FlexSortGenericDescending
             If Not IsNumeric(Data(i).Cols(Col).Text) Or Not IsNumeric(Temp(j).Cols(Col).Text) Then
@@ -8695,8 +8705,6 @@ Do While i <= Right And j <= UBound(Temp)
         Case FlexSortStringAscending, FlexSortStringDescending
             Cmp = lstrcmp(StrPtr(Data(i).Cols(Col).Text), StrPtr(Temp(j).Cols(Col).Text))
             If Sort = FlexSortStringDescending Then Cmp = -Cmp
-        Case FlexSortCustom
-            RaiseEvent Compare(i, j, Col, Cmp)
     End Select
     If Cmp < 0 Then
         LSet Data(Dst) = Data(i)
@@ -8714,14 +8722,33 @@ Do While j <= UBound(Temp)
 Loop
 End Sub
 
-Private Sub MergeSortRec(ByVal Left As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TCOLS)
+Private Sub MergeSortRec(ByVal Left As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TCOLS, ByVal Sort As FlexSortConstants)
 Dim Middle As Long
 Middle = (Left + Right) \ 2
 If Left < Right Then
-    Call MergeSortRec(Left, Middle, Col, Data())
-    Call MergeSortRec(Middle + 1, Right, Col, Data())
-    Call InplaceMergeSort(Left, Middle, Right, Col, Data())
+    Call MergeSortRec(Left, Middle, Col, Data(), Sort)
+    Call MergeSortRec(Middle + 1, Right, Col, Data(), Sort)
+    Call InplaceMergeSort(Left, Middle, Right, Col, Data(), Sort)
 End If
+End Sub
+
+Private Sub BubbleSortIter(ByVal First As Long, ByVal Last As Long, ByVal Col As Long, ByRef Data() As TCOLS)
+Dim Swap As TCOLS, Cmp As Long
+Dim i As Long, j As Long
+Do While Last > First
+    i = First
+    For j = First To Last - 1
+        Cmp = Empty
+        RaiseEvent Compare(j, j + 1, Col, Cmp)
+        If Cmp >= 0 Then
+            LSet Swap = Data(j + 1)
+            LSet Data(j + 1) = Data(j)
+            LSet Data(j) = Swap
+            i = j
+        End If
+    Next j
+    Last = i
+Loop
 End Sub
 
 Friend Function FSubclass_Message(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal dwRefData As Long) As Long
