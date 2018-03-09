@@ -8855,7 +8855,11 @@ Do While i <= Right And j <= UBound(Temp)
     Select Case Sort
         Case FlexSortGenericAscending, FlexSortGenericDescending
             If Not IsNumeric(Data(i).Cols(Col).Text) Or Not IsNumeric(Temp(j).Cols(Col).Text) Then
-                If Data(i).Cols(Col).Text < Temp(j).Cols(Col).Text Then Cmp = -1 Else Cmp = 1
+                If Data(i).Cols(Col).Text < Temp(j).Cols(Col).Text Then
+                    Cmp = -1
+                ElseIf Data(i).Cols(Col).Text > Temp(j).Cols(Col).Text Then
+                    Cmp = 1
+                End If
             Else
                 Dbl1 = Empty: Dbl2 = Empty
                 On Error Resume Next
