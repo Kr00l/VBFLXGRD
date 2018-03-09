@@ -8740,7 +8740,7 @@ Do While Last > First
     For j = First To Last - 1
         Cmp = Empty
         RaiseEvent Compare(j, j + 1, Col, Cmp)
-        If Cmp >= 0 Then
+        If Cmp > 0 Then
             LSet Swap = Data(j + 1)
             LSet Data(j + 1) = Data(j)
             LSet Data(j) = Swap
