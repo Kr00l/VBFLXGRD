@@ -1,5 +1,8 @@
 List of revisions:
 
+09-Mar-2018
+- Bugfix related to custom sorting bugfix on 08-Mar-2018.
+
 08-Mar-2018
 - Critical bugfix for custom sorting. (FlexSortCustom)
 - Included enum FlexSortCurrencyAscending/FlexSortCurrencyDescending and FlexSortDateAscending/FlexSortDateDescending in Sort/ColSort property.
