@@ -361,6 +361,14 @@ Width = Me.ScaleWidth - VBFlexGrid1.Left - Me.ScaleX(8, vbPixels, Me.ScaleMode)
 If Width > 0 Then VBFlexGrid1.Width = Width
 End Sub
 
+Private Sub VBFlexGrid1_DividerDblClick(ByVal Row As Long, ByVal Col As Long)
+If Row = -1 Then
+    VBFlexGrid1.AutoSize Col, , FlexAutoSizeModeColWidth
+ElseIf Col = -1 Then
+    VBFlexGrid1.AutoSize Row, , FlexAutoSizeModeRowHeight
+End If
+End Sub
+
 Private Sub Command1_Click()
 Set VBFlexGrid1.CellPicture = Picture1.Picture
 VBFlexGrid1.CellPictureAlignment = Combo1.ItemData(Combo1.ListIndex)

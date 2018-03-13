@@ -1,5 +1,8 @@
 List of revisions:
 
+13-Mar-2018
+- Included the DividerDblClick event.
+
 09-Mar-2018
 - Bugfix related to custom sorting bugfix on 08-Mar-2018.
 
