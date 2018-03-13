@@ -465,6 +465,8 @@ Public Event SelChange()
 Attribute SelChange.VB_Description = "Occurs when the selected range of cells changes."
 Public Event Compare(ByVal Row1 As Long, ByVal Row2 As Long, ByVal Col As Long, ByRef Cmp As Long)
 Attribute Compare.VB_Description = "Occurs during custom sorts to compare two rows."
+Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
+Attribute DividerDblClick.VB_Description = "Occurs when the user double-clicked the divider on a row or column."
 Public Event PreviewKeyDown(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
 Attribute PreviewKeyDown.VB_Description = "Occurs before the KeyDown event."
 Public Event PreviewKeyUp(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
@@ -9402,6 +9404,25 @@ Select Case wMsg
         Call RedrawGrid
     Case WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK
         RaiseEvent DblClick
+        If wMsg = WM_LBUTTONDBLCLK Then
+            With HTI
+            Pos = GetMessagePos()
+            .PT.X = Get_X_lParam(Pos)
+            .PT.Y = Get_Y_lParam(Pos)
+            ScreenToClient hWnd, .PT
+            Call GetHitTestInfo(HTI)
+            Select Case .HitResult
+                Case FlexHitResultDividerRowTop
+                    RaiseEvent DividerDblClick(.HitRow - 1, -1)
+                Case FlexHitResultDividerRowBottom
+                    RaiseEvent DividerDblClick(.HitRow, -1)
+                Case FlexHitResultDividerColumnLeft
+                    RaiseEvent DividerDblClick(-1, .HitCol - 1)
+                Case FlexHitResultDividerColumnRight
+                    RaiseEvent DividerDblClick(-1, .HitCol)
+            End Select
+            End With
+        End If
     Case WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_RBUTTONDOWN, WM_MOUSEMOVE, WM_LBUTTONUP, WM_MBUTTONUP, WM_RBUTTONUP
         Dim X As Single
         Dim Y As Single
