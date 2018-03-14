@@ -1,5 +1,11 @@
 List of revisions:
 
+14-Mar-2018
+- Optimized the divider row/col dragging.
+- Included the HitRowDivider/HitColDivider property which returns the divider row/col from the last invoked .HitTest.
+  The divider row/col contains already the necessary offset for FlexHitResultDividerRowTop and FlexHitResultDividerColumnLeft.
+  In addition the offset includes hidden rows/cols. (zero width rows/cols are not offset to preserve MSFlexGrid compatibility)
+
 13-Mar-2018
 - Included the DividerDblClick event.
 
