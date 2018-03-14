@@ -8239,8 +8239,8 @@ ElseIf HTI.HitResult <> FlexHitResultCell Then
                 End If
             Next i
             P.Y = .Top + GetRowHeight(iRow)
-            .Top = .Top + (1 * PixelsPerDIP_Y())
-            .Bottom = .Bottom - (1 * PixelsPerDIP_Y())
+            .Top = .Top + (1 * PixelsPerDIP_Y()) + (Y - P.Y)
+            .Bottom = .Bottom - (1 * PixelsPerDIP_Y()) + (Y - P.Y)
         End If
         If iCol > -1 Then
             For i = 0 To iCol - 1
@@ -8249,8 +8249,8 @@ ElseIf HTI.HitResult <> FlexHitResultCell Then
                 End If
             Next i
             P.X = .Left + GetColWidth(iCol)
-            .Left = .Left + (1 * PixelsPerDIP_X())
-            .Right = .Right - (1 * PixelsPerDIP_X())
+            .Left = .Left + (1 * PixelsPerDIP_X()) + (X - P.X)
+            .Right = .Right - (1 * PixelsPerDIP_X()) + (X - P.X)
         End If
         End With
         MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, ClipRect, 2
