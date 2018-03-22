@@ -1,0 +1,9 @@
+VisualStyles = 54, 137, 814, 825, C
+VTableHandle = -203, 84, 997, 757, C
+Common = 25, 25, 1225, 698, C
+VTableSubclass = 50, 50, 1250, 723, C
+VBFlexGrid = 53, 103, 886, 696, C, -78, 89, 842, 762, C
+VBFlexGridBase = 44, 58, 900, 588, C
+PPVBFlexGridGeneral = 0, 0, 0, 0, C, 22, 29, 878, 559, C
+PPVBFlexGridStyle = 0, 0, 0, 0, C, 26, 26, 967, 558, C
+Enumeration = 0, 0, 0, 0, C
