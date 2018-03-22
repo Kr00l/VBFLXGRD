@@ -38,7 +38,7 @@ Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, 
 Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
 Private FlexRowSizingModeIndividual, FlexRowSizingModeAll
 Private FlexMergeCellsNever, FlexMergeCellsFree, FlexMergeCellsRestrictRows, FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll, FlexMergeCellsFixedOnly
-Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort
+Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending
 Private FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
 Private FlexPictureTypeColor, FlexPictureTypeMonochrome
 Private FlexEllipsisFormatNone, FlexEllipsisFormatEnd, FlexEllipsisFormatPath, FlexEllipsisFormatWord
@@ -47,6 +47,8 @@ Private FlexClearEverything, FlexClearText, FlexClearFormatting
 Private FlexTabControls, FlexTabCells, FlexTabNext
 Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
 Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort
+Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
+Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -163,6 +165,10 @@ FlexSortStringAscending = 7
 FlexSortStringDescending = 8
 FlexSortCustom = 9
 FlexSortUseColSort = 10
+FlexSortCurrencyAscending = 11
+FlexSortCurrencyDescending = 12
+FlexSortDateAscending = 13
+FlexSortDateDescending = 14
 End Enum
 Public Enum FlexVisibilityConstants
 FlexVisibilityPartialOK = 0
@@ -221,6 +227,15 @@ FlexCellTop = 21
 FlexCellWidth = 22
 FlexCellHeight = 23
 FlexCellSort = 24
+End Enum
+Public Enum FlexAutoSizeModeConstants
+FlexAutoSizeModeColWidth = 0
+FlexAutoSizeModeRowHeight = 1
+End Enum
+Public Enum FlexAutoSizeScopeConstants
+FlexAutoSizeScopeAll = 0
+FlexAutoSizeScopeFixed = 1
+FlexAutoSizeScopeScrollable = 2
 End Enum
 Private Type RECT
 Left As Long
@@ -453,6 +468,8 @@ Public Event SelChange()
 Attribute SelChange.VB_Description = "Occurs when the selected range of cells changes."
 Public Event Compare(ByVal Row1 As Long, ByVal Row2 As Long, ByVal Col As Long, ByRef Cmp As Long)
 Attribute Compare.VB_Description = "Occurs during custom sorts to compare two rows."
+Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
+Attribute DividerDblClick.VB_Description = "Occurs when the user double-clicked the divider on a row or column."
 Public Event PreviewKeyDown(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
 Attribute PreviewKeyDown.VB_Description = "Occurs before the KeyDown event."
 Public Event PreviewKeyUp(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
@@ -744,6 +761,7 @@ Private VBFlexGridMouseMoveChanged As Boolean
 Private VBFlexGridDividerDragSplitterRect As RECT
 Private VBFlexGridDividerDragOffset As POINTAPI
 Private VBFlexGridHitRow As Long, VBFlexGridHitCol As Long
+Private VBFlexGridHitRowDivider As Long, VBFlexGridHitColDivider As Long
 Private VBFlexGridHitResult As FlexHitResultConstants
 Private VBFlexGridWheelScrollLines As Long
 Private VBFlexGridFocused As Boolean
@@ -966,6 +984,8 @@ VBFlexGridMouseMoveCol = -1
 VBFlexGridMouseMoveChanged = False
 VBFlexGridHitRow = -1
 VBFlexGridHitCol = -1
+VBFlexGridHitRowDivider = -1
+VBFlexGridHitColDivider = -1
 VBFlexGridHitResult = FlexHitResultNoWhere
 SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VBFlexGridWheelScrollLines, 0
 End Sub
@@ -2805,7 +2825,7 @@ End Property
 
 Public Property Let Sort(ByVal Value As FlexSortConstants)
 Select Case Value
-    Case FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort
+    Case FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending
         VBFlexGridSort = Value
         If VBFlexGridSort = FlexSortNone Then Exit Property
         If (VBFlexGridRow < 0 Or VBFlexGridRowSel < 0) Or (VBFlexGridCol < 0 Or VBFlexGridColSel < 0) Then
@@ -3677,6 +3697,18 @@ Attribute HitCol.VB_MemberFlags = "400"
 HitCol = VBFlexGridHitCol
 End Property
 
+Public Property Get HitRowDivider() As Long
+Attribute HitRowDivider.VB_Description = "Returns the divider row returned from the last hit test."
+Attribute HitRowDivider.VB_MemberFlags = "400"
+HitRowDivider = VBFlexGridHitRowDivider
+End Property
+
+Public Property Get HitColDivider() As Long
+Attribute HitColDivider.VB_Description = "Returns the divider column returned from the last hit test."
+Attribute HitColDivider.VB_MemberFlags = "400"
+HitColDivider = VBFlexGridHitColDivider
+End Property
+
 Public Property Get HitResult() As FlexHitResultConstants
 Attribute HitResult.VB_Description = "Returns the result returned from the last hit test."
 Attribute HitResult.VB_MemberFlags = "400"
@@ -4225,7 +4257,7 @@ End Property
 Public Property Let ColSort(ByVal Index As Long, ByVal Value As FlexSortConstants)
 If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30004, Description:="Invalid Col value for alignment"
 Select Case Value
-    Case FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom
+    Case FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending
     Case Else
         Err.Raise 380
 End Select
@@ -5517,6 +5549,8 @@ With HTI
 Call GetHitTestInfo(HTI)
 VBFlexGridHitRow = .HitRow
 VBFlexGridHitCol = .HitCol
+VBFlexGridHitRowDivider = .HitRowDivider
+VBFlexGridHitColDivider = .HitColDivider
 VBFlexGridHitResult = .HitResult
 End With
 End Sub
@@ -5548,6 +5582,175 @@ Else
     Next iRow
 End If
 End With
+End Function
+
+Public Sub AutoSize(ByVal RowOrCol1 As Long, Optional ByVal RowOrCol2 As Long = -1, Optional ByVal Mode As FlexAutoSizeModeConstants, Optional ByVal Scope As FlexAutoSizeScopeConstants, Optional ByVal Equal As Boolean, Optional ByVal ExtraSpace As Long)
+Attribute AutoSize.VB_Description = "Automatically sizes column widths or row heights to fit cell contents."
+If RowOrCol2 < -1 Then Err.Raise 380
+If RowOrCol2 = -1 Then RowOrCol2 = RowOrCol1
+Select Case Mode
+    Case FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
+    Case Else
+        Err.Raise 380
+End Select
+Select Case Scope
+    Case FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable
+    Case Else
+        Err.Raise 380
+End Select
+If Mode = FlexAutoSizeModeColWidth Then
+    If (RowOrCol1 < 0 Or RowOrCol1 > (PropCols - 1)) Or (RowOrCol2 < 0 Or RowOrCol2 > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+ElseIf Mode = FlexAutoSizeModeRowHeight Then
+    If (RowOrCol1 < 0 Or RowOrCol1 > (PropRows - 1)) Or (RowOrCol2 < 0 Or RowOrCol2 > (PropRows - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+End If
+Dim iRow As Long, iCol As Long, Spacing As Long, Size As SIZEAPI, EqualSize As SIZEAPI
+If Mode = FlexAutoSizeModeColWidth Then
+    Spacing = (COLINFO_WIDTH_SPACING_DIP * PixelsPerDIP_X()) + CLng(UserControl.ScaleX(ExtraSpace, vbTwips, vbPixels))
+    EqualSize.CX = -1
+    Select Case Scope
+        Case FlexAutoSizeScopeAll
+            For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+                With VBFlexGridColsInfo(iCol)
+                .Width = -1
+                For iRow = 0 To (PropRows - 1)
+                    Size.CX = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CX
+                    If Size.CX > 0 Then
+                        Size.CX = Size.CX + Spacing
+                        If Size.CX > .Width Then .Width = Size.CX
+                        If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
+                    End If
+                Next iRow
+                End With
+            Next iCol
+        Case FlexAutoSizeScopeFixed
+            For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+                With VBFlexGridColsInfo(iCol)
+                .Width = -1
+                For iRow = 0 To (PropFixedRows - 1)
+                    Size.CX = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CX
+                    If Size.CX > 0 Then
+                        Size.CX = Size.CX + Spacing
+                        If Size.CX > .Width Then .Width = Size.CX
+                        If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
+                    End If
+                Next iRow
+                End With
+            Next iCol
+        Case FlexAutoSizeScopeScrollable
+            For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+                With VBFlexGridColsInfo(iCol)
+                .Width = -1
+                For iRow = PropFixedRows To (PropRows - 1)
+                    Size.CX = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CX
+                    If Size.CX > 0 Then
+                        Size.CX = Size.CX + Spacing
+                        If Size.CX > .Width Then .Width = Size.CX
+                        If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
+                    End If
+                Next iRow
+                End With
+            Next iCol
+    End Select
+    If Equal = True Then
+        For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+            With VBFlexGridColsInfo(iCol)
+            .Width = EqualSize.CX
+            End With
+        Next iCol
+    End If
+ElseIf Mode = FlexAutoSizeModeRowHeight Then
+    Spacing = (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()) + CLng(UserControl.ScaleY(ExtraSpace, vbTwips, vbPixels))
+    EqualSize.CY = -1
+    Select Case Scope
+        Case FlexAutoSizeScopeAll
+            For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+                With VBFlexGridCells.Rows(iRow).RowInfo
+                .Height = -1
+                For iCol = 0 To (PropCols - 1)
+                    Size.CY = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CY
+                    If Size.CY > 0 Then
+                        Size.CY = Size.CY + Spacing
+                        If Size.CY > .Height Then .Height = Size.CY
+                        If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
+                    End If
+                Next iCol
+                End With
+            Next iRow
+        Case FlexAutoSizeScopeFixed
+            For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+                With VBFlexGridCells.Rows(iRow).RowInfo
+                .Height = -1
+                For iCol = 0 To (PropFixedCols - 1)
+                    Size.CY = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CY
+                    If Size.CY > 0 Then
+                        Size.CY = Size.CY + Spacing
+                        If Size.CY > .Height Then .Height = Size.CY
+                        If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
+                    End If
+                Next iCol
+                End With
+            Next iRow
+        Case FlexAutoSizeScopeScrollable
+            For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+                With VBFlexGridCells.Rows(iRow).RowInfo
+                .Height = -1
+                For iCol = PropFixedCols To (PropCols - 1)
+                    Size.CY = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CY
+                    If Size.CY > 0 Then
+                        Size.CY = Size.CY + Spacing
+                        If Size.CY > .Height Then .Height = Size.CY
+                        If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
+                    End If
+                Next iCol
+                End With
+            Next iRow
+    End Select
+    If Equal = True Then
+        For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+            With VBFlexGridCells.Rows(iRow).RowInfo
+            .Height = EqualSize.CY
+            End With
+        Next iRow
+    End If
+End If
+Dim RCP As TROWCOLPARAMS
+With RCP
+If Mode = FlexAutoSizeModeColWidth Then
+    .Mask = RCPM_LEFTCOL
+    .Flags = RCPF_CHECKLEFTCOL
+    .LeftCol = VBFlexGridLeftCol
+ElseIf Mode = FlexAutoSizeModeRowHeight Then
+    .Mask = RCPM_TOPROW
+    .Flags = RCPF_CHECKTOPROW
+    .TopRow = VBFlexGridTopRow
+End If
+.Flags = .Flags Or RCPF_SETSCROLLBARS
+Call SetRowColParams(RCP)
+End With
+End Sub
+
+Public Function TextWidth(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Long
+Attribute TextWidth.VB_Description = "Returns the text width of the given string using the font of the current or an arbitrary cell (row/col subscripts)."
+If Row < -1 Then Err.Raise 380
+If Col < -1 Then Err.Raise 380
+If Row = -1 Then Row = VBFlexGridRow
+If Col = -1 Then Col = VBFlexGridCol
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+Dim Pixels As Long
+Pixels = GetTextSize(Row, Col, Text).CX
+If Pixels > 0 Then TextWidth = UserControl.ScaleX(Pixels, vbPixels, vbTwips)
+End Function
+
+Public Function TextHeight(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Long
+Attribute TextHeight.VB_Description = "Returns the text height of the given string using the font of the current or an arbitrary cell (row/col subscripts)."
+If Row < -1 Then Err.Raise 380
+If Col < -1 Then Err.Raise 380
+If Row = -1 Then Row = VBFlexGridRow
+If Col = -1 Then Col = VBFlexGridCol
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+Dim Pixels As Long
+Pixels = GetTextSize(Row, Col, Text).CY
+If Pixels > 0 Then TextHeight = UserControl.ScaleY(Pixels, vbPixels, vbTwips)
 End Function
 
 Public Property Get Picture() As IPictureDisp
@@ -8734,6 +8937,24 @@ Do While i <= Right And j <= UBound(Temp)
         Case FlexSortStringAscending, FlexSortStringDescending
             Cmp = lstrcmp(StrPtr(Data(i).Cols(Col).Text), StrPtr(Temp(j).Cols(Col).Text))
             If Sort = FlexSortStringDescending Then Cmp = -Cmp
+        Case FlexSortCurrencyAscending, FlexSortCurrencyDescending
+            Dim Cur1 As Currency, Cur2 As Currency
+            Cur1 = Empty: Cur2 = Empty
+            On Error Resume Next
+            Cur1 = CCur(Data(i).Cols(Col).Text)
+            Cur2 = CCur(Temp(j).Cols(Col).Text)
+            On Error GoTo 0
+            Cmp = Sgn(Cur1 - Cur2)
+            If Sort = FlexSortCurrencyDescending Then Cmp = -Cmp
+        Case FlexSortDateAscending, FlexSortDateDescending
+            Dim Date1 As Date, Date2 As Date
+            Date1 = Empty: Date2 = Empty
+            On Error Resume Next
+            Date1 = CDate(Data(i).Cols(Col).Text)
+            Date2 = CDate(Temp(j).Cols(Col).Text)
+            On Error GoTo 0
+            Cmp = Sgn(Date1 - Date2)
+            If Sort = FlexSortDateDescending Then Cmp = -Cmp
     End Select
     If Cmp < 0 Then
         LSet Data(Dst) = Data(i)
@@ -9237,6 +9458,19 @@ Select Case wMsg
         Call RedrawGrid
     Case WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK
         RaiseEvent DblClick
+        If wMsg = WM_LBUTTONDBLCLK Then
+            With HTI
+            Pos = GetMessagePos()
+            .PT.X = Get_X_lParam(Pos)
+            .PT.Y = Get_Y_lParam(Pos)
+            ScreenToClient hWnd, .PT
+            Call GetHitTestInfo(HTI)
+            Select Case .HitResult
+                Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
+                    RaiseEvent DividerDblClick(.HitRowDivider, .HitColDivider)
+            End Select
+            End With
+        End If
     Case WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_RBUTTONDOWN, WM_MOUSEMOVE, WM_LBUTTONUP, WM_MBUTTONUP, WM_RBUTTONUP
         Dim X As Single
         Dim Y As Single

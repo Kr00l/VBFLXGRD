@@ -1,13 +1,12 @@
 VERSION 5.00
 Begin VB.PropertyPage PPVBFlexGridGeneral 
    Caption         =   "General"
-   ClientHeight    =   5625
+   ClientHeight    =   6600
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   6225
-   LockControls    =   -1  'True
    PaletteMode     =   0  'Halftone
-   ScaleHeight     =   5625
+   ScaleHeight     =   6600
    ScaleWidth      =   6225
    Begin VB.TextBox TextClipSeparators 
       Height          =   315
