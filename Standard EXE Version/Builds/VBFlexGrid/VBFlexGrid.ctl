@@ -4906,6 +4906,7 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
+Dim TempFont As StdFont
 If PropFillStyle = FlexFillStyleSingle Then
     With VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol)
     If Not Value = vbNullString Then
@@ -4924,7 +4925,6 @@ If PropFillStyle = FlexFillStyleSingle Then
                 .FontUnderline = PropFontFixed.Underline
             End If
         End If
-        Dim TempFont As StdFont
         Set TempFont = New StdFont
         TempFont.Name = Value
         .FontName = TempFont.Name
@@ -4948,17 +4948,18 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                         .FontItalic = PropFont.Italic
                         .FontStrikeThrough = PropFont.Strikethrough
                         .FontUnderline = PropFont.Underline
-                        .FontCharset = PropFont.Charset
                     Else
                         .FontSize = PropFontFixed.Size
                         .FontBold = PropFontFixed.Bold
                         .FontItalic = PropFontFixed.Italic
                         .FontStrikeThrough = PropFontFixed.Strikethrough
                         .FontUnderline = PropFontFixed.Underline
-                        .FontCharset = PropFontFixed.Charset
                     End If
                 End If
-                .FontName = Value
+                Set TempFont = New StdFont
+                TempFont.Name = Value
+                .FontName = TempFont.Name
+                .FontCharset = TempFont.Charset
             Else
                 .FontName = vbNullString
             End If
