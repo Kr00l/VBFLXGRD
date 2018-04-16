@@ -1,5 +1,8 @@
 List of revisions:
 
+16-Mar-2018
+- Bugfix in the CellFontName property, related to update on 05-Dec-2017. (This bug had only effect when FillStyle is set to FlexFillStyleRepeat)
+
 14-Mar-2018
 - Optimized the divider row/col dragging.
 - Included the HitRowDivider/HitColDivider property which returns the divider row/col from the last invoked .HitTest.
@@ -41,7 +44,7 @@ List of revisions:
 05-Dec-2017
 - Major performance fix. (Caused by update on 23-Nov-2017)
 - Bugfix in the CellFontName property.
-  Am change will now overwrite the CellFontCharset settings by default. It can be changed afterwards anyhow.
+  A change will now overwrite the CellFontCharset settings.
 
 23-Nov-2017
 - Final tweak to run in the VBA environment. (meaningful for OCX only)
