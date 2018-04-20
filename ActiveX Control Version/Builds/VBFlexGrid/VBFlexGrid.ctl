@@ -7642,6 +7642,7 @@ Select Case PropSelectionMode
                         Else
                             .Row = PropFixedRows
                         End If
+                        If GetRowHeight(.Row) = 0 Then Call MoveNextRow(.Row)
                     End If
                     .RowSel = .Row
                     .ColSel = .Col
@@ -7663,6 +7664,7 @@ Select Case PropSelectionMode
                         Else
                             .RowSel = PropFixedRows
                         End If
+                        If GetRowHeight(.RowSel) = 0 Then Call MoveNextRow(.RowSel)
                     End If
                     If .TopRow > .RowSel Then
                         .TopRow = .RowSel
@@ -7692,6 +7694,7 @@ Select Case PropSelectionMode
                         Else
                             .Row = (PropRows - 1)
                         End If
+                        If GetRowHeight(.Row) = 0 Then Call MovePreviousRow(.Row)
                     End If
                     .RowSel = .Row
                     .ColSel = .Col
@@ -7713,6 +7716,7 @@ Select Case PropSelectionMode
                         Else
                             .RowSel = (PropRows - 1)
                         End If
+                        If GetRowHeight(.RowSel) = 0 Then Call MovePreviousRow(.RowSel)
                     End If
                     If .TopRow > .RowSel Then
                         .TopRow = .RowSel
@@ -7973,6 +7977,7 @@ Select Case PropSelectionMode
                         Else
                             .Row = PropFixedRows
                         End If
+                        If GetRowHeight(.Row) = 0 Then Call MoveNextRow(.Row)
                     End If
                     .RowSel = .Row
                     .ColSel = (PropCols - 1)
@@ -7989,6 +7994,7 @@ Select Case PropSelectionMode
                         Else
                             .RowSel = PropFixedRows
                         End If
+                        If GetRowHeight(.RowSel) = 0 Then Call MoveNextRow(.RowSel)
                     End If
                     If .TopRow > .RowSel Then
                         .TopRow = .RowSel
@@ -8013,6 +8019,7 @@ Select Case PropSelectionMode
                         Else
                             .Row = (PropRows - 1)
                         End If
+                        If GetRowHeight(.Row) = 0 Then Call MovePreviousRow(.Row)
                     End If
                     .RowSel = .Row
                     .ColSel = (PropCols - 1)
@@ -8029,6 +8036,7 @@ Select Case PropSelectionMode
                         Else
                             .RowSel = (PropRows - 1)
                         End If
+                        If GetRowHeight(.RowSel) = 0 Then Call MovePreviousRow(.RowSel)
                     End If
                     If .TopRow > .RowSel Then
                         .TopRow = .RowSel
