@@ -1,6 +1,9 @@
 List of revisions:
 
-16-Mar-2018
+20-Apr-2018
+- Internal bugfix in page scroll up and down in relation to zero width rows.
+
+16-Apr-2018
 - Bugfix in the CellFontName property, related to update on 05-Dec-2017. (This bug had only effect when FillStyle is set to FlexFillStyleRepeat)
 
 14-Mar-2018
