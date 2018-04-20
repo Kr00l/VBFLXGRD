@@ -8414,7 +8414,7 @@ Call SetRowColParams(RCP)
 End With
 End Sub
 
-Private Sub ProcessLButtonDown(ByVal Shift As Integer, ByVal X As Long, ByVal Y As Long)
+Private Function ProcessLButtonDown(ByVal Shift As Integer, ByVal X As Long, ByVal Y As Long) As Boolean
 Dim HTI As THITTESTINFO
 HTI.PT.X = X
 HTI.PT.Y = Y
@@ -8428,13 +8428,13 @@ VBFlexGridMouseMoveRow = HTI.HitRow
 VBFlexGridMouseMoveCol = HTI.HitCol
 VBFlexGridMouseMoveChanged = False
 If HTI.HitResult = FlexHitResultNoWhere Then
-    Exit Sub
+    Exit Function
 ElseIf HTI.HitResult <> FlexHitResultCell Then
     Select Case VBFlexGridCaptureHitResult
         Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
             VBFlexGridCaptureDividerDrag = True
         Case Else
-            Exit Sub
+            Exit Function
     End Select
     Dim iRow As Long, iCol As Long, Cancel As Boolean
     iRow = VBFlexGridCaptureDividerRow
@@ -8471,10 +8471,11 @@ ElseIf HTI.HitResult <> FlexHitResultCell Then
         VBFlexGridDividerDragOffset.Y = Y - P.Y
         Call SetDividerDragSplitterRect(P.X, P.Y)
         Call DrawDividerDragSplitter
+        ProcessLButtonDown = True
     Else
         ReleaseCapture
     End If
-    Exit Sub
+    Exit Function
 End If
 Dim RCP As TROWCOLPARAMS
 With RCP
@@ -8610,7 +8611,7 @@ If HTI.HitRow <= (PropFixedRows - 1) And HTI.HitCol <= (PropFixedCols - 1) Then
 End If
 Call SetRowColParams(RCP)
 End With
-End Sub
+End Function
 
 Private Sub ProcessLButtonUp(ByVal X As Long, ByVal Y As Long)
 Dim RCP As TROWCOLPARAMS
@@ -9348,7 +9349,7 @@ Select Case wMsg
                 RaiseEvent BeforeMouseDown(vbLeftButton, GetShiftStateFromParam(wParam), UserControl.ScaleX(P.X, vbPixels, vbTwips), UserControl.ScaleY(P.Y, vbPixels, vbTwips), Cancel)
                 If Cancel = False Then
                     SetCapture hWnd
-                    Call ProcessLButtonDown(GetShiftStateFromParam(wParam), P.X, P.Y)
+                    Cancel = ProcessLButtonDown(GetShiftStateFromParam(wParam), P.X, P.Y)
                 End If
             Case WM_MBUTTONDOWN
                 RaiseEvent BeforeMouseDown(vbMiddleButton, GetShiftStateFromParam(wParam), UserControl.ScaleX(P.X, vbPixels, vbTwips), UserControl.ScaleY(P.Y, vbPixels, vbTwips), Cancel)
