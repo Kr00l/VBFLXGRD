@@ -2,6 +2,8 @@ List of revisions:
 
 20-Apr-2018
 - Internal bugfix in page scroll up and down in relation to zero width rows.
+- WM_LBUTTONDOWN intercepted (no MouseDown event) in case of divider row/col dragging.
+  This is the same behavior as in the original MS(H)FlexGrid.
 
 16-Apr-2018
 - Bugfix in the CellFontName property, related to update on 05-Dec-2017. (This bug had only effect when FillStyle is set to FlexFillStyleRepeat)
