@@ -49,6 +49,7 @@ Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
 Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable
+Private FlexClipModeIncludeHidden, FlexClipModeExcludeHidden
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -236,6 +237,10 @@ Public Enum FlexAutoSizeScopeConstants
 FlexAutoSizeScopeAll = 0
 FlexAutoSizeScopeFixed = 1
 FlexAutoSizeScopeScrollable = 2
+End Enum
+Public Enum FlexClipModeConstants
+FlexClipModeIncludeHidden = 0
+FlexClipModeExcludeHidden = 1
 End Enum
 Private Type RECT
 Left As Long
@@ -835,6 +840,7 @@ Private PropWrapCellBehavior As FlexWrapCellBehaviorConstants
 Private PropShowInfoTips As Boolean
 Private PropShowLabelTips As Boolean
 Private PropClipSeparators As String
+Private PropClipMode As FlexClipModeConstants
 Private PropFormatString As String
 
 Private Sub IOleInPlaceActiveObjectVB_TranslateAccelerator(ByRef Handled As Boolean, ByRef RetVal As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal Shift As Long)
@@ -1048,6 +1054,7 @@ PropWrapCellBehavior = FlexWrapNone
 PropShowInfoTips = False
 PropShowLabelTips = False
 PropClipSeparators = vbNullString
+PropClipMode = FlexClipModeIncludeHidden
 PropFormatString = vbNullString
 VBFlexGridDesignMode = Not Ambient.UserMode
 Call CreateVBFlexGrid
@@ -1125,6 +1132,7 @@ PropWrapCellBehavior = .ReadProperty("WrapCellBehavior", FlexWrapNone)
 PropShowInfoTips = .ReadProperty("ShowInfoTips", False)
 PropShowLabelTips = .ReadProperty("ShowLabelTips", False)
 PropClipSeparators = VarToStr(.ReadProperty("ClipSeparators", vbNullString))
+PropClipMode = .ReadProperty("ClipMode", FlexClipModeIncludeHidden)
 PropFormatString = VarToStr(.ReadProperty("FormatString", vbNullString))
 End With
 VBFlexGridDesignMode = Not Ambient.UserMode
@@ -1198,6 +1206,7 @@ With PropBag
 .WriteProperty "ShowInfoTips", PropShowInfoTips, False
 .WriteProperty "ShowLabelTips", PropShowLabelTips, False
 .WriteProperty "ClipSeparators", StrToVar(PropClipSeparators), vbNullString
+.WriteProperty "ClipMode", PropClipMode, FlexClipModeIncludeHidden
 .WriteProperty "FormatString", StrToVar(PropFormatString), vbNullString
 End With
 End Sub
@@ -2951,6 +2960,21 @@ PropClipSeparators = Value
 UserControl.PropertyChanged "ClipSeparators"
 End Property
 
+Public Property Get ClipMode() As FlexClipModeConstants
+Attribute ClipMode.VB_Description = "Returns/sets a value that determines whether to include or exclude hidden cells when doing a clip command."
+ClipMode = PropClipMode
+End Property
+
+Public Property Let ClipMode(ByVal Value As FlexClipModeConstants)
+Select Case Value
+    Case FlexClipModeIncludeHidden, FlexClipModeExcludeHidden
+        PropClipMode = Value
+    Case Else
+        Err.Raise 380
+End Select
+UserControl.PropertyChanged "ClipMode"
+End Property
+
 Public Property Get FormatString() As String
 Attribute FormatString.VB_Description = "Allows you to set up column widths, alignments, and fixed row and column text in the flex grid at design time."
 FormatString = PropFormatString
@@ -4529,16 +4553,39 @@ Dim ColSeparator As String, RowSeparator As String
 ColSeparator = GetColSeparator()
 RowSeparator = GetRowSeparator()
 Call GetSelRangeStruct(SelRange)
-For i = SelRange.TopRow To SelRange.BottomRow
-    With VBFlexGridCells.Rows(i)
-    For j = SelRange.LeftCol To SelRange.RightCol
-        Buffer = Buffer & .Cols(j).Text
-        If Len(Buffer) > 1000 Then Clip = Clip & Buffer: Buffer = vbNullString
-        If j < SelRange.RightCol Then Buffer = Buffer & ColSeparator
+If PropClipMode = FlexClipModeIncludeHidden Then
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i)
+        For j = SelRange.LeftCol To SelRange.RightCol
+            Buffer = Buffer & .Cols(j).Text
+            If Len(Buffer) > 1000 Then Clip = Clip & Buffer: Buffer = vbNullString
+            If j < SelRange.RightCol Then Buffer = Buffer & ColSeparator
+        Next j
+        If i < SelRange.BottomRow Then Buffer = Buffer & RowSeparator
+        End With
+    Next i
+ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+    For i = SelRange.BottomRow To SelRange.TopRow Step -1
+        If VBFlexGridCells.Rows(i).RowInfo.Hidden = True Then SelRange.BottomRow = SelRange.BottomRow - 1 Else Exit For
+    Next i
+    For j = SelRange.RightCol - 1 To SelRange.LeftCol Step -1
+        If VBFlexGridColsInfo(j).Hidden = True Then SelRange.RightCol = SelRange.RightCol - 1 Else Exit For
     Next j
-    If i < SelRange.BottomRow Then Buffer = Buffer & RowSeparator
-    End With
-Next i
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i)
+        If .RowInfo.Hidden = False Then
+            For j = SelRange.LeftCol To SelRange.RightCol
+                If VBFlexGridColsInfo(j).Hidden = False Then
+                    Buffer = Buffer & .Cols(j).Text
+                    If Len(Buffer) > 1000 Then Clip = Clip & Buffer: Buffer = vbNullString
+                    If j < SelRange.RightCol Then Buffer = Buffer & ColSeparator
+                End If
+            Next j
+            If i < SelRange.BottomRow Then Buffer = Buffer & RowSeparator
+        End If
+        End With
+    Next i
+End If
 If Len(Buffer) > 0 Then Clip = Clip & Buffer
 End Property
 
@@ -4555,46 +4602,109 @@ Call GetSelRangeStruct(SelRange)
 ColSeparator = GetColSeparator()
 RowSeparator = GetRowSeparator()
 With VBFlexGridCells
-Do
-    Pos1 = InStr(Pos1 + 1, Value, RowSeparator)
-    If Pos1 > 0 Then
-        If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
-            Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1)
-            With .Rows(SelRange.TopRow + iRow)
-            Do
-                Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
-                If Pos3 > 0 Then
-                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1)
-                Else
-                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1)
-                End If
-                Pos4 = Pos3
-                iCol = iCol + 1
-            Loop Until Pos3 = 0
-            End With
+If PropClipMode = FlexClipModeIncludeHidden Then
+    Do
+        Pos1 = InStr(Pos1 + 1, Value, RowSeparator)
+        If Pos1 > 0 Then
+            If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
+                Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1)
+                With .Rows(SelRange.TopRow + iRow)
+                Do
+                    Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
+                    If Pos3 > 0 Then
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1)
+                    Else
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1)
+                    End If
+                    Pos4 = Pos3
+                    iCol = iCol + 1
+                Loop Until Pos3 = 0
+                End With
+            End If
+        Else
+            If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
+                Temp = Mid$(Value, Pos2 + 1)
+                With .Rows(SelRange.TopRow + iRow)
+                Do
+                    Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
+                    If Pos3 > 0 Then
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1)
+                    Else
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1)
+                    End If
+                    Pos4 = Pos3
+                    iCol = iCol + 1
+                Loop Until Pos3 = 0
+                End With
+            End If
         End If
-    Else
-        If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
-            Temp = Mid$(Value, Pos2 + 1)
-            With .Rows(SelRange.TopRow + iRow)
-            Do
-                Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
-                If Pos3 > 0 Then
-                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1)
-                Else
-                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1)
+        Pos2 = Pos1
+        Pos4 = 0
+        iRow = iRow + 1
+        iCol = 0
+    Loop Until Pos1 = 0
+ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+    Dim RowLoop As Boolean, ColLoop As Boolean
+    Do
+        If .Rows(SelRange.TopRow + iRow).RowInfo.Hidden = False Then
+            Pos1 = InStr(Pos1 + 1, Value, RowSeparator)
+            If Pos1 > 0 Then
+                If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
+                    Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1)
+                    With .Rows(SelRange.TopRow + iRow)
+                    Do
+                        If VBFlexGridColsInfo(SelRange.LeftCol + iCol).Hidden = False Then
+                            Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
+                            If Pos3 > 0 Then
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1)
+                            Else
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1)
+                            End If
+                            Pos4 = Pos3
+                            iCol = iCol + 1
+                            ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                        Else
+                            iCol = iCol + 1
+                            ColLoop = CBool((SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                        End If
+                    Loop Until ColLoop = False
+                    End With
                 End If
-                Pos4 = Pos3
-                iCol = iCol + 1
-            Loop Until Pos3 = 0
-            End With
+            Else
+                If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
+                    Temp = Mid$(Value, Pos2 + 1)
+                    With .Rows(SelRange.TopRow + iRow)
+                    Do
+                        If VBFlexGridColsInfo(SelRange.LeftCol + iCol).Hidden = False Then
+                            Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
+                            If Pos3 > 0 Then
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1)
+                            Else
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then .Cols(SelRange.LeftCol + iCol).Text = Mid$(Temp, Pos4 + 1)
+                            End If
+                            Pos4 = Pos3
+                            iCol = iCol + 1
+                            ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                        Else
+                            iCol = iCol + 1
+                            ColLoop = CBool((SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                        End If
+                    Loop Until ColLoop = False
+                    End With
+                End If
+            End If
+            Pos2 = Pos1
+            Pos4 = 0
+            iRow = iRow + 1
+            iCol = 0
+            RowLoop = CBool(Pos1 <> 0 And (SelRange.TopRow + iRow) <= SelRange.BottomRow)
+        Else
+            iRow = iRow + 1
+            iCol = 0
+            RowLoop = CBool((SelRange.TopRow + iRow) <= SelRange.BottomRow)
         End If
-    End If
-    Pos2 = Pos1
-    Pos4 = 0
-    iRow = iRow + 1
-    iCol = 0
-Loop Until Pos1 = 0
+    Loop Until RowLoop = False
+End If
 End With
 Call RedrawGrid
 End Property
