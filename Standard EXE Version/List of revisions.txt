@@ -1,5 +1,8 @@
 List of revisions:
 
+22-Apr-2018
+- Included the ClipMode property that controls whether to include or exclude hidden cells in a clip command.
+
 20-Apr-2018
 - Internal bugfix in page scroll up and down in relation to zero width rows.
 - WM_LBUTTONDOWN intercepted (no MouseDown event) in case of divider row/col dragging.
