@@ -49,7 +49,7 @@ Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
 Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable
-Private FlexClipModeIncludeHidden, FlexClipModeExcludeHidden
+Private FlexClipModeNormal, FlexClipModeExcludeHidden
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -239,7 +239,7 @@ FlexAutoSizeScopeFixed = 1
 FlexAutoSizeScopeScrollable = 2
 End Enum
 Public Enum FlexClipModeConstants
-FlexClipModeIncludeHidden = 0
+FlexClipModeNormal = 0
 FlexClipModeExcludeHidden = 1
 End Enum
 Private Type RECT
@@ -1054,7 +1054,7 @@ PropWrapCellBehavior = FlexWrapNone
 PropShowInfoTips = False
 PropShowLabelTips = False
 PropClipSeparators = vbNullString
-PropClipMode = FlexClipModeIncludeHidden
+PropClipMode = FlexClipModeNormal
 PropFormatString = vbNullString
 VBFlexGridDesignMode = Not Ambient.UserMode
 Call CreateVBFlexGrid
@@ -1132,7 +1132,7 @@ PropWrapCellBehavior = .ReadProperty("WrapCellBehavior", FlexWrapNone)
 PropShowInfoTips = .ReadProperty("ShowInfoTips", False)
 PropShowLabelTips = .ReadProperty("ShowLabelTips", False)
 PropClipSeparators = VarToStr(.ReadProperty("ClipSeparators", vbNullString))
-PropClipMode = .ReadProperty("ClipMode", FlexClipModeIncludeHidden)
+PropClipMode = .ReadProperty("ClipMode", FlexClipModeNormal)
 PropFormatString = VarToStr(.ReadProperty("FormatString", vbNullString))
 End With
 VBFlexGridDesignMode = Not Ambient.UserMode
@@ -1206,7 +1206,7 @@ With PropBag
 .WriteProperty "ShowInfoTips", PropShowInfoTips, False
 .WriteProperty "ShowLabelTips", PropShowLabelTips, False
 .WriteProperty "ClipSeparators", StrToVar(PropClipSeparators), vbNullString
-.WriteProperty "ClipMode", PropClipMode, FlexClipModeIncludeHidden
+.WriteProperty "ClipMode", PropClipMode, FlexClipModeNormal
 .WriteProperty "FormatString", StrToVar(PropFormatString), vbNullString
 End With
 End Sub
@@ -2967,7 +2967,7 @@ End Property
 
 Public Property Let ClipMode(ByVal Value As FlexClipModeConstants)
 Select Case Value
-    Case FlexClipModeIncludeHidden, FlexClipModeExcludeHidden
+    Case FlexClipModeNormal, FlexClipModeExcludeHidden
         PropClipMode = Value
     Case Else
         Err.Raise 380
@@ -4553,7 +4553,7 @@ Dim ColSeparator As String, RowSeparator As String
 ColSeparator = GetColSeparator()
 RowSeparator = GetRowSeparator()
 Call GetSelRangeStruct(SelRange)
-If PropClipMode = FlexClipModeIncludeHidden Then
+If PropClipMode = FlexClipModeNormal Then
     For i = SelRange.TopRow To SelRange.BottomRow
         With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
@@ -4602,7 +4602,7 @@ Call GetSelRangeStruct(SelRange)
 ColSeparator = GetColSeparator()
 RowSeparator = GetRowSeparator()
 With VBFlexGridCells
-If PropClipMode = FlexClipModeIncludeHidden Then
+If PropClipMode = FlexClipModeNormal Then
     Do
         Pos1 = InStr(Pos1 + 1, Value, RowSeparator)
         If Pos1 > 0 Then
@@ -5685,7 +5685,7 @@ End If
 End With
 End Function
 
-Public Sub AutoSize(ByVal RowOrCol1 As Long, Optional ByVal RowOrCol2 As Long = -1, Optional ByVal Mode As FlexAutoSizeModeConstants, Optional ByVal Scope As FlexAutoSizeScopeConstants, Optional ByVal Equal As Boolean, Optional ByVal ExtraSpace As Long)
+Public Sub AutoSize(ByVal RowOrCol1 As Long, Optional ByVal RowOrCol2 As Long = -1, Optional ByVal Mode As FlexAutoSizeModeConstants, Optional ByVal Scope As FlexAutoSizeScopeConstants, Optional ByVal Equal As Boolean, Optional ByVal ExtraSpace As Long, Optional ByVal ExcludeHidden As Boolean)
 Attribute AutoSize.VB_Description = "Automatically sizes column widths or row heights to fit cell contents."
 If RowOrCol2 < -1 Then Err.Raise 380
 If RowOrCol2 = -1 Then RowOrCol2 = RowOrCol1
@@ -5712,50 +5712,62 @@ If Mode = FlexAutoSizeModeColWidth Then
         Case FlexAutoSizeScopeAll
             For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
                 With VBFlexGridColsInfo(iCol)
-                .Width = -1
-                For iRow = 0 To (PropRows - 1)
-                    Size.CX = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CX
-                    If Size.CX > 0 Then
-                        Size.CX = Size.CX + Spacing
-                        If Size.CX > .Width Then .Width = Size.CX
-                        If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
-                    End If
-                Next iRow
+                If (.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    .Width = -1
+                    For iRow = 0 To (PropRows - 1)
+                        If (VBFlexGridCells.Rows(iRow).RowInfo.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                            Size.CX = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CX
+                            If Size.CX > 0 Then
+                                Size.CX = Size.CX + Spacing
+                                If Size.CX > .Width Then .Width = Size.CX
+                                If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
+                            End If
+                        End If
+                    Next iRow
+                End If
                 End With
             Next iCol
         Case FlexAutoSizeScopeFixed
             For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
                 With VBFlexGridColsInfo(iCol)
-                .Width = -1
-                For iRow = 0 To (PropFixedRows - 1)
-                    Size.CX = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CX
-                    If Size.CX > 0 Then
-                        Size.CX = Size.CX + Spacing
-                        If Size.CX > .Width Then .Width = Size.CX
-                        If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
-                    End If
-                Next iRow
+                If (.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    .Width = -1
+                    For iRow = 0 To (PropFixedRows - 1)
+                        If (VBFlexGridCells.Rows(iRow).RowInfo.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                            Size.CX = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CX
+                            If Size.CX > 0 Then
+                                Size.CX = Size.CX + Spacing
+                                If Size.CX > .Width Then .Width = Size.CX
+                                If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
+                            End If
+                        End If
+                    Next iRow
+                End If
                 End With
             Next iCol
         Case FlexAutoSizeScopeScrollable
             For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
                 With VBFlexGridColsInfo(iCol)
-                .Width = -1
-                For iRow = PropFixedRows To (PropRows - 1)
-                    Size.CX = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CX
-                    If Size.CX > 0 Then
-                        Size.CX = Size.CX + Spacing
-                        If Size.CX > .Width Then .Width = Size.CX
-                        If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
-                    End If
-                Next iRow
+                If (.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    .Width = -1
+                    For iRow = PropFixedRows To (PropRows - 1)
+                        If (VBFlexGridCells.Rows(iRow).RowInfo.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                            Size.CX = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CX
+                            If Size.CX > 0 Then
+                                Size.CX = Size.CX + Spacing
+                                If Size.CX > .Width Then .Width = Size.CX
+                                If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
+                            End If
+                        End If
+                    Next iRow
+                End If
                 End With
             Next iCol
     End Select
     If Equal = True Then
         For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
             With VBFlexGridColsInfo(iCol)
-            .Width = EqualSize.CX
+            If (.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then .Width = EqualSize.CX
             End With
         Next iCol
     End If
@@ -5766,50 +5778,62 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
         Case FlexAutoSizeScopeAll
             For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
                 With VBFlexGridCells.Rows(iRow).RowInfo
-                .Height = -1
-                For iCol = 0 To (PropCols - 1)
-                    Size.CY = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CY
-                    If Size.CY > 0 Then
-                        Size.CY = Size.CY + Spacing
-                        If Size.CY > .Height Then .Height = Size.CY
-                        If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
-                    End If
-                Next iCol
+                If (.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    .Height = -1
+                    For iCol = 0 To (PropCols - 1)
+                        If (VBFlexGridColsInfo(iCol).Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                            Size.CY = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CY
+                            If Size.CY > 0 Then
+                                Size.CY = Size.CY + Spacing
+                                If Size.CY > .Height Then .Height = Size.CY
+                                If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
+                            End If
+                        End If
+                    Next iCol
+                End If
                 End With
             Next iRow
         Case FlexAutoSizeScopeFixed
             For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
                 With VBFlexGridCells.Rows(iRow).RowInfo
-                .Height = -1
-                For iCol = 0 To (PropFixedCols - 1)
-                    Size.CY = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CY
-                    If Size.CY > 0 Then
-                        Size.CY = Size.CY + Spacing
-                        If Size.CY > .Height Then .Height = Size.CY
-                        If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
-                    End If
-                Next iCol
+                If (.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    .Height = -1
+                    For iCol = 0 To (PropFixedCols - 1)
+                        If (VBFlexGridColsInfo(iCol).Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                            Size.CY = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CY
+                            If Size.CY > 0 Then
+                                Size.CY = Size.CY + Spacing
+                                If Size.CY > .Height Then .Height = Size.CY
+                                If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
+                            End If
+                        End If
+                    Next iCol
+                End If
                 End With
             Next iRow
         Case FlexAutoSizeScopeScrollable
             For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
                 With VBFlexGridCells.Rows(iRow).RowInfo
-                .Height = -1
-                For iCol = PropFixedCols To (PropCols - 1)
-                    Size.CY = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CY
-                    If Size.CY > 0 Then
-                        Size.CY = Size.CY + Spacing
-                        If Size.CY > .Height Then .Height = Size.CY
-                        If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
-                    End If
-                Next iCol
+                If (.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    .Height = -1
+                    For iCol = PropFixedCols To (PropCols - 1)
+                        If (VBFlexGridColsInfo(iCol).Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+                            Size.CY = GetTextSize(iRow, iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).Text).CY
+                            If Size.CY > 0 Then
+                                Size.CY = Size.CY + Spacing
+                                If Size.CY > .Height Then .Height = Size.CY
+                                If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
+                            End If
+                        End If
+                    Next iCol
+                End If
                 End With
             Next iRow
     End Select
     If Equal = True Then
         For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
             With VBFlexGridCells.Rows(iRow).RowInfo
-            .Height = EqualSize.CY
+            If (.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then .Height = EqualSize.CY
             End With
         Next iRow
     End If

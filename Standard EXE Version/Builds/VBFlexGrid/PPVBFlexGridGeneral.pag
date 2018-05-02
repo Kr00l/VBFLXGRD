@@ -494,8 +494,8 @@ With ComboWrapCellBehavior
 .ItemData(.NewIndex) = FlexWrapGrid
 End With
 With ComboClipMode
-.AddItem FlexClipModeIncludeHidden & " - IncludeHidden"
-.ItemData(.NewIndex) = FlexClipModeIncludeHidden
+.AddItem FlexClipModeNormal & " - Normal"
+.ItemData(.NewIndex) = FlexClipModeNormal
 .AddItem FlexClipModeExcludeHidden & " - ExcludeHidden"
 .ItemData(.NewIndex) = FlexClipModeExcludeHidden
 End With
