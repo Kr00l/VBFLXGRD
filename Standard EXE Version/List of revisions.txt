@@ -1,5 +1,9 @@
 List of revisions:
 
+02-May-2018
+- Renamed enum 'FlexClipModeIncludeHidden' to 'FlexClipModeNormal'.
+- Included optional argument ExcludeHidden in the AutoSize method.
+
 22-Apr-2018
 - Included the ClipMode property that controls whether to include or exclude hidden cells in a clip command.
 
