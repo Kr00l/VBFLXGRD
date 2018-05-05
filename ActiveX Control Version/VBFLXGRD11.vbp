@@ -22,7 +22,7 @@ Description="VB FlexGrid Control 1.1"
 CompatibleMode="0"
 MajorVer=1
 MinorVer=1
-RevisionVer=4
+RevisionVer=5
 AutoIncrementVer=0
 ServerSupportFiles=0
 CompilationType=0
@@ -42,6 +42,9 @@ ThreadPerObject=0
 MaxNumberOfThreads=1
 ThreadingModel=1
 DebugStartupOption=0
+
+[VBCompiler]
+LinkSwitches=/OPT:NOWIN98
 
 [MS Transaction Server]
 AutoRefresh=1
