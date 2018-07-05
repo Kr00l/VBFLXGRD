@@ -13,19 +13,18 @@ PropertyPage=Builds\VBFlexGrid\PPVBFlexGridStyle.pag
 Class=Enumeration; Builds\Enumeration.cls
 Startup="(None)"
 HelpFile=""
-Title="VBFLXGRD10"
-ExeName32="VBFLXGRD10.OCX"
+Title="VBFLXGRD11"
+ExeName32="VBFLXGRD11.OCX"
 Command32=""
-Name="VBFLXGRD"
+Name="VBFLXGRD11"
 HelpContextID="0"
-Description="VB FlexGrid Control 1.0"
+Description="VB FlexGrid Control 1.1"
 CompatibleMode="0"
 MajorVer=1
-MinorVer=0
-RevisionVer=0
+MinorVer=1
+RevisionVer=5
 AutoIncrementVer=0
 ServerSupportFiles=0
-VersionCompanyName="Home"
 CompilationType=0
 OptimizationType=0
 FavorPentiumPro(tm)=0
@@ -43,6 +42,9 @@ ThreadPerObject=0
 MaxNumberOfThreads=1
 ThreadingModel=1
 DebugStartupOption=0
+
+[VBCompiler]
+LinkSwitches=/OPT:NOWIN98
 
 [MS Transaction Server]
 AutoRefresh=1

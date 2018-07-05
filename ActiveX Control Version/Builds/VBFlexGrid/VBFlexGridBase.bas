@@ -1,5 +1,8 @@
 Attribute VB_Name = "VBFlexGridBase"
 Option Explicit
+
+#Const ImplementIDEStopProtection = True
+
 Private Type TINITCOMMONCONTROLSEX
 dwSize As Long
 dwICC As Long
@@ -81,6 +84,73 @@ Private Const IDC_ARROW As Long = 32512
 Private ShellModHandle As Long, ShellModCount As Long
 Private FlexClassAtom As Integer, FlexRefCount As Long
 Private FlexSplitterBrush As Long
+
+#If ImplementIDEStopProtection = True Then
+
+Private Declare Function VirtualAlloc Lib "kernel32" (ByRef lpAddress As Long, ByVal dwSize As Long, ByVal flAllocType As Long, ByVal flProtect As Long) As Long
+Private Declare Function VirtualProtect Lib "kernel32" (ByVal lpAddress As Long, ByVal dwSize As Long, ByVal flNewProtect As Long, ByRef lpflOldProtect As Long) As Long
+Private Const MEM_COMMIT As Long = &H1000
+Private Const PAGE_EXECUTE_READWRITE As Long = &H40
+Private Type IMAGE_DATA_DIRECTORY
+VirtualAddress As Long
+Size As Long
+End Type
+Private Type IMAGE_OPTIONAL_HEADER32
+Magic As Integer
+MajorLinkerVersion As Byte
+MinorLinkerVersion As Byte
+SizeOfCode As Long
+SizeOfInitalizedData As Long
+SizeOfUninitalizedData As Long
+AddressOfEntryPoint As Long
+BaseOfCode As Long
+BaseOfData As Long
+ImageBase As Long
+SectionAlignment As Long
+FileAlignment As Long
+MajorOperatingSystemVer As Integer
+MinorOperatingSystemVer As Integer
+MajorImageVersion As Integer
+MinorImageVersion As Integer
+MajorSubsystemVersion As Integer
+MinorSubsystemVersion As Integer
+Reserved1 As Long
+SizeOfImage As Long
+SizeOfHeaders As Long
+CheckSum As Long
+Subsystem As Integer
+DllCharacteristics As Integer
+SizeOfStackReserve As Long
+SizeOfStackCommit As Long
+SizeOfHeapReserve As Long
+SizeOfHeapCommit As Long
+LoaderFlags As Long
+NumberOfRvaAndSizes As Long
+DataDirectory(15) As IMAGE_DATA_DIRECTORY
+End Type
+Private Type IMAGE_DOS_HEADER
+e_magic As Integer
+e_cblp As Integer
+e_cp As Integer
+e_crlc As Integer
+e_cparhdr As Integer
+e_minalloc As Integer
+e_maxalloc As Integer
+e_ss As Integer
+e_sp As Integer
+e_csum As Integer
+e_ip As Integer
+e_cs As Integer
+e_lfarlc As Integer
+e_onvo As Integer
+e_res(0 To 3) As Integer
+e_oemid As Integer
+e_oeminfo As Integer
+e_res2(0 To 9) As Integer
+e_lfanew As Long
+End Type
+
+#End If
 
 Public Sub FlexLoadShellMod()
 If (ShellModHandle Or ShellModCount) = 0 Then ShellModHandle = LoadLibrary(StrPtr("Shell32.dll"))
@@ -300,3 +370,97 @@ Else
     FlexWindowProc = DefWindowProc(hWnd, wMsg, wParam, lParam)
 End If
 End Function
+
+Public Sub FlexInitIDEStopProtection()
+
+#If ImplementIDEStopProtection = True Then
+
+If InIDE() = True Then
+    Dim ASMWrapper As Long, RestorePointer As Long, OldAddress As Long
+    ASMWrapper = VirtualAlloc(ByVal 0, 20, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
+    OldAddress = GetProcAddress(GetModuleHandle(StrPtr("vba6.dll")), "EbProjectReset")
+    RestorePointer = HookIATEntry("vb6.exe", "vba6.dll", "EbProjectReset", ASMWrapper)
+    WriteCall ASMWrapper, AddressOf FlexIDEStopProtectionHandler
+    WriteByte ASMWrapper, &HC7 ' MOV
+    WriteByte ASMWrapper, &H5
+    WriteLong ASMWrapper, RestorePointer ' IAT Entry
+    WriteLong ASMWrapper, OldAddress ' Address from EbProjectReset
+    WriteJump ASMWrapper, OldAddress
+End If
+
+#End If
+
+End Sub
+
+#If ImplementIDEStopProtection = True Then
+
+Private Sub FlexIDEStopProtectionHandler()
+On Error Resume Next
+Call RemoveAllVTableSubclass(VTableInterfaceInPlaceActiveObject)
+Call RemoveAllVTableSubclass(VTableInterfaceControl)
+Call RemoveAllVTableSubclass(VTableInterfacePerPropertyBrowsing)
+Call RemoveAllVTableSubclass(VTableInterfaceEnumeration)
+Dim AppForm As Form, CurrControl As Control
+For Each AppForm In Forms
+    For Each CurrControl In AppForm.Controls
+        If TypeName(CurrControl) = "VBFlexGrid" Then
+            Call FlexRemoveSubclass(CurrControl.hWnd)
+            Call FlexRemoveSubclass(CurrControl.hWndUserControl)
+        End If
+    Next CurrControl
+Next AppForm
+End Sub
+
+Private Function HookIATEntry(ByVal Module As String, ByVal Lib As String, ByVal Fnc As String, ByVal NewAddr As Long) As Long
+Dim hMod As Long, OldLibFncAddr As Long
+Dim lpIAT As Long, IATLen As Long, IATPos As Long
+Dim DOSHdr As IMAGE_DOS_HEADER
+Dim PEHdr As IMAGE_OPTIONAL_HEADER32
+hMod = GetModuleHandle(StrPtr(Module))
+If hMod = 0 Then Exit Function
+OldLibFncAddr = GetProcAddress(GetModuleHandle(StrPtr(Lib)), Fnc)
+If OldLibFncAddr = 0 Then Exit Function
+CopyMemory DOSHdr, ByVal hMod, LenB(DOSHdr)
+CopyMemory PEHdr, ByVal UnsignedAdd(hMod, DOSHdr.e_lfanew), LenB(PEHdr)
+Const IMAGE_NT_SIGNATURE As Long = &H4550
+If PEHdr.Magic = IMAGE_NT_SIGNATURE Then
+    lpIAT = UnsignedAdd(PEHdr.DataDirectory(15).VirtualAddress, hMod)
+    IATLen = PEHdr.DataDirectory(15).Size
+    IATPos = lpIAT
+    Do Until CLngToULng(IATPos) >= CLngToULng(UnsignedAdd(lpIAT, IATLen))
+        If DeRef(IATPos) = OldLibFncAddr Then
+            VirtualProtect IATPos, 4, PAGE_EXECUTE_READWRITE, 0
+            CopyMemory ByVal IATPos, NewAddr, 4
+            HookIATEntry = IATPos
+            Exit Do
+        End If
+        IATPos = UnsignedAdd(IATPos, 4)
+    Loop
+End If
+End Function
+
+Private Function DeRef(ByVal Addr As Long) As Long
+CopyMemory DeRef, ByVal Addr, 4
+End Function
+
+Private Sub WriteJump(ByRef ASM As Long, ByRef Addr As Long)
+WriteByte ASM, &HE9
+WriteLong ASM, Addr - ASM - 4
+End Sub
+
+Private Sub WriteCall(ByRef ASM As Long, ByRef Addr As Long)
+WriteByte ASM, &HE8
+WriteLong ASM, Addr - ASM - 4
+End Sub
+
+Private Sub WriteLong(ByRef ASM As Long, ByRef Lng As Long)
+CopyMemory ByVal ASM, Lng, 4
+ASM = ASM + 4
+End Sub
+
+Private Sub WriteByte(ByRef ASM As Long, ByRef B As Byte)
+CopyMemory ByVal ASM, B, 1
+ASM = ASM + 1
+End Sub
+
+#End If

@@ -300,12 +300,17 @@ End Property
 
 Private Sub Form_Load()
 SetupVisualStyles Me
-Dim i As Long, j As Long, DecStr As String
+Dim i As Long, j As Long, DecStr As String, StartDate As Date
 DecStr = Mid$(1.1, 2, 1)
+StartDate = DateSerial(Year(Now()), 1, 1)
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1
     For j = VBFlexGrid1.FixedCols To VBFlexGrid1.Cols - 1
-        VBFlexGrid1.TextMatrix(i, j) = i & DecStr & j
-        VBFlexGrid1.Cell(FlexCellToolTipText, i, j) = i & "/" & j & " info tip"
+        If j <> 1 Then
+            VBFlexGrid1.TextMatrix(i, j) = i & DecStr & j
+            VBFlexGrid1.Cell(FlexCellToolTipText, i, j) = i & "/" & j & " info tip"
+        Else
+            VBFlexGrid1.TextMatrix(i, j) = StartDate + (i - 1)
+        End If
     Next j
 Next i
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1
@@ -344,6 +349,8 @@ With Combo2
 .AddItem "Numeric"
 .AddItem "StringNoCase"
 .AddItem "String"
+.AddItem "Currency"
+.AddItem "Date"
 .ListIndex = 0
 End With
 End Sub
@@ -352,6 +359,14 @@ Private Sub Form_Resize()
 Dim Width As Single
 Width = Me.ScaleWidth - VBFlexGrid1.Left - Me.ScaleX(8, vbPixels, Me.ScaleMode)
 If Width > 0 Then VBFlexGrid1.Width = Width
+End Sub
+
+Private Sub VBFlexGrid1_DividerDblClick(ByVal Row As Long, ByVal Col As Long)
+If Row = -1 Then
+    VBFlexGrid1.AutoSize Col, , FlexAutoSizeModeColWidth
+ElseIf Col = -1 Then
+    VBFlexGrid1.AutoSize Row, , FlexAutoSizeModeRowHeight
+End If
 End Sub
 
 Private Sub Command1_Click()
@@ -445,11 +460,11 @@ Set Me.CellFont = Nothing
 End Sub
 
 Private Sub Command17_Click()
-VBFlexGrid1.Sort = VBA.Choose(Combo2.ListIndex + 1, FlexSortGenericAscending, FlexSortNumericAscending, FlexSortStringNoCaseAscending, FlexSortStringAscending)
+VBFlexGrid1.Sort = VBA.Choose(Combo2.ListIndex + 1, FlexSortGenericAscending, FlexSortNumericAscending, FlexSortStringNoCaseAscending, FlexSortStringAscending, FlexSortCurrencyAscending, FlexSortDateAscending)
 End Sub
 
 Private Sub Command18_Click()
-VBFlexGrid1.Sort = VBA.Choose(Combo2.ListIndex + 1, FlexSortGenericDescending, FlexSortNumericDescending, FlexSortStringNoCaseDescending, FlexSortStringDescending)
+VBFlexGrid1.Sort = VBA.Choose(Combo2.ListIndex + 1, FlexSortGenericDescending, FlexSortNumericDescending, FlexSortStringNoCaseDescending, FlexSortStringDescending, FlexSortCurrencyDescending, FlexSortDateDescending)
 End Sub
 
 Private Sub Command6_Click()

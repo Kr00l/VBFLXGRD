@@ -1,14 +1,22 @@
 VERSION 5.00
 Begin VB.PropertyPage PPVBFlexGridGeneral 
    Caption         =   "General"
-   ClientHeight    =   5625
+   ClientHeight    =   6600
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   6225
    LockControls    =   -1  'True
    PaletteMode     =   0  'Halftone
-   ScaleHeight     =   5625
+   ScaleHeight     =   6600
    ScaleWidth      =   6225
+   Begin VB.ComboBox ComboClipMode 
+      Height          =   315
+      Left            =   1800
+      Style           =   2  'Dropdown List
+      TabIndex        =   37
+      Top             =   5520
+      Width           =   2235
+   End
    Begin VB.TextBox TextClipSeparators 
       Height          =   315
       Left            =   1800
@@ -93,7 +101,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ShowLabelTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   42
+      TabIndex        =   44
       Top             =   3000
       Width           =   1920
    End
@@ -101,7 +109,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ShowInfoTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   41
+      TabIndex        =   43
       Top             =   2640
       Width           =   1920
    End
@@ -109,7 +117,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "DisableNoScroll"
       Height          =   285
       Left            =   4200
-      TabIndex        =   40
+      TabIndex        =   42
       Top             =   2280
       Width           =   1920
    End
@@ -117,7 +125,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ScrollTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   39
+      TabIndex        =   41
       Top             =   1920
       Width           =   1920
    End
@@ -125,7 +133,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   38
+      TabIndex        =   40
       Top             =   1560
       Width           =   1920
    End
@@ -133,7 +141,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowBigSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   37
+      TabIndex        =   39
       Top             =   1200
       Width           =   1920
    End
@@ -169,7 +177,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "MouseTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   36
+      TabIndex        =   38
       Top             =   840
       Width           =   1920
    End
@@ -213,6 +221,14 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   1800
       TabIndex        =   1
       Top             =   120
+      Width           =   1620
+   End
+   Begin VB.Label LabelClipMode 
+      Caption         =   "ClipMode:"
+      Height          =   240
+      Left            =   120
+      TabIndex        =   36
+      Top             =   5520
       Width           =   1620
    End
    Begin VB.Label LabelClipSeparators 
@@ -359,14 +375,14 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
-Private Const WM_CHANGEUISTATE As Long = &H127
+Private Const WM_UPDATEUISTATE As Long = &H128
 Private Const UIS_CLEAR As Long = 2, UISF_HIDEFOCUS As Long = &H1, UISF_HIDEACCEL As Long = &H2
 Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
 Private FontFixedCleared As Boolean
 Private FreezeChanged As Boolean
 
 Private Sub PropertyPage_Initialize()
-SendMessage PropertyPage.hWnd, WM_CHANGEUISTATE, MakeDWord(UIS_CLEAR, UISF_HIDEFOCUS Or UISF_HIDEACCEL), ByVal 0&
+SendMessage PropertyPage.hWnd, WM_UPDATEUISTATE, MakeDWord(UIS_CLEAR, UISF_HIDEFOCUS Or UISF_HIDEACCEL), ByVal 0&
 With ComboMousePointer
 .AddItem "0 - Default"
 .ItemData(.NewIndex) = 0
@@ -477,6 +493,12 @@ With ComboWrapCellBehavior
 .AddItem FlexWrapGrid & " - Grid"
 .ItemData(.NewIndex) = FlexWrapGrid
 End With
+With ComboClipMode
+.AddItem FlexClipModeNormal & " - Normal"
+.ItemData(.NewIndex) = FlexClipModeNormal
+.AddItem FlexClipModeExcludeHidden & " - ExcludeHidden"
+.ItemData(.NewIndex) = FlexClipModeExcludeHidden
+End With
 End Sub
 
 Private Sub PropertyPage_ApplyChanges()
@@ -516,6 +538,7 @@ End If
 .TabBehavior = ComboTabBehavior.ItemData(ComboTabBehavior.ListIndex)
 .WrapCellBehavior = ComboWrapCellBehavior.ItemData(ComboWrapCellBehavior.ListIndex)
 .ClipSeparators = TextClipSeparators.Text
+.ClipMode = ComboClipMode.ItemData(ComboClipMode.ListIndex)
 .MouseTrack = CBool(CheckMouseTrack.Value = vbChecked)
 .AllowBigSelection = CBool(CheckAllowBigSelection.Value = vbChecked)
 .AllowSelection = CBool(CheckAllowSelection.Value = vbChecked)
@@ -606,6 +629,12 @@ For i = 0 To ComboWrapCellBehavior.ListCount - 1
     End If
 Next i
 TextClipSeparators.Text = .ClipSeparators
+For i = 0 To ComboClipMode.ListCount - 1
+    If ComboClipMode.ItemData(i) = .ClipMode Then
+        ComboClipMode.ListIndex = i
+        Exit For
+    End If
+Next i
 CheckMouseTrack.Value = IIf(.MouseTrack = True, vbChecked, vbUnchecked)
 CheckAllowBigSelection.Value = IIf(.AllowBigSelection = True, vbChecked, vbUnchecked)
 CheckAllowSelection.Value = IIf(.AllowSelection = True, vbChecked, vbUnchecked)
@@ -902,6 +931,11 @@ Select Case Len(TextClipSeparators.Text)
             Cancel = True
         End If
 End Select
+End Sub
+
+Private Sub ComboClipMode_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckMouseTrack_Click()

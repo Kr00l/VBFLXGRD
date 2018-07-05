@@ -1,5 +1,63 @@
 List of revisions:
 
+02-May-2018
+- Renamed enum 'FlexClipModeIncludeHidden' to 'FlexClipModeNormal'.
+- Included optional argument ExcludeHidden in the AutoSize method.
+
+22-Apr-2018
+- Included the ClipMode property that controls whether to include or exclude hidden cells in a clip command.
+
+20-Apr-2018
+- Internal bugfix in page scroll up and down in relation to zero width rows.
+- WM_LBUTTONDOWN intercepted (no MouseDown event) in case of divider row/col dragging.
+  This is the same behavior as in the original MS(H)FlexGrid.
+
+16-Apr-2018
+- Bugfix in the CellFontName property, related to update on 05-Dec-2017. (This bug had only effect when FillStyle is set to FlexFillStyleRepeat)
+
+14-Mar-2018
+- Optimized the divider row/col dragging.
+- Included the HitRowDivider/HitColDivider property which returns the divider row/col from the last invoked .HitTest.
+  The divider row/col contains already the necessary offset for FlexHitResultDividerRowTop and FlexHitResultDividerColumnLeft.
+  In addition the offset includes hidden rows/cols. (zero width rows/cols are not offset to preserve MSFlexGrid compatibility)
+
+13-Mar-2018
+- Included the DividerDblClick event.
+
+09-Mar-2018
+- Bugfix related to custom sorting bugfix on 08-Mar-2018.
+
+08-Mar-2018
+- Critical bugfix for custom sorting. (FlexSortCustom)
+- Included enum FlexSortCurrencyAscending/FlexSortCurrencyDescending and FlexSortDateAscending/FlexSortDateDescending in Sort/ColSort property.
+
+04-Mar-2018
+- Bugfix in VTableHandle.bas related to 25-Feb-2018 update. (concerns unload stability in IDE only)
+
+25-Feb-2018
+- Major internal improvement in the VTableHandle.bas concerning IOleInPlaceActiveObject.
+
+20-Feb-2018
+- Unicode support when generating ASCII key combos, e.g. ALT + 3333.
+
+11-Feb-2018
+- Included the AutoSize method.
+
+23-Jan-2018
+- Included the TextWidth/TextHeight function that calculates for the current or an arbitrary cell the width and height length.
+  For multiline text the heights are cumulated and for the width the line with the greatest width is taken. Similar to VB.Form's TextWidth function.
+
+21-Dec-2017
+- Improved the WM_MOUSEWHEEL handler for fine-grained wheel changes.
+
+09-Dec-2017
+- Improved VTableHandle.bas so it does not crash anymore when using VBCCRxx.OCX and VBFLXGRDxx.OCX in paralell. (concerns ActiveX control only)
+
+05-Dec-2017
+- Major performance fix. (Caused by update on 23-Nov-2017)
+- Bugfix in the CellFontName property.
+  A change will now overwrite the CellFontCharset settings.
+
 23-Nov-2017
 - Final tweak to run in the VBA environment. (meaningful for OCX only)
 
