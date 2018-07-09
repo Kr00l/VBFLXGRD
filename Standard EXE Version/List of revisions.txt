@@ -1,5 +1,8 @@
 List of revisions:
 
+09-Jul-2018
+- Bugfix in the WrapCellBehavior property. Bug only affected when SelectionMode was ByRow or ByColumn.
+
 02-May-2018
 - Renamed enum 'FlexClipModeIncludeHidden' to 'FlexClipModeNormal'.
 - Included optional argument ExcludeHidden in the AutoSize method.
