@@ -868,17 +868,35 @@ If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
                     Case FlexTabNext
                         Select Case PropWrapCellBehavior
                             Case FlexWrapNone
-                                If (Shift And vbShiftMask) = 0 Then
-                                    If VBFlexGridCol < (PropCols - 1) Then IsInputKey = True
-                                Else
-                                    If VBFlexGridCol > PropFixedCols Then IsInputKey = True
-                                End If
+                                Select Case PropSelectionMode
+                                    Case FlexSelectionModeFree
+                                        If (Shift And vbShiftMask) = 0 Then
+                                            If VBFlexGridCol < (PropCols - 1) Then IsInputKey = True
+                                        Else
+                                            If VBFlexGridCol > PropFixedCols Then IsInputKey = True
+                                        End If
+                                End Select
                             Case FlexWrapRow
-                                If (Shift And vbShiftMask) = 0 Then
-                                    If VBFlexGridRow < (PropRows - 1) Or VBFlexGridCol < (PropCols - 1) Then IsInputKey = True
-                                Else
-                                    If VBFlexGridRow > PropFixedRows Or VBFlexGridCol > PropFixedCols Then IsInputKey = True
-                                End If
+                                Select Case PropSelectionMode
+                                    Case FlexSelectionModeFree
+                                        If (Shift And vbShiftMask) = 0 Then
+                                            If VBFlexGridRow < (PropRows - 1) Or VBFlexGridCol < (PropCols - 1) Then IsInputKey = True
+                                        Else
+                                            If VBFlexGridRow > PropFixedRows Or VBFlexGridCol > PropFixedCols Then IsInputKey = True
+                                        End If
+                                    Case FlexSelectionModeByRow
+                                        If (Shift And vbShiftMask) = 0 Then
+                                            If VBFlexGridRow < (PropRows - 1) Then IsInputKey = True
+                                        Else
+                                            If VBFlexGridRow > PropFixedRows Then IsInputKey = True
+                                        End If
+                                    Case FlexSelectionModeByColumn
+                                        If (Shift And vbShiftMask) = 0 Then
+                                            If VBFlexGridCol < (PropCols - 1) Then IsInputKey = True
+                                        Else
+                                            If VBFlexGridCol > PropFixedCols Then IsInputKey = True
+                                        End If
+                                End Select
                             Case FlexWrapGrid
                                 IsInputKey = True
                         End Select
