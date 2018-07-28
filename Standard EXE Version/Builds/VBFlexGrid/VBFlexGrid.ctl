@@ -1598,13 +1598,13 @@ VBFlexGridFontHandle = CreateGDIFontFromOLEFont(PropFont)
 Dim hDCScreen As Long
 hDCScreen = GetDC(0)
 If hDCScreen <> 0 Then
-    Dim TM As TEXTMETRIC, hFontTemp As Long
-    If VBFlexGridFontHandle <> 0 Then hFontTemp = SelectObject(hDCScreen, VBFlexGridFontHandle)
+    Dim TM As TEXTMETRIC, hFontOld As Long
+    If VBFlexGridFontHandle <> 0 Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontHandle)
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
         VBFlexGridDefaultRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
         VBFlexGridDefaultColWidth = VBFlexGridDefaultRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
-    If hFontTemp <> 0 Then SelectObject hDCScreen, hFontTemp
+    If hFontOld <> 0 Then SelectObject hDCScreen, hFontOld
     ReleaseDC 0, hDCScreen
 End If
 Me.Refresh
@@ -1619,13 +1619,13 @@ VBFlexGridFontHandle = CreateGDIFontFromOLEFont(PropFont)
 Dim hDCScreen As Long
 hDCScreen = GetDC(0)
 If hDCScreen <> 0 Then
-    Dim TM As TEXTMETRIC, hFontTemp As Long
-    If VBFlexGridFontHandle <> 0 Then hFontTemp = SelectObject(hDCScreen, VBFlexGridFontHandle)
+    Dim TM As TEXTMETRIC, hFontOld As Long
+    If VBFlexGridFontHandle <> 0 Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontHandle)
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
         VBFlexGridDefaultRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
         VBFlexGridDefaultColWidth = VBFlexGridDefaultRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
-    If hFontTemp <> 0 Then SelectObject hDCScreen, hFontTemp
+    If hFontOld <> 0 Then SelectObject hDCScreen, hFontOld
     ReleaseDC 0, hDCScreen
 End If
 Me.Refresh
@@ -1659,13 +1659,13 @@ Else
     Dim hDCScreen As Long
     hDCScreen = GetDC(0)
     If hDCScreen <> 0 Then
-        Dim TM As TEXTMETRIC, hFontTemp As Long
-        If VBFlexGridFontFixedHandle <> 0 Then hFontTemp = SelectObject(hDCScreen, VBFlexGridFontFixedHandle)
+        Dim TM As TEXTMETRIC, hFontOld As Long
+        If VBFlexGridFontFixedHandle <> 0 Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontFixedHandle)
         If GetTextMetrics(hDCScreen, TM) <> 0 Then
             VBFlexGridDefaultFixedRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
             VBFlexGridDefaultFixedColWidth = VBFlexGridDefaultFixedRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
         End If
-        If hFontTemp <> 0 Then SelectObject hDCScreen, hFontTemp
+        If hFontOld <> 0 Then SelectObject hDCScreen, hFontOld
         ReleaseDC 0, hDCScreen
     End If
 End If
@@ -1681,13 +1681,13 @@ VBFlexGridFontFixedHandle = CreateGDIFontFromOLEFont(PropFontFixed)
 Dim hDCScreen As Long
 hDCScreen = GetDC(0)
 If hDCScreen <> 0 Then
-    Dim TM As TEXTMETRIC, hFontTemp As Long
-    If VBFlexGridFontFixedHandle <> 0 Then hFontTemp = SelectObject(hDCScreen, VBFlexGridFontFixedHandle)
+    Dim TM As TEXTMETRIC, hFontOld As Long
+    If VBFlexGridFontFixedHandle <> 0 Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontFixedHandle)
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
         VBFlexGridDefaultFixedRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
         VBFlexGridDefaultFixedColWidth = VBFlexGridDefaultFixedRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
-    If hFontTemp <> 0 Then SelectObject hDCScreen, hFontTemp
+    If hFontOld <> 0 Then SelectObject hDCScreen, hFontOld
     ReleaseDC 0, hDCScreen
 End If
 Me.Refresh
