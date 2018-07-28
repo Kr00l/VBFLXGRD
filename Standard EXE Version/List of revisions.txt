@@ -1,5 +1,8 @@
 List of revisions:
 
+28-Jul-2018
+- Internal GDI leak fixed. (forgot to restore old font handle in a hDCScreen)
+
 09-Jul-2018
 - Bugfix in the WrapCellBehavior property. Bug only affected when SelectionMode was ByRow or ByColumn.
 
