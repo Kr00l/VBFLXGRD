@@ -6733,19 +6733,25 @@ HTI.MouseRow = 0
 HTI.MouseCol = 0
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
 Dim iRow As Long, iCol As Long, iRowDivider As Long, iColDivider As Long
+Dim iRowTo As Long, iColTo As Long
 Dim ClientRect As RECT, CellRect As RECT, TempRect As RECT
 GetClientRect VBFlexGridHandle, ClientRect
 iRowDivider = -1
 iColDivider = -1
 With CellRect
-For iRow = 0 To (PropRows - 1)
+If HTI.PT.Y >= 0 Then iRowTo = (PropRows - 1) Else iRowTo = 0
+For iRow = 0 To iRowTo
     If iRow >= VBFlexGridTopRow Then
         .Bottom = .Top + GetRowHeight(iRow)
-        For iCol = 0 To (PropCols - 1)
+        If HTI.PT.X >= 0 Then iColTo = (PropCols - 1) Else iColTo = 0
+        For iCol = 0 To iColTo
             If iCol >= VBFlexGridLeftCol Then
                 .Left = .Right
                 .Right = .Right + GetColWidth(iCol)
                 If PtInRect(CellRect, HTI.PT.X, HTI.PT.Y) <> 0 Then HTI.HitResult = FlexHitResultCell
+                If HTI.PT.Y >= CellRect.Top Then HTI.MouseRow = iRow
+                If HTI.PT.X >= CellRect.Left Then HTI.MouseCol = iCol
+                If HTI.HitResult <> FlexHitResultNoWhere Then Exit For
             ElseIf iCol < PropFixedCols Then
                 .Left = .Right
                 .Right = .Right + GetColWidth(iCol)
@@ -6775,17 +6781,21 @@ For iRow = 0 To (PropRows - 1)
                         HTI.HitResult = FlexHitResultCell
                     End If
                 End If
+                If HTI.PT.Y >= CellRect.Top Then HTI.MouseRow = iRow
+                If HTI.PT.X >= CellRect.Left Then HTI.MouseCol = iCol
+                If HTI.HitResult <> FlexHitResultNoWhere Then Exit For
+            Else
+                iCol = VBFlexGridLeftCol - 1
             End If
-            If HTI.PT.Y >= CellRect.Top Then HTI.MouseRow = iRow
-            If HTI.PT.X >= CellRect.Left Then HTI.MouseCol = iCol
-            If HTI.HitResult <> FlexHitResultNoWhere Then Exit For
         Next iCol
         .Left = 0
         .Right = 0
         .Top = .Top + GetRowHeight(iRow)
+        If HTI.HitResult <> FlexHitResultNoWhere Then Exit For
     ElseIf iRow < PropFixedRows Then
         .Bottom = .Top + GetRowHeight(iRow)
-        For iCol = 0 To (PropCols - 1)
+        If HTI.PT.X >= 0 Then iColTo = (PropCols - 1) Else iColTo = 0
+        For iCol = 0 To iColTo
             If iCol >= VBFlexGridLeftCol Or iCol < PropFixedCols Then
                 .Left = .Right
                 .Right = .Right + GetColWidth(iCol)
@@ -6844,16 +6854,20 @@ For iRow = 0 To (PropRows - 1)
                         HTI.HitResult = FlexHitResultCell
                     End If
                 End If
+                If HTI.PT.Y >= CellRect.Top Then HTI.MouseRow = iRow
+                If HTI.PT.X >= CellRect.Left Then HTI.MouseCol = iCol
+                If HTI.HitResult <> FlexHitResultNoWhere Then Exit For
+            Else
+                iCol = VBFlexGridLeftCol - 1
             End If
-            If HTI.PT.Y >= CellRect.Top Then HTI.MouseRow = iRow
-            If HTI.PT.X >= CellRect.Left Then HTI.MouseCol = iCol
-            If HTI.HitResult <> FlexHitResultNoWhere Then Exit For
         Next iCol
         .Left = 0
         .Right = 0
         .Top = .Top + GetRowHeight(iRow)
+        If HTI.HitResult <> FlexHitResultNoWhere Then Exit For
+    Else
+        iRow = VBFlexGridTopRow - 1
     End If
-    If HTI.HitResult <> FlexHitResultNoWhere Then Exit For
 Next iRow
 End With
 If HTI.HitResult <> FlexHitResultNoWhere Then
