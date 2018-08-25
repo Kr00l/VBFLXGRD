@@ -6908,7 +6908,7 @@ For iRow = 0 To iRowTo
             If HTI.PT.X >= .Left Then HTI.MouseCol = iCol
             If HTI.HitResult <> FlexHitResultNoWhere Then Exit For
         Next iCol
-        If HTI.PT.X >= .Right And .Bottom > HTI.PT.Y Then Exit For
+        If (HTI.PT.X >= .Right Or HTI.PT.X < 0) And .Bottom > HTI.PT.Y Then Exit For
         .Left = 0
         .Right = 0
         .Top = .Top + GetRowHeight(iRow)
@@ -6981,7 +6981,7 @@ For iRow = 0 To iRowTo
             If HTI.PT.X >= .Left Then HTI.MouseCol = iCol
             If HTI.HitResult <> FlexHitResultNoWhere Then Exit For
         Next iCol
-        If HTI.PT.X >= .Right And .Bottom > HTI.PT.Y Then Exit For
+        If (HTI.PT.X >= .Right Or HTI.PT.X < 0) And .Bottom > HTI.PT.Y Then Exit For
         .Left = 0
         .Right = 0
         .Top = .Top + GetRowHeight(iRow)
