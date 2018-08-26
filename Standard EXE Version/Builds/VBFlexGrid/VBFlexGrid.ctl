@@ -6855,7 +6855,7 @@ HTI.HitColDivider = -1
 HTI.HitResult = FlexHitResultNoWhere
 HTI.MouseRow = 0
 HTI.MouseCol = 0
-If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
+If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Or (HTI.PT.X < 0 And HTI.PT.Y < 0) Then Exit Sub
 Dim iRow As Long, iCol As Long, iRowDivider As Long, iColDivider As Long
 Dim iRowTo As Long, iColTo As Long
 Dim CellRect As RECT, TempRect As RECT
@@ -6865,6 +6865,7 @@ With CellRect
 If HTI.PT.Y >= 0 Then iRowTo = (PropRows - 1) Else iRowTo = 0
 For iRow = 0 To iRowTo
     If iRow >= VBFlexGridTopRow Then
+        .Top = .Bottom
         .Bottom = .Top + GetRowHeight(iRow)
         If HTI.PT.X >= 0 Then iColTo = (PropCols - 1) Else iColTo = 0
         For iCol = 0 To iColTo
@@ -6911,8 +6912,8 @@ For iRow = 0 To iRowTo
         If (HTI.PT.X >= .Right Or HTI.PT.X < 0) And .Bottom > HTI.PT.Y Then Exit For
         .Left = 0
         .Right = 0
-        .Top = .Top + GetRowHeight(iRow)
     ElseIf iRow < PropFixedRows Then
+        .Top = .Bottom
         .Bottom = .Top + GetRowHeight(iRow)
         If HTI.PT.X >= 0 Then iColTo = (PropCols - 1) Else iColTo = 0
         For iCol = 0 To iColTo
@@ -6984,7 +6985,6 @@ For iRow = 0 To iRowTo
         If (HTI.PT.X >= .Right Or HTI.PT.X < 0) And .Bottom > HTI.PT.Y Then Exit For
         .Left = 0
         .Right = 0
-        .Top = .Top + GetRowHeight(iRow)
     Else
         iRow = VBFlexGridTopRow - 1
     End If
