@@ -1,5 +1,8 @@
 List of revisions:
 
+27-Aug-2018
+- Further optimization of the internal GetHitTestInfo function.
+
 26-Aug-2018
 - Major performance boost for internal GetHitTestInfo function.
 
