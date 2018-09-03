@@ -1,5 +1,8 @@
 List of revisions:
 
+03-Sep-2018
+- Bugfix in the Cell property for FlexCellSort setting.
+
 27-Aug-2018
 - Further optimization of the internal GetHitTestInfo function.
 

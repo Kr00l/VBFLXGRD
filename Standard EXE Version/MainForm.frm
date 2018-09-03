@@ -363,9 +363,9 @@ End Sub
 
 Private Sub VBFlexGrid1_DividerDblClick(ByVal Row As Long, ByVal Col As Long)
 If Row = -1 Then
-    VBFlexGrid1.AutoSize Col, , FlexAutoSizeModeColWidth
+    VBFlexGrid1.AutoSize Col, , FlexAutoSizeModeColWidth, , , , CBool(VBFlexGrid1.ClipMode = FlexClipModeExcludeHidden)
 ElseIf Col = -1 Then
-    VBFlexGrid1.AutoSize Row, , FlexAutoSizeModeRowHeight
+    VBFlexGrid1.AutoSize Row, , FlexAutoSizeModeRowHeight, , , , CBool(VBFlexGrid1.ClipMode = FlexClipModeExcludeHidden)
 End If
 End Sub
 
