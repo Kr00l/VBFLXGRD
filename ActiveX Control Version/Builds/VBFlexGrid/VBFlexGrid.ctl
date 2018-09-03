@@ -361,6 +361,11 @@ ColSel As Long
 TopRow As Long
 LeftCol As Long
 End Type
+Private Type TINDIRECTCELLREF
+InProc As Boolean
+SetRCP As Boolean
+RCP As TROWCOLPARAMS
+End Type
 Private Type TSELRANGE
 LeftCol As Long
 TopRow As Long
@@ -737,6 +742,7 @@ Private VBFlexGridBackColorSelBrush As Long
 Private VBFlexGridGridLinePen As Long, VBFlexGridPenStyle As Long
 Private VBFlexGridGridLineFixedPen As Long, VBFlexGridFixedPenStyle As Long
 Private VBFlexGridGridLineWhitePen As Long, VBFlexGridGridLineBlackPen As Long
+Private VBFlexGridIndirectCellRef As TINDIRECTCELLREF
 Private VBFlexGridCells As TROWS
 Private VBFlexGridColsInfo() As TCOLINFO
 Private VBFlexGridMergeDrawInfo As TMERGEDRAWINFO
@@ -2883,8 +2889,13 @@ Select Case Value
         .Mask = RCPM_TOPROW
         .Flags = RCPF_CHECKTOPROW Or RCPF_SETSCROLLBARS
         .TopRow = VBFlexGridTopRow
-        Call SetRowColParams(RCP)
         End With
+        If VBFlexGridIndirectCellRef.InProc = False Then
+            Call SetRowColParams(RCP)
+        Else
+            LSet VBFlexGridIndirectCellRef.RCP = RCP
+            VBFlexGridIndirectCellRef.SetRCP = True
+        End If
     Case Else
         Err.Raise 380
 End Select
@@ -4404,6 +4415,8 @@ If Col > -1 Then VBFlexGridCol = Col
 If RowSel > -1 Then VBFlexGridRowSel = RowSel Else VBFlexGridRowSel = VBFlexGridRow
 If ColSel > -1 Then VBFlexGridColSel = ColSel Else VBFlexGridColSel = VBFlexGridCol
 VBFlexGridNoRedraw = True
+VBFlexGridIndirectCellRef.InProc = True
+VBFlexGridIndirectCellRef.SetRCP = False
 On Error GoTo Cancel
 Select Case Setting
     Case FlexCellText
@@ -4457,8 +4470,16 @@ VBFlexGridCol = OldCol
 VBFlexGridRowSel = OldRowSel
 VBFlexGridColSel = OldColSel
 VBFlexGridNoRedraw = OldNoRedraw
+VBFlexGridIndirectCellRef.InProc = False
 If Err.Number = 0 Then
-    Call RedrawGrid
+    If VBFlexGridIndirectCellRef.SetRCP = False Then
+        Call RedrawGrid
+    Else
+        Dim RCP As TROWCOLPARAMS
+        LSet RCP = VBFlexGridIndirectCellRef.RCP
+        VBFlexGridIndirectCellRef.SetRCP = False
+        Call SetRowColParams(RCP)
+    End If
 Else
     Err.Raise Number:=Err.Number, Description:=Err.Description
 End If
