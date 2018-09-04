@@ -1,5 +1,8 @@
 List of revisions:
 
+04-Sep-2018
+- Included optional argument ExcludeHidden in the FindItem function.
+
 03-Sep-2018
 - Bugfix in the Cell property for FlexCellSort setting.
 
