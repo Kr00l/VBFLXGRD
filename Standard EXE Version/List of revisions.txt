@@ -2,6 +2,9 @@ List of revisions:
 
 04-Sep-2018
 - Included optional argument ExcludeHidden in the FindItem function.
+- Added WS_EX_TRANSPARENT for the internal tooltip control which solved two issues:
+  - The control did not receive focus when clicking on a tip from another control.
+  - In Win10 the mouse wheel will scroll even if the mouse hovers over a tip. (in-place tip)
 
 03-Sep-2018
 - Bugfix in the Cell property for FlexCellSort setting.
