@@ -5703,7 +5703,7 @@ VBFlexGridHitResult = .HitResult
 End With
 End Sub
 
-Public Function FindItem(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal Partial As Boolean, Optional ByVal CaseSensitive As Boolean) As Long
+Public Function FindItem(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal Partial As Boolean, Optional ByVal CaseSensitive As Boolean, Optional ByVal ExcludeHidden As Boolean) As Long
 Attribute FindItem.VB_Description = "Finds an item in the flex grid and returns the index of that item."
 If Row < -1 Then Err.Raise 380
 If Col < -1 Then Err.Raise 380
@@ -5716,17 +5716,25 @@ If CaseSensitive = False Then Compare = vbTextCompare Else Compare = vbBinaryCom
 With VBFlexGridCells
 If Partial = False Then
     For iRow = Row To (PropRows - 1)
-        If StrComp(.Rows(iRow).Cols(Col).Text, Text, Compare) = 0 Then
-            FindItem = iRow
-            Exit For
+        With .Rows(iRow)
+        If (.RowInfo.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+            If StrComp(.Cols(Col).Text, Text, Compare) = 0 Then
+                FindItem = iRow
+                Exit For
+            End If
         End If
+        End With
     Next iRow
 Else
     For iRow = Row To (PropRows - 1)
-        If InStr(1, .Rows(iRow).Cols(Col).Text, Text, Compare) > 0 Then
-            FindItem = iRow
-            Exit For
+        With .Rows(iRow)
+        If (.RowInfo.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
+            If InStr(1, .Cols(Col).Text, Text, Compare) > 0 Then
+                FindItem = iRow
+                Exit For
+            End If
         End If
+        End With
     Next iRow
 End If
 End With
