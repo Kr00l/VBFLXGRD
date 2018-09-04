@@ -653,6 +653,7 @@ Private Const GWL_EXSTYLE As Long = (-20)
 Private Const LAYOUT_RTL As Long = &H1
 Private Const WS_BORDER As Long = &H800000
 Private Const WS_DLGFRAME As Long = &H400000
+Private Const WS_EX_TRANSPARENT As Long = &H20
 Private Const WS_EX_CLIENTEDGE As Long = &H200
 Private Const WS_EX_STATICEDGE As Long = &H20000
 Private Const WS_EX_WINDOWEDGE As Long = &H100
@@ -3200,7 +3201,7 @@ If Done = False Then
     Call FlexInitCC(ICC_TAB_CLASSES)
     Done = True
 End If
-dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
+dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST Or WS_EX_TRANSPARENT
 If PropRightToLeft = True And PropRightToLeftLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
 VBFlexGridToolTipHandle = CreateWindowEx(dwExStyle, StrPtr("tooltips_class32"), StrPtr("Tool Tip"), WS_POPUP Or TTS_ALWAYSTIP Or TTS_NOPREFIX, 0, 0, 0, 0, UserControl.hWnd, 0, App.hInstance, ByVal 0&)
 If VBFlexGridToolTipHandle <> 0 Then
