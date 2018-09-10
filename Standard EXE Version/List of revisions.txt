@@ -1,5 +1,30 @@
 List of revisions:
 
+04-Sep-2018
+- Included optional argument ExcludeHidden in the FindItem function.
+- Added WS_EX_TRANSPARENT for the internal tooltip control which solved two issues:
+  - The control did not receive focus when clicking on a tip from another control.
+  - In Win10 the mouse wheel will scroll even if the mouse hovers over a tip. (in-place tip)
+
+03-Sep-2018
+- Bugfix in the Cell property for FlexCellSort setting.
+
+27-Aug-2018
+- Further optimization of the internal GetHitTestInfo function.
+
+26-Aug-2018
+- Major performance boost for internal GetHitTestInfo function.
+
+12-Aug-2018
+- TEXTMETRIC structure was declared as ANSI. Fixed to WIDE version.
+  Unicode did not lack due to this bug, but it was a memory risk as WIDE version is larger than ANSI.
+
+28-Jul-2018
+- Internal GDI leak fixed. (forgot to restore old font handle in a hDCScreen)
+
+09-Jul-2018
+- Bugfix in the WrapCellBehavior property. Bug only affected when SelectionMode was ByRow or ByColumn.
+
 02-May-2018
 - Renamed enum 'FlexClipModeIncludeHidden' to 'FlexClipModeNormal'.
 - Included optional argument ExcludeHidden in the AutoSize method.

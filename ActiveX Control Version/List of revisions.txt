@@ -1,5 +1,32 @@
 List of revisions:
 
+04-Sep-2018
+- Revision update. (Version 1.1.14)
+
+03-Sep-2018
+- Revision update. (Version 1.1.13)
+
+27-Aug-2018
+- Revision update. (Version 1.1.12)
+
+26-Aug-2018
+- Revision update. (Version 1.1.11)
+
+25-Aug-2018
+- Revision update. (Version 1.1.10)
+
+25-Aug-2018
+- Revision update. (Version 1.1.9)
+
+12-Aug-2018
+- Revision update. (Version 1.1.8)
+
+28-Jul-2018
+- Revision update. (Version 1.1.7)
+
+09-Jul-2018
+- Revision update. (Version 1.1.6)
+
 05-May-2018
 - Revision update. (Version 1.1.5)
 

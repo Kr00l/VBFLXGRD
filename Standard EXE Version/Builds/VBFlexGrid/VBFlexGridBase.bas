@@ -403,7 +403,7 @@ Call RemoveAllVTableSubclass(VTableInterfaceEnumeration)
 Dim AppForm As Form, CurrControl As Control
 For Each AppForm In Forms
     For Each CurrControl In AppForm.Controls
-        If TypeName(CurrControl) = "VBFlexGrid" Then
+        If TypeOf CurrControl Is VBFlexGrid Then
             Call FlexRemoveSubclass(CurrControl.hWnd)
             Call FlexRemoveSubclass(CurrControl.hWndUserControl)
         End If
