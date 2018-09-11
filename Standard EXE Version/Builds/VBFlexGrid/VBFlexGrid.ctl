@@ -5831,7 +5831,7 @@ Else
 End If
 If Wrap = True And FindItem = -1 Then
     If Partial = False Then
-        For iRow = 0 To (Row - 1)
+        For iRow = PropFixedRows To (Row - 1)
             With .Rows(iRow)
             If (.RowInfo.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
                 If StrComp(.Cols(Col).Text, Text, Compare) = 0 Then
@@ -5842,7 +5842,7 @@ If Wrap = True And FindItem = -1 Then
             End With
         Next iRow
     Else
-        For iRow = 0 To (Row - 1)
+        For iRow = PropFixedRows To (Row - 1)
             With .Rows(iRow)
             If (.RowInfo.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
                 If InStr(1, .Cols(Col).Text, Text, Compare) > 0 Then
