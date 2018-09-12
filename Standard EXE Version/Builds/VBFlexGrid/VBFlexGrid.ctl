@@ -51,6 +51,7 @@ Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCe
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
+Private FlexFindDirectionDown, FlexFindDirectionUp
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -242,6 +243,10 @@ End Enum
 Public Enum FlexClipModeConstants
 FlexClipModeNormal = 0
 FlexClipModeExcludeHidden = 1
+End Enum
+Public Enum FlexFindDirectionConstants
+FlexFindDirectionDown = 0
+FlexFindDirectionUp = 1
 End Enum
 Private Type RECT
 Left As Long
@@ -5788,7 +5793,7 @@ VBFlexGridHitResult = .HitResult
 End With
 End Sub
 
-Public Function FindItem(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal Partial As Boolean, Optional ByVal CaseSensitive As Boolean, Optional ByVal ExcludeHidden As Boolean, Optional ByVal Wrap As Boolean) As Long
+Public Function FindItem(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal Partial As Boolean, Optional ByVal CaseSensitive As Boolean, Optional ByVal ExcludeHidden As Boolean, Optional ByVal Wrap As Boolean, Optional ByVal Direction As FlexFindDirectionConstants) As Long
 Attribute FindItem.VB_Description = "Finds an item in the flex grid and returns the index of that item."
 
 #If ImplementFlexDataSource Then
@@ -5799,15 +5804,22 @@ If Not VBFlexGridFlexDataSource Is Nothing Then Err.Raise Number:=5, Description
 
 If Row < -1 Then Err.Raise 380
 If Col < -1 Then Err.Raise 380
+Select Case Direction
+    Case FlexFindDirectionDown, FlexFindDirectionUp
+    Case Else
+        Err.Raise 380
+End Select
 If Row = -1 Then Row = PropFixedRows
 If Col = -1 Then Col = PropFixedCols
 If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
-Dim iRow As Long, Compare As VbCompareMethod
+If Row < PropFixedRows Then Err.Raise Number:=30003, Description:="Cannot use FindItem on a fixed row"
+Dim iRow As Long, iRowTo As Long, Compare As VbCompareMethod
 FindItem = -1
+If Direction = FlexFindDirectionDown Then iRowTo = (PropRows - 1) Else iRowTo = PropFixedRows
 If CaseSensitive = False Then Compare = vbTextCompare Else Compare = vbBinaryCompare
 With VBFlexGridCells
 If Partial = False Then
-    For iRow = Row To (PropRows - 1)
+    For iRow = Row To iRowTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
         With .Rows(iRow)
         If (.RowInfo.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
             If StrComp(.Cols(Col).Text, Text, Compare) = 0 Then
@@ -5818,7 +5830,7 @@ If Partial = False Then
         End With
     Next iRow
 Else
-    For iRow = Row To (PropRows - 1)
+    For iRow = Row To iRowTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
         With .Rows(iRow)
         If (.RowInfo.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
             If InStr(1, .Cols(Col).Text, Text, Compare) > 0 Then
@@ -5830,8 +5842,9 @@ Else
     Next iRow
 End If
 If Wrap = True And FindItem = -1 Then
+    If Direction = FlexFindDirectionDown Then iRowTo = PropFixedRows Else iRowTo = (PropRows - 1)
     If Partial = False Then
-        For iRow = PropFixedRows To (Row - 1)
+        For iRow = iRowTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
             With .Rows(iRow)
             If (.RowInfo.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
                 If StrComp(.Cols(Col).Text, Text, Compare) = 0 Then
@@ -5842,7 +5855,7 @@ If Wrap = True And FindItem = -1 Then
             End With
         Next iRow
     Else
-        For iRow = PropFixedRows To (Row - 1)
+        For iRow = iRowTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
             With .Rows(iRow)
             If (.RowInfo.Hidden Xor ExcludeHidden) Or ExcludeHidden = False Then
                 If InStr(1, .Cols(Col).Text, Text, Compare) > 0 Then
