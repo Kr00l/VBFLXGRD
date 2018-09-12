@@ -1,5 +1,8 @@
 List of revisions:
 
+12-Sep-2018
+- Included optional argument Direction in the FindItem function. Also FindItem cannot be used anymore on a fixed row.
+
 11-Sep-2018
 - Included the FlexDataSource property (run-time only) to set a custom data source which fetches data from the IVBFlexDataSource interface.
   It comes along with several limitations (e.g. cannot use .Sort) and the behavior/definitions are similar to the IVSFlexDataSource from VSFlexGrid.
