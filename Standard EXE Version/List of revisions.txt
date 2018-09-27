@@ -1,5 +1,8 @@
 List of revisions:
 
+27-Sep-2018
+- Included the SingleLine property.
+
 12-Sep-2018
 - Included optional argument Direction in the FindItem function. Also FindItem cannot be used anymore on a fixed row.
 
