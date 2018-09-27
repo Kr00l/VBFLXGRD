@@ -649,7 +649,10 @@ Private Const DT_RTLREADING As Long = &H20000
 Private Const DT_LEFT As Long = &H0
 Private Const DT_CENTER As Long = &H1
 Private Const DT_RIGHT As Long = &H2
+Private Const DT_VCENTER As Long = &H4
+Private Const DT_BOTTOM As Long = &H8
 Private Const DT_WORDBREAK As Long = &H10
+Private Const DT_SINGLELINE As Long = &H20
 Private Const DT_PATH_ELLIPSIS As Long = &H4000
 Private Const DT_END_ELLIPSIS As Long = &H8000&
 Private Const DT_WORD_ELLIPSIS As Long = &H40000
@@ -851,6 +854,7 @@ Private PropTextStyle As FlexTextStyleConstants
 Private PropTextStyleFixed As FlexTextStyleConstants
 Private PropPictureType As FlexPictureTypeConstants
 Private PropWordWrap As Boolean
+Private PropSingleLine As Boolean
 Private PropEllipsisFormat As FlexEllipsisFormatConstants
 Private PropEllipsisFormatFixed As FlexEllipsisFormatConstants
 Private PropRedraw As Boolean
@@ -1083,6 +1087,7 @@ PropTextStyle = FlexTextStyleFlat
 PropTextStyleFixed = FlexTextStyleFlat
 PropPictureType = FlexPictureTypeColor
 PropWordWrap = False
+PropSingleLine = False
 PropEllipsisFormat = FlexEllipsisFormatNone
 PropEllipsisFormatFixed = FlexEllipsisFormatNone
 PropRedraw = True
@@ -1161,6 +1166,7 @@ PropTextStyle = .ReadProperty("TextStyle", FlexTextStyleFlat)
 PropTextStyleFixed = .ReadProperty("TextStyleFixed", FlexTextStyleFlat)
 PropPictureType = .ReadProperty("PictureType", FlexPictureTypeColor)
 PropWordWrap = .ReadProperty("WordWrap", False)
+PropSingleLine = .ReadProperty("SingleLine", False)
 PropEllipsisFormat = .ReadProperty("EllipsisFormat", FlexEllipsisFormatNone)
 PropEllipsisFormatFixed = .ReadProperty("EllipsisFormatFixed", FlexEllipsisFormatNone)
 PropRedraw = .ReadProperty("Redraw", True)
@@ -1235,6 +1241,7 @@ With PropBag
 .WriteProperty "TextStyleFixed", PropTextStyleFixed, FlexTextStyleFlat
 .WriteProperty "PictureType", PropPictureType, FlexPictureTypeColor
 .WriteProperty "WordWrap", PropWordWrap, False
+.WriteProperty "SingleLine", PropSingleLine, False
 .WriteProperty "EllipsisFormat", PropEllipsisFormat, FlexEllipsisFormatNone
 .WriteProperty "EllipsisFormatFixed", PropEllipsisFormatFixed, FlexEllipsisFormatNone
 .WriteProperty "Redraw", PropRedraw, True
@@ -2794,9 +2801,29 @@ WordWrap = PropWordWrap
 End Property
 
 Public Property Let WordWrap(ByVal Value As Boolean)
+If PropSingleLine = True And Value = True Then
+    If Ambient.UserMode = False Then
+        MsgBox "WordWrap must be False when SingleLine is True", vbCritical + vbOKOnly
+        Exit Property
+    Else
+        Err.Raise Number:=383, Description:="WordWrap must be False when SingleLine is True"
+    End If
+End If
 PropWordWrap = Value
 Call RedrawGrid
 UserControl.PropertyChanged "WordWrap"
+End Property
+
+Public Property Get SingleLine() As Boolean
+Attribute SingleLine.VB_Description = "Returns/sets whether text within a cell is displayed on a single line only."
+SingleLine = PropSingleLine
+End Property
+
+Public Property Let SingleLine(ByVal Value As Boolean)
+PropSingleLine = Value
+If PropSingleLine = True Then PropWordWrap = False
+Call RedrawGrid
+UserControl.PropertyChanged "SingleLine"
 End Property
 
 Public Property Get EllipsisFormat() As FlexEllipsisFormatConstants
@@ -6794,7 +6821,11 @@ If Not Text = vbNullString Then
                 Format = Format Or DT_RIGHT
             End If
     End Select
-    If PropWordWrap = True Then Format = Format Or DT_WORDBREAK
+    If PropWordWrap = True Then
+        Format = Format Or DT_WORDBREAK
+    ElseIf PropSingleLine = True Then
+        Format = Format Or DT_SINGLELINE
+    End If
     If IsFixedCell = False Then
         Select Case PropEllipsisFormat
             Case FlexEllipsisFormatEnd
@@ -6819,11 +6850,19 @@ If Not Text = vbNullString Then
         Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
             LSet CalcRect = TextRect
             Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
-            Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
+            If Not (Format And DT_SINGLELINE) = DT_SINGLELINE Then
+                Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
+            Else
+                Format = Format Or DT_VCENTER
+            End If
         Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
             LSet CalcRect = TextRect
             Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
-            Result = ((TextRect.Bottom - TextRect.Top) - Height)
+            If Not (Format And DT_SINGLELINE) = DT_SINGLELINE Then
+                Result = ((TextRect.Bottom - TextRect.Top) - Height)
+            Else
+                Format = Format Or DT_BOTTOM
+            End If
     End Select
     If Result > 0 Then TextRect.Top = TextRect.Top + Result
     Dim Offset As Long
@@ -7306,7 +7345,11 @@ If hDC <> 0 Then
                     Format = Format Or DT_RIGHT
                 End If
         End Select
-        If PropWordWrap = True Then Format = Format Or DT_WORDBREAK
+        If PropWordWrap = True Then
+            Format = Format Or DT_WORDBREAK
+        ElseIf PropSingleLine = True Then
+            Format = Format Or DT_SINGLELINE
+        End If
         ' Ellipsis format will be ignored.
         Dim CalcRect As RECT, Height As Long, Result As Long
         LSet CalcRect = TextRect
@@ -7314,11 +7357,13 @@ If hDC <> 0 Then
             Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
                 Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
                 Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
+                ' DT_VCENTER not applicable to apply here in case of DT_SINGLELINE.
             Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
                 Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
                 Result = ((TextRect.Bottom - TextRect.Top) - Height)
+                ' DT_BOTTOM not applicable to apply here in case of DT_SINGLELINE.
         End Select
-        If Result > 0 Then
+        If Result > 0 Or (Format And DT_SINGLELINE) = DT_SINGLELINE Then
             CalcRect.Top = CalcRect.Top + Result
             CalcRect.Bottom = CalcRect.Bottom + Result
         End If
@@ -9784,6 +9829,10 @@ Select Case wMsg
                         If PropShowLabelTips = True Then Call GetLabelInfo(.HitRow, .HitCol, LBLI)
                         If (LBLI.Flags And LBLI_VALID) = LBLI_VALID And Not (LBLI.Flags And LBLI_UNFOLDED) = LBLI_UNFOLDED Then
                             Call GetCellText(.HitRow, .HitCol, Text)
+                            If (LBLI.DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
+                                If InStr(Text, vbCr) Then Text = Replace$(Text, vbCr, vbNullString)
+                                If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbNullString)
+                            End If
                         ElseIf PropShowInfoTips = True Then
                             Text = VBFlexGridCells.Rows(.HitRow).Cols(.HitCol).ToolTipText
                             ShowInfoTip = True

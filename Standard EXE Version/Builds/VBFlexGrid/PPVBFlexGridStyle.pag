@@ -9,12 +9,21 @@ Begin VB.PropertyPage PPVBFlexGridStyle
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   6600
    ScaleWidth      =   6225
+   Begin VB.CheckBox CheckSingleLine 
+      Alignment       =   1  'Right Justify
+      Caption         =   "SingleLine"
+      Height          =   285
+      Left            =   3120
+      TabIndex        =   27
+      Top             =   3120
+      Width           =   1650
+   End
    Begin VB.TextBox TextFormatString 
       Height          =   675
       Left            =   1560
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   28
+      TabIndex        =   29
       Top             =   3480
       Width           =   4395
    End
@@ -130,7 +139,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "FormatString:"
       Height          =   240
       Left            =   120
-      TabIndex        =   27
+      TabIndex        =   28
       Top             =   3480
       Width           =   1410
    End
@@ -351,7 +360,16 @@ On Error Resume Next
 PropertyPage.ValidateControls
 If Err.Number = 380 Then Exit Sub
 On Error GoTo 0
+If CheckSingleLine.Value = vbChecked Then
+    If CheckWordWrap.Value = vbChecked Then
+        MsgBox "WordWrap must be False when SingleLine is True", vbExclamation + vbOKOnly
+        CheckWordWrap.SetFocus
+        PropertyPage.Changed = True
+        Exit Sub
+    End If
+End If
 With PropertyPage.SelectedControls(0)
+.SingleLine = CBool(CheckSingleLine.Value = vbChecked)
 .GridLines = ComboGridLines.ItemData(ComboGridLines.ListIndex)
 .GridLinesFixed = ComboGridLinesFixed.ItemData(ComboGridLinesFixed.ListIndex)
 .GridLineWidth = CInt(TextGridLineWidth.Text)
@@ -429,6 +447,7 @@ For i = 0 To ComboEllipsisFormatFixed.ListCount - 1
     End If
 Next i
 CheckWordWrap.Value = IIf(.WordWrap = True, vbChecked, vbUnchecked)
+CheckSingleLine.Value = IIf(.SingleLine = True, vbChecked, vbUnchecked)
 TextFormatString.Text = .FormatString
 End With
 FreezeChanged = False
@@ -705,6 +724,11 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckWordWrap_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckSingleLine_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
