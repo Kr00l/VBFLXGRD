@@ -436,6 +436,7 @@ Private Type TROWINFO
 Height As Long
 Data As Long
 Hidden As Boolean
+ID As Long
 Merge As Boolean
 End Type
 Private Const COLINFO_WIDTH_SPACING_DIP As Long = 6
@@ -4017,6 +4018,39 @@ With RCP
 .TopRow = VBFlexGridTopRow
 Call SetRowColParams(RCP)
 End With
+End Property
+
+Public Property Get RowID(ByVal Index As Long) As Long
+Attribute RowID.VB_Description = "Returns/sets an identification used to identify the specified row."
+Attribute RowID.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+RowID = VBFlexGridCells.Rows(Index).RowInfo.ID
+End Property
+
+Public Property Let RowID(ByVal Index As Long, ByVal Value As Long)
+If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+VBFlexGridCells.Rows(Index).RowInfo.ID = Value
+End Property
+
+Public Property Get RowIndex(ByVal ID As Long) As Long
+Attribute RowIndex.VB_Description = "Returns a row index given its identification."
+Attribute RowIndex.VB_MemberFlags = "400"
+RowIndex = -1
+Dim i As Long
+With VBFlexGridCells
+For i = 0 To (PropRows - 1)
+    With .Rows(i).RowInfo
+    If .ID = ID And .ID <> 0 Then
+        RowIndex = i
+        Exit For
+    End If
+    End With
+Next i
+End With
+End Property
+
+Public Property Let RowIndex(ByVal ID As Long, ByVal Value As Long)
+Err.Raise Number:=383, Description:="Property is read-only"
 End Property
 
 Public Property Get RowIsVisible(ByVal Index As Long, Optional ByVal Visibility As FlexVisibilityConstants) As Boolean
