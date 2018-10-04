@@ -460,11 +460,33 @@ Set Me.CellFont = Nothing
 End Sub
 
 Private Sub Command17_Click()
-VBFlexGrid1.Sort = VBA.Choose(Combo2.ListIndex + 1, FlexSortGenericAscending, FlexSortNumericAscending, FlexSortStringNoCaseAscending, FlexSortStringAscending, FlexSortCurrencyAscending, FlexSortDateAscending)
+Dim Row1 As Long, Row2 As Long
+Dim Col1 As Long, Col2 As Long
+With VBFlexGrid1
+.GetSelRange Row1, Col1, Row2, Col2
+.RowID(.Row) = 1 ' Temporary identification
+.Sort = VBA.Choose(Combo2.ListIndex + 1, FlexSortGenericAscending, FlexSortNumericAscending, FlexSortStringNoCaseAscending, FlexSortStringAscending, FlexSortCurrencyAscending, FlexSortDateAscending)
+.Row = .RowIndex(1)
+.RowID(.RowIndex(1)) = 0 ' Remove temporary identification
+.CellEnsureVisible
+If Row1 <> Row2 Then .RowSel = IIf(Row1 < .Row, Row1, Row2)
+If Col1 <> Col2 Then .ColSel = IIf(Col1 < .Col, Col1, Col2)
+End With
 End Sub
 
 Private Sub Command18_Click()
-VBFlexGrid1.Sort = VBA.Choose(Combo2.ListIndex + 1, FlexSortGenericDescending, FlexSortNumericDescending, FlexSortStringNoCaseDescending, FlexSortStringDescending, FlexSortCurrencyDescending, FlexSortDateDescending)
+Dim Row1 As Long, Row2 As Long
+Dim Col1 As Long, Col2 As Long
+With VBFlexGrid1
+.GetSelRange Row1, Col1, Row2, Col2
+.RowID(.Row) = 1 ' Temporary identification
+.Sort = VBA.Choose(Combo2.ListIndex + 1, FlexSortGenericDescending, FlexSortNumericDescending, FlexSortStringNoCaseDescending, FlexSortStringDescending, FlexSortCurrencyDescending, FlexSortDateDescending)
+.Row = .RowIndex(1)
+.RowID(.RowIndex(1)) = 0 ' Remove temporary identification
+.CellEnsureVisible
+If Row1 <> Row2 Then .RowSel = IIf(Row1 < .Row, Row1, Row2)
+If Col1 <> Col2 Then .ColSel = IIf(Col1 < .Col, Col1, Col2)
+End With
 End Sub
 
 Private Sub Command6_Click()

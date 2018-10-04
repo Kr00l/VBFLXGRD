@@ -1,5 +1,9 @@
 List of revisions:
 
+04-Oct-2018
+- RowID/RowIndex property included. The usage is similar to the ColKey/ColIndex property.
+  RowIndex returns a row given its ID, whereas RowID returns/sets the ID given its row.
+
 27-Sep-2018
 - Included the SingleLine property.
 
