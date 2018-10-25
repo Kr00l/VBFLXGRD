@@ -1,5 +1,8 @@
 List of revisions:
 
+25-Oct-2018
+- Internal improvement concerning divider drag of the last row or col.
+
 09-Oct-2018
 - WM_SYSKEYDOWN/WM_SYSKEYUP considered now for KeyDown/KeyUp events.
 
