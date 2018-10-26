@@ -1,5 +1,9 @@
 List of revisions:
 
+26-Oct-2018
+- Bugfix related to 25-Oct-2018 update.
+- Minor internal improvements.
+
 25-Oct-2018
 - Internal improvement concerning divider drag of the last row or col.
 
