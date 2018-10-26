@@ -7147,8 +7147,7 @@ If iRowHit > -1 And iColHit > -1 Then
         ElseIf iColHit < PropFixedCols Then
             If PropAllowUserResizing = FlexAllowUserResizingRows Or PropAllowUserResizing = FlexAllowUserResizingBoth Then
                 SetRect TempRect, .Left, .Top, .Right, .Bottom
-                If iRowHit > 0 Then TempRect.Top = TempRect.Top + (DIVIDER_SPACING_DIP * PixelsPerDIP_Y())
-                TempRect.Bottom = TempRect.Bottom - (DIVIDER_SPACING_DIP * PixelsPerDIP_Y())
+                Call AdjustRectRowDividerSpacing(TempRect, iRowHit)
                 If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
                     HTI.HitResult = FlexHitResultCell
                 Else
@@ -7156,11 +7155,11 @@ If iRowHit > -1 And iColHit > -1 Then
                     iRowDivider = iRowHit
                     If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
                         HTI.HitResult = FlexHitResultDividerRowTop
-                        Do While VBFlexGridCells.Rows(iRowDivider - 1).RowInfo.Hidden
-                            iRowDivider = iRowDivider - 1
-                            If iRowDivider = 0 Then Exit Do
-                        Loop
                         iRowDivider = iRowDivider - 1
+                        Do While VBFlexGridCells.Rows(iRowDivider).RowInfo.Hidden
+                            iRowDivider = iRowDivider - 1
+                            If iRowDivider = -1 Then Exit Do
+                        Loop
                         If iRowDivider = -1 Then HTI.HitResult = FlexHitResultCell
                     Else
                         HTI.HitResult = FlexHitResultDividerRowBottom
@@ -7173,14 +7172,12 @@ If iRowHit > -1 And iColHit > -1 Then
     ElseIf iRowHit < PropFixedRows Then
         If PropAllowUserResizing <> FlexAllowUserResizingNone Then
             SetRect TempRect, .Left, .Top, .Right, .Bottom
-            If iColHit > 0 Then TempRect.Left = TempRect.Left + (DIVIDER_SPACING_DIP * PixelsPerDIP_X())
-            TempRect.Right = TempRect.Right - (DIVIDER_SPACING_DIP * PixelsPerDIP_X())
+            Call AdjustRectColDividerSpacing(TempRect, iColHit)
             If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
                 If iColHit < PropFixedCols Then
                     If PropAllowUserResizing <> FlexAllowUserResizingColumns Then
                         SetRect TempRect, .Left, .Top, .Right, .Bottom
-                        If iRowHit > 0 Then TempRect.Top = TempRect.Top + (DIVIDER_SPACING_DIP * PixelsPerDIP_Y())
-                        TempRect.Bottom = TempRect.Bottom - (DIVIDER_SPACING_DIP * PixelsPerDIP_Y())
+                        Call AdjustRectRowDividerSpacing(TempRect, iRowHit)
                         If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
                             HTI.HitResult = FlexHitResultCell
                         Else
@@ -7188,11 +7185,11 @@ If iRowHit > -1 And iColHit > -1 Then
                             iRowDivider = iRowHit
                             If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
                                 HTI.HitResult = FlexHitResultDividerRowTop
-                                Do While VBFlexGridCells.Rows(iRowDivider - 1).RowInfo.Hidden
-                                    iRowDivider = iRowDivider - 1
-                                    If iRowDivider = 0 Then Exit Do
-                                Loop
                                 iRowDivider = iRowDivider - 1
+                                Do While VBFlexGridCells.Rows(iRowDivider).RowInfo.Hidden
+                                    iRowDivider = iRowDivider - 1
+                                    If iRowDivider = -1 Then Exit Do
+                                Loop
                                 If iRowDivider = -1 Then HTI.HitResult = FlexHitResultCell
                             Else
                                 HTI.HitResult = FlexHitResultDividerRowBottom
@@ -7209,11 +7206,11 @@ If iRowHit > -1 And iColHit > -1 Then
                 iColDivider = iColHit
                 If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
                     HTI.HitResult = FlexHitResultDividerColumnLeft
-                    Do While VBFlexGridColsInfo(iColDivider - 1).Hidden
-                        iColDivider = iColDivider - 1
-                        If iColDivider = 0 Then Exit Do
-                    Loop
                     iColDivider = iColDivider - 1
+                    Do While VBFlexGridColsInfo(iColDivider).Hidden
+                        iColDivider = iColDivider - 1
+                        If iColDivider = -1 Then Exit Do
+                    Loop
                     If iColDivider = -1 Then HTI.HitResult = FlexHitResultCell
                 Else
                     HTI.HitResult = FlexHitResultDividerColumnRight
@@ -7226,16 +7223,31 @@ If iRowHit > -1 And iColHit > -1 Then
         End If
     End If
 Else
-    If iRowHit = -1 And iColHit < PropFixedCols Then
-        If HTI.PT.Y < (.Bottom + (DIVIDER_SPACING_DIP * PixelsPerDIP_Y())) Then
-            iRowDivider = (PropRows - 1)
-            HTI.HitResult = FlexHitResultDividerRowBottom
-        End If
-    End If
-    If iColHit = -1 And iRowHit < PropFixedRows Then
-        If HTI.PT.X < (.Right + (DIVIDER_SPACING_DIP * PixelsPerDIP_X())) Then
-            iColDivider = (PropCols - 1)
-            HTI.HitResult = FlexHitResultDividerColumnRight
+    If PropAllowUserResizing <> FlexAllowUserResizingNone Then
+        If iColHit > -1 And PropAllowUserResizing <> FlexAllowUserResizingColumns Then
+            If iRowHit = -1 And iColHit < PropFixedCols Then
+                If HTI.PT.Y < (.Bottom + (DIVIDER_SPACING_DIP * PixelsPerDIP_Y())) Then
+                    iRowDivider = (PropRows - 1)
+                    HTI.HitResult = FlexHitResultDividerRowBottom
+                    Do While VBFlexGridCells.Rows(iRowDivider).RowInfo.Hidden
+                        iRowDivider = iRowDivider - 1
+                        If iRowDivider = -1 Then Exit Do
+                    Loop
+                    If iRowDivider = -1 Then HTI.HitResult = FlexHitResultNoWhere
+                End If
+            End If
+        ElseIf iRowHit > -1 And PropAllowUserResizing <> FlexAllowUserResizingRows Then
+            If iColHit = -1 And iRowHit < PropFixedRows Then
+                If HTI.PT.X < (.Right + (DIVIDER_SPACING_DIP * PixelsPerDIP_X())) Then
+                    iColDivider = (PropCols - 1)
+                    HTI.HitResult = FlexHitResultDividerColumnRight
+                    Do While VBFlexGridColsInfo(iColDivider).Hidden
+                        iColDivider = iColDivider - 1
+                        If iColDivider = -1 Then Exit Do
+                    Loop
+                    If iColDivider = -1 Then HTI.HitResult = FlexHitResultNoWhere
+                End If
+            End If
         End If
     End If
     iRowHit = -1
@@ -7250,6 +7262,44 @@ If HTI.HitResult <> FlexHitResultNoWhere Then
             HTI.HitRowDivider = iRowDivider
             HTI.HitColDivider = iColDivider
     End Select
+End If
+End Sub
+
+Private Sub AdjustRectColDividerSpacing(ByRef RC As RECT, ByVal iCol As Long)
+Dim Spacing As Long
+Spacing = DIVIDER_SPACING_DIP * PixelsPerDIP_X()
+If iCol > 0 Then
+    If (RC.Right - RC.Left) >= (Spacing * 2) Then
+        RC.Left = RC.Left + Spacing
+        RC.Right = RC.Right - Spacing
+    Else
+        ' Rectangle is not wide enough to include the spacing.
+        RC.Left = RC.Left + ((RC.Right - RC.Left) / 2)
+        RC.Right = RC.Left ' Remainder
+    End If
+ElseIf iCol > -1 Then
+    ' First column need divider spacing to the right only.
+    RC.Right = RC.Right - Spacing
+    If RC.Right < RC.Left Then RC.Right = RC.Left
+End If
+End Sub
+
+Private Sub AdjustRectRowDividerSpacing(ByRef RC As RECT, ByVal iRow As Long)
+Dim Spacing As Long
+Spacing = DIVIDER_SPACING_DIP * PixelsPerDIP_Y()
+If iRow > 0 Then
+    If (RC.Bottom - RC.Top) >= (Spacing * 2) Then
+        RC.Top = RC.Top + Spacing
+        RC.Bottom = RC.Bottom - Spacing
+    Else
+        ' Rectangle is not wide enough to include the spacing.
+        RC.Top = RC.Top + ((RC.Bottom - RC.Top) / 2)
+        RC.Bottom = RC.Top ' Remainder
+    End If
+ElseIf iRow > -1 Then
+    ' First row need divider spacing to the bottom only.
+    RC.Bottom = RC.Bottom - Spacing
+    If RC.Bottom < RC.Top Then RC.Bottom = RC.Top
 End If
 End Sub
 
