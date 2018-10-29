@@ -399,7 +399,6 @@ On Error Resume Next
 Call RemoveAllVTableSubclass(VTableInterfaceInPlaceActiveObject)
 Call RemoveAllVTableSubclass(VTableInterfaceControl)
 Call RemoveAllVTableSubclass(VTableInterfacePerPropertyBrowsing)
-Call RemoveAllVTableSubclass(VTableInterfaceEnumeration)
 Dim AppForm As Form, CurrControl As Control
 For Each AppForm In Forms
     For Each CurrControl In AppForm.Controls
