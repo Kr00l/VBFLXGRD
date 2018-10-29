@@ -12,7 +12,6 @@ UserControl=Builds\VBFlexGrid\VBFlexGrid.ctl
 Module=VBFlexGridBase; Builds\VBFlexGrid\VBFlexGridBase.bas
 PropertyPage=Builds\VBFlexGrid\PPVBFlexGridGeneral.pag
 PropertyPage=Builds\VBFlexGrid\PPVBFlexGridStyle.pag
-Class=Enumeration; Builds\Enumeration.cls
 Form=InputForm.frm
 Class=IVBFlexDataSource; Builds\VBFlexGrid\IVBFlexDataSource.cls
 ResFile32="Resources\Resources.res"
