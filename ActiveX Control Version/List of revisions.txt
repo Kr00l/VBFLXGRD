@@ -1,46 +1,19 @@
 List of revisions:
 
-04-Sep-2018
-- Revision update. (Version 1.1.14)
+30-Oct-2018
+- Revision update. (Version 1.2.5)
 
-03-Sep-2018
-- Revision update. (Version 1.1.13)
+29-Oct-2018
+- Revision update. (Version 1.2.4)
 
-27-Aug-2018
-- Revision update. (Version 1.1.12)
+26-Oct-2018
+- Revision update. (Version 1.2.3)
 
-26-Aug-2018
-- Revision update. (Version 1.1.11)
+25-Oct-2018
+- Revision update. (Version 1.2.2)
 
-25-Aug-2018
-- Revision update. (Version 1.1.10)
+09-Oct-2018
+- Revision update. (Version 1.2.1)
 
-25-Aug-2018
-- Revision update. (Version 1.1.9)
-
-12-Aug-2018
-- Revision update. (Version 1.1.8)
-
-28-Jul-2018
-- Revision update. (Version 1.1.7)
-
-09-Jul-2018
-- Revision update. (Version 1.1.6)
-
-05-May-2018
-- Revision update. (Version 1.1.5)
-
-30-Apr-2018
-- Revision update. (Version 1.1.4)
-
-20-Apr-2018
-- Revision update. (Version 1.1.3)
-
-20-Apr-2018
-- Revision update. (Version 1.1.2)
-
-16-Apr-2018
-- Revision update. (Version 1.1.1)
-
-22-Mar-2018
-- First release. (Version 1.1.0)
+13-Sep-2018
+- First release. (Version 1.2.0)
