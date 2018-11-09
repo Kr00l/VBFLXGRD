@@ -48,8 +48,6 @@ Private Declare Function InitCommonControlsEx Lib "comctl32" (ByRef ICCEX As TIN
 Private Declare Function RegisterClassEx Lib "user32" Alias "RegisterClassExW" (ByRef lpWndClassEx As WNDCLASSEX) As Integer
 Private Declare Function UnregisterClass Lib "user32" Alias "UnregisterClassW" (ByVal lpClassName As Long, ByVal hInstance As Long) As Long
 Private Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-Private Declare Function GetAncestor Lib "user32" (ByVal hWnd As Long, ByVal gaFlags As Long) As Long
-Private Declare Function GetClassName Lib "user32" Alias "GetClassNameW" (ByVal hWnd As Long, ByVal lpClassName As Long, ByVal nMaxCount As Long) As Long
 Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
 Private Declare Function GetWindowLong Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long) As Long
 Private Declare Function DllGetVersion Lib "comctl32" (ByRef pdvi As DLLVERSIONINFO) As Long
@@ -121,22 +119,6 @@ If Done = False Then
     Done = True
 End If
 FlexW2KCompatibility = Value
-End Function
-
-Public Function FlexRootIsEditor(ByVal hWnd As Long) As Boolean
-Static Done As Boolean, Value As Boolean
-If Done = False Then
-    Const GA_ROOT As Long = 2
-    hWnd = GetAncestor(hWnd, GA_ROOT)
-    If hWnd <> 0 Then
-        Dim Buffer As String, RetVal As Long
-        Buffer = String(256, vbNullChar)
-        RetVal = GetClassName(hWnd, StrPtr(Buffer), Len(Buffer))
-        If RetVal <> 0 Then Value = CBool(Left$(Buffer, RetVal) = "wndclass_desked_gsk")
-    End If
-    Done = True
-End If
-FlexRootIsEditor = Value
 End Function
 
 Public Sub FlexTopParentValidateControls(ByVal UserControl As Object)
