@@ -792,7 +792,7 @@ Private VBFlexGridNoRedraw As Boolean
 Private VBFlexGridCharCodeCache As Long
 Private VBFlexGridIsClick As Boolean
 Private VBFlexGridMouseOver As Boolean
-Private VBFlexGridDesignMode As Boolean
+Private VBFlexGridDesignMode As Boolean, VBFlexGridTopDesignMode As Boolean
 Private VBFlexGridRTLLayout As Boolean, VBFlexGridRTLReading As Boolean
 Private VBFlexGridAlignable As Boolean
 Private VBFlexGridSort As FlexSortConstants
@@ -1036,6 +1036,8 @@ If DispIDMousePointer = 0 Then DispIDMousePointer = GetDispID(Me, "MousePointer"
 On Error Resume Next
 If UserControl.ParentControls.Count = 0 Then VBFlexGridAlignable = False Else VBFlexGridAlignable = True
 On Error GoTo 0
+VBFlexGridDesignMode = Not Ambient.UserMode
+VBFlexGridTopDesignMode = Not GetTopUserControl(Me).Ambient.UserMode
 
 #If ImplementDataSource = True Then
 
@@ -1102,7 +1104,6 @@ PropShowLabelTips = False
 PropClipSeparators = vbNullString
 PropClipMode = FlexClipModeNormal
 PropFormatString = vbNullString
-VBFlexGridDesignMode = Not Ambient.UserMode
 Call CreateVBFlexGrid
 End Sub
 
@@ -1111,6 +1112,8 @@ If DispIDMousePointer = 0 Then DispIDMousePointer = GetDispID(Me, "MousePointer"
 On Error Resume Next
 If UserControl.ParentControls.Count = 0 Then VBFlexGridAlignable = False Else VBFlexGridAlignable = True
 On Error GoTo 0
+VBFlexGridDesignMode = Not Ambient.UserMode
+VBFlexGridTopDesignMode = Not GetTopUserControl(Me).Ambient.UserMode
 With PropBag
 
 #If ImplementDataSource = True Then
@@ -1182,7 +1185,6 @@ PropClipSeparators = VarToStr(.ReadProperty("ClipSeparators", vbNullString))
 PropClipMode = .ReadProperty("ClipMode", FlexClipModeNormal)
 PropFormatString = VarToStr(.ReadProperty("FormatString", vbNullString))
 End With
-VBFlexGridDesignMode = Not Ambient.UserMode
 Call CreateVBFlexGrid
 End Sub
 
@@ -1544,7 +1546,7 @@ End Property
 
 Public Property Set DataSource(ByVal Value As MSDATASRC.DataSource)
 Set PropDataSource = Value
-If Ambient.UserMode = True Then
+If VBFlexGridDesignMode = False Then
     If Not PropDataSource Is Nothing Then
         If PropRecordset Is Nothing Then Set PropRecordset = CreateObject("ADODB.Recordset")
         With PropRecordset
@@ -1947,7 +1949,7 @@ Else
     If Value.Type = vbPicTypeIcon Or Value.Handle = 0 Then
         Set PropMouseIcon = Value
     Else
-        If Ambient.UserMode = False Then
+        If VBFlexGridDesignMode = True Then
             MsgBox "Invalid property value", vbCritical + vbOKOnly
             Exit Property
         Else
@@ -2001,7 +2003,7 @@ If PropRightToLeft = True Then
     End Select
 End If
 Dim dwMask As Long, dwExStyle As Long
-If Ambient.UserMode = True Then
+If VBFlexGridDesignMode = False Then
     ' Only on run-time the UserControl gets the mirror placement with WS_EX_LAYOUTRTL.
     ' On design-time the mirror effect will be simulated by setting WS_EX_LEFTSCROLLBAR and SetLayout API.
     ' This way the design-time dragging of the control on a form will not be reversed and works as expected.
@@ -2030,7 +2032,7 @@ Else
 End If
 If VBFlexGridHandle <> 0 Then
     If PropRightToLeft = True Then
-        If Ambient.UserMode = True Then
+        If VBFlexGridDesignMode = False Then
             If PropRightToLeftLayout = True Then dwMask = WS_EX_LAYOUTRTL Else dwMask = WS_EX_RTLREADING
         Else
             If PropRightToLeftLayout = True Then dwMask = WS_EX_LEFTSCROLLBAR
@@ -2161,14 +2163,14 @@ End Property
 
 Public Property Let FixedRows(ByVal Value As Long)
 If Value < 0 Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "Invalid Row Value", vbCritical + vbOKOnly
         Exit Property
     Else
         Err.Raise Number:=30009, Description:="Invalid Row value"
     End If
 ElseIf Value >= PropRows Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "FixedRows must be at least one less than Rows value", vbCritical + vbOKOnly
         Exit Property
     Else
@@ -2203,14 +2205,14 @@ End Property
 
 Public Property Let FixedCols(ByVal Value As Long)
 If Value < 0 Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "Invalid Col value", vbCritical + vbOKOnly
         Exit Property
     Else
         Err.Raise Number:=30010, Description:="Invalid Col value"
     End If
 ElseIf Value >= PropCols Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "FixedCols must be at least one less than Cols value", vbCritical + vbOKOnly
         Exit Property
     Else
@@ -2246,7 +2248,7 @@ End Property
 
 Public Property Let Rows(ByVal Value As Long)
 If Value < 0 Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "Invalid Row value", vbCritical + vbOKOnly
         Exit Property
     Else
@@ -2312,7 +2314,7 @@ End Property
 
 Public Property Let Cols(ByVal Value As Long)
 If Value < 0 Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "Invalid Col value", vbCritical + vbOKOnly
         Exit Property
     Else
@@ -2597,7 +2599,7 @@ End Property
 
 Public Property Let RowHeightMin(ByVal Value As Long)
 If Value < 0 Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "Invalid Row Height value", vbCritical + vbOKOnly
         Exit Property
     Else
@@ -2617,7 +2619,7 @@ End Property
 
 Public Property Let RowHeightMax(ByVal Value As Long)
 If Value < 0 Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "Invalid Row Height value", vbCritical + vbOKOnly
         Exit Property
     Else
@@ -2637,7 +2639,7 @@ End Property
 
 Public Property Let ColWidthMin(ByVal Value As Long)
 If Value < 0 Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "Invalid Col Width value", vbCritical + vbOKOnly
         Exit Property
     Else
@@ -2657,7 +2659,7 @@ End Property
 
 Public Property Let ColWidthMax(ByVal Value As Long)
 If Value < 0 Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "Invalid Col Width value", vbCritical + vbOKOnly
         Exit Property
     Else
@@ -2733,7 +2735,7 @@ End Property
 
 Public Property Let GridLineWidth(ByVal Value As Integer)
 If Value < 1 Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "Invalid property value", vbCritical + vbOKOnly
         Exit Property
     Else
@@ -2805,7 +2807,7 @@ End Property
 
 Public Property Let WordWrap(ByVal Value As Boolean)
 If PropSingleLine = True And Value = True Then
-    If Ambient.UserMode = False Then
+    If VBFlexGridDesignMode = True Then
         MsgBox "WordWrap must be False when SingleLine is True", vbCritical + vbOKOnly
         Exit Property
     Else
@@ -2989,7 +2991,7 @@ End Property
 
 Public Property Let ShowInfoTips(ByVal Value As Boolean)
 PropShowInfoTips = Value
-If VBFlexGridHandle <> 0 And Ambient.UserMode = True Then
+If VBFlexGridHandle <> 0 And VBFlexGridDesignMode = False Then
     If PropShowInfoTips = False And PropShowLabelTips = False Then
         Call DestroyToolTip
     Else
@@ -3006,7 +3008,7 @@ End Property
 
 Public Property Let ShowLabelTips(ByVal Value As Boolean)
 PropShowLabelTips = Value
-If VBFlexGridHandle <> 0 And Ambient.UserMode = True Then
+If VBFlexGridHandle <> 0 And VBFlexGridDesignMode = False Then
     If PropShowInfoTips = False And PropShowLabelTips = False Then
         Call DestroyToolTip
     Else
@@ -3024,7 +3026,7 @@ End Property
 Public Property Let ClipSeparators(ByVal Value As String)
 Select Case Len(Value)
     Case Is > 2, 1
-        If Ambient.UserMode = False Then
+        If VBFlexGridDesignMode = True Then
             MsgBox "Invalid property value", vbCritical + vbOKOnly
             Exit Property
         Else
@@ -3032,7 +3034,7 @@ Select Case Len(Value)
         End If
     Case 2
         If StrComp(Left$(Value, 1), Right$(Value, 1)) = 0 Then
-            If Ambient.UserMode = False Then
+            If VBFlexGridDesignMode = True Then
                 MsgBox "Invalid property value", vbCritical + vbOKOnly
                 Exit Property
             Else
@@ -9761,7 +9763,7 @@ Select Case wMsg
         Exit Function
     Case WM_MOUSEACTIVATE
         Static InProc As Boolean
-        If FlexRootIsEditor(hWnd) = False And GetFocus() <> VBFlexGridHandle Then
+        If VBFlexGridTopDesignMode = False And GetFocus() <> VBFlexGridHandle Then
             If InProc = True Or LoWord(lParam) = HTBORDER Then WindowProcControl = MA_NOACTIVATEANDEAT: Exit Function
             Select Case HiWord(lParam)
                 Case WM_LBUTTONDOWN
