@@ -1,5 +1,8 @@
 List of revisions:
 
+17-Jan-2019
+- Improvement in VTableHandle.bas concerning 'DeactivateIPAO'.
+
 09-Nov-2018
 - Internal improvement concerning design-mode handling.
 
