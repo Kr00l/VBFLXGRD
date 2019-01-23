@@ -1,5 +1,8 @@
 List of revisions:
 
+23-Jan-2019
+- VBA bugfix.
+
 17-Jan-2019
 - Improvement in VTableHandle.bas concerning 'DeactivateIPAO'.
 
