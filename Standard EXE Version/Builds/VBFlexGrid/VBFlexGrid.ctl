@@ -1035,9 +1035,9 @@ Private Sub UserControl_InitProperties()
 If DispIDMousePointer = 0 Then DispIDMousePointer = GetDispID(Me, "MousePointer")
 On Error Resume Next
 If UserControl.ParentControls.Count = 0 Then VBFlexGridAlignable = False Else VBFlexGridAlignable = True
-On Error GoTo 0
 VBFlexGridDesignMode = Not Ambient.UserMode
 VBFlexGridTopDesignMode = Not GetTopUserControl(Me).Ambient.UserMode
+On Error GoTo 0
 
 #If ImplementDataSource = True Then
 
@@ -1111,9 +1111,9 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 If DispIDMousePointer = 0 Then DispIDMousePointer = GetDispID(Me, "MousePointer")
 On Error Resume Next
 If UserControl.ParentControls.Count = 0 Then VBFlexGridAlignable = False Else VBFlexGridAlignable = True
-On Error GoTo 0
 VBFlexGridDesignMode = Not Ambient.UserMode
 VBFlexGridTopDesignMode = Not GetTopUserControl(Me).Ambient.UserMode
+On Error GoTo 0
 With PropBag
 
 #If ImplementDataSource = True Then
