@@ -429,6 +429,7 @@ FontItalic As Boolean
 FontStrikeThrough As Boolean
 FontUnderline As Boolean
 FontCharset As Integer
+PictureRenderFlag As Integer
 End Type
 Private Const RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH As Long = 4
 Private Const ROWINFO_HEIGHT_SPACING_DIP As Long = 3
@@ -567,7 +568,6 @@ Private Declare Function LineTo Lib "gdi32" (ByVal hDC As Long, ByVal X As Long,
 Private Declare Function FillRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal hBrush As Long) As Long
 Private Declare Function DrawFocusRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT) As Long
 Private Declare Function DrawText Lib "user32" Alias "DrawTextW" (ByVal hDC As Long, ByVal lpchText As Long, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long) As Long
-Private Declare Function DrawIconEx Lib "user32" (ByVal hDC As Long, ByVal XLeft As Long, ByVal YTop As Long, ByVal hIcon As Long, ByVal CXWidth As Long, ByVal CYWidth As Long, ByVal istepIfAniCur As Long, ByVal hbrFlickerFreeDraw As Long, ByVal diFlags As Long) As Long
 Private Declare Function DeleteObject Lib "gdi32" (ByVal hObject As Long) As Long
 Private Declare Function SelectObject Lib "gdi32" (ByVal hDC As Long, ByVal hObject As Long) As Long
 Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
@@ -643,7 +643,6 @@ Private Const SIF_ALL As Long = (SIF_RANGE Or SIF_PAGE Or SIF_POS Or SIF_TRACKPO
 Private Const SPI_GETWHEELSCROLLLINES As Long = &H68
 Private Const RGN_DIFF As Long = 4
 Private Const RGN_COPY As Long = 5
-Private Const DI_NORMAL As Long = &H3
 Private Const DT_NOPREFIX As Long = &H800
 Private Const DT_RTLREADING As Long = &H20000
 Private Const DT_LEFT As Long = &H0
@@ -4979,7 +4978,10 @@ ElseIf VBFlexGridCol < 0 Then
 End If
 Set UserControl.Picture = Value
 If PropFillStyle = FlexFillStyleSingle Then
-    Set VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Picture = UserControl.Picture
+    With VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol)
+    Set .Picture = UserControl.Picture
+    .PictureRenderFlag = 0
+    End With
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TSELRANGE
     Call GetSelRangeStruct(SelRange)
@@ -4987,6 +4989,7 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
         With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
             Set .Cols(j).Picture = UserControl.Picture
+            .Cols(j).PictureRenderFlag = 0
         Next j
         End With
     Next i
@@ -6653,35 +6656,16 @@ If Not .Picture Is Nothing Then
         If PictureOffsetX > 0 Then PictureLeft = PictureLeft + PictureOffsetX
         If PictureOffsetY > 0 Then PictureTop = PictureTop + PictureOffsetY
         If .PictureAlignment <> FlexPictureAlignmentTile Then
-            With .Picture
-            If .Type = vbPicTypeIcon Then
-                DrawIconEx hDC, PictureLeft, PictureTop, .Handle, PictureWidth, PictureHeight, 0, 0, DI_NORMAL
-            Else
-                .Render hDC Or 0&, PictureLeft Or 0&, PictureTop Or 0&, PictureWidth Or 0&, PictureHeight Or 0&, 0&, .Height, .Width, -.Height, ByVal 0&
-            End If
-            End With
+            Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
         Else
-            With .Picture
-            If .Type = vbPicTypeIcon Then
+            Do
                 Do
-                    Do
-                        DrawIconEx hDC, PictureLeft, PictureTop, .Handle, PictureWidth, PictureHeight, 0, 0, DI_NORMAL
-                        PictureTop = PictureTop + PictureHeight
-                    Loop While PictureTop < CellRect.Bottom
-                    PictureLeft = PictureLeft + PictureWidth
-                    PictureTop = CellRect.Top
-                Loop While PictureLeft < CellRect.Right
-            Else
-                Do
-                    Do
-                        .Render hDC Or 0&, PictureLeft Or 0&, PictureTop Or 0&, PictureWidth Or 0&, PictureHeight Or 0&, 0&, .Height, .Width, -.Height, ByVal 0&
-                        PictureTop = PictureTop + PictureHeight
-                    Loop While PictureTop < CellRect.Bottom
-                    PictureLeft = PictureLeft + PictureWidth
-                    PictureTop = CellRect.Top
-                Loop While PictureLeft < CellRect.Right
-            End If
-            End With
+                    Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+                    PictureTop = PictureTop + PictureHeight
+                Loop While PictureTop < CellRect.Bottom
+                PictureLeft = PictureLeft + PictureWidth
+                PictureTop = CellRect.Top
+            Loop While PictureLeft < CellRect.Right
         End If
     End If
 End If
