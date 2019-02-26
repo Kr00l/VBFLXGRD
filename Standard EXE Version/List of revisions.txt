@@ -1,5 +1,8 @@
 List of revisions:
 
+26-Feb-2019
+- Included the CellClick and CellDblClick event.
+
 30-Jan-2019
 - CellPicture property can now render 32bpp alpha bitmaps.
 
