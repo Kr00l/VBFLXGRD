@@ -488,6 +488,10 @@ Public Event Compare(ByVal Row1 As Long, ByVal Row2 As Long, ByVal Col As Long, 
 Attribute Compare.VB_Description = "Occurs during custom sorts to compare two rows."
 Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
 Attribute DividerDblClick.VB_Description = "Occurs when the user double-clicked the divider on a row or column."
+Public Event CellClick(ByVal Row As Long, ByVal Col As Long, ByVal Button As Integer)
+Attribute CellClick.VB_Description = "Occurs when a cell is clicked."
+Public Event CellDblClick(ByVal Row As Long, ByVal Col As Long, ByVal Button As Integer)
+Attribute CellDblClick.VB_Description = "Occurs when a cell is double clicked."
 Public Event PreviewKeyDown(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
 Attribute PreviewKeyDown.VB_Description = "Occurs before the KeyDown event."
 Public Event PreviewKeyUp(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
@@ -746,6 +750,7 @@ Private Const TTN_GETDISPINFOA As Long = (TTN_FIRST - 0)
 Private Const TTN_GETDISPINFOW As Long = (TTN_FIRST - 10)
 Private Const TTN_GETDISPINFO As Long = TTN_GETDISPINFOW
 Private Const TTN_SHOW As Long = (TTN_FIRST - 1)
+Implements OLEGuids.IObjectSafety
 Implements OLEGuids.IOleInPlaceActiveObjectVB
 Implements OLEGuids.IPerPropertyBrowsingVB
 Private VBFlexGridHandle As Long, VBFlexGridToolTipHandle As Long
@@ -785,6 +790,7 @@ Private VBFlexGridDividerDragOffset As POINTAPI
 Private VBFlexGridHitRow As Long, VBFlexGridHitCol As Long
 Private VBFlexGridHitRowDivider As Long, VBFlexGridHitColDivider As Long
 Private VBFlexGridHitResult As FlexHitResultConstants
+Private VBFlexGridCellClickRow As Long, VBFlexGridCellClickCol As Long
 Private VBFlexGridWheelScrollLines As Long
 Private VBFlexGridFocused As Boolean
 Private VBFlexGridNoRedraw As Boolean
@@ -868,6 +874,15 @@ Private PropShowLabelTips As Boolean
 Private PropClipSeparators As String
 Private PropClipMode As FlexClipModeConstants
 Private PropFormatString As String
+
+Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
+Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
+pdwSupportedOptions = INTERFACESAFE_FOR_UNTRUSTED_CALLER Or INTERFACESAFE_FOR_UNTRUSTED_DATA
+pdwEnabledOptions = INTERFACESAFE_FOR_UNTRUSTED_CALLER Or INTERFACESAFE_FOR_UNTRUSTED_DATA
+End Sub
+
+Private Sub IObjectSafety_SetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByVal dwOptionsSetMask As Long, ByVal dwEnabledOptions As Long)
+End Sub
 
 Private Sub IOleInPlaceActiveObjectVB_TranslateAccelerator(ByRef Handled As Boolean, ByRef RetVal As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal Shift As Long)
 If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
@@ -1027,6 +1042,8 @@ VBFlexGridHitCol = -1
 VBFlexGridHitRowDivider = -1
 VBFlexGridHitColDivider = -1
 VBFlexGridHitResult = FlexHitResultNoWhere
+VBFlexGridCellClickRow = -1
+VBFlexGridCellClickCol = -1
 SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VBFlexGridWheelScrollLines, 0
 End Sub
 
@@ -8932,11 +8949,7 @@ Call SetRowColParams(RCP)
 End With
 End Sub
 
-Private Function ProcessLButtonDown(ByVal Shift As Integer, ByVal X As Long, ByVal Y As Long) As Boolean
-Dim HTI As THITTESTINFO
-HTI.PT.X = X
-HTI.PT.Y = Y
-Call GetHitTestInfo(HTI)
+Private Function ProcessLButtonDown(ByVal Shift As Integer, ByRef HTI As THITTESTINFO) As Boolean
 VBFlexGridCaptureRow = HTI.HitRow
 VBFlexGridCaptureCol = HTI.HitCol
 VBFlexGridCaptureDividerRow = HTI.HitRowDivider
@@ -8969,8 +8982,8 @@ ElseIf HTI.HitResult <> FlexHitResultCell Then
                 End If
             Next i
             P.Y = .Top + GetRowHeight(iRow)
-            .Top = .Top + (Y - P.Y) + 1
-            .Bottom = .Bottom + (Y - P.Y) - 1
+            .Top = .Top + (HTI.PT.Y - P.Y) + 1
+            .Bottom = .Bottom + (HTI.PT.Y - P.Y) - 1
         End If
         If iCol > -1 Then
             For i = 0 To iCol - 1
@@ -8979,14 +8992,14 @@ ElseIf HTI.HitResult <> FlexHitResultCell Then
                 End If
             Next i
             P.X = .Left + GetColWidth(iCol)
-            .Left = .Left + (X - P.X) + 1
-            .Right = .Right + (X - P.X) - 1
+            .Left = .Left + (HTI.PT.X - P.X) + 1
+            .Right = .Right + (HTI.PT.X - P.X) - 1
         End If
         End With
         MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, ClipRect, 2
         ClipCursor ClipRect
-        VBFlexGridDividerDragOffset.X = X - P.X
-        VBFlexGridDividerDragOffset.Y = Y - P.Y
+        VBFlexGridDividerDragOffset.X = HTI.PT.X - P.X
+        VBFlexGridDividerDragOffset.Y = HTI.PT.Y - P.Y
         Call SetDividerDragSplitterRect(P.X, P.Y)
         Call DrawDividerDragSplitter
         ProcessLButtonDown = True
@@ -9873,24 +9886,39 @@ Select Case wMsg
         SendMessage hWnd, WM_CHAR, wParam, ByVal lParam
         Exit Function
     Case WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_RBUTTONDOWN
-        Dim P As POINTAPI, Cancel As Boolean
-        P.X = Get_X_lParam(lParam)
-        P.Y = Get_Y_lParam(lParam)
+        Dim Cancel As Boolean
+        With HTI
+        .PT.X = Get_X_lParam(lParam)
+        .PT.Y = Get_Y_lParam(lParam)
+        Call GetHitTestInfo(HTI)
         Select Case wMsg
             Case WM_LBUTTONDOWN
-                RaiseEvent BeforeMouseDown(vbLeftButton, GetShiftStateFromParam(wParam), UserControl.ScaleX(P.X, vbPixels, vbTwips), UserControl.ScaleY(P.Y, vbPixels, vbTwips), Cancel)
+                RaiseEvent BeforeMouseDown(vbLeftButton, GetShiftStateFromParam(wParam), UserControl.ScaleX(.PT.X, vbPixels, vbTwips), UserControl.ScaleY(.PT.Y, vbPixels, vbTwips), Cancel)
                 If Cancel = False Then
                     SetCapture hWnd
-                    Cancel = ProcessLButtonDown(GetShiftStateFromParam(wParam), P.X, P.Y)
+                    Cancel = ProcessLButtonDown(GetShiftStateFromParam(wParam), HTI)
                 End If
             Case WM_MBUTTONDOWN
-                RaiseEvent BeforeMouseDown(vbMiddleButton, GetShiftStateFromParam(wParam), UserControl.ScaleX(P.X, vbPixels, vbTwips), UserControl.ScaleY(P.Y, vbPixels, vbTwips), Cancel)
+                RaiseEvent BeforeMouseDown(vbMiddleButton, GetShiftStateFromParam(wParam), UserControl.ScaleX(.PT.X, vbPixels, vbTwips), UserControl.ScaleY(.PT.Y, vbPixels, vbTwips), Cancel)
             Case WM_RBUTTONDOWN
-                RaiseEvent BeforeMouseDown(vbRightButton, GetShiftStateFromParam(wParam), UserControl.ScaleX(P.X, vbPixels, vbTwips), UserControl.ScaleY(P.Y, vbPixels, vbTwips), Cancel)
+                RaiseEvent BeforeMouseDown(vbRightButton, GetShiftStateFromParam(wParam), UserControl.ScaleX(.PT.X, vbPixels, vbTwips), UserControl.ScaleY(.PT.Y, vbPixels, vbTwips), Cancel)
         End Select
+        End With
         If Cancel = True Then
+            VBFlexGridCellClickRow = -1
+            VBFlexGridCellClickCol = -1
             WindowProcControl = 0
             Exit Function
+        Else
+            With HTI
+            If .HitResult = FlexHitResultCell Then
+                VBFlexGridCellClickRow = .HitRow
+                VBFlexGridCellClickCol = .HitCol
+            Else
+                VBFlexGridCellClickRow = -1
+                VBFlexGridCellClickCol = -1
+            End If
+            End With
         End If
     Case WM_MOUSEMOVE
         Call ProcessMouseMove(GetMouseStateFromParam(wParam), Get_X_lParam(lParam), Get_Y_lParam(lParam))
@@ -10001,20 +10029,30 @@ Select Case wMsg
         VBFlexGridFocused = CBool(wMsg = WM_SETFOCUS)
         Call RedrawGrid
     Case WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK
-        RaiseEvent DblClick
+        With HTI
+        Pos = GetMessagePos()
+        .PT.X = Get_X_lParam(Pos)
+        .PT.Y = Get_Y_lParam(Pos)
+        ScreenToClient hWnd, .PT
+        Call GetHitTestInfo(HTI)
         If wMsg = WM_LBUTTONDBLCLK Then
-            With HTI
-            Pos = GetMessagePos()
-            .PT.X = Get_X_lParam(Pos)
-            .PT.Y = Get_Y_lParam(Pos)
-            ScreenToClient hWnd, .PT
-            Call GetHitTestInfo(HTI)
             Select Case .HitResult
                 Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
                     RaiseEvent DividerDblClick(.HitRowDivider, .HitColDivider)
+                Case FlexHitResultCell
+                    RaiseEvent CellDblClick(.HitRow, .HitCol, vbLeftButton)
             End Select
-            End With
+        Else
+            If .HitResult = FlexHitResultCell Then
+                If wMsg = WM_MBUTTONDBLCLK Then
+                    RaiseEvent CellDblClick(.HitRow, .HitCol, vbMiddleButton)
+                ElseIf wMsg = WM_RBUTTONDBLCLK Then
+                    RaiseEvent CellDblClick(.HitRow, .HitCol, vbRightButton)
+                End If
+            End If
         End If
+        End With
+        RaiseEvent DblClick
     Case WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_RBUTTONDOWN, WM_MOUSEMOVE, WM_LBUTTONUP, WM_MBUTTONUP, WM_RBUTTONUP
         Dim X As Single
         Dim Y As Single
@@ -10044,6 +10082,23 @@ Select Case wMsg
                 End If
                 RaiseEvent MouseMove(GetMouseStateFromParam(wParam), GetShiftStateFromParam(wParam), X, Y)
             Case WM_LBUTTONUP, WM_MBUTTONUP, WM_RBUTTONUP
+                With HTI
+                .PT.X = Get_X_lParam(lParam)
+                .PT.Y = Get_Y_lParam(lParam)
+                Call GetHitTestInfo(HTI)
+                If .HitResult = FlexHitResultCell And VBFlexGridIsClick = True Then
+                    If VBFlexGridCellClickRow = .HitRow And VBFlexGridCellClickCol = .HitCol Then
+                        Select Case wMsg
+                            Case WM_LBUTTONUP
+                                RaiseEvent CellClick(.HitRow, .HitCol, vbLeftButton)
+                            Case WM_MBUTTONUP
+                                RaiseEvent CellClick(.HitRow, .HitCol, vbMiddleButton)
+                            Case WM_RBUTTONUP
+                                RaiseEvent CellClick(.HitRow, .HitCol, vbRightButton)
+                        End Select
+                    End If
+                End If
+                End With
                 Select Case wMsg
                     Case WM_LBUTTONUP
                         RaiseEvent MouseUp(vbLeftButton, GetShiftStateFromParam(wParam), X, Y)
