@@ -8382,8 +8382,9 @@ Select Case PropSelectionMode
                     ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
                         .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
                     End If
+                    Call MovePreviousCol(.LeftCol)
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    ' Void
+                    Call MovePreviousCol(.LeftCol)
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
                     .RowSel = .Row
                     .ColSel = (PropCols - 1)
@@ -8392,8 +8393,9 @@ Select Case PropSelectionMode
                     ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
                         .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
                     End If
+                    Call MoveFirstCol(.LeftCol)
                 Else
-                    ' Void
+                    Call MoveFirstCol(.LeftCol)
                 End If
             Case vbKeyRight
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
@@ -8404,8 +8406,9 @@ Select Case PropSelectionMode
                     ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
                         .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
                     End If
+                    If .LeftCol < (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1 Then Call MoveNextCol(.LeftCol)
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    ' Void
+                    If .LeftCol < (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1 Then Call MoveNextCol(.LeftCol)
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
                     .RowSel = .Row
                     .ColSel = (PropCols - 1)
@@ -8414,8 +8417,9 @@ Select Case PropSelectionMode
                     ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
                         .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
                     End If
+                    .LeftCol = (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1
                 Else
-                    ' Void
+                    .LeftCol = (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1
                 End If
             Case vbKeyPageUp
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
@@ -8588,45 +8592,49 @@ Select Case PropSelectionMode
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
                     .RowSel = (PropRows - 1)
                     .ColSel = .Col
+                    Call MovePreviousRow(.TopRow)
                     If .LeftCol > .Col Then
                         .LeftCol = .Col
                     ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
                         .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    ' Void
+                    Call MovePreviousRow(.TopRow)
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
                     .RowSel = (PropRows - 1)
                     .ColSel = .Col
+                    Call MoveFirstRow(.TopRow)
                     If .LeftCol > .Col Then
                         .LeftCol = .Col
                     ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
                         .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
                     End If
                 Else
-                    ' Void
+                    Call MoveFirstRow(.TopRow)
                 End If
             Case vbKeyDown
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
                     .RowSel = (PropRows - 1)
                     .ColSel = .Col
+                    If .TopRow < (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1 Then Call MoveNextRow(.TopRow)
                     If .LeftCol > .Col Then
                         .LeftCol = .Col
                     ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
                         .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    ' Void
+                    If .TopRow < (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1 Then Call MoveNextRow(.TopRow)
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
                     .RowSel = (PropRows - 1)
                     .ColSel = .Col
+                    .TopRow = (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1
                     If .LeftCol > .Col Then
                         .LeftCol = .Col
                     ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
                         .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
                     End If
                 Else
-                    ' Void
+                    .TopRow = (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1
                 End If
             Case vbKeyLeft
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
