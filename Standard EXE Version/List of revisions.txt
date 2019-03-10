@@ -1,5 +1,8 @@
 List of revisions:
 
+10-Mar-2019
+- Improvement in VTableHandle.bas concerning 'DeactivateIPAO'.
+
 02-Mar-2019
 - More user friendly behavior when SelectionMode is ByRow/ByCol and pressing cursor keys.
 
