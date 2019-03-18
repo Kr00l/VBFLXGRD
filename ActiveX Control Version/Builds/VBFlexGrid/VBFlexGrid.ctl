@@ -6207,42 +6207,46 @@ If PropMergeCells = FlexMergeCellsNever Then
     For iRow = 0 To (PropRows - 1)
         If iRow >= VBFlexGridTopRow Then
             .Bottom = .Top + GetRowHeight(iRow)
-            For iCol = 0 To (PropCols - 1)
-                If iCol >= VBFlexGridLeftCol Then
-                    .Left = .Right
-                    .Right = .Right + GetColWidth(iCol)
-                    If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, False)
-                ElseIf iCol < PropFixedCols Then
-                    .Left = .Right
-                    .Right = .Right + GetColWidth(iCol)
-                    If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, True)
-                Else
-                    iCol = VBFlexGridLeftCol - 1
-                End If
-                If NoClip = False And .Right > ClientRect.Right Then Exit For
-            Next iCol
+            If .Bottom > .Top Then
+                For iCol = 0 To (PropCols - 1)
+                    If iCol >= VBFlexGridLeftCol Then
+                        .Left = .Right
+                        .Right = .Right + GetColWidth(iCol)
+                        If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, False)
+                    ElseIf iCol < PropFixedCols Then
+                        .Left = .Right
+                        .Right = .Right + GetColWidth(iCol)
+                        If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, True)
+                    Else
+                        iCol = VBFlexGridLeftCol - 1
+                    End If
+                    If NoClip = False And .Right > ClientRect.Right Then Exit For
+                Next iCol
+            End If
             If .Bottom > GridRect.Bottom Then GridRect.Bottom = .Bottom
             If .Right > GridRect.Right Then GridRect.Right = .Right
             .Left = 0
             .Right = 0
-            .Top = .Top + GetRowHeight(iRow)
+            .Top = .Bottom
         ElseIf iRow < PropFixedRows Then
             .Bottom = .Top + GetRowHeight(iRow)
-            For iCol = 0 To (PropCols - 1)
-                If iCol >= VBFlexGridLeftCol Or iCol < PropFixedCols Then
-                    .Left = .Right
-                    .Right = .Right + GetColWidth(iCol)
-                    If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, True)
-                Else
-                    iCol = VBFlexGridLeftCol - 1
-                End If
-                If NoClip = False And .Right > ClientRect.Right Then Exit For
-            Next iCol
+            If .Bottom > .Top Then
+                For iCol = 0 To (PropCols - 1)
+                    If iCol >= VBFlexGridLeftCol Or iCol < PropFixedCols Then
+                        .Left = .Right
+                        .Right = .Right + GetColWidth(iCol)
+                        If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, True)
+                    Else
+                        iCol = VBFlexGridLeftCol - 1
+                    End If
+                    If NoClip = False And .Right > ClientRect.Right Then Exit For
+                Next iCol
+            End If
             If .Bottom > GridRect.Bottom Then GridRect.Bottom = .Bottom
             If .Right > GridRect.Right Then GridRect.Right = .Right
             .Left = 0
             .Right = 0
-            .Top = .Top + GetRowHeight(iRow)
+            .Top = .Bottom
         Else
             iRow = VBFlexGridTopRow - 1
         End If
@@ -6421,7 +6425,7 @@ Else
             If .Right > GridRect.Right Then GridRect.Right = .Right
             .Left = 0
             .Right = 0
-            .Top = .Top + GetRowHeight(iRow)
+            .Top = .Bottom
         ElseIf iRow < PropFixedRows Then
             .Bottom = .Top + GetRowHeight(iRow)
             For iCol = 0 To (PropCols - 1)
@@ -6512,7 +6516,7 @@ Else
             If .Right > GridRect.Right Then GridRect.Right = .Right
             .Left = 0
             .Right = 0
-            .Top = .Top + GetRowHeight(iRow)
+            .Top = .Bottom
         Else
             iRow = VBFlexGridTopRow - 1
         End If
@@ -7627,7 +7631,7 @@ If wBar = SB_HORZ Then
 ElseIf wBar = SB_VERT Then
     SCI.nPos = VBFlexGridTopRow - PropFixedRows
 End If
-SetScrollInfo VBFlexGridHandle, wBar, SCI, 1
+SetScrollInfo VBFlexGridHandle, wBar, SCI, IIf(VBFlexGridNoRedraw = False, 1, 0)
 GetScrollInfo VBFlexGridHandle, wBar, SCI
 If PrevPos <> SCI.nPos Then
     Call RedrawGrid
@@ -7642,53 +7646,51 @@ End Function
 
 Private Sub CheckTopRow(ByRef TopRow As Long)
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
-Dim ClientRect As RECT, GridRect As RECT, iRow As Long, Changed As Boolean
+Dim ClientRect As RECT, GridRect As RECT, iRow As Long
 GetClientRect VBFlexGridHandle, ClientRect
 With GridRect
-Do
-    Changed = False
-    For iRow = 0 To (PropFixedRows - 1)
-        .Bottom = .Bottom + GetRowHeight(iRow)
-    Next iRow
-    For iRow = TopRow To (PropRows - 1)
-        .Bottom = .Bottom + GetRowHeight(iRow)
-        If .Bottom > ClientRect.Bottom Then Exit For
-    Next iRow
-    If .Bottom <= ClientRect.Bottom And TopRow > ((PropFixedRows - 1) + 1) Then
+For iRow = 0 To (PropFixedRows - 1)
+    .Bottom = .Bottom + GetRowHeight(iRow)
+Next iRow
+For iRow = TopRow To (PropRows - 1)
+    .Bottom = .Bottom + GetRowHeight(iRow)
+    If .Bottom > ClientRect.Bottom Then Exit For
+Next iRow
+If .Bottom <= ClientRect.Bottom Then
+    Do While TopRow > ((PropFixedRows - 1) + 1)
         .Bottom = .Bottom + GetRowHeight(TopRow - 1)
-        If .Bottom <= ClientRect.Bottom Then
-            .Bottom = 0
+        If .Bottom > ClientRect.Bottom Then
+            Exit Do
+        Else
             TopRow = TopRow - 1
-            Changed = True
         End If
-    End If
-Loop Until Changed = False
+    Loop
+End If
 End With
 End Sub
 
 Private Sub CheckLeftCol(ByRef LeftCol As Long)
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
-Dim ClientRect As RECT, GridRect As RECT, iCol As Long, Changed As Boolean
+Dim ClientRect As RECT, GridRect As RECT, iCol As Long
 GetClientRect VBFlexGridHandle, ClientRect
 With GridRect
-Do
-    Changed = False
-    For iCol = 0 To (PropFixedCols - 1)
-        .Right = .Right + GetColWidth(iCol)
-    Next iCol
-    For iCol = LeftCol To (PropCols - 1)
-        .Right = .Right + GetColWidth(iCol)
-        If .Right > ClientRect.Right Then Exit For
-    Next iCol
-    If .Right <= ClientRect.Right And LeftCol > ((PropFixedCols - 1) + 1) Then
+For iCol = 0 To (PropFixedCols - 1)
+    .Right = .Right + GetColWidth(iCol)
+Next iCol
+For iCol = LeftCol To (PropCols - 1)
+    .Right = .Right + GetColWidth(iCol)
+    If .Right > ClientRect.Right Then Exit For
+Next iCol
+If .Right <= ClientRect.Right Then
+    Do While LeftCol > ((PropFixedCols - 1) + 1)
         .Right = .Right + GetColWidth(LeftCol - 1)
-        If .Right <= ClientRect.Right Then
-            .Right = 0
+        If .Right > ClientRect.Right Then
+            Exit Do
+        Else
             LeftCol = LeftCol - 1
-            Changed = True
         End If
-    End If
-Loop Until Changed = False
+    Loop
+End If
 End With
 End Sub
 
