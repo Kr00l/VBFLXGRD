@@ -3224,14 +3224,14 @@ End Sub
 
 Private Sub CreateToolTip()
 Static Done As Boolean
-Dim dwExStyle As Long
 If VBFlexGridToolTipHandle <> 0 Then Exit Sub
 If Done = False Then
     Call FlexInitCC(ICC_TAB_CLASSES)
     Done = True
 End If
+Dim dwExStyle As Long
 dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST Or WS_EX_TRANSPARENT
-If PropRightToLeft = True And PropRightToLeftLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
+If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
 VBFlexGridToolTipHandle = CreateWindowEx(dwExStyle, StrPtr("tooltips_class32"), StrPtr("Tool Tip"), WS_POPUP Or TTS_ALWAYSTIP Or TTS_NOPREFIX, 0, 0, 0, 0, UserControl.hWnd, 0, App.hInstance, ByVal 0&)
 If VBFlexGridToolTipHandle <> 0 Then
     SendMessage VBFlexGridToolTipHandle, TTM_SETMAXTIPWIDTH, 0, ByVal &H7FFF&
@@ -3241,7 +3241,7 @@ If VBFlexGridToolTipHandle <> 0 Then
     .hWnd = VBFlexGridHandle
     .uId = 0
     .uFlags = TTF_SUBCLASS Or TTF_TRANSPARENT Or TTF_PARSELINKS
-    If PropRightToLeft = True And PropRightToLeftLayout = False Then .uFlags = .uFlags Or TTF_RTLREADING
+    If VBFlexGridRTLReading = True Then .uFlags = .uFlags Or TTF_RTLREADING
     .lpszText = LPSTR_TEXTCALLBACK
     GetClientRect VBFlexGridHandle, .RC
     End With
