@@ -1,5 +1,8 @@
 List of revisions:
 
+18-Mar-2019
+- Internal performance improvement.
+
 10-Mar-2019
 - Improvement in VTableHandle.bas concerning 'DeactivateIPAO'.
 
