@@ -5846,7 +5846,7 @@ End If
 Me.CellEnsureVisible
 Dim CellRect As RECT
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, True, CellRect)
-CellWidth = UserControl.ScaleX((CellRect.Right - CellRect.Left), vbPixels, vbTwips)
+CellWidth = UserControl.ScaleX((CellRect.Right - CellRect.Left) - 1, vbPixels, vbTwips)
 End Property
 
 Public Property Get CellHeight() As Long
@@ -5860,7 +5860,7 @@ End If
 Me.CellEnsureVisible
 Dim CellRect As RECT
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, True, CellRect)
-CellHeight = UserControl.ScaleY((CellRect.Bottom - CellRect.Top), vbPixels, vbTwips)
+CellHeight = UserControl.ScaleY((CellRect.Bottom - CellRect.Top) - 1, vbPixels, vbTwips)
 End Property
 
 Public Sub HitTest(ByVal X As Single, ByVal Y As Single)
