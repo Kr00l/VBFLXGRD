@@ -1,5 +1,8 @@
 List of revisions:
 
+24-Mar-2019
+- Compatibility fix for the CellWidth/CellHeight property.
+
 18-Mar-2019
 - Internal performance improvement.
 
