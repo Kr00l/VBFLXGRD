@@ -681,7 +681,7 @@ Private Const WS_HSCROLL As Long = &H100000
 Private Const WS_VSCROLL As Long = &H200000
 Private Const WM_NOTIFY As Long = &H4E
 Private Const WM_NOTIFYFORMAT As Long = &H55
-Private Const WM_MOUSEACTIVATE As Long = &H21, MA_NOACTIVATE As Long = &H3, MA_NOACTIVATEANDEAT As Long = &H4, HTBORDER As Long = 18
+Private Const WM_MOUSEACTIVATE As Long = &H21, MA_ACTIVATE As Long = &H1, MA_ACTIVATEANDEAT As Long = &H2, MA_NOACTIVATE As Long = &H3, MA_NOACTIVATEANDEAT As Long = &H4, HTBORDER As Long = 18
 Private Const WM_SETTINGCHANGE As Long = &H1A
 Private Const WM_MOUSEWHEEL As Long = &H20A
 Private Const SW_HIDE As Long = &H0
@@ -9771,7 +9771,7 @@ Select Case wMsg
     Case WM_MOUSEACTIVATE
         Static InProc As Boolean
         If VBFlexGridTopDesignMode = False And GetFocus() <> VBFlexGridHandle Then
-            If InProc = True Or LoWord(lParam) = HTBORDER Then WindowProcControl = MA_NOACTIVATEANDEAT: Exit Function
+            If InProc = True Or LoWord(lParam) = HTBORDER Then WindowProcControl = MA_ACTIVATEANDEAT: Exit Function
             Select Case HiWord(lParam)
                 Case WM_LBUTTONDOWN
                     On Error Resume Next
@@ -9781,7 +9781,7 @@ Select Case wMsg
                         Call FlexTopParentValidateControls(Me)
                         InProc = False
                         If Err.Number = 380 Then
-                            WindowProcControl = MA_NOACTIVATEANDEAT
+                            WindowProcControl = MA_ACTIVATEANDEAT
                         Else
                             SetFocusAPI .hWnd
                             WindowProcControl = MA_NOACTIVATE
