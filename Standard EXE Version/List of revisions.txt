@@ -1,5 +1,8 @@
 List of revisions:
 
+26-Mar-2019
+- Minor bugfix in the WM_MOUSEACTIVATE handler.
+
 24-Mar-2019
 - Compatibility fix for the CellWidth/CellHeight property.
 
