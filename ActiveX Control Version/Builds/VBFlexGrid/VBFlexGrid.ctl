@@ -7034,7 +7034,7 @@ If VBFlexGridHandle <> 0 Then
         Dim hFontTemp As Long
         With VBFlexGridCells.Rows(iRow).Cols(iCol)
         If .FontName = vbNullString Then
-            If iRow >= PropFixedRows Or iCol >= PropFixedCols Then
+            If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
                 SelectObject hDC, VBFlexGridFontHandle
             Else
                 If VBFlexGridFontFixedHandle = 0 Then
