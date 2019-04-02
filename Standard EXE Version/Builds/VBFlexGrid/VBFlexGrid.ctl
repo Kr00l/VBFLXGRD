@@ -3134,7 +3134,7 @@ If Not PropFormatString = vbNullString Then
                         .Alignment = FlexAlignmentRightCenter
                         Temp = Mid$(Temp, 2)
                     Case Else
-                        .Alignment = FlexAlignmentLeftCenter
+                        .Alignment = FlexAlignmentGeneral
                 End Select
                 .Width = GetTextSize(0, iCol, Temp).CX + Spacing
                 End With
