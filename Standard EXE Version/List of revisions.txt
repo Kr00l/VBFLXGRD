@@ -1,5 +1,9 @@
 List of revisions:
 
+02-Apr-2019
+- Bugfix in FormatString property when no alignment prefix for a column was specified.
+  FlexAlignmentGeneral is now used then instead of FlexAlignmentLeftCenter.
+
 26-Mar-2019
 - Minor bugfix in the WM_MOUSEACTIVATE handler.
 
