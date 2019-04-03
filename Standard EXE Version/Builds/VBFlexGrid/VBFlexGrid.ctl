@@ -908,30 +908,30 @@ If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
                                 Select Case PropSelectionMode
                                     Case FlexSelectionModeFree
                                         If (Shift And vbShiftMask) = 0 Then
-                                            If VBFlexGridCol < (PropCols - 1) Then IsInputKey = True
+                                            If VBFlexGridCol < GetLastMovableCol() Then IsInputKey = True
                                         Else
-                                            If VBFlexGridCol > PropFixedCols Then IsInputKey = True
+                                            If VBFlexGridCol > GetFirstMovableCol() Then IsInputKey = True
                                         End If
                                 End Select
                             Case FlexWrapRow
                                 Select Case PropSelectionMode
                                     Case FlexSelectionModeFree
                                         If (Shift And vbShiftMask) = 0 Then
-                                            If VBFlexGridRow < (PropRows - 1) Or VBFlexGridCol < (PropCols - 1) Then IsInputKey = True
+                                            If VBFlexGridRow < GetLastMovableRow() Or VBFlexGridCol < GetLastMovableCol() Then IsInputKey = True
                                         Else
-                                            If VBFlexGridRow > PropFixedRows Or VBFlexGridCol > PropFixedCols Then IsInputKey = True
+                                            If VBFlexGridRow > GetFirstMovableRow() Or VBFlexGridCol > GetFirstMovableCol() Then IsInputKey = True
                                         End If
                                     Case FlexSelectionModeByRow
                                         If (Shift And vbShiftMask) = 0 Then
-                                            If VBFlexGridRow < (PropRows - 1) Then IsInputKey = True
+                                            If VBFlexGridRow < GetLastMovableRow() Then IsInputKey = True
                                         Else
-                                            If VBFlexGridRow > PropFixedRows Then IsInputKey = True
+                                            If VBFlexGridRow > GetFirstMovableRow() Then IsInputKey = True
                                         End If
                                     Case FlexSelectionModeByColumn
                                         If (Shift And vbShiftMask) = 0 Then
-                                            If VBFlexGridCol < (PropCols - 1) Then IsInputKey = True
+                                            If VBFlexGridCol < GetLastMovableCol() Then IsInputKey = True
                                         Else
-                                            If VBFlexGridCol > PropFixedCols Then IsInputKey = True
+                                            If VBFlexGridCol > GetFirstMovableCol() Then IsInputKey = True
                                         End If
                                 End Select
                             Case FlexWrapGrid
@@ -7958,6 +7958,42 @@ Loop
 If Cancel = False Then iCol = i
 End Sub
 
+Private Function GetFirstMovableRow() As Long
+Dim i As Long, Cancel As Boolean
+i = PropFixedRows
+Do Until GetRowHeight(i) > 0 Or Cancel = True
+    If i < (PropRows - 1) Then i = i + 1 Else Cancel = True
+Loop
+If Cancel = False Then GetFirstMovableRow = i
+End Function
+
+Private Function GetLastMovableRow() As Long
+Dim i As Long, Cancel As Boolean
+i = PropRows - 1
+Do Until GetRowHeight(i) > 0 Or Cancel = True
+    If i > PropFixedRows Then i = i - 1 Else Cancel = True
+Loop
+If Cancel = False Then GetLastMovableRow = i
+End Function
+
+Private Function GetFirstMovableCol() As Long
+Dim i As Long, Cancel As Boolean
+i = PropFixedCols
+Do Until GetColWidth(i) > 0 Or Cancel = True
+    If i < (PropCols - 1) Then i = i + 1 Else Cancel = True
+Loop
+If Cancel = False Then GetFirstMovableCol = i
+End Function
+
+Private Function GetLastMovableCol() As Long
+Dim i As Long, Cancel As Boolean
+i = PropCols - 1
+Do Until GetColWidth(i) > 0 Or Cancel = True
+    If i > PropFixedCols Then i = i - 1 Else Cancel = True
+Loop
+If Cancel = False Then GetLastMovableCol = i
+End Function
+
 Private Sub ProcessKeyDown(ByVal KeyCode As Integer, ByVal Shift As Integer)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 Select Case KeyCode
@@ -8073,10 +8109,10 @@ Select Case PropSelectionMode
             Case vbKeyLeft
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior <> FlexWrapNone Then
-                        If .Col > PropFixedCols Then
+                        If .Col > GetFirstMovableCol() Then
                             Call MovePreviousCol(.Col)
                         Else
-                            If .Row > PropFixedRows Then
+                            If .Row > GetFirstMovableRow() Then
                                 Call MoveLastCol(.Col)
                                 Call MovePreviousRow(.Row)
                             Else
@@ -8121,10 +8157,10 @@ Select Case PropSelectionMode
             Case vbKeyRight
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior <> FlexWrapNone Then
-                        If .Col < (PropCols - 1) Then
+                        If .Col < GetLastMovableCol() Then
                             Call MoveNextCol(.Col)
                         Else
-                            If .Row < (PropRows - 1) Then
+                            If .Row < GetLastMovableRow() Then
                                 Call MoveFirstCol(.Col)
                                 Call MoveNextRow(.Row)
                             Else
@@ -8331,10 +8367,10 @@ Select Case PropSelectionMode
             Case vbKeyTab
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior <> FlexWrapNone Then
-                        If .Col < (PropCols - 1) Then
+                        If .Col < GetLastMovableCol() Then
                             Call MoveNextCol(.Col)
                         Else
-                            If .Row < (PropRows - 1) Then
+                            If .Row < GetLastMovableRow() Then
                                 Call MoveFirstCol(.Col)
                                 Call MoveNextRow(.Row)
                             Else
@@ -8361,10 +8397,10 @@ Select Case PropSelectionMode
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior <> FlexWrapNone Then
-                        If .Col > PropFixedCols Then
+                        If .Col > GetFirstMovableCol() Then
                             Call MovePreviousCol(.Col)
                         Else
-                            If .Row > PropFixedRows Then
+                            If .Row > GetFirstMovableRow() Then
                                 Call MoveLastCol(.Col)
                                 Call MovePreviousRow(.Row)
                             Else
@@ -8400,7 +8436,7 @@ Select Case PropSelectionMode
             Case vbKeyUp
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior = FlexWrapGrid Then
-                        If .Row > PropFixedRows Then
+                        If .Row > GetFirstMovableRow() Then
                             Call MovePreviousRow(.Row)
                         Else
                             Call MoveLastRow(.Row)
@@ -8430,7 +8466,7 @@ Select Case PropSelectionMode
             Case vbKeyDown
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior = FlexWrapGrid Then
-                        If .Row < (PropRows - 1) Then
+                        If .Row < GetLastMovableRow() Then
                             Call MoveNextRow(.Row)
                         Else
                             Call MoveFirstRow(.Row)
@@ -8640,7 +8676,7 @@ Select Case PropSelectionMode
             Case vbKeyTab
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior <> FlexWrapNone Then
-                        If .Row < (PropRows - 1) Then
+                        If .Row < GetLastMovableRow() Then
                             Call MoveNextRow(.Row)
                         Else
                             If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstRow(.Row)
@@ -8655,7 +8691,7 @@ Select Case PropSelectionMode
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior <> FlexWrapNone Then
-                        If .Row > PropFixedRows Then
+                        If .Row > GetFirstMovableRow() Then
                             Call MovePreviousRow(.Row)
                         Else
                             If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastRow(.Row)
@@ -8727,7 +8763,7 @@ Select Case PropSelectionMode
             Case vbKeyLeft
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior = FlexWrapGrid Then
-                        If .Col > PropFixedCols Then
+                        If .Col > GetFirstMovableCol() Then
                             Call MovePreviousCol(.Col)
                         Else
                             Call MoveLastCol(.Col)
@@ -8757,7 +8793,7 @@ Select Case PropSelectionMode
             Case vbKeyRight
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior = FlexWrapGrid Then
-                        If .Col < (PropCols - 1) Then
+                        If .Col < GetLastMovableCol() Then
                             Call MoveNextCol(.Col)
                         Else
                             Call MoveFirstCol(.Col)
@@ -8875,7 +8911,7 @@ Select Case PropSelectionMode
             Case vbKeyTab
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior <> FlexWrapNone Then
-                        If .Col < (PropCols - 1) Then
+                        If .Col < GetLastMovableCol() Then
                             Call MoveNextCol(.Col)
                         Else
                             If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstCol(.Col)
@@ -8890,7 +8926,7 @@ Select Case PropSelectionMode
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
                     If PropWrapCellBehavior <> FlexWrapNone Then
-                        If .Col > PropFixedCols Then
+                        If .Col > GetFirstMovableCol() Then
                             Call MovePreviousCol(.Col)
                         Else
                             If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastCol(.Col)
