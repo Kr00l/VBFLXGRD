@@ -5777,31 +5777,36 @@ End If
 Call RedrawGrid
 End Property
 
-Public Sub CellEnsureVisible(Optional ByVal Visibility As FlexVisibilityConstants = FlexVisibilityCompleteOnly)
-Attribute CellEnsureVisible.VB_Description = "Ensures the current cell is visible, scrolling the control if necessary."
+Public Sub CellEnsureVisible(Optional ByVal Visibility As FlexVisibilityConstants = FlexVisibilityCompleteOnly, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1)
+Attribute CellEnsureVisible.VB_Description = "Ensures that the current or an arbitrary cell (row/col subscripts) is visible, scrolling the control if necessary."
 Select Case Visibility
     Case FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
     Case Else
         Err.Raise 380
 End Select
+If Row < -1 Then Err.Raise 380
+If Col < -1 Then Err.Raise 380
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
+If Row = -1 Then Row = VBFlexGridRow
+If Col = -1 Then Col = VBFlexGridCol
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
 If Visibility = FlexVisibilityPartialOK Then
-    If Me.RowIsVisible(VBFlexGridRow, FlexVisibilityPartialOK) = True And Me.ColIsVisible(VBFlexGridCol, FlexVisibilityPartialOK) = True Then Exit Sub
+    If Me.RowIsVisible(Row, FlexVisibilityPartialOK) = True And Me.ColIsVisible(Col, FlexVisibilityPartialOK) = True Then Exit Sub
 End If
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_TOPROW Or RCPM_LEFTCOL
 .TopRow = VBFlexGridTopRow
 .LeftCol = VBFlexGridLeftCol
-If .TopRow > VBFlexGridRow Then
-    .TopRow = VBFlexGridRow
-ElseIf VBFlexGridRow > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-    .TopRow = VBFlexGridRow - GetRowsPerPageRev(VBFlexGridRow) + 1
+If .TopRow > Row Then
+    .TopRow = Row
+ElseIf Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+    .TopRow = Row - GetRowsPerPageRev(Row) + 1
 End If
-If .LeftCol > VBFlexGridCol Then
-    .LeftCol = VBFlexGridCol
-ElseIf VBFlexGridCol > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-    .LeftCol = VBFlexGridCol - GetColsPerPageRev(VBFlexGridCol) + 1
+If .LeftCol > Col Then
+    .LeftCol = Col
+ElseIf Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+    .LeftCol = Col - GetColsPerPageRev(Col) + 1
 End If
 Call SetRowColParams(RCP)
 End With
