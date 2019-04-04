@@ -1,5 +1,9 @@
 List of revisions:
 
+04-Apr-2019
+- Included optional parameter Row and Col in the CellEnsureVisible method.
+  So instead the current cell an arbitrary cell can now be ensured to be visible, scrolling if necessary.
+
 03-Apr-2019
 - Bugfix in CellWrapBehavior property.
   It didn't work as expected when there were hidden or zero height/width rows/cols.
