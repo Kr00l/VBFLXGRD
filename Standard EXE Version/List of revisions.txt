@@ -1,5 +1,8 @@
 List of revisions:
 
+10-Apr-2019
+- Minor modification in the WM_LBUTTONDOWN handler.
+
 04-Apr-2019
 - Included optional parameter Row and Col in the CellEnsureVisible method.
   So instead the current cell an arbitrary cell can now be ensured to be visible, scrolling if necessary.
