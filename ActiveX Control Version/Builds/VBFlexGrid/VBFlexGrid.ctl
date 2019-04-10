@@ -9858,6 +9858,7 @@ Select Case wMsg
                 RaiseEvent BeforeMouseDown(vbLeftButton, GetShiftStateFromParam(wParam), UserControl.ScaleX(P.X, vbPixels, vbTwips), UserControl.ScaleY(P.Y, vbPixels, vbTwips), Cancel)
                 If Cancel = False Then
                     SetCapture hWnd
+                    If GetFocus() <> hWnd Then SetFocusAPI UserControl.hWnd
                     Cancel = ProcessLButtonDown(GetShiftStateFromParam(wParam), P.X, P.Y)
                 End If
             Case WM_MBUTTONDOWN
