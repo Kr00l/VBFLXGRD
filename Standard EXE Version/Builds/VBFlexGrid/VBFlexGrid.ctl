@@ -8024,16 +8024,13 @@ With RCP
 .Row = VBFlexGridRow
 .Col = VBFlexGridCol
 Select Case KeyCode
-    Case vbKeyUp, vbKeyDown, vbKeyPageUp, vbKeyPageDown
+    Case vbKeyUp, vbKeyPageUp
         If .Row < PropFixedRows Then .Row = PropFixedRows
+    Case vbKeyDown, vbKeyPageDown
         If .Row > (PropRows - 1) Then .Row = (PropRows - 1)
-    Case vbKeyLeft, vbKeyRight, vbKeyHome, vbKeyEnd
+    Case vbKeyLeft, vbKeyHome
         If .Col < PropFixedCols Then .Col = PropFixedCols
-        If .Col > (PropCols - 1) Then .Col = (PropCols - 1)
-    Case vbKeyTab
-        If .Row < PropFixedRows Then .Row = PropFixedRows
-        If .Row > (PropRows - 1) Then .Row = (PropRows - 1)
-        If .Col < PropFixedCols Then .Col = PropFixedCols
+    Case vbKeyRight, vbKeyEnd
         If .Col > (PropCols - 1) Then .Col = (PropCols - 1)
 End Select
 .RowSel = VBFlexGridRowSel
