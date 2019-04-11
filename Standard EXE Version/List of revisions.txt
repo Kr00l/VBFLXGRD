@@ -1,5 +1,8 @@
 List of revisions:
 
+11-Apr-2019
+- Minor modification in the internal ProcessKeyDown method.
+
 10-Apr-2019
 - Minor modification in the WM_LBUTTONDOWN handler.
 
