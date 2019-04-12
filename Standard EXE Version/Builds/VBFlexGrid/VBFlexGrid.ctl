@@ -6340,7 +6340,7 @@ Else
                         If iCol > VBFlexGridLeftCol Then
                             Select Case PropMergeCells
                                 Case FlexMergeCellsFree, FlexMergeCellsRestrictRows
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow).Cols(iCol - 1).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow, iCol - 1) = True Then
                                         VBFlexGridMergeDrawInfo.Row.ColOffset = VBFlexGridMergeDrawInfo.Row.ColOffset + 1
                                         VBFlexGridMergeDrawInfo.Row.Width = VBFlexGridMergeDrawInfo.Row.Width + GetColWidth(iCol - 1)
                                     Else
@@ -6348,9 +6348,9 @@ Else
                                         VBFlexGridMergeDrawInfo.Row.Width = 0
                                     End If
                                 Case FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow).Cols(iCol - 1).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow, iCol - 1) = True Then
                                         If iRow > VBFlexGridTopRow Then
-                                            If MergeCompareFunction(VBFlexGridCells.Rows(iRow - 1).Cols(iCol).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol - 1).Text) = True Then
+                                            If MergeCompareFunction(iRow - 1, iCol, iRow - 1, iCol - 1) = True Then
                                                 VBFlexGridMergeDrawInfo.Row.ColOffset = VBFlexGridMergeDrawInfo.Row.ColOffset + 1
                                                 VBFlexGridMergeDrawInfo.Row.Width = VBFlexGridMergeDrawInfo.Row.Width + GetColWidth(iCol - 1)
                                             Else
@@ -6375,7 +6375,7 @@ Else
                         If iRow > VBFlexGridTopRow Then
                             Select Case PropMergeCells
                                 Case FlexMergeCellsFree, FlexMergeCellsRestrictColumns
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow - 1, iCol) = True Then
                                         VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset = VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset + 1
                                         VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height = VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height + GetRowHeight(iRow - 1)
                                     Else
@@ -6383,9 +6383,9 @@ Else
                                         VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height = 0
                                     End If
                                 Case FlexMergeCellsRestrictRows, FlexMergeCellsRestrictAll
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow - 1, iCol) = True Then
                                         If iCol > VBFlexGridLeftCol Then
-                                            If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol - 1).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol - 1).Text) = True Then
+                                            If MergeCompareFunction(iRow, iCol - 1, iRow - 1, iCol - 1) = True Then
                                                 VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset = VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset + 1
                                                 VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height = VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height + GetRowHeight(iRow - 1)
                                             Else
@@ -6418,7 +6418,7 @@ Else
                         If iCol > 0 Then
                             Select Case PropMergeCells
                                 Case FlexMergeCellsFree, FlexMergeCellsRestrictRows, FlexMergeCellsFixedOnly
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow).Cols(iCol - 1).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow, iCol - 1) = True Then
                                         VBFlexGridMergeDrawInfo.Row.ColOffset = VBFlexGridMergeDrawInfo.Row.ColOffset + 1
                                         VBFlexGridMergeDrawInfo.Row.Width = VBFlexGridMergeDrawInfo.Row.Width + GetColWidth(iCol - 1)
                                     Else
@@ -6426,9 +6426,9 @@ Else
                                         VBFlexGridMergeDrawInfo.Row.Width = 0
                                     End If
                                 Case FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow).Cols(iCol - 1).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow, iCol - 1) = True Then
                                         If iRow > VBFlexGridTopRow Then
-                                            If MergeCompareFunction(VBFlexGridCells.Rows(iRow - 1).Cols(iCol).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol - 1).Text) = True Then
+                                            If MergeCompareFunction(iRow - 1, iCol, iRow - 1, iCol - 1) = True Then
                                                 VBFlexGridMergeDrawInfo.Row.ColOffset = VBFlexGridMergeDrawInfo.Row.ColOffset + 1
                                                 VBFlexGridMergeDrawInfo.Row.Width = VBFlexGridMergeDrawInfo.Row.Width + GetColWidth(iCol - 1)
                                             Else
@@ -6453,7 +6453,7 @@ Else
                         If iRow > 0 Then
                             Select Case PropMergeCells
                                 Case FlexMergeCellsFree, FlexMergeCellsRestrictColumns, FlexMergeCellsFixedOnly
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow - 1, iCol) = True Then
                                         VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset = VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset + 1
                                         VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height = VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height + GetRowHeight(iRow - 1)
                                     Else
@@ -6461,9 +6461,9 @@ Else
                                         VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height = 0
                                     End If
                                 Case FlexMergeCellsRestrictRows, FlexMergeCellsRestrictAll
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow - 1, iCol) = True Then
                                         If iCol > 0 Then
-                                            If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol - 1).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol - 1).Text) = True Then
+                                            If MergeCompareFunction(iRow, iCol - 1, iRow - 1, iCol - 1) = True Then
                                                 VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset = VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset + 1
                                                 VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height = VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height + GetRowHeight(iRow - 1)
                                             Else
@@ -6509,7 +6509,7 @@ Else
                         If iCol > VBFlexGridLeftCol Or (iCol > 0 And iCol < PropFixedCols) Then
                             Select Case PropMergeCells
                                 Case FlexMergeCellsFree, FlexMergeCellsRestrictRows, FlexMergeCellsFixedOnly
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow).Cols(iCol - 1).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow, iCol - 1) = True Then
                                         VBFlexGridMergeDrawInfo.Row.ColOffset = VBFlexGridMergeDrawInfo.Row.ColOffset + 1
                                         VBFlexGridMergeDrawInfo.Row.Width = VBFlexGridMergeDrawInfo.Row.Width + GetColWidth(iCol - 1)
                                     Else
@@ -6517,9 +6517,9 @@ Else
                                         VBFlexGridMergeDrawInfo.Row.Width = 0
                                     End If
                                 Case FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow).Cols(iCol - 1).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow, iCol - 1) = True Then
                                         If iRow > 0 Then
-                                            If MergeCompareFunction(VBFlexGridCells.Rows(iRow - 1).Cols(iCol).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol - 1).Text) = True Then
+                                            If MergeCompareFunction(iRow - 1, iCol, iRow - 1, iCol - 1) = True Then
                                                 VBFlexGridMergeDrawInfo.Row.ColOffset = VBFlexGridMergeDrawInfo.Row.ColOffset + 1
                                                 VBFlexGridMergeDrawInfo.Row.Width = VBFlexGridMergeDrawInfo.Row.Width + GetColWidth(iCol - 1)
                                             Else
@@ -6544,7 +6544,7 @@ Else
                         If iRow > 0 Then
                             Select Case PropMergeCells
                                 Case FlexMergeCellsFree, FlexMergeCellsRestrictColumns, FlexMergeCellsFixedOnly
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow - 1, iCol) = True Then
                                         VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset = VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset + 1
                                         VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height = VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height + GetRowHeight(iRow - 1)
                                     Else
@@ -6552,9 +6552,9 @@ Else
                                         VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height = 0
                                     End If
                                 Case FlexMergeCellsRestrictRows, FlexMergeCellsRestrictAll
-                                    If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol).Text) = True Then
+                                    If MergeCompareFunction(iRow, iCol, iRow - 1, iCol) = True Then
                                         If iCol > VBFlexGridLeftCol Or (iCol > 0 And iCol < PropFixedCols) Then
-                                            If MergeCompareFunction(VBFlexGridCells.Rows(iRow).Cols(iCol - 1).Text, VBFlexGridCells.Rows(iRow - 1).Cols(iCol - 1).Text) = True Then
+                                            If MergeCompareFunction(iRow, iCol - 1, iRow - 1, iCol - 1) = True Then
                                                 VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset = VBFlexGridMergeDrawInfo.Row.Cols(iCol).RowOffset + 1
                                                 VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height = VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height + GetRowHeight(iRow - 1)
                                             Else
@@ -9392,7 +9392,10 @@ Call SetRowColParams(RCP)
 End With
 End Sub
 
-Private Function MergeCompareFunction(ByVal Text1 As String, ByVal Text2 As String) As Boolean
+Private Function MergeCompareFunction(ByVal Row1 As Long, ByVal Col1 As Long, ByVal Row2 As Long, ByVal Col2 As Long) As Boolean
+Dim Text1 As String, Text2 As String
+Call GetCellText(Row1, Col1, Text1)
+Call GetCellText(Row2, Col2, Text2)
 If Text1 = vbNullString Or Text2 = vbNullString Then Exit Function
 If StrComp(Text1, Text2) = 0 Then MergeCompareFunction = True
 End Function
