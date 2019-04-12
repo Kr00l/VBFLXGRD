@@ -1,5 +1,8 @@
 List of revisions:
 
+12-Apr-2019
+- Merged cells are now able to fetch custom data source 'FlexDataSource'.
+
 11-Apr-2019
 - Minor modification in the internal ProcessKeyDown method.
 
