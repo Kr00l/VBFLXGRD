@@ -1,5 +1,16 @@
 List of revisions:
 
+13-Apr-2019
+- Included the in-cell editing functionality.
+  - AllowUserEditing property.
+  - StartEdit/CancelEdit/CommitEdit method. (works even if AllowUserEditing is False)
+  - BeforeEdit/EnterEdit/ValidateEdit/LeaveEdit/AfterEdit events.
+  - EditSetupStyle/EditSetupWindow/EditQueryClose/EditChange/EditKeyDown/EditKeyUp/EditKeyPress events.
+  - hWndEdit/EditRow/EditCol/EditReason/EditCloseMode read-only run-time property.
+  - EditText/EditMaxLength/EditSelStart/EditSelLength/EditSelText run-time property.
+- Included the IMEMode property.
+- Included the GetMergedRange method.
+
 12-Apr-2019
 - Merged cells are now able to fetch custom data source 'FlexDataSource'.
 
