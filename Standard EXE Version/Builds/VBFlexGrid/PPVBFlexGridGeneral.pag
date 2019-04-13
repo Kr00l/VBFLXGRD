@@ -9,6 +9,22 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   6600
    ScaleWidth      =   6225
+   Begin VB.CheckBox CheckAllowUserEditing 
+      Caption         =   "AllowUserEditing"
+      Height          =   285
+      Left            =   4200
+      TabIndex        =   43
+      Top             =   1920
+      Width           =   1920
+   End
+   Begin VB.ComboBox ComboIMEMode 
+      Height          =   315
+      Left            =   1800
+      Style           =   2  'Dropdown List
+      TabIndex        =   39
+      Top             =   5880
+      Width           =   2235
+   End
    Begin VB.ComboBox ComboClipMode 
       Height          =   315
       Left            =   1800
@@ -101,39 +117,39 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ShowLabelTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   44
-      Top             =   3000
+      TabIndex        =   47
+      Top             =   3360
       Width           =   1920
    End
    Begin VB.CheckBox CheckShowInfoTips 
       Caption         =   "ShowInfoTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   43
-      Top             =   2640
+      TabIndex        =   46
+      Top             =   3000
       Width           =   1920
    End
    Begin VB.CheckBox CheckDisableNoScroll 
       Caption         =   "DisableNoScroll"
       Height          =   285
       Left            =   4200
-      TabIndex        =   42
-      Top             =   2280
+      TabIndex        =   45
+      Top             =   2640
       Width           =   1920
    End
    Begin VB.CheckBox CheckScrollTrack 
       Caption         =   "ScrollTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   41
-      Top             =   1920
+      TabIndex        =   44
+      Top             =   2280
       Width           =   1920
    End
    Begin VB.CheckBox CheckAllowSelection 
       Caption         =   "AllowSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   40
+      TabIndex        =   42
       Top             =   1560
       Width           =   1920
    End
@@ -141,7 +157,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowBigSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   39
+      TabIndex        =   41
       Top             =   1200
       Width           =   1920
    End
@@ -177,7 +193,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "MouseTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   38
+      TabIndex        =   40
       Top             =   840
       Width           =   1920
    End
@@ -221,6 +237,14 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   1800
       TabIndex        =   1
       Top             =   120
+      Width           =   1620
+   End
+   Begin VB.Label LabelIMEMode 
+      Caption         =   "IMEMode:"
+      Height          =   240
+      Left            =   120
+      TabIndex        =   38
+      Top             =   5880
       Width           =   1620
    End
    Begin VB.Label LabelClipMode 
@@ -499,6 +523,30 @@ With ComboClipMode
 .AddItem FlexClipModeExcludeHidden & " - ExcludeHidden"
 .ItemData(.NewIndex) = FlexClipModeExcludeHidden
 End With
+With ComboIMEMode
+.AddItem FlexIMEModeNoControl & " - NoControl"
+.ItemData(.NewIndex) = FlexIMEModeNoControl
+.AddItem FlexIMEModeOn & " - On"
+.ItemData(.NewIndex) = FlexIMEModeOn
+.AddItem FlexIMEModeOff & " - Off"
+.ItemData(.NewIndex) = FlexIMEModeOff
+.AddItem FlexIMEModeDisable & " - Disable"
+.ItemData(.NewIndex) = FlexIMEModeDisable
+.AddItem FlexIMEModeHiragana & " - Hiragana"
+.ItemData(.NewIndex) = FlexIMEModeHiragana
+.AddItem FlexIMEModeKatakana & " - Katakana"
+.ItemData(.NewIndex) = FlexIMEModeKatakana
+.AddItem FlexIMEModeKatakanaHalf & " - KatakanaHalf"
+.ItemData(.NewIndex) = FlexIMEModeKatakanaHalf
+.AddItem FlexIMEModeAlphaFull & " - AlphaFull"
+.ItemData(.NewIndex) = FlexIMEModeAlphaFull
+.AddItem FlexIMEModeAlpha & " - Alpha"
+.ItemData(.NewIndex) = FlexIMEModeAlpha
+.AddItem FlexIMEModeHangulFull & " - HangulFull"
+.ItemData(.NewIndex) = FlexIMEModeHangulFull
+.AddItem FlexIMEModeHangul & " - Hangul"
+.ItemData(.NewIndex) = FlexIMEModeHangul
+End With
 End Sub
 
 Private Sub PropertyPage_ApplyChanges()
@@ -539,9 +587,11 @@ End If
 .WrapCellBehavior = ComboWrapCellBehavior.ItemData(ComboWrapCellBehavior.ListIndex)
 .ClipSeparators = TextClipSeparators.Text
 .ClipMode = ComboClipMode.ItemData(ComboClipMode.ListIndex)
+.IMEMode = ComboIMEMode.ItemData(ComboIMEMode.ListIndex)
 .MouseTrack = CBool(CheckMouseTrack.Value = vbChecked)
 .AllowBigSelection = CBool(CheckAllowBigSelection.Value = vbChecked)
 .AllowSelection = CBool(CheckAllowSelection.Value = vbChecked)
+.AllowUserEditing = CBool(CheckAllowUserEditing.Value = vbChecked)
 .ScrollTrack = CBool(CheckScrollTrack.Value = vbChecked)
 .DisableNoScroll = CBool(CheckDisableNoScroll.Value = vbChecked)
 .ShowInfoTips = CBool(CheckShowInfoTips.Value = vbChecked)
@@ -635,9 +685,16 @@ For i = 0 To ComboClipMode.ListCount - 1
         Exit For
     End If
 Next i
+For i = 0 To ComboIMEMode.ListCount - 1
+    If ComboIMEMode.ItemData(i) = .IMEMode Then
+        ComboIMEMode.ListIndex = i
+        Exit For
+    End If
+Next i
 CheckMouseTrack.Value = IIf(.MouseTrack = True, vbChecked, vbUnchecked)
 CheckAllowBigSelection.Value = IIf(.AllowBigSelection = True, vbChecked, vbUnchecked)
 CheckAllowSelection.Value = IIf(.AllowSelection = True, vbChecked, vbUnchecked)
+CheckAllowUserEditing.Value = IIf(.AllowUserEditing = True, vbChecked, vbUnchecked)
 CheckScrollTrack.Value = IIf(.ScrollTrack = True, vbChecked, vbUnchecked)
 CheckDisableNoScroll.Value = IIf(.DisableNoScroll = True, vbChecked, vbUnchecked)
 CheckShowInfoTips.Value = IIf(.ShowInfoTips = True, vbChecked, vbUnchecked)
@@ -938,6 +995,11 @@ If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
 
+Private Sub ComboIMEMode_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
 Private Sub CheckMouseTrack_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
@@ -949,6 +1011,11 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckAllowSelection_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckAllowUserEditing_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
