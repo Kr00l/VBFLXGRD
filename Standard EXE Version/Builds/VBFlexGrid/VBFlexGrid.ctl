@@ -797,16 +797,6 @@ Private Const WM_LBUTTONDBLCLK As Long = &H203
 Private Const WM_MBUTTONDBLCLK As Long = &H209
 Private Const WM_RBUTTONDBLCLK As Long = &H206
 Private Const WM_MOUSEMOVE As Long = &H200
-Private Const WM_NCLBUTTONDOWN = &HA1
-Private Const WM_NCLBUTTONUP = &HA2
-Private Const WM_NCMBUTTONDOWN = &HA7
-Private Const WM_NCMBUTTONUP = &HA8
-Private Const WM_NCRBUTTONDOWN = &HA4
-Private Const WM_NCRBUTTONUP = &HA5
-Private Const WM_NCLBUTTONDBLCLK = &HA3
-Private Const WM_NCMBUTTONDBLCLK = &HA9
-Private Const WM_NCRBUTTONDBLCLK = &HA6
-Private Const WM_NCMOUSEMOVE = &HA0
 Private Const WM_MOUSELEAVE As Long = &H2A3
 Private Const WM_CAPTURECHANGED As Long = &H215
 Private Const WM_HSCROLL As Long = &H114
@@ -8515,6 +8505,7 @@ If PrevPos <> SCI.nPos Then
         Pos = GetMessagePos()
         Call CheckToolTipRowCol(Get_X_lParam(Pos), Get_Y_lParam(Pos))
     End If
+    If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then Call UpdateEditRect
     RaiseEvent Scroll
 End If
 End Function
@@ -10354,6 +10345,44 @@ If VBFlexGridHandle <> 0 And VBFlexGridToolTipHandle <> 0 Then
 End If
 End Sub
 
+Private Sub UpdateEditRect()
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
+If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
+    Dim RC As RECT, i As Long
+    With VBFlexGridEditMergedRange
+    If VBFlexGridTopRow <= .BottomRow Then
+        For i = 0 To (PropFixedRows - 1)
+            RC.Top = RC.Bottom
+            RC.Bottom = RC.Bottom + GetRowHeight(i)
+        Next i
+        For i = VBFlexGridTopRow To .TopRow
+            RC.Top = RC.Bottom
+            RC.Bottom = RC.Bottom + GetRowHeight(i)
+        Next i
+        If .TopRow < VBFlexGridTopRow Then RC.Top = RC.Bottom
+        For i = (.TopRow + 1) To .BottomRow
+            If i >= VBFlexGridTopRow Then RC.Bottom = RC.Bottom + GetRowHeight(i)
+        Next i
+    End If
+    If VBFlexGridLeftCol <= .RightCol Then
+        For i = 0 To (PropFixedCols - 1)
+            RC.Left = RC.Right
+            RC.Right = RC.Right + GetColWidth(i)
+        Next i
+        For i = VBFlexGridLeftCol To .LeftCol
+            RC.Left = RC.Right
+            RC.Right = RC.Right + GetColWidth(i)
+        Next i
+        If .LeftCol < VBFlexGridLeftCol Then RC.Left = RC.Right
+        For i = (.LeftCol + 1) To .RightCol
+            If i >= VBFlexGridLeftCol Then RC.Right = RC.Right + GetColWidth(i)
+        Next i
+    End If
+    End With
+    MoveWindow VBFlexGridEditHandle, RC.Left, RC.Top, (RC.Right - RC.Left) - 1, (RC.Bottom - RC.Top) - 1, 1
+End If
+End Sub
+
 Private Sub InplaceMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TCOLS, ByVal Sort As FlexSortConstants)
 Dim Temp() As TCOLS, Cmp As Long, Dst As Long
 Dim i As Long, j As Long
@@ -10600,6 +10629,7 @@ Select Case wMsg
                     Pos = GetMessagePos()
                     Call CheckToolTipRowCol(Get_X_lParam(Pos), Get_Y_lParam(Pos))
                 End If
+                If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then Call UpdateEditRect
                 RaiseEvent Scroll
             End If
             WindowProcControl = 0
