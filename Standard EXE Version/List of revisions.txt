@@ -1,5 +1,8 @@
 List of revisions:
 
+15-Apr-2019
+- Scrolling will now update the in-cell editing window accordingly.
+
 13-Apr-2019
 - Included the in-cell editing functionality.
   - AllowUserEditing property.
