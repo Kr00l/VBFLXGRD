@@ -445,6 +445,8 @@ End Type
 Private Type TMERGEDRAWINFO
 Row As TMERGEDRAWROWINFO
 End Type
+Private Const CELL_TEXT_WIDTH_SPACING_DIP As Long = 3
+Private Const CELL_TEXT_HEIGHT_SPACING_DIP As Long = 1
 Private Type TCELL
 Text As String
 TextStyle As FlexTextStyleConstants
@@ -745,6 +747,8 @@ Private Const EM_LINEINDEX As Long = &HBB
 Private Const EM_LINELENGTH As Long = &HC1
 Private Const EM_LINEFROMCHAR As Long = &HC9
 Private Const EM_GETLINECOUNT As Long = &HBA
+Private Const EM_GETMARGINS As Long = &HD4
+Private Const EM_SETMARGINS As Long = &HD3
 Private Const EN_CHANGE As Long = &H300
 Private Const ES_LEFT As Long = &H0
 Private Const ES_CENTER As Long = &H1
@@ -753,6 +757,8 @@ Private Const ES_MULTILINE As Long = &H4
 Private Const ES_AUTOVSCROLL As Long = &H40
 Private Const ES_AUTOHSCROLL As Long = &H80
 Private Const ES_READONLY As Long = &H800
+Private Const EC_LEFTMARGIN As Long = &H1
+Private Const EC_RIGHTMARGIN As Long = &H2
 Private Const WS_BORDER As Long = &H800000
 Private Const WS_DLGFRAME As Long = &H400000
 Private Const WS_EX_TRANSPARENT As Long = &H20
@@ -3556,6 +3562,7 @@ If VBFlexGridEditHandle <> 0 Then
     End If
     End With
     SendMessage VBFlexGridEditHandle, WM_SETFONT, hFont, ByVal 0&
+    SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X(), (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X()) - 1)
     SendMessage VBFlexGridEditHandle, WM_SETTEXT, 0, ByVal StrPtr(Text)
     SendMessage VBFlexGridEditHandle, EM_SETSEL, 0, ByVal -1&
     If Reason = FlexEditReasonSpace Then SendMessage VBFlexGridEditHandle, EM_SETSEL, -1, ByVal -1&
@@ -7372,10 +7379,10 @@ End If
 If Not Text = vbNullString Then
     Dim TextRect As RECT, TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, Format As Long
     With TextRect
-    .Top = CellRect.Top + (1 * PixelsPerDIP_Y())
-    .Left = CellRect.Left + (3 * PixelsPerDIP_X())
-    .Bottom = CellRect.Bottom - (1 * PixelsPerDIP_Y())
-    .Right = CellRect.Right - (3 * PixelsPerDIP_X())
+    .Left = CellRect.Left + (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X())
+    .Top = CellRect.Top + (CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+    .Right = CellRect.Right - (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X())
+    .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
     End With
     If .TextStyle = -1 Then
         If IsFixedCell = False Then
@@ -7609,10 +7616,10 @@ If PropMergeCells <> FlexMergeCellsNever And PropRows > 0 And PropCols > 0 Then
                             If MergeCompareFunction(iRow, iCol, iRow, .LeftCol - 1) = True Then .LeftCol = .LeftCol - 1 Else Exit Do
                         Loop While .LeftCol > 0
                     End If
-                    If iCol < (PropFixedCols - 1) Then
+                    If iCol < (PropCols - 1) Then
                         Do
                             If MergeCompareFunction(iRow, iCol, iRow, .RightCol + 1) = True Then .RightCol = .RightCol + 1 Else Exit Do
-                        Loop While .RightCol < (PropFixedCols - 1)
+                        Loop While .RightCol < (PropCols - 1)
                     End If
                 Case FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll
                     If iCol > 0 Then
@@ -7628,7 +7635,7 @@ If PropMergeCells <> FlexMergeCellsNever And PropRows > 0 And PropCols > 0 Then
                             End If
                         Loop While .LeftCol > 0
                     End If
-                    If iCol < (PropFixedCols - 1) Then
+                    If iCol < (PropCols - 1) Then
                         Do
                             If MergeCompareFunction(iRow, iCol, iRow, .RightCol + 1) = True Then
                                 If Row > 0 Then
@@ -7639,7 +7646,7 @@ If PropMergeCells <> FlexMergeCellsNever And PropRows > 0 And PropCols > 0 Then
                             Else
                                 Exit Do
                             End If
-                        Loop While .RightCol < (PropFixedCols - 1)
+                        Loop While .RightCol < (PropCols - 1)
                     End If
             End Select
         End If
@@ -7651,10 +7658,10 @@ If PropMergeCells <> FlexMergeCellsNever And PropRows > 0 And PropCols > 0 Then
                             If MergeCompareFunction(iRow, iCol, .TopRow - 1, iCol) = True Then .TopRow = .TopRow - 1 Else Exit Do
                         Loop While .TopRow > 0
                     End If
-                    If iRow < (PropFixedRows - 1) Then
+                    If iRow < (PropRows - 1) Then
                         Do
                             If MergeCompareFunction(iRow, iCol, .BottomRow + 1, iCol) = True Then .BottomRow = .BottomRow + 1 Else Exit Do
-                        Loop While .BottomRow < (PropFixedRows - 1)
+                        Loop While .BottomRow < (PropRows - 1)
                     End If
                 Case FlexMergeCellsRestrictRows, FlexMergeCellsRestrictAll
                     If iRow > 0 Then
@@ -7670,7 +7677,7 @@ If PropMergeCells <> FlexMergeCellsNever And PropRows > 0 And PropCols > 0 Then
                             End If
                         Loop While .TopRow > 0
                     End If
-                    If iRow < (PropFixedRows - 1) Then
+                    If iRow < (PropRows - 1) Then
                         Do
                             If MergeCompareFunction(iRow, iCol, .BottomRow + 1, iCol) = True Then
                                 If iCol > 0 Then
@@ -7681,7 +7688,7 @@ If PropMergeCells <> FlexMergeCellsNever And PropRows > 0 And PropCols > 0 Then
                             Else
                                 Exit Do
                             End If
-                        Loop While .BottomRow < (PropFixedRows - 1)
+                        Loop While .BottomRow < (PropRows - 1)
                     End If
             End Select
         End If
@@ -8193,10 +8200,10 @@ If hDC <> 0 Then
         End If
         Dim TextRect As RECT, TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, Format As Long
         With TextRect
-        .Top = CellRect.Top + (1 * PixelsPerDIP_Y())
-        .Left = CellRect.Left + (3 * PixelsPerDIP_X())
-        .Bottom = CellRect.Bottom - (1 * PixelsPerDIP_Y())
-        .Right = CellRect.Right - (3 * PixelsPerDIP_X())
+        .Left = CellRect.Left + (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X())
+        .Top = CellRect.Top + (CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+        .Right = CellRect.Right - (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X())
+        .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
         End With
         If .TextStyle = -1 Then
             If IsFixedCell = False Then
@@ -10348,38 +10355,58 @@ End Sub
 Private Sub UpdateEditRect()
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
-    Dim RC As RECT, i As Long
     With VBFlexGridEditMergedRange
-    If VBFlexGridTopRow <= .BottomRow Then
-        For i = 0 To (PropFixedRows - 1)
-            RC.Top = RC.Bottom
-            RC.Bottom = RC.Bottom + GetRowHeight(i)
-        Next i
-        For i = VBFlexGridTopRow To .TopRow
-            RC.Top = RC.Bottom
-            RC.Bottom = RC.Bottom + GetRowHeight(i)
-        Next i
-        If .TopRow < VBFlexGridTopRow Then RC.Top = RC.Bottom
-        For i = (.TopRow + 1) To .BottomRow
-            If i >= VBFlexGridTopRow Then RC.Bottom = RC.Bottom + GetRowHeight(i)
-        Next i
-    End If
-    If VBFlexGridLeftCol <= .RightCol Then
-        For i = 0 To (PropFixedCols - 1)
-            RC.Left = RC.Right
-            RC.Right = RC.Right + GetColWidth(i)
-        Next i
-        For i = VBFlexGridLeftCol To .LeftCol
-            RC.Left = RC.Right
-            RC.Right = RC.Right + GetColWidth(i)
-        Next i
-        If .LeftCol < VBFlexGridLeftCol Then RC.Left = RC.Right
-        For i = (.LeftCol + 1) To .RightCol
-            If i >= VBFlexGridLeftCol Then RC.Right = RC.Right + GetColWidth(i)
-        Next i
+    If .TopRow < PropFixedRows And .LeftCol < PropFixedCols Then
+        ' Void
+    Else
+        Dim RC As RECT, i As Long
+        If .BottomRow >= VBFlexGridTopRow Then
+            For i = 0 To (PropFixedRows - 1)
+                RC.Top = RC.Bottom
+                RC.Bottom = RC.Bottom + GetRowHeight(i)
+            Next i
+            For i = VBFlexGridTopRow To .TopRow
+                RC.Top = RC.Bottom
+                RC.Bottom = RC.Bottom + GetRowHeight(i)
+            Next i
+            If .TopRow < VBFlexGridTopRow Then RC.Top = RC.Bottom
+            For i = (.TopRow + 1) To .BottomRow
+                If i >= VBFlexGridTopRow Then RC.Bottom = RC.Bottom + GetRowHeight(i)
+            Next i
+        ElseIf .BottomRow < PropFixedRows Then
+            For i = 0 To .TopRow
+                RC.Top = RC.Bottom
+                RC.Bottom = RC.Bottom + GetRowHeight(i)
+            Next i
+            For i = (.TopRow + 1) To .BottomRow
+                RC.Bottom = RC.Bottom + GetRowHeight(i)
+            Next i
+        End If
+        If .RightCol >= VBFlexGridLeftCol Then
+            For i = 0 To (PropFixedCols - 1)
+                RC.Left = RC.Right
+                RC.Right = RC.Right + GetColWidth(i)
+            Next i
+            For i = VBFlexGridLeftCol To .LeftCol
+                RC.Left = RC.Right
+                RC.Right = RC.Right + GetColWidth(i)
+            Next i
+            If .LeftCol < VBFlexGridLeftCol Then RC.Left = RC.Right
+            For i = (.LeftCol + 1) To .RightCol
+                If i >= VBFlexGridLeftCol Then RC.Right = RC.Right + GetColWidth(i)
+            Next i
+        ElseIf .RightCol < PropFixedCols Then
+            For i = 0 To .LeftCol
+                RC.Left = RC.Right
+                RC.Right = RC.Right + GetColWidth(i)
+            Next i
+            For i = (.LeftCol + 1) To .RightCol
+                RC.Right = RC.Right + GetColWidth(i)
+            Next i
+        End If
+        MoveWindow VBFlexGridEditHandle, RC.Left, RC.Top, (RC.Right - RC.Left) - 1, (RC.Bottom - RC.Top) - 1, 1
     End If
     End With
-    MoveWindow VBFlexGridEditHandle, RC.Left, RC.Top, (RC.Right - RC.Left) - 1, (RC.Bottom - RC.Top) - 1, 1
 End If
 End Sub
 
@@ -11159,7 +11186,6 @@ Select Case wMsg
         If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
             If wMsg = WM_KEYDOWN Then
                 RaiseEvent EditKeyDown(KeyCode, GetShiftStateFromMsg())
-                ' Testing if the event may has ended edit mode.
                 If VBFlexGridEditHandle <> 0 Then
                     Select Case KeyCode
                         Case vbKeyEscape
@@ -11226,7 +11252,6 @@ Select Case wMsg
             If PeekMessage(Msg, hWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE) <> 0 Then VBFlexGridCharCodeCache = Msg.wParam
         ElseIf wMsg = WM_SYSKEYDOWN Then
             RaiseEvent EditKeyDown(KeyCode, GetShiftStateFromMsg())
-            ' Testing if the event may has ended edit mode.
             If VBFlexGridEditHandle <> 0 Then
                 If KeyCode = vbKeyReturn Then PostMessage hWnd, WM_CHAR, vbKeyReturn, ByVal 0&
             Else
@@ -11258,7 +11283,10 @@ Select Case wMsg
         Exit Function
 End Select
 WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
-If wMsg = WM_KILLFOCUS Then DestroyEdit False, FlexEditCloseModeLostFocus
+Select Case wMsg
+    Case WM_KILLFOCUS
+        DestroyEdit False, FlexEditCloseModeLostFocus
+End Select
 End Function
 
 Private Function WindowProcUserControl(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
