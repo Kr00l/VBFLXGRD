@@ -1,5 +1,8 @@
 List of revisions:
 
+23-Apr-2019
+- Bugfix in the internal FlexTopParentValidateControls function.
+
 17-Apr-2019
 - Bugfix related to 15-Apr-2019 update when scrolling while editing fixed cells.
 - Finetuning with EM_SETMARGINS for in-cell editing window.
