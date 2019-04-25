@@ -1,5 +1,8 @@
 List of revisions:
 
+25-Apr-2019
+- Finetuning with WM_NCCALCSIZE/WM_NCHITTEST/WM_NCPAINT for in-cell editing window.
+
 23-Apr-2019
 - Bugfix in the internal FlexTopParentValidateControls function.
 
