@@ -294,6 +294,10 @@ Private Type SIZEAPI
 CX As Long
 CY As Long
 End Type
+Private Type NCCALCSIZE_PARAMS
+RC(0 To 2) As RECT
+lpWPOS As Long
+End Type
 Private Type TRACKMOUSEEVENTSTRUCT
 cbSize As Long
 dwFlags As Long
@@ -653,9 +657,12 @@ Private Declare Function SetTextColor Lib "gdi32" (ByVal hDC As Long, ByVal crCo
 Private Declare Function SetBkColor Lib "gdi32" (ByVal hDC As Long, ByVal crColor As Long) As Long
 Private Declare Function GetTextExtentPoint32 Lib "gdi32" Alias "GetTextExtentPoint32W" (ByVal hDC As Long, ByVal lpsz As Long, ByVal cbString As Long, ByRef lpSize As SIZEAPI) As Long
 Private Declare Function GetDC Lib "user32" (ByVal hWnd As Long) As Long
+Private Declare Function GetWindowDC Lib "user32" (ByVal hWnd As Long) As Long
+Private Declare Function GetDCEx Lib "user32" (ByVal hWnd As Long, ByVal hRgnClip As Long, ByVal fdwOptions As Long) As Long
 Private Declare Function ReleaseDC Lib "user32" (ByVal hWnd As Long, ByVal hDC As Long) As Long
 Private Declare Function GetTextMetrics Lib "gdi32" Alias "GetTextMetricsW" (ByVal hDC As Long, ByRef lpMetrics As TEXTMETRIC) As Long
 Private Declare Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As Long
+Private Declare Function GetSysColorBrush Lib "user32" (ByVal nIndex As Long) As Long
 Private Declare Function SystemParametersInfo Lib "user32" Alias "SystemParametersInfoW" (ByVal uAction As Long, ByVal uiParam As Long, ByRef lpvParam As Long, ByVal fWinIni As Long) As Long
 Private Declare Function SetBkMode Lib "gdi32" (ByVal hDC As Long, ByVal nBkMode As Long) As Long
 Private Declare Function SetLayout Lib "gdi32" (ByVal hDC As Long, ByVal dwLayout As Long) As Long
@@ -686,6 +693,9 @@ Private Const SWP_NOSIZE As Long = &H1
 Private Const SWP_NOZORDER As Long = &H4
 Private Const SWP_NOACTIVATE As Long = &H10
 Private Const HWND_DESKTOP As Long = &H0
+Private Const DCX_WINDOW As Long = &H1
+Private Const DCX_INTERSECTRGN As Long = &H80
+Private Const DCX_USESTYLE As Long = &H10000
 Private Const MK_SHIFT As Long = &H4
 Private Const MK_CONTROL As Long = &H8
 Private Const TME_LEAVE As Long = &H2
@@ -822,6 +832,9 @@ Private Const WM_SETTEXT As Long = &HC
 Private Const WM_ERASEBKGND As Long = &H14
 Private Const WM_PAINT As Long = &HF
 Private Const WM_PRINTCLIENT As Long = &H318
+Private Const WM_NCCALCSIZE As Long = &H83
+Private Const WM_NCHITTEST As Long = &H84
+Private Const WM_NCPAINT As Long = &H85
 Private Const WM_USER As Long = &H400
 Private Const TTM_ADDTOOLA As Long = (WM_USER + 4)
 Private Const TTM_ADDTOOLW As Long = (WM_USER + 50)
@@ -3507,6 +3520,11 @@ Else
 End If
 ' Ellipsis format will be ignored.
 RaiseEvent EditSetupStyle(dwStyle, dwExStyle)
+If (dwStyle And WS_BORDER) = WS_BORDER Then dwStyle = dwStyle And Not WS_BORDER
+If (dwStyle And WS_DLGFRAME) = WS_DLGFRAME Then dwStyle = dwStyle And Not WS_DLGFRAME
+If (dwExStyle And WS_EX_STATICEDGE) = WS_EX_STATICEDGE Then dwExStyle = dwExStyle And Not WS_EX_STATICEDGE
+If (dwExStyle And WS_EX_CLIENTEDGE) = WS_EX_CLIENTEDGE Then dwExStyle = dwExStyle And Not WS_EX_CLIENTEDGE
+If (dwExStyle And WS_EX_WINDOWEDGE) = WS_EX_WINDOWEDGE Then dwExStyle = dwExStyle And Not WS_EX_WINDOWEDGE
 Dim CellRangeRect As RECT, ClientRect As RECT
 Call GetMergedRangeStruct(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditMergedRange)
 Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
@@ -3572,6 +3590,7 @@ End If
 Call SetVisualStylesEdit
 If VBFlexGridEditHandle <> 0 Then
     Call FlexSetSubclass(VBFlexGridEditHandle, Me, 2)
+    SetWindowPos VBFlexGridEditHandle, 0, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_FRAMECHANGED
     RaiseEvent EditSetupWindow(VBFlexGridEditBackColor, VBFlexGridEditForeColor)
     VBFlexGridEditBackColorBrush = CreateSolidBrush(WinColor(VBFlexGridEditBackColor))
     ShowWindow VBFlexGridEditHandle, SW_SHOW
@@ -11281,12 +11300,75 @@ Select Case wMsg
     Case WM_IME_CHAR
         SendMessage hWnd, WM_CHAR, wParam, ByVal lParam
         Exit Function
+    Case WM_NCCALCSIZE, WM_NCHITTEST, WM_NCPAINT
+        Dim RC As RECT
+        Select Case wMsg
+            Case WM_NCCALCSIZE
+                Dim dwStyle As Long, dwExStyle As Long
+                dwStyle = GetWindowLong(hWnd, GWL_STYLE)
+                dwExStyle = GetWindowLong(hWnd, GWL_EXSTYLE)
+                If (dwStyle And WS_BORDER) = WS_BORDER Then dwStyle = dwStyle And Not WS_BORDER
+                If (dwStyle And WS_DLGFRAME) = WS_DLGFRAME Then dwStyle = dwStyle And Not WS_DLGFRAME
+                If (dwExStyle And WS_EX_STATICEDGE) = WS_EX_STATICEDGE Then dwExStyle = dwExStyle And Not WS_EX_STATICEDGE
+                If (dwExStyle And WS_EX_CLIENTEDGE) = WS_EX_CLIENTEDGE Then dwExStyle = dwExStyle And Not WS_EX_CLIENTEDGE
+                If (dwExStyle And WS_EX_WINDOWEDGE) = WS_EX_WINDOWEDGE Then dwExStyle = dwExStyle And Not WS_EX_WINDOWEDGE
+                SetWindowLong hWnd, GWL_STYLE, dwStyle
+                SetWindowLong hWnd, GWL_EXSTYLE, dwExStyle
+                WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
+                ' The NCCALCSIZE_PARAMS struct is not necessary because only the first rectangle is adjusted.
+                ' If wParam is 1 or not, the treatment is the same.
+                CopyMemory RC, ByVal lParam, LenB(RC)
+                RC.Top = RC.Top + (CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+                RC.Bottom = RC.Bottom - ((CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()) - 1)
+                CopyMemory ByVal lParam, RC, LenB(RC)
+                WindowProcEdit = 0
+                Exit Function
+            Case WM_NCHITTEST
+                GetWindowRect hWnd, RC
+                DefWindowProc hWnd, WM_NCCALCSIZE, 0, ByVal VarPtr(RC)
+                Dim P As POINTAPI
+                P.X = Get_X_lParam(lParam)
+                P.Y = Get_Y_lParam(lParam)
+                If PtInRect(RC, P.X, P.Y) <> 0 Then
+                    WindowProcEdit = HTCLIENT
+                Else
+                    WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
+                    If WindowProcEdit = 0 Then WindowProcEdit = HTBORDER
+                End If
+                Exit Function
+            Case WM_NCPAINT
+                Dim hDC As Long
+                If wParam = 1 Then ' Alias for entire window
+                    hDC = GetWindowDC(hWnd)
+                Else
+                    hDC = GetDCEx(hWnd, wParam, DCX_WINDOW Or DCX_INTERSECTRGN Or DCX_USESTYLE)
+                End If
+                If hDC <> 0 Then
+                    Dim Brush As Long
+                    If VBFlexGridEditBackColorBrush <> 0 Then
+                        Brush = VBFlexGridEditBackColorBrush
+                    Else
+                        Const COLOR_WINDOW As Long = 5
+                        Brush = GetSysColorBrush(COLOR_WINDOW)
+                    End If
+                    Dim WndRect As RECT
+                    GetWindowRect hWnd, WndRect
+                    RC.Left = 0
+                    RC.Right = (WndRect.Right - WndRect.Left)
+                    RC.Top = 0
+                    RC.Bottom = RC.Top + (CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+                    FillRect hDC, RC, Brush
+                    RC.Bottom = (WndRect.Bottom - WndRect.Top)
+                    RC.Top = RC.Bottom - ((CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()) - 1)
+                    FillRect hDC, RC, Brush
+                    ReleaseDC hWnd, hDC
+                End If
+                WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
+                Exit Function
+        End Select
 End Select
 WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
-Select Case wMsg
-    Case WM_KILLFOCUS
-        DestroyEdit False, FlexEditCloseModeLostFocus
-End Select
+If wMsg = WM_KILLFOCUS Then DestroyEdit False, FlexEditCloseModeLostFocus
 End Function
 
 Private Function WindowProcUserControl(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
