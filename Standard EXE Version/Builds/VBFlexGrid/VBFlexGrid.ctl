@@ -524,7 +524,7 @@ Public Event SelChange()
 Attribute SelChange.VB_Description = "Occurs when the selected range of cells changes."
 Public Event Compare(ByVal Row1 As Long, ByVal Row2 As Long, ByVal Col As Long, ByRef Cmp As Long)
 Attribute Compare.VB_Description = "Occurs during custom sorts to compare two rows."
-Public Event BeforeEdit(ByVal Row As Long, ByVal Col As Long, ByVal Reason As FlexEditReasonConstants, ByRef Cancel As Boolean)
+Public Event BeforeEdit(ByRef Row As Long, ByRef Col As Long, ByVal Reason As FlexEditReasonConstants, ByRef Cancel As Boolean)
 Attribute BeforeEdit.VB_Description = "Occurs when a user attempts to edit the text of a cell."
 Public Event AfterEdit(ByVal Row As Long, ByVal Col As Long, ByVal Changed As Boolean)
 Attribute AfterEdit.VB_Description = "Occurs after a user edits the text of a cell."
@@ -3475,8 +3475,8 @@ If Cancel = True Then
     InProc = False
     Exit Function
 Else
-    VBFlexGridEditRow = Row
-    VBFlexGridEditCol = Col
+    If (Row >= 0 And Row <= (PropRows - 1)) Then VBFlexGridEditRow = Row Else VBFlexGridEditRow = VBFlexGridRow
+    If (Col >= 0 And Col <= (PropCols - 1)) Then VBFlexGridEditCol = Col Else VBFlexGridEditCol = VBFlexGridCol
     VBFlexGridEditReason = Reason
     VBFlexGridEditCloseMode = -1
 End If
@@ -10902,7 +10902,7 @@ Select Case wMsg
         RaiseEvent KeyPress(KeyChar)
         wParam = CIntToUInt(KeyChar)
         If PropAllowUserEditing = True Then
-            If wParam >= 32 Then ' 0 to 31 are non-printable
+            If wParam >= 33 Then ' 0 to 31 are non-printable and 32 is space char
                 If CreateEdit(FlexEditReasonKeyPress) = True Then
                     If VBFlexGridEditHandle <> 0 Then PostMessage VBFlexGridEditHandle, wMsg, wParam, ByVal 0&
                     Exit Function
