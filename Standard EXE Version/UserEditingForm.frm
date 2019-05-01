@@ -164,9 +164,10 @@ ElseIf Col = -1 Then
 End If
 End Sub
 
-Private Sub VBFlexGrid1_BeforeEdit(ByVal Row As Long, ByVal Col As Long, ByVal Reason As FlexEditReasonConstants, Cancel As Boolean)
+Private Sub VBFlexGrid1_BeforeEdit(Row As Long, Col As Long, ByVal Reason As FlexEditReasonConstants, Cancel As Boolean)
 ' This event is for evaluation if the cell can be edited.
 ' Nothing has been initialized yet. So EditRow/EditCol can't be used. Instead they are passed in the parameters.
+' Row and Col parameters are ByRef so they can be changed, if necessary.
 ' The Reason parameter is a value indicating why this event was called.
 ' EditReason property is not appropriate as it contains the value from the last edit which was not canceled in this event.
 ' EditReason can be -1 as an alias for a failed edit attempt (canceled here) or the grid was never edited before.

@@ -1,5 +1,8 @@
 List of revisions:
 
+01-May-2019
+- Row/Col params in the BeforeEdit event now ByRef instead ByVal.
+
 25-Apr-2019
 - Finetuning with WM_NCCALCSIZE/WM_NCHITTEST/WM_NCPAINT for in-cell editing window.
 
