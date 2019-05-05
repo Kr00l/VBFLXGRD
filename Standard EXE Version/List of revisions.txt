@@ -1,5 +1,8 @@
 List of revisions:
 
+05-May-2019
+- Included enum FlexSelectionModeFreeByRow and FlexSelectionModeFreeByColumn in the SelectionMode property.
+
 01-May-2019
 - Row/Col params in the BeforeEdit event now ByRef instead ByVal.
 
