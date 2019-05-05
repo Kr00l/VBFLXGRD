@@ -484,6 +484,10 @@ With ComboSelectionMode
 .ItemData(.NewIndex) = FlexSelectionModeByRow
 .AddItem FlexSelectionModeByColumn & " - ByColumn"
 .ItemData(.NewIndex) = FlexSelectionModeByColumn
+.AddItem FlexSelectionModeFreeByRow & " - FreeByRow"
+.ItemData(.NewIndex) = FlexSelectionModeFreeByRow
+.AddItem FlexSelectionModeFreeByColumn & " - FreeByColumn"
+.ItemData(.NewIndex) = FlexSelectionModeFreeByColumn
 End With
 With ComboAllowUserResizing
 .AddItem FlexAllowUserResizingNone & " - None"

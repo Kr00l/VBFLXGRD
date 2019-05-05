@@ -28,7 +28,7 @@ Private FlexOLEDropModeNone, FlexOLEDropModeManual
 Private FlexRightToLeftModeNoControl, FlexRightToLeftModeVBAME, FlexRightToLeftModeSystemLocale, FlexRightToLeftModeUserLocale, FlexRightToLeftModeOSLanguage
 Private FlexBorderStyleNone, FlexBorderStyleSingle, FlexBorderStyleThin, FlexBorderStyleSunken, FlexBorderStyleRaised
 Private FlexAllowUserResizingNone, FlexAllowUserResizingColumns, FlexAllowUserResizingRows, FlexAllowUserResizingBoth
-Private FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn
+Private FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
 Private FlexFillStyleSingle, FlexFillStyleRepeat
 Private FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus
 Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy
@@ -84,6 +84,8 @@ Public Enum FlexSelectionModeConstants
 FlexSelectionModeFree = 0
 FlexSelectionModeByRow = 1
 FlexSelectionModeByColumn = 2
+FlexSelectionModeFreeByRow = 3
+FlexSelectionModeFreeByColumn = 4
 End Enum
 Public Enum FlexFillStyleConstants
 FlexFillStyleSingle = 0
@@ -1042,7 +1044,7 @@ If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
                     Select Case PropWrapCellBehavior
                         Case FlexWrapNone
                             Select Case PropSelectionMode
-                                Case FlexSelectionModeFree
+                                Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
                                     If (Shift And vbShiftMask) = 0 Then
                                         If VBFlexGridCol < GetLastMovableCol() Then IsInputKey = True
                                     Else
@@ -1051,7 +1053,7 @@ If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
                             End Select
                         Case FlexWrapRow
                             Select Case PropSelectionMode
-                                Case FlexSelectionModeFree
+                                Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
                                     If (Shift And vbShiftMask) = 0 Then
                                         If VBFlexGridRow < GetLastMovableRow() Or VBFlexGridCol < GetLastMovableCol() Then IsInputKey = True
                                     Else
@@ -2365,7 +2367,7 @@ With RCP
 .Row = PropFixedRows
 .TopRow = PropFixedRows
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         .Mask = .Mask Or RCPM_ROWSEL
         .RowSel = .Row
     Case FlexSelectionModeByRow
@@ -2407,7 +2409,7 @@ With RCP
 .Col = PropFixedCols
 .LeftCol = PropFixedCols
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         .Mask = .Mask Or RCPM_COLSEL
         .ColSel = .Col
     Case FlexSelectionModeByColumn
@@ -2466,7 +2468,7 @@ If VBFlexGridRow > (PropRows - 1) Then
     .Row = (PropRows - 1)
 End If
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeByRow
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn, FlexSelectionModeByRow
         If VBFlexGridRowSel > (PropRows - 1) Then
             .Mask = .Mask Or RCPM_ROWSEL
             .RowSel = (PropRows - 1)
@@ -2547,7 +2549,7 @@ If VBFlexGridCol > (PropCols - 1) Then
     .Col = (PropCols - 1)
 End If
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeByColumn
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn, FlexSelectionModeByColumn
         If VBFlexGridColSel > (PropCols - 1) Then
             .Mask = .Mask Or RCPM_COLSEL
             .ColSel = (PropCols - 1)
@@ -2590,7 +2592,7 @@ With RCP
 .Mask = RCPM_ROWSEL Or RCPM_COLSEL
 If PropAllowSelection = True Then
     Select Case PropSelectionMode
-        Case FlexSelectionModeFree
+        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
             .RowSel = VBFlexGridRow
             .ColSel = VBFlexGridCol
         Case FlexSelectionModeByRow
@@ -2672,7 +2674,7 @@ End Property
 
 Public Property Let SelectionMode(ByVal Value As FlexSelectionModeConstants)
 Select Case Value
-    Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn
+    Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         PropSelectionMode = Value
     Case Else
         Err.Raise 380
@@ -2683,7 +2685,7 @@ With RCP
 .Row = PropFixedRows
 .Col = PropFixedCols
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         .RowSel = .Row
         .ColSel = .Col
     Case FlexSelectionModeByRow
@@ -3942,7 +3944,7 @@ Else
         .Row = (PropRows - 1)
     End If
     Select Case PropSelectionMode
-        Case FlexSelectionModeFree, FlexSelectionModeByRow
+        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn, FlexSelectionModeByRow
             If VBFlexGridRowSel > (PropRows - 1) Then
                 .Mask = .Mask Or RCPM_ROWSEL
                 .RowSel = (PropRows - 1)
@@ -4111,7 +4113,7 @@ With RCP
 .RowSel = VBFlexGridRowSel
 .ColSel = VBFlexGridColSel
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         .RowSel = .Row
         .ColSel = VBFlexGridCol
     Case FlexSelectionModeByRow
@@ -4141,7 +4143,7 @@ With RCP
 .RowSel = VBFlexGridRowSel
 .ColSel = VBFlexGridColSel
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         .RowSel = VBFlexGridRow
         .ColSel = .Col
     Case FlexSelectionModeByRow
@@ -6796,7 +6798,7 @@ VBFlexGridRow = PropFixedRows
 VBFlexGridCol = PropFixedCols
 If PropAllowSelection = True Then
     Select Case PropSelectionMode
-        Case FlexSelectionModeFree
+        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
             VBFlexGridRowSel = VBFlexGridRow
             VBFlexGridColSel = VBFlexGridCol
         Case FlexSelectionModeByRow
@@ -6842,6 +6844,8 @@ Private Sub DrawGrid(ByVal hDC As Long, ByRef hRgn As Long, Optional ByVal NoCli
 If VBFlexGridNoRedraw = True And hDC <> 0 Then
     If hRgn <> -1 Then hRgn = CreateRectRgn(0, 0, 0, 0)
     Exit Sub
+ElseIf hDC = 0 Then
+    Exit Sub
 End If
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
 Dim iRow As Long, iCol As Long
@@ -6857,11 +6861,11 @@ If PropMergeCells = FlexMergeCellsNever Then
                     If iCol >= VBFlexGridLeftCol Then
                         .Left = .Right
                         .Right = .Right + GetColWidth(iCol)
-                        If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, False)
+                        Call DrawCell(hDC, CellRect, iRow, iCol, False)
                     ElseIf iCol < PropFixedCols Then
                         .Left = .Right
                         .Right = .Right + GetColWidth(iCol)
-                        If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, True)
+                        Call DrawCell(hDC, CellRect, iRow, iCol, True)
                     Else
                         iCol = VBFlexGridLeftCol - 1
                     End If
@@ -6880,7 +6884,7 @@ If PropMergeCells = FlexMergeCellsNever Then
                     If iCol >= VBFlexGridLeftCol Or iCol < PropFixedCols Then
                         .Left = .Right
                         .Right = .Right + GetColWidth(iCol)
-                        If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, True)
+                        Call DrawCell(hDC, CellRect, iRow, iCol, True)
                     Else
                         iCol = VBFlexGridLeftCol - 1
                     End If
@@ -6980,7 +6984,7 @@ Else
                     End If
                     .Left = .Left - VBFlexGridMergeDrawInfo.Row.Width
                     .Top = .Top - VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
-                    If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, False)
+                    Call DrawCell(hDC, CellRect, iRow, iCol, False)
                     .Left = .Left + VBFlexGridMergeDrawInfo.Row.Width
                     .Top = .Top + VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
                 ElseIf iCol < PropFixedCols Then
@@ -7058,7 +7062,7 @@ Else
                     End If
                     .Left = .Left - VBFlexGridMergeDrawInfo.Row.Width
                     .Top = .Top - VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
-                    If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, True)
+                    Call DrawCell(hDC, CellRect, iRow, iCol, True)
                     .Left = .Left + VBFlexGridMergeDrawInfo.Row.Width
                     .Top = .Top + VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
                 Else
@@ -7149,7 +7153,7 @@ Else
                     End If
                     .Left = .Left - VBFlexGridMergeDrawInfo.Row.Width
                     .Top = .Top - VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
-                    If hDC <> 0 Then Call DrawCell(hDC, CellRect, iRow, iCol, True)
+                    Call DrawCell(hDC, CellRect, iRow, iCol, True)
                     .Left = .Left + VBFlexGridMergeDrawInfo.Row.Width
                     .Top = .Top + VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
                 Else
@@ -7189,8 +7193,8 @@ If hRgn <> -1 Then hRgn = CreateRectRgn(.Left, .Top, .Right, .Bottom)
 End With
 End Sub
 
-Private Sub DrawCell(ByVal hDC As Long, ByRef CellRect As RECT, ByVal iRow As Long, ByVal iCol As Long, ByVal IsFixedCell As Boolean)
-If (CellRect.Bottom - CellRect.Top) = 0 Or (CellRect.Right - CellRect.Left) = 0 Or hDC = 0 Then Exit Sub
+Private Sub DrawCell(ByRef hDC As Long, ByRef CellRect As RECT, ByVal iRow As Long, ByVal iCol As Long, ByVal IsFixedCell As Boolean)
+If (CellRect.Bottom - CellRect.Top) = 0 Or (CellRect.Right - CellRect.Left) = 0 Then Exit Sub
 Const ODS_SELECTED As Long = &H1, ODS_FOCUS As Long = &H10, ODS_NOFOCUSRECT As Long = &H200
 Dim SelRange As TCELLRANGE, ItemState As Long
 Call GetSelRangeStruct(SelRange)
@@ -7203,11 +7207,50 @@ If PropMergeCells <> FlexMergeCellsNever Then
         iCol = iCol - VBFlexGridMergeDrawInfo.Row.ColOffset
     End If
 End If
-Select Case PropHighLight
-    Case FlexHighLightAlways
-        If (iCol >= SelRange.LeftCol And iCol <= SelRange.RightCol) And (iRow >= SelRange.TopRow And iRow <= SelRange.BottomRow) Then ItemState = ItemState Or ODS_SELECTED
-    Case FlexHighLightWithFocus
-        If VBFlexGridFocused = True And (iCol >= SelRange.LeftCol And iCol <= SelRange.RightCol) And (iRow >= SelRange.TopRow And iRow <= SelRange.BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+Select Case PropSelectionMode
+    Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn
+        Select Case PropHighLight
+            Case FlexHighLightAlways
+                If (iCol >= SelRange.LeftCol And iCol <= SelRange.RightCol) And (iRow >= SelRange.TopRow And iRow <= SelRange.BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+            Case FlexHighLightWithFocus
+                If VBFlexGridFocused = True Then
+                    If (iCol >= SelRange.LeftCol And iCol <= SelRange.RightCol) And (iRow >= SelRange.TopRow And iRow <= SelRange.BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+                End If
+        End Select
+    Case FlexSelectionModeFreeByRow
+        Select Case PropHighLight
+            Case FlexHighLightAlways
+                If (iCol >= SelRange.LeftCol And iCol <= SelRange.RightCol) And (iRow >= SelRange.TopRow And iRow <= SelRange.BottomRow) Then
+                    ItemState = ItemState Or ODS_SELECTED
+                ElseIf IsFixedCell = False And (iRow >= SelRange.TopRow And iRow <= SelRange.BottomRow) Then
+                    ItemState = ItemState Or ODS_SELECTED
+                End If
+            Case FlexHighLightWithFocus
+                If VBFlexGridFocused = True Then
+                    If (iCol >= SelRange.LeftCol And iCol <= SelRange.RightCol) And (iRow >= SelRange.TopRow And iRow <= SelRange.BottomRow) Then
+                        ItemState = ItemState Or ODS_SELECTED
+                    ElseIf IsFixedCell = False And (iRow >= SelRange.TopRow And iRow <= SelRange.BottomRow) Then
+                        ItemState = ItemState Or ODS_SELECTED
+                    End If
+                End If
+        End Select
+    Case FlexSelectionModeFreeByColumn
+        Select Case PropHighLight
+            Case FlexHighLightAlways
+                If (iCol >= SelRange.LeftCol And iCol <= SelRange.RightCol) And (iRow >= SelRange.TopRow And iRow <= SelRange.BottomRow) Then
+                    ItemState = ItemState Or ODS_SELECTED
+                ElseIf IsFixedCell = False And (iCol >= SelRange.LeftCol And iCol <= SelRange.RightCol) Then
+                    ItemState = ItemState Or ODS_SELECTED
+                End If
+            Case FlexHighLightWithFocus
+                If VBFlexGridFocused = True Then
+                    If (iCol >= SelRange.LeftCol And iCol <= SelRange.RightCol) And (iRow >= SelRange.TopRow And iRow <= SelRange.BottomRow) Then
+                        ItemState = ItemState Or ODS_SELECTED
+                    ElseIf IsFixedCell = False And (iCol >= SelRange.LeftCol And iCol <= SelRange.RightCol) Then
+                        ItemState = ItemState Or ODS_SELECTED
+                    End If
+                End If
+        End Select
 End Select
 If PropFocusRect <> FlexFocusRectNone Then
     If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
@@ -8839,7 +8882,7 @@ End Select
 .TopRow = VBFlexGridTopRow
 .LeftCol = VBFlexGridLeftCol
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         Select Case KeyCode
             Case vbKeyUp
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
@@ -9757,7 +9800,7 @@ If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFix
     ScreenToClient VBFlexGridHandle, HTI.PT
     Call GetHitTestInfo(HTI)
     Select Case PropSelectionMode
-        Case FlexSelectionModeFree
+        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
             If VBFlexGridCaptureRow > (PropFixedRows - 1) Or PropAllowBigSelection = False Then
                 If HTI.MouseRow > (PropFixedRows - 1) Then
                     .RowSel = HTI.MouseRow
@@ -9865,7 +9908,7 @@ With RCP
 .RowSel = VBFlexGridRowSel
 .ColSel = VBFlexGridColSel
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         If HTI.HitRow > (PropFixedRows - 1) Then
             If (Shift And vbShiftMask) = 0 Then
                 .Row = HTI.HitRow
@@ -9875,8 +9918,10 @@ Select Case PropSelectionMode
             End If
         Else
             If PropAllowBigSelection = True Then
-                .Row = PropFixedRows
-                .RowSel = (PropRows - 1)
+                If HTI.HitCol < PropFixedCols Or PropSelectionMode <> FlexSelectionModeFreeByRow Then
+                    .Row = PropFixedRows
+                    .RowSel = (PropRows - 1)
+                End If
             Else
                 If (Shift And vbShiftMask) = 0 Then
                     .Row = VBFlexGridTopRow
@@ -9895,8 +9940,10 @@ Select Case PropSelectionMode
             End If
         Else
             If PropAllowBigSelection = True Then
-                .Col = PropFixedCols
-                .ColSel = (PropCols - 1)
+                If HTI.HitRow < PropFixedRows Or PropSelectionMode <> FlexSelectionModeFreeByColumn Then
+                    .Col = PropFixedCols
+                    .ColSel = (PropCols - 1)
+                End If
             Else
                 If (Shift And vbShiftMask) = 0 Then
                     .Col = VBFlexGridLeftCol
@@ -9975,7 +10022,7 @@ Select Case PropSelectionMode
 End Select
 If HTI.HitRow <= (PropFixedRows - 1) And HTI.HitCol <= (PropFixedCols - 1) Then
     Select Case PropSelectionMode
-        Case FlexSelectionModeFree
+        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
             If PropAllowBigSelection = True Or (Shift And vbShiftMask) = 0 Then
                 .Mask = .Mask Or RCPM_TOPROW Or RCPM_LEFTCOL
                 .TopRow = .Row
@@ -10117,7 +10164,7 @@ End If
 .TopRow = VBFlexGridTopRow
 .LeftCol = VBFlexGridLeftCol
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         If VBFlexGridCaptureRow > (PropFixedRows - 1) Or PropAllowBigSelection = False Then
             If HTI.MouseRow > (PropFixedRows - 1) Then
                 .RowSel = HTI.MouseRow
@@ -10133,7 +10180,7 @@ Select Case PropSelectionMode
                 End If
             End If
             If PropAllowSelection = False Then .Row = .RowSel
-        Else
+        ElseIf PropSelectionMode <> FlexSelectionModeFreeByRow Then
             .RowSel = (PropRows - 1)
         End If
         If VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
@@ -10151,7 +10198,7 @@ Select Case PropSelectionMode
                 End If
             End If
             If PropAllowSelection = False Then .Col = .ColSel
-        Else
+        ElseIf PropSelectionMode <> FlexSelectionModeFreeByColumn Then
             .ColSel = (PropCols - 1)
         End If
     Case FlexSelectionModeByRow
