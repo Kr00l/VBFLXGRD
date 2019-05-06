@@ -777,8 +777,10 @@ Private Const WS_EX_TRANSPARENT As Long = &H20
 Private Const WS_EX_CLIENTEDGE As Long = &H200
 Private Const WS_EX_STATICEDGE As Long = &H20000
 Private Const WS_EX_WINDOWEDGE As Long = &H100
+Private Const WS_EX_NOPARENTNOTIFY As Long = &H4
 Private Const WS_VISIBLE As Long = &H10000000
 Private Const WS_CHILD As Long = &H40000000
+Private Const WS_CLIPCHILDREN As Long = &H2000000
 Private Const WS_CLIPSIBLINGS As Long = &H4000000
 Private Const WS_POPUP As Long = &H80000000
 Private Const WS_EX_TOOLWINDOW As Long = &H80
@@ -921,6 +923,7 @@ Private VBFlexGridEditValidateCancel As Boolean
 Private VBFlexGridEditValidateInProc As Boolean
 Private VBFlexGridEditTextChanged As Boolean
 Private VBFlexGridEditAlreadyValidated As Boolean
+Private VBFlexGridEditHidden As Boolean
 Private VBFlexGridEditTempFontHandle As Long
 Private VBFlexGridEditBackColor As OLE_COLOR, VBFlexGridEditForeColor As OLE_COLOR
 Private VBFlexGridEditBackColorBrush As Long
@@ -3388,7 +3391,8 @@ If VBFlexGridHandle <> 0 Then Exit Sub
 Call InitFlexGridCells
 If VBFlexGridDesignMode = False Then
     Dim dwStyle As Long, dwExStyle As Long
-    dwStyle = WS_CHILD Or WS_VISIBLE Or WS_CLIPSIBLINGS
+    dwStyle = WS_CHILD Or WS_VISIBLE Or WS_CLIPCHILDREN Or WS_CLIPSIBLINGS
+    dwExStyle = WS_EX_NOPARENTNOTIFY
     If PropRightToLeft = True Then
         If PropRightToLeftLayout = True Then
             dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
@@ -3749,6 +3753,7 @@ ShowWindow VBFlexGridEditHandle, SW_HIDE
 SetParent VBFlexGridEditHandle, 0
 DestroyWindow VBFlexGridEditHandle
 VBFlexGridEditHandle = 0
+VBFlexGridEditHidden = False
 If VBFlexGridEditTempFontHandle <> 0 Then
     DeleteObject VBFlexGridEditTempFontHandle
     VBFlexGridEditTempFontHandle = 0
@@ -10421,6 +10426,7 @@ End Sub
 Private Sub UpdateEditRect()
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
+    Dim Hidden As Boolean
     With VBFlexGridEditMergedRange
     If .TopRow < PropFixedRows And .LeftCol < PropFixedCols Then
         ' Void
@@ -10447,6 +10453,12 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
             For i = (.TopRow + 1) To .BottomRow
                 RC.Bottom = RC.Bottom + GetRowHeight(i)
             Next i
+        Else
+            For i = .TopRow To .BottomRow
+                RC.Bottom = RC.Top
+                RC.Top = RC.Top - GetRowHeight(i)
+            Next i
+            Hidden = True
         End If
         If .RightCol >= VBFlexGridLeftCol Then
             For i = 0 To (PropFixedCols - 1)
@@ -10469,10 +10481,17 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
             For i = (.LeftCol + 1) To .RightCol
                 RC.Right = RC.Right + GetColWidth(i)
             Next i
+        Else
+            For i = .LeftCol To .RightCol
+                RC.Right = RC.Left
+                RC.Left = RC.Left - GetColWidth(i)
+            Next i
+            Hidden = True
         End If
         MoveWindow VBFlexGridEditHandle, RC.Left, RC.Top, (RC.Right - RC.Left) - 1, (RC.Bottom - RC.Top) - 1, 1
     End If
     End With
+    VBFlexGridEditHidden = Hidden
 End If
 End Sub
 
@@ -11251,6 +11270,7 @@ Select Case wMsg
         KeyCode = wParam And &HFF&
         If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
             If wMsg = WM_KEYDOWN Then
+                If VBFlexGridEditHidden = True Then Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
                 RaiseEvent EditKeyDown(KeyCode, GetShiftStateFromMsg())
                 If VBFlexGridEditHandle <> 0 Then
                     Select Case KeyCode
