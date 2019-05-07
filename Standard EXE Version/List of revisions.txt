@@ -1,5 +1,8 @@
 List of revisions:
 
+07-May-2019
+- Bugfix related to 06-May-2019 update concerning in-cell editing window.
+
 06-May-2019
 - When in-cell editing window is scrolled off then any key input will now bring it back into view.
 - Included WS_CLIPCHILDREN on VBFlexGridWndClass creation.
