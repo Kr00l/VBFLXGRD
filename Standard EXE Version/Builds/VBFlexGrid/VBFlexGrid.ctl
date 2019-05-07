@@ -923,7 +923,8 @@ Private VBFlexGridEditValidateCancel As Boolean
 Private VBFlexGridEditValidateInProc As Boolean
 Private VBFlexGridEditTextChanged As Boolean
 Private VBFlexGridEditAlreadyValidated As Boolean
-Private VBFlexGridEditHidden As Boolean
+Private VBFlexGridEditRectChanged As Boolean
+Private VBFlexGridEditRectChangedFrozen As Boolean
 Private VBFlexGridEditTempFontHandle As Long
 Private VBFlexGridEditBackColor As OLE_COLOR, VBFlexGridEditForeColor As OLE_COLOR
 Private VBFlexGridEditBackColorBrush As Long
@@ -3753,7 +3754,7 @@ ShowWindow VBFlexGridEditHandle, SW_HIDE
 SetParent VBFlexGridEditHandle, 0
 DestroyWindow VBFlexGridEditHandle
 VBFlexGridEditHandle = 0
-VBFlexGridEditHidden = False
+VBFlexGridEditRectChanged = False
 If VBFlexGridEditTempFontHandle <> 0 Then
     DeleteObject VBFlexGridEditTempFontHandle
     VBFlexGridEditTempFontHandle = 0
@@ -10426,7 +10427,6 @@ End Sub
 Private Sub UpdateEditRect()
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
-    Dim Hidden As Boolean
     With VBFlexGridEditMergedRange
     If .TopRow < PropFixedRows And .LeftCol < PropFixedCols Then
         ' Void
@@ -10458,7 +10458,6 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
                 RC.Bottom = RC.Top
                 RC.Top = RC.Top - GetRowHeight(i)
             Next i
-            Hidden = True
         End If
         If .RightCol >= VBFlexGridLeftCol Then
             For i = 0 To (PropFixedCols - 1)
@@ -10486,12 +10485,11 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
                 RC.Right = RC.Left
                 RC.Left = RC.Left - GetColWidth(i)
             Next i
-            Hidden = True
         End If
         MoveWindow VBFlexGridEditHandle, RC.Left, RC.Top, (RC.Right - RC.Left) - 1, (RC.Bottom - RC.Top) - 1, 1
+        If VBFlexGridEditRectChangedFrozen = False Then VBFlexGridEditRectChanged = True
     End If
     End With
-    VBFlexGridEditHidden = Hidden
 End If
 End Sub
 
@@ -11270,7 +11268,12 @@ Select Case wMsg
         KeyCode = wParam And &HFF&
         If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
             If wMsg = WM_KEYDOWN Then
-                If VBFlexGridEditHidden = True Then Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
+                If VBFlexGridEditRectChanged = True Then
+                    VBFlexGridEditRectChanged = False
+                    VBFlexGridEditRectChangedFrozen = True
+                    Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
+                    VBFlexGridEditRectChangedFrozen = False
+                End If
                 RaiseEvent EditKeyDown(KeyCode, GetShiftStateFromMsg())
                 If VBFlexGridEditHandle <> 0 Then
                     Select Case KeyCode
