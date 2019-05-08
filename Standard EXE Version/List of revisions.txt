@@ -1,5 +1,8 @@
 List of revisions:
 
+08-May-2019
+- Major drawing performance boost. (~20%)
+
 07-May-2019
 - Bugfix related to 06-May-2019 update concerning in-cell editing window.
 
