@@ -573,12 +573,16 @@ OldFixedCols = .FixedCols
 .Rows = CLng(TextRows.Text)
 If .Rows > 0 Then
     If OldFixedRows > .FixedRows Then TextFixedRows.Text = CStr(.FixedRows)
+    On Error Resume Next
     .FixedRows = CLng(TextFixedRows.Text)
+    On Error GoTo 0
 End If
 .Cols = CLng(TextCols.Text)
 If .Cols > 0 Then
     If OldFixedCols > .FixedCols Then TextFixedCols.Text = CStr(.FixedCols)
+    On Error Resume Next
     .FixedCols = CLng(TextFixedCols.Text)
+    On Error GoTo 0
 End If
 .ScrollBars = ComboScrollBars.ItemData(ComboScrollBars.ListIndex)
 .HighLight = ComboHighLight.ItemData(ComboHighLight.ListIndex)
