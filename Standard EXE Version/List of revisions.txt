@@ -1,5 +1,8 @@
 List of revisions:
 
+09-May-2019
+- Bugfix related to 08-May-2019 update.
+
 08-May-2019
 - Major drawing performance boost. (~20%)
 
