@@ -786,6 +786,7 @@ Private Const WS_EX_CLIENTEDGE As Long = &H200
 Private Const WS_EX_STATICEDGE As Long = &H20000
 Private Const WS_EX_WINDOWEDGE As Long = &H100
 Private Const WS_EX_NOPARENTNOTIFY As Long = &H4
+Private Const WS_EX_NOINHERITLAYOUT As Long = &H100000
 Private Const WS_VISIBLE As Long = &H10000000
 Private Const WS_CHILD As Long = &H40000000
 Private Const WS_CLIPCHILDREN As Long = &H2000000
@@ -3402,7 +3403,7 @@ Call InitFlexGridCells
 If VBFlexGridDesignMode = False Then
     Dim dwStyle As Long, dwExStyle As Long
     dwStyle = WS_CHILD Or WS_VISIBLE Or WS_CLIPCHILDREN Or WS_CLIPSIBLINGS
-    dwExStyle = WS_EX_NOPARENTNOTIFY
+    dwExStyle = WS_EX_NOPARENTNOTIFY Or WS_EX_NOINHERITLAYOUT
     If PropRightToLeft = True Then
         If PropRightToLeftLayout = True Then
             dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
@@ -3517,16 +3518,16 @@ End If
 End With
 Select Case Alignment
     Case FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom
-        dwStyle = dwStyle Or ES_LEFT
+        If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_LEFT Else dwStyle = dwStyle Or ES_RIGHT
     Case FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom
         dwStyle = dwStyle Or ES_CENTER
     Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
-        dwStyle = dwStyle Or ES_RIGHT
+        If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_RIGHT Else dwStyle = dwStyle Or ES_LEFT
     Case FlexAlignmentGeneral
         If Not IsNumeric(Text) Then
-            dwStyle = dwStyle Or ES_LEFT
+            If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_LEFT Else dwStyle = dwStyle Or ES_RIGHT
         Else
-            dwStyle = dwStyle Or ES_RIGHT
+            If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_RIGHT Else dwStyle = dwStyle Or ES_LEFT
         End If
 End Select
 If PropWordWrap = True Or PropSingleLine = False Then
@@ -3596,7 +3597,11 @@ If VBFlexGridEditHandle <> 0 Then
     End If
     End With
     SendMessage VBFlexGridEditHandle, WM_SETFONT, hFont, ByVal 0&
-    SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X(), (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X()) - 1)
+    If VBFlexGridRTLLayout = False Then
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X(), (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X()) - 1)
+    Else
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X() - 1, (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X()))
+    End If
     SendMessage VBFlexGridEditHandle, WM_SETTEXT, 0, ByVal StrPtr(Text)
     SendMessage VBFlexGridEditHandle, EM_SETSEL, 0, ByVal -1&
     If Reason = FlexEditReasonSpace Then SendMessage VBFlexGridEditHandle, EM_SETSEL, -1, ByVal -1&
