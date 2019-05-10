@@ -1,5 +1,8 @@
 List of revisions:
 
+10-May-2019
+- Finetuning concerning RightToLeftLayout for in-cell editing window.
+
 09-May-2019
 - Bugfix related to 08-May-2019 update.
 
