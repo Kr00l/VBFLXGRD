@@ -11486,7 +11486,7 @@ Select Case wMsg
                             LSet RC = LBLI.RC
                             MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, RC, 2
                             SendMessage VBFlexGridToolTipHandle, TTM_ADJUSTRECT, 1, ByVal VarPtr(RC)
-                            SetWindowPos VBFlexGridToolTipHandle, 0, RC.Left, RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOZORDER Or SWP_NOACTIVATE
+                            SetWindowPos VBFlexGridToolTipHandle, 0, RC.Left, RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
                             WindowProcControl = 1
                             Exit Function
                         End If
