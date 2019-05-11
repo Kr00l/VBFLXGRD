@@ -884,7 +884,7 @@ Private Const TTN_SHOW As Long = (TTN_FIRST - 1)
 Implements OLEGuids.IObjectSafety
 Implements OLEGuids.IOleInPlaceActiveObjectVB
 Implements OLEGuids.IPerPropertyBrowsingVB
-Private VBFlexGridHandle As Long, VBFlexGridEditHandle As Long, VBFlexGridToolTipHandle As Long
+Private VBFlexGridHandle As Long, VBFlexGridToolTipHandle As Long
 Private VBFlexGridFontHandle As Long, VBFlexGridFontFixedHandle As Long
 Private VBFlexGridIMCHandle As Long
 Private VBFlexGridBackColorBrush As Long
@@ -924,6 +924,7 @@ Private VBFlexGridHitRow As Long, VBFlexGridHitCol As Long
 Private VBFlexGridHitRowDivider As Long, VBFlexGridHitColDivider As Long
 Private VBFlexGridHitResult As FlexHitResultConstants
 Private VBFlexGridCellClickRow As Long, VBFlexGridCellClickCol As Long
+Private VBFlexGridEditHandle As Long
 Private VBFlexGridEditRow As Long, VBFlexGridEditCol As Long
 Private VBFlexGridEditMergedRange As TCELLRANGE
 Private VBFlexGridEditReason As FlexEditReasonConstants
@@ -3476,6 +3477,105 @@ If VBFlexGridDesignMode = False Then Call FlexSetSubclass(UserControl.hWnd, Me, 
 UserControl.BackColor = PropBackColorBkg
 End Sub
 
+Private Sub CreateToolTip()
+Static Done As Boolean
+If VBFlexGridToolTipHandle <> 0 Then Exit Sub
+If Done = False Then
+    Call FlexInitCC(ICC_TAB_CLASSES)
+    Done = True
+End If
+Dim dwExStyle As Long
+dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST Or WS_EX_TRANSPARENT
+If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
+VBFlexGridToolTipHandle = CreateWindowEx(dwExStyle, StrPtr("tooltips_class32"), StrPtr("Tool Tip"), WS_POPUP Or TTS_ALWAYSTIP Or TTS_NOPREFIX, 0, 0, 0, 0, UserControl.hWnd, 0, App.hInstance, ByVal 0&)
+If VBFlexGridToolTipHandle <> 0 Then
+    SendMessage VBFlexGridToolTipHandle, TTM_SETMAXTIPWIDTH, 0, ByVal &H7FFF&
+    Dim TI As TOOLINFO
+    With TI
+    .cbSize = LenB(TI)
+    .hWnd = VBFlexGridHandle
+    .uId = 0
+    .uFlags = TTF_SUBCLASS Or TTF_TRANSPARENT Or TTF_PARSELINKS
+    If VBFlexGridRTLReading = True Then .uFlags = .uFlags Or TTF_RTLREADING
+    .lpszText = LPSTR_TEXTCALLBACK
+    GetClientRect VBFlexGridHandle, .RC
+    End With
+    SendMessage VBFlexGridToolTipHandle, TTM_ADDTOOL, 0, ByVal VarPtr(TI)
+End If
+Call SetVisualStylesToolTip
+End Sub
+
+Private Sub DestroyVBFlexGrid()
+If VBFlexGridHandle = 0 Then Exit Sub
+Call FlexRemoveSubclass(UserControl.hWnd)
+Call DestroyToolTip
+If VBFlexGridDesignMode = False Then
+    SetWindowLong VBFlexGridHandle, 0, 0
+    If VBFlexGridIMCHandle <> 0 Then
+        ImmAssociateContext VBFlexGridHandle, 0
+        ImmDestroyContext VBFlexGridIMCHandle
+        VBFlexGridIMCHandle = 0
+    End If
+    ShowWindow VBFlexGridHandle, SW_HIDE
+    SetParent VBFlexGridHandle, 0
+    DestroyWindow VBFlexGridHandle
+End If
+VBFlexGridHandle = 0
+Call EraseFlexGridCells
+If VBFlexGridFontHandle <> 0 Then
+    DeleteObject VBFlexGridFontHandle
+    VBFlexGridFontHandle = 0
+End If
+If VBFlexGridFontFixedHandle <> 0 Then
+    DeleteObject VBFlexGridFontFixedHandle
+    VBFlexGridFontFixedHandle = 0
+End If
+If VBFlexGridBackColorBrush <> 0 Then
+    DeleteObject VBFlexGridBackColorBrush
+    VBFlexGridBackColorBrush = 0
+End If
+If VBFlexGridBackColorAltBrush <> 0 Then
+    DeleteObject VBFlexGridBackColorAltBrush
+    VBFlexGridBackColorAltBrush = 0
+End If
+If VBFlexGridBackColorBkgBrush <> 0 Then
+    DeleteObject VBFlexGridBackColorBkgBrush
+    VBFlexGridBackColorBkgBrush = 0
+End If
+If VBFlexGridBackColorFixedBrush <> 0 Then
+    DeleteObject VBFlexGridBackColorFixedBrush
+    VBFlexGridBackColorFixedBrush = 0
+End If
+If VBFlexGridBackColorSelBrush <> 0 Then
+    DeleteObject VBFlexGridBackColorSelBrush
+    VBFlexGridBackColorSelBrush = 0
+End If
+If VBFlexGridGridLinePen <> 0 Then
+    DeleteObject VBFlexGridGridLinePen
+    VBFlexGridGridLinePen = 0
+End If
+If VBFlexGridGridLineFixedPen <> 0 Then
+    DeleteObject VBFlexGridGridLineFixedPen
+    VBFlexGridGridLineFixedPen = 0
+End If
+If VBFlexGridGridLineWhitePen <> 0 Then
+    DeleteObject VBFlexGridGridLineWhitePen
+    VBFlexGridGridLineWhitePen = 0
+End If
+If VBFlexGridGridLineBlackPen <> 0 Then
+    DeleteObject VBFlexGridGridLineBlackPen
+    VBFlexGridGridLineBlackPen = 0
+End If
+End Sub
+
+Private Sub DestroyToolTip()
+If VBFlexGridToolTipHandle = 0 Then Exit Sub
+DestroyWindow VBFlexGridToolTipHandle
+VBFlexGridToolTipHandle = 0
+VBFlexGridToolTipRow = -1
+VBFlexGridToolTipCol = -1
+End Sub
+
 Private Function CreateEdit(ByVal Reason As FlexEditReasonConstants, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Boolean
 Static InProc As Boolean
 If VBFlexGridHandle = 0 Or VBFlexGridEditHandle <> 0 Or InProc = True Then Exit Function
@@ -3622,97 +3722,6 @@ End If
 InProc = False
 End Function
 
-Private Sub CreateToolTip()
-Static Done As Boolean
-If VBFlexGridToolTipHandle <> 0 Then Exit Sub
-If Done = False Then
-    Call FlexInitCC(ICC_TAB_CLASSES)
-    Done = True
-End If
-Dim dwExStyle As Long
-dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST Or WS_EX_TRANSPARENT
-If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
-VBFlexGridToolTipHandle = CreateWindowEx(dwExStyle, StrPtr("tooltips_class32"), StrPtr("Tool Tip"), WS_POPUP Or TTS_ALWAYSTIP Or TTS_NOPREFIX, 0, 0, 0, 0, UserControl.hWnd, 0, App.hInstance, ByVal 0&)
-If VBFlexGridToolTipHandle <> 0 Then
-    SendMessage VBFlexGridToolTipHandle, TTM_SETMAXTIPWIDTH, 0, ByVal &H7FFF&
-    Dim TI As TOOLINFO
-    With TI
-    .cbSize = LenB(TI)
-    .hWnd = VBFlexGridHandle
-    .uId = 0
-    .uFlags = TTF_SUBCLASS Or TTF_TRANSPARENT Or TTF_PARSELINKS
-    If VBFlexGridRTLReading = True Then .uFlags = .uFlags Or TTF_RTLREADING
-    .lpszText = LPSTR_TEXTCALLBACK
-    GetClientRect VBFlexGridHandle, .RC
-    End With
-    SendMessage VBFlexGridToolTipHandle, TTM_ADDTOOL, 0, ByVal VarPtr(TI)
-End If
-Call SetVisualStylesToolTip
-End Sub
-
-Private Sub DestroyVBFlexGrid()
-If VBFlexGridHandle = 0 Then Exit Sub
-Call FlexRemoveSubclass(UserControl.hWnd)
-Call DestroyToolTip
-If VBFlexGridDesignMode = False Then
-    SetWindowLong VBFlexGridHandle, 0, 0
-    If VBFlexGridIMCHandle <> 0 Then
-        ImmAssociateContext VBFlexGridHandle, 0
-        ImmDestroyContext VBFlexGridIMCHandle
-        VBFlexGridIMCHandle = 0
-    End If
-    ShowWindow VBFlexGridHandle, SW_HIDE
-    SetParent VBFlexGridHandle, 0
-    DestroyWindow VBFlexGridHandle
-End If
-VBFlexGridHandle = 0
-Call EraseFlexGridCells
-If VBFlexGridFontHandle <> 0 Then
-    DeleteObject VBFlexGridFontHandle
-    VBFlexGridFontHandle = 0
-End If
-If VBFlexGridFontFixedHandle <> 0 Then
-    DeleteObject VBFlexGridFontFixedHandle
-    VBFlexGridFontFixedHandle = 0
-End If
-If VBFlexGridBackColorBrush <> 0 Then
-    DeleteObject VBFlexGridBackColorBrush
-    VBFlexGridBackColorBrush = 0
-End If
-If VBFlexGridBackColorAltBrush <> 0 Then
-    DeleteObject VBFlexGridBackColorAltBrush
-    VBFlexGridBackColorAltBrush = 0
-End If
-If VBFlexGridBackColorBkgBrush <> 0 Then
-    DeleteObject VBFlexGridBackColorBkgBrush
-    VBFlexGridBackColorBkgBrush = 0
-End If
-If VBFlexGridBackColorFixedBrush <> 0 Then
-    DeleteObject VBFlexGridBackColorFixedBrush
-    VBFlexGridBackColorFixedBrush = 0
-End If
-If VBFlexGridBackColorSelBrush <> 0 Then
-    DeleteObject VBFlexGridBackColorSelBrush
-    VBFlexGridBackColorSelBrush = 0
-End If
-If VBFlexGridGridLinePen <> 0 Then
-    DeleteObject VBFlexGridGridLinePen
-    VBFlexGridGridLinePen = 0
-End If
-If VBFlexGridGridLineFixedPen <> 0 Then
-    DeleteObject VBFlexGridGridLineFixedPen
-    VBFlexGridGridLineFixedPen = 0
-End If
-If VBFlexGridGridLineWhitePen <> 0 Then
-    DeleteObject VBFlexGridGridLineWhitePen
-    VBFlexGridGridLineWhitePen = 0
-End If
-If VBFlexGridGridLineBlackPen <> 0 Then
-    DeleteObject VBFlexGridGridLineBlackPen
-    VBFlexGridGridLineBlackPen = 0
-End If
-End Sub
-
 Private Function DestroyEdit(ByVal Discard As Boolean, ByVal CloseMode As FlexEditCloseModeConstants) As Boolean
 Static InProc As Boolean
 If VBFlexGridEditHandle = 0 Or InProc = True Then Exit Function
@@ -3787,15 +3796,6 @@ End If
 DestroyEdit = True
 InProc = False
 End Function
-
-Private Sub DestroyToolTip()
-If VBFlexGridToolTipHandle = 0 Then Exit Sub
-SetParent VBFlexGridToolTipHandle, 0
-DestroyWindow VBFlexGridToolTipHandle
-VBFlexGridToolTipHandle = 0
-VBFlexGridToolTipRow = -1
-VBFlexGridToolTipCol = -1
-End Sub
 
 Public Sub Refresh()
 Attribute Refresh.VB_Description = "Forces a complete repaint of a object."
@@ -11513,16 +11513,18 @@ Select Case wMsg
             End Select
         End If
     Case WM_COMMAND
-        Select Case HiWord(wParam)
-            Case EN_CHANGE
-                If LoWord(wParam) = ID_EDITCHILD And lParam = VBFlexGridEditHandle And VBFlexGridEditHandle <> 0 Then
-                    If VBFlexGridEditChangeFrozen = False Then
-                        VBFlexGridEditTextChanged = True
-                        VBFlexGridEditAlreadyValidated = False
-                        RaiseEvent EditChange
+        If lParam <> 0 Then
+            Select Case HiWord(wParam)
+                Case EN_CHANGE
+                    If LoWord(wParam) = ID_EDITCHILD And lParam = VBFlexGridEditHandle And VBFlexGridEditHandle <> 0 Then
+                        If VBFlexGridEditChangeFrozen = False Then
+                            VBFlexGridEditTextChanged = True
+                            VBFlexGridEditAlreadyValidated = False
+                            RaiseEvent EditChange
+                        End If
                     End If
-                End If
-        End Select
+            End Select
+        End If
     Case WM_NOTIFYFORMAT
         Const NF_QUERY As Long = 3
         If wParam = VBFlexGridToolTipHandle And VBFlexGridToolTipHandle <> 0 And lParam = NF_QUERY Then
