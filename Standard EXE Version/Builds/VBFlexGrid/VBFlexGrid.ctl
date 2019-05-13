@@ -925,7 +925,7 @@ Private Const TTN_SHOW As Long = (TTN_FIRST - 1)
 Implements OLEGuids.IObjectSafety
 Implements OLEGuids.IOleInPlaceActiveObjectVB
 Implements OLEGuids.IPerPropertyBrowsingVB
-Private VBFlexGridHandle As Long, VBFlexGridToolTipHandle As Long
+Private VBFlexGridHandle As Long, VBFlexGridEditHandle As Long, VBFlexGridEditButtonHandle As Long, VBFlexGridEditListHandle As Long, VBFlexGridToolTipHandle As Long
 Private VBFlexGridFontHandle As Long, VBFlexGridFontFixedHandle As Long
 Private VBFlexGridIMCHandle As Long
 Private VBFlexGridBackColorBrush As Long
@@ -965,9 +965,6 @@ Private VBFlexGridHitRow As Long, VBFlexGridHitCol As Long
 Private VBFlexGridHitRowDivider As Long, VBFlexGridHitColDivider As Long
 Private VBFlexGridHitResult As FlexHitResultConstants
 Private VBFlexGridCellClickRow As Long, VBFlexGridCellClickCol As Long
-Private VBFlexGridEditHandle As Long
-Private VBFlexGridEditButtonHandle As Long
-Private VBFlexGridEditListHandle As Long
 Private VBFlexGridEditRow As Long, VBFlexGridEditCol As Long
 Private VBFlexGridEditMergedRange As TCELLRANGE
 Private VBFlexGridEditReason As FlexEditReasonConstants
