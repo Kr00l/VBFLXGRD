@@ -344,6 +344,17 @@ fRestore As Long
 fIncUpdate As Long
 RGBReserved(0 To 31) As Byte
 End Type
+Private Type DRAWITEMSTRUCT
+CtlType As Long
+CtlID As Long
+ItemID As Long
+ItemAction As Long
+ItemState As Long
+hWndItem As Long
+hDC As Long
+RCItem As RECT
+ItemData As Long
+End Type
 Private Type SCROLLINFO
 cbSize As Long
 fMask As Long
@@ -616,6 +627,7 @@ Private Declare Function MoveWindow Lib "user32" (ByVal hWnd As Long, ByVal X As
 Private Declare Function EnableWindow Lib "user32" (ByVal hWnd As Long, ByVal fEnable As Long) As Long
 Private Declare Function IsWindowEnabled Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function IsWindowVisible Lib "user32" (ByVal hWnd As Long) As Long
+Private Declare Function LBItemFromPt Lib "comctl32" (ByVal hLB As Long, ByVal PX As Long, ByVal PY As Long, ByVal bAutoScroll As Long) As Long
 Private Declare Function SetFocusAPI Lib "user32" Alias "SetFocus" (ByVal hWnd As Long) As Long
 Private Declare Function GetFocus Lib "user32" () As Long
 Private Declare Function BeginPaint Lib "user32" (ByVal hWnd As Long, ByRef lpPaint As PAINTSTRUCT) As Long
@@ -654,6 +666,7 @@ Private Declare Function MoveToEx Lib "gdi32" (ByVal hDC As Long, ByVal X As Lon
 Private Declare Function LineTo Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long) As Long
 Private Declare Function FillRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal hBrush As Long) As Long
 Private Declare Function DrawFocusRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT) As Long
+Private Declare Function DrawFrameControl Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
 Private Declare Function DrawText Lib "user32" Alias "DrawTextW" (ByVal hDC As Long, ByVal lpchText As Long, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long) As Long
 Private Declare Function DeleteObject Lib "gdi32" (ByVal hObject As Long) As Long
 Private Declare Function SelectObject Lib "gdi32" (ByVal hDC As Long, ByVal hObject As Long) As Long
@@ -679,6 +692,7 @@ Private Declare Function CreateCompatibleDC Lib "gdi32" (ByVal hDC As Long) As L
 Private Declare Function CreateCompatibleBitmap Lib "gdi32" (ByVal hDC As Long, ByVal nWidth As Long, ByVal nHeight As Long) As Long
 Private Declare Function DeleteDC Lib "gdi32" (ByVal hDC As Long) As Long
 Private Declare Function ScreenToClient Lib "user32" (ByVal hWnd As Long, ByRef lpPoint As POINTAPI) As Long
+Private Declare Function ClientToScreen Lib "user32" (ByVal hWnd As Long, ByRef lpPoint As POINTAPI) As Long
 Private Declare Function SetScrollInfo Lib "user32" (ByVal hWnd As Long, ByVal wBar As Long, ByRef lpScrollInfo As SCROLLINFO, ByVal fRedraw As Long) As Long
 Private Declare Function GetScrollInfo Lib "user32" (ByVal hWnd As Long, ByVal wBar As Long, ByRef lpScrollInfo As SCROLLINFO) As Long
 Private Declare Function PtInRect Lib "user32" (ByRef lpRect As RECT, ByVal X As Long, ByVal Y As Long) As Long
@@ -686,11 +700,12 @@ Private Declare Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hIns
 Private Declare Function SetCursor Lib "user32" (ByVal hCursor As Long) As Long
 Private Declare Function GetCursorPos Lib "user32" (ByRef lpPoint As POINTAPI) As Long
 Private Declare Function ClipCursor Lib "user32" (ByRef lpRect As Any) As Long
+Private Declare Function GetCapture Lib "user32" () As Long
 Private Declare Function SetCapture Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function ReleaseCapture Lib "user32" () As Long
 Private Const ICC_STANDARD_CLASSES As Long = &H4000
 Private Const ICC_TAB_CLASSES As Long = &H8
-Private Const ID_EDITCHILD As Long = 100
+Private Const ID_EDITCHILD As Long = 100, ID_EDITBUTTONCHILD As Long = 101
 Private Const RDW_UPDATENOW As Long = &H100, RDW_INVALIDATE As Long = &H1, RDW_ERASE As Long = &H4, RDW_ALLCHILDREN As Long = &H80, RDW_FRAME As Long = &H400
 Private Const SWP_FRAMECHANGED As Long = &H20
 Private Const SWP_DRAWFRAME As Long = SWP_FRAMECHANGED
@@ -699,6 +714,7 @@ Private Const SWP_NOOWNERZORDER As Long = &H200
 Private Const SWP_NOSIZE As Long = &H1
 Private Const SWP_NOZORDER As Long = &H4
 Private Const SWP_NOACTIVATE As Long = &H10
+Private Const SWP_SHOWWINDOW As Long = &H40
 Private Const HWND_DESKTOP As Long = &H0
 Private Const DCX_WINDOW As Long = &H1
 Private Const DCX_INTERSECTRGN As Long = &H80
@@ -706,7 +722,9 @@ Private Const DCX_USESTYLE As Long = &H10000
 Private Const MK_SHIFT As Long = &H4
 Private Const MK_CONTROL As Long = &H8
 Private Const TME_LEAVE As Long = &H2
+Private Const TME_NONCLIENT As Long = &H10
 Private Const ODS_SELECTED As Long = &H1
+Private Const ODS_DISABLED As Long = &H4
 Private Const ODS_FOCUS As Long = &H10
 Private Const ODS_NOFOCUSRECT As Long = &H200
 Private Const PS_SOLID As Long = 0
@@ -756,6 +774,7 @@ Private Const DT_WORD_ELLIPSIS As Long = &H40000
 Private Const DT_CALCRECT As Long = &H400
 Private Const GWL_STYLE As Long = (-16)
 Private Const GWL_EXSTYLE As Long = (-20)
+Private Const GWL_USERDATA As Long = (-21)
 Private Const LAYOUT_RTL As Long = &H1
 Private Const EM_GETSEL As Long = &HB0
 Private Const EM_SETSEL As Long = &HB1
@@ -779,6 +798,24 @@ Private Const ES_AUTOHSCROLL As Long = &H80
 Private Const ES_READONLY As Long = &H800
 Private Const EC_LEFTMARGIN As Long = &H1
 Private Const EC_RIGHTMARGIN As Long = &H2
+Private Const SS_OWNERDRAW As Long = &HD
+Private Const SS_NOTIFY As Long = &H100
+Private Const STN_CLICKED As Long = &H0
+Private Const STN_DBLCLK As Long = &H1
+Private Const STN_ENABLE As Long = &H2
+Private Const STN_DISABLE As Long = &H3
+Private Const LB_ERR As Long = (-1)
+Private Const LB_ADDSTRING As Long = &H180
+Private Const LB_SETCURSEL As Long = &H186
+Private Const LB_GETCURSEL As Long = &H188
+Private Const LB_GETTEXT As Long = &H189
+Private Const LB_GETTEXTLEN As Long = &H18A
+Private Const LB_GETCOUNT As Long = &H18B
+Private Const LB_GETITEMHEIGHT As Long = &H1A1
+Private Const LB_FINDSTRINGEXACT As Long = &H1A2
+Private Const LBS_NOTIFY As Long = &H1
+Private Const LBN_SELCHANGE As Long = 1
+Private Const DFC_SCROLL As Long = &H3, DFCS_SCROLLCOMBOBOX As Long = &H5, DFCS_INACTIVE As Long = &H100, DFCS_PUSHED As Long = &H200, DFCS_FLAT As Long = &H4000
 Private Const WS_BORDER As Long = &H800000
 Private Const WS_DLGFRAME As Long = &H400000
 Private Const WS_EX_TRANSPARENT As Long = &H20
@@ -804,6 +841,7 @@ Private Const WM_SETTINGCHANGE As Long = &H1A
 Private Const WM_MOUSEWHEEL As Long = &H20A
 Private Const SW_HIDE As Long = &H0
 Private Const SW_SHOW As Long = &H5
+Private Const SW_SHOWNA As Long = &H8
 Private Const WM_SETFOCUS As Long = &H7
 Private Const WM_KILLFOCUS As Long = &H8
 Private Const WM_COMMAND As Long = &H111
@@ -846,8 +884,11 @@ Private Const WM_ERASEBKGND As Long = &H14
 Private Const WM_PAINT As Long = &HF
 Private Const WM_PRINTCLIENT As Long = &H318
 Private Const WM_NCCALCSIZE As Long = &H83
-Private Const WM_NCHITTEST As Long = &H84
+Private Const WM_NCHITTEST As Long = &H84, HTVSCROLL As Long = 7
 Private Const WM_NCPAINT As Long = &H85
+Private Const WM_NCMOUSEMOVE As Long = &HA0
+Private Const WM_NCMOUSELEAVE As Long = &H2A2
+Private Const WM_DRAWITEM As Long = &H2B, ODT_STATIC As Long = &H5
 Private Const WM_USER As Long = &H400
 Private Const TTM_ADDTOOLA As Long = (WM_USER + 4)
 Private Const TTM_ADDTOOLW As Long = (WM_USER + 50)
@@ -925,10 +966,15 @@ Private VBFlexGridHitRowDivider As Long, VBFlexGridHitColDivider As Long
 Private VBFlexGridHitResult As FlexHitResultConstants
 Private VBFlexGridCellClickRow As Long, VBFlexGridCellClickCol As Long
 Private VBFlexGridEditHandle As Long
+Private VBFlexGridEditButtonHandle As Long
+Private VBFlexGridEditListHandle As Long
 Private VBFlexGridEditRow As Long, VBFlexGridEditCol As Long
 Private VBFlexGridEditMergedRange As TCELLRANGE
 Private VBFlexGridEditReason As FlexEditReasonConstants
 Private VBFlexGridEditCloseMode As FlexEditCloseModeConstants
+Private VBFlexGridEditDropDownList As String
+Private VBFlexGridEditDropDownCombo As Boolean
+Private VBFlexGridEditListIndex As Long
 Private VBFlexGridEditChangeFrozen As Boolean
 Private VBFlexGridEditValidateCancel As Boolean
 Private VBFlexGridEditValidateInProc As Boolean
@@ -1214,6 +1260,7 @@ VBFlexGridEditRow = -1
 VBFlexGridEditCol = -1
 VBFlexGridEditReason = -1
 VBFlexGridEditCloseMode = -1
+VBFlexGridEditListIndex = -1
 SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VBFlexGridWheelScrollLines, 0
 End Sub
 
@@ -1727,6 +1774,16 @@ End Property
 Public Property Get hWndEdit() As Long
 Attribute hWndEdit.VB_Description = "Returns a handle to a control."
 hWndEdit = VBFlexGridEditHandle
+End Property
+
+Public Property Get hWndEditButton() As Long
+Attribute hWndEditButton.VB_Description = "Returns a handle to a control."
+hWndEditButton = VBFlexGridEditButtonHandle
+End Property
+
+Public Property Get hWndEditList() As Long
+Attribute hWndEditList.VB_Description = "Returns a handle to a control."
+hWndEditList = VBFlexGridEditListHandle
 End Property
 
 #If ImplementDataSource = True Then
@@ -3473,7 +3530,7 @@ Me.Enabled = UserControl.Enabled
 If PropRedraw = False Then Me.Redraw = False
 Me.FormatString = PropFormatString
 Call SetScrollBars
-If VBFlexGridDesignMode = False Then Call FlexSetSubclass(UserControl.hWnd, Me, 3)
+If VBFlexGridDesignMode = False Then Call FlexSetSubclass(UserControl.hWnd, Me, 4)
 UserControl.BackColor = PropBackColorBkg
 End Sub
 
@@ -3596,6 +3653,8 @@ Else
     If (Col >= 0 And Col <= (PropCols - 1)) Then VBFlexGridEditCol = Col Else VBFlexGridEditCol = VBFlexGridCol
     VBFlexGridEditReason = Reason
     VBFlexGridEditCloseMode = -1
+    VBFlexGridEditDropDownCombo = False
+    VBFlexGridEditListIndex = -1
 End If
 If VBFlexGridFocused = False Then SetFocusAPI UserControl.hWnd
 Dim IsFixedCell As Boolean, Text As String
@@ -3603,7 +3662,7 @@ IsFixedCell = CBool(VBFlexGridEditRow < PropFixedRows Or VBFlexGridEditCol < Pro
 Call GetCellText(VBFlexGridEditRow, VBFlexGridEditCol, Text)
 Dim dwStyle As Long, dwExStyle As Long
 dwStyle = WS_CHILD
-If VBFlexGridRTLReading = True Then dwExStyle = WS_EX_RTLREADING Or WS_EX_LEFTSCROLLBAR
+If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING Or WS_EX_LEFTSCROLLBAR
 Dim Alignment As FlexAlignmentConstants
 With VBFlexGridCells.Rows(VBFlexGridEditRow).Cols(VBFlexGridEditCol)
 If .Alignment = -1 Then
@@ -3642,14 +3701,28 @@ If (dwStyle And WS_DLGFRAME) = WS_DLGFRAME Then dwStyle = dwStyle And Not WS_DLG
 If (dwExStyle And WS_EX_STATICEDGE) = WS_EX_STATICEDGE Then dwExStyle = dwExStyle And Not WS_EX_STATICEDGE
 If (dwExStyle And WS_EX_CLIENTEDGE) = WS_EX_CLIENTEDGE Then dwExStyle = dwExStyle And Not WS_EX_CLIENTEDGE
 If (dwExStyle And WS_EX_WINDOWEDGE) = WS_EX_WINDOWEDGE Then dwExStyle = dwExStyle And Not WS_EX_WINDOWEDGE
-Dim CellRangeRect As RECT, ClientRect As RECT
+Dim CellRangeRect As RECT, ClientRect As RECT, EditRect As RECT, ButtonWidth As Long
 Call GetMergedRangeStruct(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditMergedRange)
 Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
 Call GetCellRangeRect(VBFlexGridEditMergedRange, False, CellRangeRect)
 GetClientRect VBFlexGridHandle, ClientRect
-If CellRangeRect.Bottom > ClientRect.Bottom Then CellRangeRect.Bottom = ClientRect.Bottom
-If CellRangeRect.Right > ClientRect.Right Then CellRangeRect.Right = ClientRect.Right
-VBFlexGridEditHandle = CreateWindowEx(dwExStyle, StrPtr("Edit"), 0, dwStyle, CellRangeRect.Left, CellRangeRect.Top, (CellRangeRect.Right - CellRangeRect.Left) - 1, (CellRangeRect.Bottom - CellRangeRect.Top) - 1, VBFlexGridHandle, ID_EDITCHILD, App.hInstance, ByVal 0&)
+LSet EditRect = CellRangeRect
+If EditRect.Bottom > ClientRect.Bottom Then EditRect.Bottom = ClientRect.Bottom
+If EditRect.Right > ClientRect.Right Then EditRect.Right = ClientRect.Right
+If Not VBFlexGridEditDropDownList = vbNullString Then
+    ButtonWidth = GetSystemMetrics(SM_CXVSCROLL)
+    EditRect.Right = EditRect.Right - ButtonWidth
+    If (EditRect.Right - 1) < EditRect.Left Then EditRect.Right = (EditRect.Left + 1)
+    If (((CellRangeRect.Right - CellRangeRect.Left) - 1) - ButtonWidth) < 0 Then ButtonWidth = ((CellRangeRect.Right - CellRangeRect.Left) - 1)
+    If Left$(VBFlexGridEditDropDownList, 1) = "|" Then
+        VBFlexGridEditDropDownCombo = True
+        If (dwStyle And ES_READONLY) = ES_READONLY Then dwStyle = dwStyle And Not ES_READONLY
+    Else
+        VBFlexGridEditDropDownCombo = False
+        If Not (dwStyle And ES_READONLY) = ES_READONLY Then dwStyle = dwStyle Or ES_READONLY
+    End If
+End If
+VBFlexGridEditHandle = CreateWindowEx(dwExStyle, StrPtr("Edit"), 0, dwStyle, EditRect.Left, EditRect.Top, (EditRect.Right - EditRect.Left) - 1, (EditRect.Bottom - EditRect.Top) - 1, VBFlexGridHandle, ID_EDITCHILD, App.hInstance, ByVal 0&)
 If VBFlexGridEditHandle <> 0 Then
     With VBFlexGridCells.Rows(VBFlexGridEditRow).Cols(VBFlexGridEditCol)
     Dim hFont As Long
@@ -3704,18 +3777,74 @@ If VBFlexGridEditHandle <> 0 Then
     End If
     SendMessage VBFlexGridEditHandle, WM_SETTEXT, 0, ByVal StrPtr(Text)
     SendMessage VBFlexGridEditHandle, EM_SETSEL, 0, ByVal -1&
-    If Reason = FlexEditReasonSpace Then SendMessage VBFlexGridEditHandle, EM_SETSEL, -1, ByVal -1&
+    If Not (dwStyle And ES_READONLY) = ES_READONLY Then
+        If Reason = FlexEditReasonSpace Then SendMessage VBFlexGridEditHandle, EM_SETSEL, -1, ByVal -1&
+    End If
     VBFlexGridEditTextChanged = False
     VBFlexGridEditAlreadyValidated = False
-End If
-Call SetVisualStylesEdit
-If VBFlexGridEditHandle <> 0 Then
+    If Not VBFlexGridEditDropDownList = vbNullString Then
+        VBFlexGridEditButtonHandle = CreateWindowEx(0, StrPtr("Static"), 0, WS_CHILD Or SS_OWNERDRAW Or SS_NOTIFY, EditRect.Right - 1, EditRect.Top, ButtonWidth, (EditRect.Bottom - EditRect.Top) - 1, VBFlexGridHandle, ID_EDITBUTTONCHILD, App.hInstance, ByVal 0&)
+        If VBFlexGridEditButtonHandle <> 0 Then
+            Dim WndRect As RECT
+            SetRect WndRect, CellRangeRect.Left, EditRect.Bottom, CellRangeRect.Right, EditRect.Bottom
+            MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
+            VBFlexGridEditListHandle = CreateWindowEx(WS_EX_TOOLWINDOW Or WS_EX_TOPMOST, StrPtr("ComboLBox"), 0, WS_POPUP Or WS_BORDER Or WS_VSCROLL Or LBS_NOTIFY, WndRect.Left, WndRect.Top, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
+            If VBFlexGridEditListHandle <> 0 Then
+                SendMessage VBFlexGridEditListHandle, WM_SETFONT, hFont, ByVal 0&
+                Dim Pos1 As Long, Pos2 As Long, ComboList As String, Temp As String
+                If Left$(VBFlexGridEditDropDownList, 1) = "|" Then
+                    ComboList = Mid$(VBFlexGridEditDropDownList, 2, Len(VBFlexGridEditDropDownList) - 1)
+                Else
+                    ComboList = VBFlexGridEditDropDownList
+                End If
+                Do
+                    Pos1 = InStr(Pos1 + 1, ComboList, "|")
+                    If Pos1 > 0 Then
+                        Temp = Mid$(ComboList, Pos2 + 1, Pos1 - Pos2 - 1)
+                    Else
+                        Temp = Mid$(ComboList, Pos2 + 1)
+                    End If
+                    SendMessage VBFlexGridEditListHandle, LB_ADDSTRING, 0, ByVal StrPtr(Temp)
+                    Pos2 = Pos1
+                Loop Until Pos1 = 0
+                VBFlexGridEditListIndex = SendMessage(VBFlexGridEditListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Text))
+                SendMessage VBFlexGridEditListHandle, LB_SETCURSEL, VBFlexGridEditListIndex, ByVal 0&
+                Const EDIT_MAXDROPDOWNITEMS As Integer = 9
+                Dim Count As Long, Height As Long
+                Count = SendMessage(VBFlexGridEditListHandle, LB_GETCOUNT, 0, ByVal 0&)
+                Select Case Count
+                    Case 0
+                        Count = 1
+                    Case Is > EDIT_MAXDROPDOWNITEMS
+                        Count = EDIT_MAXDROPDOWNITEMS
+                End Select
+                Height = SendMessage(VBFlexGridEditListHandle, LB_GETITEMHEIGHT, 0, ByVal 0&) * Count
+                MoveWindow VBFlexGridEditListHandle, WndRect.Left, WndRect.Top, WndRect.Right - WndRect.Left, Height + 2, 0
+            End If
+        End If
+    End If
+    If EnabledVisualStyles() = True Then
+        If PropVisualStyles = True Then
+            ActivateVisualStyles VBFlexGridEditHandle
+            If VBFlexGridEditButtonHandle <> 0 Then ActivateVisualStyles VBFlexGridEditButtonHandle
+            If VBFlexGridEditListHandle <> 0 Then ActivateVisualStyles VBFlexGridEditListHandle
+        Else
+            RemoveVisualStyles VBFlexGridEditHandle
+            If VBFlexGridEditButtonHandle <> 0 Then RemoveVisualStyles VBFlexGridEditButtonHandle
+            If VBFlexGridEditListHandle <> 0 Then RemoveVisualStyles VBFlexGridEditListHandle
+        End If
+    End If
     Call FlexSetSubclass(VBFlexGridEditHandle, Me, 2)
+    If VBFlexGridEditListHandle <> 0 Then Call FlexSetSubclass(VBFlexGridEditListHandle, Me, 3)
     SetWindowPos VBFlexGridEditHandle, 0, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_FRAMECHANGED
     RaiseEvent EditSetupWindow(VBFlexGridEditBackColor, VBFlexGridEditForeColor)
     VBFlexGridEditBackColorBrush = CreateSolidBrush(WinColor(VBFlexGridEditBackColor))
     ShowWindow VBFlexGridEditHandle, SW_SHOW
     SetFocusAPI VBFlexGridEditHandle
+    If VBFlexGridEditButtonHandle <> 0 Then
+        ShowWindow VBFlexGridEditButtonHandle, SW_SHOW
+        If VBFlexGridEditDropDownCombo = False Then Call EditShowDropDown(True)
+    End If
     RaiseEvent EnterEdit
     CreateEdit = True
 End If
@@ -3777,6 +3906,16 @@ ShowWindow VBFlexGridEditHandle, SW_HIDE
 SetParent VBFlexGridEditHandle, 0
 DestroyWindow VBFlexGridEditHandle
 VBFlexGridEditHandle = 0
+If VBFlexGridEditButtonHandle <> 0 Then
+    ShowWindow VBFlexGridEditButtonHandle, SW_HIDE
+    SetParent VBFlexGridEditButtonHandle, 0
+    DestroyWindow VBFlexGridEditButtonHandle
+    VBFlexGridEditButtonHandle = 0
+End If
+If VBFlexGridEditListHandle <> 0 Then
+    DestroyWindow VBFlexGridEditListHandle
+    VBFlexGridEditListHandle = 0
+End If
 VBFlexGridEditRectChanged = False
 If VBFlexGridEditTempFontHandle <> 0 Then
     DeleteObject VBFlexGridEditTempFontHandle
@@ -3788,6 +3927,8 @@ If VBFlexGridEditBackColorBrush <> 0 Then
 End If
 VBFlexGridEditRow = -1
 VBFlexGridEditCol = -1
+VBFlexGridEditDropDownCombo = False
+VBFlexGridEditListIndex = -1
 If Discard = False And VBFlexGridEditTextChanged = True Then
     RaiseEvent AfterEdit(Row, Col, True)
 Else
@@ -6779,6 +6920,25 @@ End Property
 
 Public Property Let EditSelText(ByVal Value As String)
 If VBFlexGridEditHandle <> 0 Then SendMessage VBFlexGridEditHandle, EM_REPLACESEL, 1, ByVal StrPtr(Value)
+End Property
+
+Public Property Get EditDropDownList() As String
+Attribute EditDropDownList.VB_Description = "Returns/sets the list to be used as a drop-down when editing a cell."
+Attribute EditDropDownList.VB_MemberFlags = "400"
+EditDropDownList = VBFlexGridEditDropDownList
+End Property
+
+Public Property Let EditDropDownList(ByVal Value As String)
+VBFlexGridEditDropDownList = Value
+End Property
+
+Public Property Get EditDroppedDown() As Boolean
+Attribute EditDroppedDown.VB_Description = "Returns/sets a value that determines whether the drop-down list is dropped down or not when editing a cell."
+EditDroppedDown = EditGetDroppedState()
+End Property
+
+Public Property Let EditDroppedDown(ByVal Value As Boolean)
+Call EditShowDropDown(Value)
 End Property
 
 Public Property Get Version() As Integer
@@ -10699,18 +10859,6 @@ Else
 End If
 End Function
 
-Private Sub SetVisualStylesEdit()
-If VBFlexGridHandle <> 0 Then
-    If VBFlexGridEditHandle <> 0 And EnabledVisualStyles() = True Then
-        If PropVisualStyles = True Then
-            ActivateVisualStyles VBFlexGridEditHandle
-        Else
-            RemoveVisualStyles VBFlexGridEditHandle
-        End If
-    End If
-End If
-End Sub
-
 Private Sub SetVisualStylesToolTip()
 If VBFlexGridHandle <> 0 Then
     If VBFlexGridToolTipHandle <> 0 And EnabledVisualStyles() = True Then
@@ -10886,10 +11034,105 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
                 RC.Left = RC.Left - GetColWidth(i)
             Next i
         End If
-        MoveWindow VBFlexGridEditHandle, RC.Left, RC.Top, (RC.Right - RC.Left) - 1, (RC.Bottom - RC.Top) - 1, 1
+        SetWindowPos VBFlexGridEditHandle, 0, RC.Left, RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
+        If VBFlexGridEditButtonHandle <> 0 Then
+            Dim EditRect As RECT
+            GetClientRect VBFlexGridEditHandle, EditRect
+            SetWindowPos VBFlexGridEditButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
+            If VBFlexGridEditListHandle <> 0 Then
+                Dim WndRect As RECT
+                SetRect WndRect, RC.Left, RC.Bottom, 0, 0
+                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
+                SetWindowPos VBFlexGridEditListHandle, 0, WndRect.Left, WndRect.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+            End If
+        End If
         If VBFlexGridEditRectChangedFrozen = False Then VBFlexGridEditRectChanged = True
     End If
     End With
+End If
+End Sub
+
+Private Function EditGetDroppedState() As Boolean
+If VBFlexGridEditHandle <> 0 And VBFlexGridEditButtonHandle <> 0 And VBFlexGridEditListHandle <> 0 Then
+    If (GetWindowLong(VBFlexGridEditButtonHandle, GWL_USERDATA) And ODS_SELECTED) = ODS_SELECTED Then EditGetDroppedState = CBool(IsWindowVisible(VBFlexGridEditListHandle) <> 0)
+End If
+End Function
+
+Private Sub EditShowDropDown(ByVal Value As Boolean)
+If VBFlexGridEditHandle <> 0 And VBFlexGridEditButtonHandle <> 0 And VBFlexGridEditListHandle <> 0 Then
+    Dim dwLong As Long
+    dwLong = GetWindowLong(VBFlexGridEditButtonHandle, GWL_USERDATA)
+    If Value = True Then
+        If Not (dwLong And ODS_SELECTED) = ODS_SELECTED Then
+            SetWindowLong VBFlexGridEditButtonHandle, GWL_USERDATA, dwLong Or ODS_SELECTED
+            InvalidateRect VBFlexGridEditButtonHandle, ByVal 0&, 0
+        End If
+        If IsWindowVisible(VBFlexGridEditListHandle) = 0 Then
+            SendMessage VBFlexGridEditListHandle, LB_SETCURSEL, VBFlexGridEditListIndex, ByVal 0&
+            Dim WndRect As RECT
+            GetWindowRect VBFlexGridEditHandle, WndRect
+            SetWindowPos VBFlexGridEditListHandle, 0, WndRect.Left, WndRect.Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
+            SetCapture VBFlexGridEditListHandle
+        End If
+    Else
+        If (dwLong And ODS_SELECTED) = ODS_SELECTED Then
+            SetWindowLong VBFlexGridEditButtonHandle, GWL_USERDATA, dwLong And Not ODS_SELECTED
+            InvalidateRect VBFlexGridEditButtonHandle, ByVal 0&, 0
+        End If
+        If IsWindowVisible(VBFlexGridEditListHandle) <> 0 Then
+            If GetCapture() = VBFlexGridEditListHandle Then ReleaseCapture
+            ShowWindow VBFlexGridEditListHandle, SW_HIDE
+            SendMessage VBFlexGridEditListHandle, LB_SETCURSEL, VBFlexGridEditListIndex, ByVal 0&
+        End If
+    End If
+End If
+End Sub
+
+Private Sub EditButtonSetEnabledState(ByVal Value As Boolean)
+If VBFlexGridEditHandle <> 0 And VBFlexGridEditButtonHandle <> 0 Then
+    Dim dwLong As Long
+    dwLong = GetWindowLong(VBFlexGridEditButtonHandle, GWL_USERDATA)
+    If Value = True Then
+        If (dwLong And ODS_DISABLED) = ODS_DISABLED Then
+            SetWindowLong VBFlexGridEditButtonHandle, GWL_USERDATA, dwLong And Not ODS_DISABLED
+            InvalidateRect VBFlexGridEditButtonHandle, ByVal 0&, 0
+        End If
+    Else
+        If Not (dwLong And ODS_DISABLED) = ODS_DISABLED Then
+            SetWindowLong VBFlexGridEditButtonHandle, GWL_USERDATA, dwLong Or ODS_DISABLED
+            InvalidateRect VBFlexGridEditButtonHandle, ByVal 0&, 0
+        End If
+    End If
+End If
+End Sub
+
+Private Function EditListSelFromPt(ByVal X As Long, ByVal Y As Long) As Long
+EditListSelFromPt = LB_ERR
+If VBFlexGridEditListHandle <> 0 Then
+    Dim P As POINTAPI, Index As Long
+    P.X = X
+    P.Y = Y
+    ClientToScreen VBFlexGridEditListHandle, P
+    Index = LBItemFromPt(VBFlexGridEditListHandle, P.X, P.Y, 0)
+    If Not Index = LB_ERR Then
+        If Index <> SendMessage(VBFlexGridEditListHandle, LB_GETCURSEL, 0, ByVal 0&) Then SendMessage VBFlexGridEditListHandle, LB_SETCURSEL, Index, ByVal 0&
+    End If
+    EditListSelFromPt = Index
+End If
+End Function
+
+Private Sub EditListCommitTextFromSel()
+If VBFlexGridEditListHandle <> 0 Then
+    VBFlexGridEditListIndex = SendMessage(VBFlexGridEditListHandle, LB_GETCURSEL, 0, ByVal 0&)
+    Dim Length As Long
+    Length = SendMessage(VBFlexGridEditListHandle, LB_GETTEXTLEN, VBFlexGridEditListIndex, ByVal 0&)
+    If Not Length = LB_ERR Then
+        Dim Text As String
+        Text = String(Length, vbNullChar)
+        SendMessage VBFlexGridEditListHandle, LB_GETTEXT, VBFlexGridEditListIndex, ByVal StrPtr(Text)
+        Me.EditText = Text
+        SendMessage VBFlexGridEditHandle, EM_SETSEL, 0, ByVal -1&
+    End If
 End If
 End Sub
 
@@ -11009,6 +11252,8 @@ Select Case dwRefData
     Case 2
         FSubclass_Message = WindowProcEdit(hWnd, wMsg, wParam, lParam)
     Case 3
+        FSubclass_Message = WindowProcEditList(hWnd, wMsg, wParam, lParam)
+    Case 4
         FSubclass_Message = WindowProcUserControl(hWnd, wMsg, wParam, lParam)
 End Select
 End Function
@@ -11518,11 +11763,27 @@ Select Case wMsg
                 Case EN_CHANGE
                     If LoWord(wParam) = ID_EDITCHILD And lParam = VBFlexGridEditHandle And VBFlexGridEditHandle <> 0 Then
                         If VBFlexGridEditChangeFrozen = False Then
+                            If VBFlexGridEditDropDownCombo = True And VBFlexGridEditListHandle <> 0 Then
+                                Dim Index As Long
+                                Index = SendMessage(VBFlexGridEditListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Me.EditText))
+                                If Not Index = LB_ERR Then
+                                    SendMessage VBFlexGridEditListHandle, LB_SETCURSEL, Index, ByVal 0&
+                                    Call EditListCommitTextFromSel
+                                End If
+                            End If
                             VBFlexGridEditTextChanged = True
                             VBFlexGridEditAlreadyValidated = False
                             RaiseEvent EditChange
                         End If
                     End If
+                Case STN_CLICKED
+                    If LoWord(wParam) = ID_EDITBUTTONCHILD And lParam = VBFlexGridEditButtonHandle And VBFlexGridEditButtonHandle <> 0 Then Call EditShowDropDown(True)
+                Case STN_ENABLE
+                    If LoWord(wParam) = ID_EDITBUTTONCHILD And lParam = VBFlexGridEditButtonHandle And VBFlexGridEditButtonHandle <> 0 Then Call EditButtonSetEnabledState(True)
+                Case STN_DISABLE
+                    If LoWord(wParam) = ID_EDITBUTTONCHILD And lParam = VBFlexGridEditButtonHandle And VBFlexGridEditButtonHandle <> 0 Then Call EditButtonSetEnabledState(False)
+                Case LBN_SELCHANGE
+                    If LoWord(wParam) = 0 And lParam = VBFlexGridEditListHandle And VBFlexGridEditListHandle <> 0 Then Call EditListCommitTextFromSel
             End Select
         End If
     Case WM_NOTIFYFORMAT
@@ -11541,6 +11802,20 @@ Select Case wMsg
                 WindowProcControl = VBFlexGridEditBackColorBrush
                 Exit Function
             End If
+        End If
+    Case WM_DRAWITEM
+        Dim DIS As DRAWITEMSTRUCT
+        CopyMemory DIS, ByVal lParam, LenB(DIS)
+        If DIS.CtlType = ODT_STATIC And DIS.CtlID = ID_EDITBUTTONCHILD And DIS.hWndItem = VBFlexGridEditButtonHandle And VBFlexGridEditButtonHandle <> 0 Then
+            Dim Flags As Long
+            Flags = DFCS_SCROLLCOMBOBOX
+            If (GetWindowLong(DIS.hWndItem, GWL_USERDATA) And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
+            If (GetWindowLong(DIS.hWndItem, GWL_USERDATA) And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
+            Const COLOR_3DFACE As Long = 15
+            FillRect DIS.hDC, DIS.RCItem, GetSysColorBrush(COLOR_3DFACE)
+            DrawFrameControl DIS.hDC, DIS.RCItem, DFC_SCROLL, Flags
+            WindowProcControl = 1
+            Exit Function
         End If
 End Select
 WindowProcControl = DefWindowProc(hWnd, wMsg, wParam, lParam)
@@ -11665,6 +11940,13 @@ Select Case wMsg
         ' This enables the parent window - when it receives WM_MOUSEACTIVATE - to destroy this child window.
         WindowProcEdit = MA_ACTIVATE
         Exit Function
+    Case WM_MOUSEWHEEL
+        If VBFlexGridEditListHandle <> 0 Then
+            If EditGetDroppedState() = True Then
+                SendMessage VBFlexGridEditListHandle, WM_MOUSEWHEEL, wParam, ByVal lParam
+                Exit Function
+            End If
+        End If
     Case WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP
         Dim KeyCode As Integer
         KeyCode = wParam And &HFF&
@@ -11680,8 +11962,30 @@ Select Case wMsg
                 If VBFlexGridEditHandle <> 0 Then
                     Select Case KeyCode
                         Case vbKeyEscape
-                            If DestroyEdit(True, FlexEditCloseModeEscape) = True Then Exit Function
+                            If VBFlexGridEditButtonHandle = 0 Then
+                                If DestroyEdit(True, FlexEditCloseModeEscape) = True Then Exit Function
+                            Else
+                                If EditGetDroppedState() = True Then
+                                    Call EditShowDropDown(False)
+                                    Exit Function
+                                Else
+                                    If DestroyEdit(True, FlexEditCloseModeEscape) = True Then Exit Function
+                                End If
+                            End If
+                        Case vbKeyF4
+                            If VBFlexGridEditButtonHandle <> 0 Then
+                                Call EditShowDropDown(Not EditGetDroppedState())
+                                Exit Function
+                            End If
                         Case vbKeyReturn
+                            If VBFlexGridEditButtonHandle <> 0 Then
+                                If EditGetDroppedState() = True Then
+                                    Call EditListCommitTextFromSel
+                                    Call EditShowDropDown(False)
+                                    DestroyEdit False, FlexEditCloseModeReturn
+                                    Exit Function
+                                End If
+                            End If
                             If GetShiftStateFromMsg() = 0 Then
                                 If DestroyEdit(False, FlexEditCloseModeReturn) = True Then Exit Function
                             Else
@@ -11697,6 +12001,10 @@ Select Case wMsg
                                 End Select
                             End If
                         Case vbKeyUp, vbKeyDown, vbKeyLeft, vbKeyRight, vbKeyPageDown, vbKeyPageUp, vbKeyHome, vbKeyEnd
+                            If VBFlexGridEditButtonHandle <> 0 And VBFlexGridEditListHandle <> 0 Then
+                                SendMessage VBFlexGridEditListHandle, wMsg, wParam, ByVal lParam
+                                Exit Function
+                            End If
                             Dim SelStart As Long, SelEnd As Long
                             SendMessage hWnd, EM_GETSEL, VarPtr(SelStart), ByVal VarPtr(SelEnd)
                             If SelStart = SelEnd Then
@@ -11744,7 +12052,11 @@ Select Case wMsg
         ElseIf wMsg = WM_SYSKEYDOWN Then
             RaiseEvent EditKeyDown(KeyCode, GetShiftStateFromMsg())
             If VBFlexGridEditHandle <> 0 Then
-                If KeyCode = vbKeyReturn Then PostMessage hWnd, WM_CHAR, vbKeyReturn, ByVal 0&
+                If KeyCode = vbKeyReturn Then
+                    PostMessage hWnd, WM_CHAR, vbKeyReturn, ByVal 0&
+                ElseIf VBFlexGridEditButtonHandle <> 0 Then
+                    If KeyCode = vbKeyDown Or KeyCode = vbKeyUp Then Call EditShowDropDown(Not EditGetDroppedState())
+                End If
             Else
                 Exit Function
             End If
@@ -11761,6 +12073,10 @@ Select Case wMsg
             KeyChar = CUIntToInt(wParam And &HFFFF&)
         End If
         RaiseEvent EditKeyPress(KeyChar)
+        If VBFlexGridEditDropDownCombo = False And VBFlexGridEditListHandle <> 0 Then
+            SendMessage VBFlexGridEditListHandle, wMsg, wParam, ByVal lParam
+            Exit Function
+        End If
         wParam = CIntToUInt(KeyChar)
     Case WM_UNICHAR
         If wParam = UNICODE_NOCHAR Then WindowProcEdit = 1 Else SendMessage hWnd, WM_CHAR, wParam, ByVal lParam
@@ -11841,6 +12157,47 @@ Select Case wMsg
 End Select
 WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
 If wMsg = WM_KILLFOCUS Then DestroyEdit False, FlexEditCloseModeLostFocus
+End Function
+
+Private Function WindowProcEditList(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Static NonClientMouseOver As Boolean
+Select Case wMsg
+    Case WM_MOUSEACTIVATE
+        ' To prevent the popup window from being activated it is necessary to return MA_NOACTIVATE.
+        WindowProcEditList = MA_NOACTIVATE
+        Exit Function
+    Case WM_MOUSEMOVE
+        If SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos()) = HTVSCROLL Then ReleaseCapture
+        EditListSelFromPt Get_X_lParam(lParam), Get_Y_lParam(lParam)
+    Case WM_NCMOUSEMOVE
+        If NonClientMouseOver = False Then
+            NonClientMouseOver = True
+            Dim TME As TRACKMOUSEEVENTSTRUCT
+            With TME
+            .cbSize = LenB(TME)
+            .hWndTrack = hWnd
+            .dwFlags = TME_LEAVE Or TME_NONCLIENT
+            End With
+            TrackMouseEvent TME
+        End If
+    Case WM_NCMOUSELEAVE
+        NonClientMouseOver = False
+        SetCapture hWnd
+    Case WM_LBUTTONDOWN, WM_LBUTTONDBLCLK
+        If Not EditListSelFromPt(Get_X_lParam(lParam), Get_Y_lParam(lParam)) = LB_ERR Then
+            Call EditListCommitTextFromSel
+            If VBFlexGridEditDropDownCombo = False Then
+                Call EditShowDropDown(False)
+                DestroyEdit False, FlexEditCloseModeReturn
+                Exit Function
+            End If
+        End If
+        ReleaseCapture
+        Exit Function ' Prevents the popup window from being focused.
+    Case WM_CAPTURECHANGED
+        If SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos()) <> HTVSCROLL Then Call EditShowDropDown(False)
+End Select
+WindowProcEditList = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
 End Function
 
 Private Function WindowProcUserControl(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
