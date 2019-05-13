@@ -6934,6 +6934,7 @@ End Property
 
 Public Property Get EditDroppedDown() As Boolean
 Attribute EditDroppedDown.VB_Description = "Returns/sets a value that determines whether the drop-down list is dropped down or not when editing a cell."
+Attribute EditDroppedDown.VB_MemberFlags = "400"
 EditDroppedDown = EditGetDroppedState()
 End Property
 
@@ -11962,16 +11963,7 @@ Select Case wMsg
                 If VBFlexGridEditHandle <> 0 Then
                     Select Case KeyCode
                         Case vbKeyEscape
-                            If VBFlexGridEditButtonHandle = 0 Then
-                                If DestroyEdit(True, FlexEditCloseModeEscape) = True Then Exit Function
-                            Else
-                                If EditGetDroppedState() = True Then
-                                    Call EditShowDropDown(False)
-                                    Exit Function
-                                Else
-                                    If DestroyEdit(True, FlexEditCloseModeEscape) = True Then Exit Function
-                                End If
-                            End If
+                            If DestroyEdit(True, FlexEditCloseModeEscape) = True Then Exit Function
                         Case vbKeyF4
                             If VBFlexGridEditButtonHandle <> 0 Then
                                 Call EditShowDropDown(Not EditGetDroppedState())
@@ -12002,8 +11994,11 @@ Select Case wMsg
                             End If
                         Case vbKeyUp, vbKeyDown, vbKeyLeft, vbKeyRight, vbKeyPageDown, vbKeyPageUp, vbKeyHome, vbKeyEnd
                             If VBFlexGridEditButtonHandle <> 0 And VBFlexGridEditListHandle <> 0 Then
-                                SendMessage VBFlexGridEditListHandle, wMsg, wParam, ByVal lParam
-                                Exit Function
+                                Select Case KeyCode
+                                    Case vbKeyUp, vbKeyDown, vbKeyPageDown, vbKeyPageUp, vbKeyHome, vbKeyEnd
+                                        SendMessage VBFlexGridEditListHandle, wMsg, wParam, ByVal lParam
+                                        Exit Function
+                                End Select
                             End If
                             Dim SelStart As Long, SelEnd As Long
                             SendMessage hWnd, EM_GETSEL, VarPtr(SelStart), ByVal VarPtr(SelEnd)
