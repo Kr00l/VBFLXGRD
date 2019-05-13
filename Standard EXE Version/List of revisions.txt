@@ -1,5 +1,8 @@
 List of revisions:
 
+13-May-2019
+- Included the EditDropDownList/EditDroppedDown run-time property that allows to use a drop-down list when editing a cell.
+
 10-May-2019
 - Finetuning concerning RightToLeftLayout for in-cell editing window.
 

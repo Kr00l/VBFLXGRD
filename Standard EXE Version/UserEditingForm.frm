@@ -1,19 +1,19 @@
 VERSION 5.00
 Begin VB.Form UserEditingForm 
    Caption         =   "CellEditing Demo"
-   ClientHeight    =   6630
+   ClientHeight    =   6900
    ClientLeft      =   120
    ClientTop       =   450
-   ClientWidth     =   10185
-   ScaleHeight     =   6630
-   ScaleWidth      =   10185
+   ClientWidth     =   12510
+   ScaleHeight     =   6900
+   ScaleWidth      =   12510
    StartUpPosition =   3  'Windows Default
    Begin VB.Frame Frame2 
       Caption         =   "Edit on return key (by code)"
       Height          =   1335
       Left            =   3120
       TabIndex        =   6
-      Top             =   5160
+      Top             =   5400
       Width           =   2295
       Begin VB.OptionButton Option5 
          Caption         =   "Yes"
@@ -38,7 +38,7 @@ Begin VB.Form UserEditingForm
       Height          =   1335
       Left            =   240
       TabIndex        =   2
-      Top             =   5160
+      Top             =   5400
       Width           =   2775
       Begin VB.OptionButton Option3 
          Caption         =   "Discard changes silently"
@@ -70,9 +70,9 @@ Begin VB.Form UserEditingForm
       Cancel          =   -1  'True
       Caption         =   "Cancel"
       Height          =   495
-      Left            =   7320
+      Left            =   9720
       TabIndex        =   9
-      Top             =   4560
+      Top             =   4800
       Width           =   2655
    End
    Begin VB.TextBox Text1 
@@ -80,23 +80,31 @@ Begin VB.Form UserEditingForm
       Left            =   240
       TabIndex        =   1
       Text            =   "Other control to test validation"
-      Top             =   4560
-      Width           =   6855
+      Top             =   4800
+      Width           =   9375
    End
    Begin VBFlexGridDemo.VBFlexGrid VBFlexGrid1 
       Height          =   4215
       Left            =   240
       TabIndex        =   0
-      Top             =   240
-      Width           =   9735
-      _ExtentX        =   17171
+      Top             =   360
+      Width           =   12135
+      _ExtentX        =   21405
       _ExtentY        =   7435
       Rows            =   25
-      Cols            =   10
+      Cols            =   12
       AllowUserEditing=   -1  'True
       AllowUserResizing=   3
       MergeCells      =   1
       FormatString    =   "UserEditingForm.frx":0000
+   End
+   Begin VB.Label Label1 
+      Caption         =   "Editing mode OFF"
+      Height          =   255
+      Left            =   240
+      TabIndex        =   10
+      Top             =   120
+      Width           =   12135
    End
 End
 Attribute VB_Name = "UserEditingForm"
@@ -105,6 +113,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
+Private Declare Function EnableWindow Lib "user32" (ByVal hWnd As Long, ByVal fEnable As Long) As Long
 Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
 Private Const COL_NORMAL As Long = 1
 Private Const COL_ONLYNUMBERS As Long = 2
@@ -115,6 +124,8 @@ Private Const COL_NOTALLOWED As Long = 6
 Private Const COL_NOCLOSEBYNAVIGATIONKEY As Long = 7
 Private Const COL_SINGLELINE As Long = 8
 Private Const COL_MERGEDCELLS As Long = 9
+Private Const COL_DROPDOWNLIST As Long = 10
+Private Const COL_DROPDOWNCOMBO As Long = 11
 Private FormCaption As String
 
 Private Sub Command1_Click()
@@ -145,6 +156,16 @@ Next i
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 1 Step 2
     VBFlexGrid1.TextMatrix(i, COL_MERGEDCELLS) = Chr(64 + i)
     VBFlexGrid1.TextMatrix(i + 1, COL_MERGEDCELLS) = Chr(64 + i)
+Next i
+For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
+    VBFlexGrid1.TextMatrix(i, COL_DROPDOWNLIST) = "Arnold"
+    VBFlexGrid1.TextMatrix(i + 1, COL_DROPDOWNLIST) = "Bob"
+    VBFlexGrid1.TextMatrix(i + 2, COL_DROPDOWNLIST) = "Charlie"
+Next i
+For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
+    VBFlexGrid1.TextMatrix(i, COL_DROPDOWNCOMBO) = "Arnold"
+    VBFlexGrid1.TextMatrix(i + 1, COL_DROPDOWNCOMBO) = "Bob"
+    VBFlexGrid1.TextMatrix(i + 2, COL_DROPDOWNCOMBO) = "Charlie"
 Next i
 FormCaption = Me.Caption
 VBFlexGrid1.AutoSize 0, VBFlexGrid1.Cols - 1, FlexAutoSizeModeColWidth, FlexAutoSizeScopeAll
@@ -180,6 +201,13 @@ If Col = COL_NOTALLOWED Then
     ' The last col we want to be in a special range which is not allowed to be edited.
     Cancel = True
 End If
+If Col = COL_DROPDOWNLIST Then
+    VBFlexGrid1.EditDropDownList = "Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
+ElseIf Col = COL_DROPDOWNCOMBO Then
+    VBFlexGrid1.EditDropDownList = "|Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
+Else
+    VBFlexGrid1.EditDropDownList = vbNullString
+End If
 End Sub
 
 Private Sub VBFlexGrid1_AfterEdit(ByVal Row As Long, ByVal Col As Long, ByVal Changed As Boolean)
@@ -191,13 +219,13 @@ End Sub
 
 Private Sub VBFlexGrid1_EnterEdit()
 ' This event will be called always when entering edit mode. Edit control is already displayed.
-Me.Caption = FormCaption & " (editing mode - row: " & VBFlexGrid1.EditRow & " col: " & VBFlexGrid1.EditCol & ")"
+Label1.Caption = "Editing mode ON (Row:" & VBFlexGrid1.EditRow & " Col: " & VBFlexGrid1.EditCol & ")"
 End Sub
 
 Private Sub VBFlexGrid1_LeaveEdit()
 ' This event will be called always when exiting edit mode. Edit control is still displayed.
 ' EditCloseMode property can be used to find out why the editing is about to be closed.
-Me.Caption = FormCaption
+Label1.Caption = "Editing mode OFF"
 End Sub
 
 Private Sub VBFlexGrid1_EditSetupStyle(dwStyle As Long, dwExStyle As Long)
@@ -206,6 +234,9 @@ Select Case VBFlexGrid1.EditCol
     Case COL_ONLYNUMBERS
         Const ES_NUMBER As Long = &H2000
         dwStyle = dwStyle Or ES_NUMBER
+    Case COL_LOCKED
+        Const ES_READONLY As Long = &H800
+        dwStyle = dwStyle Or ES_READONLY
     Case COL_SINGLELINE
         Const ES_MULTILINE As Long = &H4
         ' If 'SingleLine' is True then the whole flex grid is single lined. ES_MULTILINE is not predefined in that case.
@@ -217,9 +248,6 @@ End Sub
 Private Sub VBFlexGrid1_EditSetupWindow(BackColor As stdole.OLE_COLOR, ForeColor As stdole.OLE_COLOR)
 ' Edit control is created but not yet displayed.
 Select Case VBFlexGrid1.EditCol
-    Case COL_LOCKED
-        Const EM_SETREADONLY As Long = &HCF
-        SendMessage VBFlexGrid1.hWndEdit, EM_SETREADONLY, 1, ByVal 0&
     Case COL_REDBKCOLOR
         BackColor = vbRed
 End Select
