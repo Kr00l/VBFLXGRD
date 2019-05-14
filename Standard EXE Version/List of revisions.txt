@@ -1,5 +1,8 @@
 List of revisions:
 
+14-May-2019
+- Eliminated run-time limitation of no support for having fixed cell(s) without cell(s). (e.g. FixedRows = 1 and Rows = 1)
+
 13-May-2019
 - Included the EditDropDownList/EditDroppedDown run-time property that allows to use a drop-down list when editing a cell.
 
