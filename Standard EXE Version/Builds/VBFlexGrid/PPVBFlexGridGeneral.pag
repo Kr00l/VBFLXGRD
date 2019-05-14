@@ -567,22 +567,25 @@ If FontFixedCleared = True Then
     FontFixedCleared = False
 End If
 .MousePointer = ComboMousePointer.ItemData(ComboMousePointer.ListIndex)
-Dim OldFixedRows As Long, OldFixedCols As Long
-OldFixedRows = .FixedRows
-OldFixedCols = .FixedCols
 .Rows = CLng(TextRows.Text)
 If .Rows > 0 Then
-    If OldFixedRows > .FixedRows Then TextFixedRows.Text = CStr(.FixedRows)
-    On Error Resume Next
-    .FixedRows = CLng(TextFixedRows.Text)
-    On Error GoTo 0
+    If CLng(TextFixedRows.Text) >= .Rows Then
+        .FixedRows = .Rows - 1
+        MsgBox "FixedRows must be at least one less than Rows value", vbExclamation + vbOKOnly
+        TextFixedRows.Text = CStr(.FixedRows)
+    Else
+        .FixedRows = CLng(TextFixedRows.Text)
+    End If
 End If
 .Cols = CLng(TextCols.Text)
 If .Cols > 0 Then
-    If OldFixedCols > .FixedCols Then TextFixedCols.Text = CStr(.FixedCols)
-    On Error Resume Next
-    .FixedCols = CLng(TextFixedCols.Text)
-    On Error GoTo 0
+    If CLng(TextFixedCols.Text) >= .Cols Then
+        .FixedCols = .Cols - 1
+        MsgBox "FixedCols must be at least one less than Cols value", vbExclamation + vbOKOnly
+        TextFixedCols.Text = CStr(.FixedCols)
+    Else
+        .FixedCols = CLng(TextFixedCols.Text)
+    End If
 End If
 .ScrollBars = ComboScrollBars.ItemData(ComboScrollBars.ListIndex)
 .HighLight = ComboHighLight.ItemData(ComboHighLight.ListIndex)

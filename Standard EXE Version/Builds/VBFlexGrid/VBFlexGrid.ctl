@@ -2505,8 +2505,8 @@ If Value < 0 Then
     Else
         Err.Raise Number:=30009, Description:="Invalid Row value"
     End If
-ElseIf Value <= PropFixedRows And Value > 0 Then
-    PropFixedRows = Value - 1
+ElseIf Value < PropFixedRows And Value > 0 Then
+    PropFixedRows = Value
 End If
 If Value > 0 And PropRows < 1 Then
     PropRows = Value
@@ -2571,8 +2571,8 @@ If Value < 0 Then
     Else
         Err.Raise Number:=30010, Description:="Invalid Col value"
     End If
-ElseIf Value <= PropFixedCols And Value > 0 Then
-    PropFixedCols = Value - 1
+ElseIf Value < PropFixedCols And Value > 0 Then
+    PropFixedCols = Value
 End If
 If Value > 0 And PropCols < 1 Then
     PropCols = Value
@@ -7057,10 +7057,12 @@ If PropMergeCells = FlexMergeCellsNever Then
                 .Left = .Right
                 If NoClip = False And .Right > ClientRect.Right Then Exit For
             Next iCol
+            If .Right > GridRect.Right Then GridRect.Right = .Right
         End If
         .Top = .Bottom
         If NoClip = False And .Bottom > ClientRect.Bottom Then Exit For
     Next iRow
+    If .Bottom > GridRect.Bottom Then GridRect.Bottom = .Bottom
     If PropFixedRows > 0 And PropFixedCols > 0 Then
         .Top = 0
         For iRow = 0 To (PropFixedRows - 1)
@@ -7213,9 +7215,11 @@ Else
             .Left = .Right
             If NoClip = False And .Right > ClientRect.Right Then Exit For
         Next iCol
+        If .Right > GridRect.Right Then GridRect.Right = .Right
         .Top = .Bottom
         If NoClip = False And .Bottom > ClientRect.Bottom Then Exit For
     Next iRow
+    If .Bottom > GridRect.Bottom Then GridRect.Bottom = .Bottom
     If PropFixedRows > 0 And PropFixedCols > 0 Then
         ReDim VBFlexGridMergeDrawInfo.Row.Cols(0 To (PropFixedCols - 1)) As TMERGEDRAWCOLINFO
         .Top = 0
