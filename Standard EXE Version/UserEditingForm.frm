@@ -113,7 +113,6 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-Private Declare Function EnableWindow Lib "user32" (ByVal hWnd As Long, ByVal fEnable As Long) As Long
 Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
 Private Const COL_NORMAL As Long = 1
 Private Const COL_ONLYNUMBERS As Long = 2
@@ -126,7 +125,6 @@ Private Const COL_SINGLELINE As Long = 8
 Private Const COL_MERGEDCELLS As Long = 9
 Private Const COL_DROPDOWNLIST As Long = 10
 Private Const COL_DROPDOWNCOMBO As Long = 11
-Private FormCaption As String
 
 Private Sub Command1_Click()
 Unload Me
@@ -157,17 +155,18 @@ For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 1 Step 2
     VBFlexGrid1.TextMatrix(i, COL_MERGEDCELLS) = Chr(64 + i)
     VBFlexGrid1.TextMatrix(i + 1, COL_MERGEDCELLS) = Chr(64 + i)
 Next i
+VBFlexGrid1.ColComboList(COL_DROPDOWNLIST) = "Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
     VBFlexGrid1.TextMatrix(i, COL_DROPDOWNLIST) = "Arnold"
     VBFlexGrid1.TextMatrix(i + 1, COL_DROPDOWNLIST) = "Bob"
     VBFlexGrid1.TextMatrix(i + 2, COL_DROPDOWNLIST) = "Charlie"
 Next i
+VBFlexGrid1.ColComboList(COL_DROPDOWNCOMBO) = "|Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
     VBFlexGrid1.TextMatrix(i, COL_DROPDOWNCOMBO) = "Arnold"
     VBFlexGrid1.TextMatrix(i + 1, COL_DROPDOWNCOMBO) = "Bob"
     VBFlexGrid1.TextMatrix(i + 2, COL_DROPDOWNCOMBO) = "Charlie"
 Next i
-FormCaption = Me.Caption
 VBFlexGrid1.AutoSize 0, VBFlexGrid1.Cols - 1, FlexAutoSizeModeColWidth, FlexAutoSizeScopeAll
 End Sub
 
@@ -200,13 +199,6 @@ End If
 If Col = COL_NOTALLOWED Then
     ' The last col we want to be in a special range which is not allowed to be edited.
     Cancel = True
-End If
-If Col = COL_DROPDOWNLIST Then
-    VBFlexGrid1.EditDropDownList = "Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
-ElseIf Col = COL_DROPDOWNCOMBO Then
-    VBFlexGrid1.EditDropDownList = "|Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
-Else
-    VBFlexGrid1.EditDropDownList = vbNullString
 End If
 End Sub
 

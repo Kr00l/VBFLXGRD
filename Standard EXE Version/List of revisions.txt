@@ -1,5 +1,15 @@
 List of revisions:
 
+15-May-2019
+- Renaming of properties related to 13-May-2019 update
+  - EditDropDownList -> ComboList
+  - EditDroppedDown -> ComboDroppedDown
+  - hWndEditButton -> hWndComboButton
+  - hWndEditList -> hWndComboList
+- Included ComboCount/ComboItem/ComboIndex run-time property that are valid when using drop-down combo lists.
+- Included ComboDropDown/ComboCloseUp event.
+- Included ColComboList run-time property. It works similar to the ComboList property, except it applies to entire columns.
+
 14-May-2019
 - Eliminated run-time limitation of no support for having fixed cell(s) without cell(s). (e.g. FixedRows = 1 and Rows = 1)
 

@@ -1,5 +1,5 @@
 MainForm = 440, 191, 1521, 903, C, 226, 111, 1400, 899, C
-VisualStyles = 54, 137, 814, 825, C
+VisualStyles = 332, 64, 1092, 752, C
 Startup = 220, 153, 873, 778, C
 VTableHandle = 25, 25, 1225, 698, C
 Common = 25, 25, 1225, 698, C
@@ -10,4 +10,4 @@ PPVBFlexGridGeneral = 64, 81, 1276, 754, C, 110, 164, 916, 837, C
 PPVBFlexGridStyle = 0, 0, 0, 0, C, 150, 150, 1359, 823, C
 InputForm = 0, 0, 0, 0, C, 175, 175, 1384, 848, C
 IVBFlexDataSource = 0, 0, 0, 0, C
-UserEditingForm = 133, 174, 1345, 847, C, 78, 163, 1290, 836, C
+UserEditingForm = 322, 348, 1534, 1021, C, 78, 163, 1290, 836, C
