@@ -3710,10 +3710,10 @@ GetClientRect VBFlexGridHandle, ClientRect
 LSet EditRect = CellRangeRect
 If EditRect.Bottom > ClientRect.Bottom Then EditRect.Bottom = ClientRect.Bottom
 If EditRect.Right > ClientRect.Right Then EditRect.Right = ClientRect.Right
-If Not VBFlexGridColsInfo(VBFlexGridEditCol).ComboList = vbNullString Then
-    ComboList = VBFlexGridColsInfo(VBFlexGridEditCol).ComboList
-ElseIf Not VBFlexGridComboList = vbNullString Then
+If Not VBFlexGridComboList = vbNullString Then
     ComboList = VBFlexGridComboList
+ElseIf Not VBFlexGridColsInfo(VBFlexGridEditCol).ComboList = vbNullString Then
+    ComboList = VBFlexGridColsInfo(VBFlexGridEditCol).ComboList
 End If
 If Not ComboList = vbNullString Then
     ComboButtonWidth = GetSystemMetrics(SM_CXVSCROLL)
