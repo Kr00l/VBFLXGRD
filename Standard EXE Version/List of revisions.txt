@@ -1,7 +1,16 @@
 List of revisions:
 
+16-May-2019
+- Renaming of properties related to 15-May-2019 update:
+  - ComboList -> ComboEditable
+  - ColComboList -> ColComboEditable
+  - ComboItem -> ComboList
+  - ComboCount -> ComboListCount
+  - ComboIndex -> ComboListIndex
+- Incremental search now enabled for the drop-down list when editing a cell.
+
 15-May-2019
-- Renaming of properties related to 13-May-2019 update
+- Renaming of properties related to 13-May-2019 update:
   - EditDropDownList -> ComboList
   - EditDroppedDown -> ComboDroppedDown
   - hWndEditButton -> hWndComboButton

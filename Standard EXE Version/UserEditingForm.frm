@@ -155,13 +155,13 @@ For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 1 Step 2
     VBFlexGrid1.TextMatrix(i, COL_MERGEDCELLS) = Chr(64 + i)
     VBFlexGrid1.TextMatrix(i + 1, COL_MERGEDCELLS) = Chr(64 + i)
 Next i
-VBFlexGrid1.ColComboList(COL_DROPDOWNLIST) = "Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
+VBFlexGrid1.ColComboEditable(COL_DROPDOWNLIST) = "Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
     VBFlexGrid1.TextMatrix(i, COL_DROPDOWNLIST) = "Arnold"
     VBFlexGrid1.TextMatrix(i + 1, COL_DROPDOWNLIST) = "Bob"
     VBFlexGrid1.TextMatrix(i + 2, COL_DROPDOWNLIST) = "Charlie"
 Next i
-VBFlexGrid1.ColComboList(COL_DROPDOWNCOMBO) = "|Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
+VBFlexGrid1.ColComboEditable(COL_DROPDOWNCOMBO) = "|Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
     VBFlexGrid1.TextMatrix(i, COL_DROPDOWNCOMBO) = "Arnold"
     VBFlexGrid1.TextMatrix(i + 1, COL_DROPDOWNCOMBO) = "Bob"
