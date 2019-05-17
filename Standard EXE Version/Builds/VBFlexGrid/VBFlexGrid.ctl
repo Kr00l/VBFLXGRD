@@ -733,6 +733,7 @@ Private Const TME_NONCLIENT As Long = &H10
 Private Const ODS_SELECTED As Long = &H1
 Private Const ODS_DISABLED As Long = &H4
 Private Const ODS_FOCUS As Long = &H10
+Private Const ODS_HOTLIGHT As Long = &H40
 Private Const ODS_NOFOCUSRECT As Long = &H200
 Private Const PS_SOLID As Long = 0
 Private Const PS_DASH As Long = 1
@@ -824,7 +825,7 @@ Private Const LB_FINDSTRINGEXACT As Long = &H1A2
 Private Const LBS_NOTIFY As Long = &H1
 Private Const LBS_SORT As Long = &H2
 Private Const LBN_SELCHANGE As Long = 1
-Private Const DFC_SCROLL As Long = &H3, DFCS_SCROLLCOMBOBOX As Long = &H5, DFCS_INACTIVE As Long = &H100, DFCS_PUSHED As Long = &H200, DFCS_FLAT As Long = &H4000
+Private Const DFC_SCROLL As Long = &H3, DFCS_SCROLLCOMBOBOX As Long = &H5, DFCS_INACTIVE As Long = &H100, DFCS_PUSHED As Long = &H200, DFCS_HOT As Long = &H1000, DFCS_FLAT As Long = &H4000
 Private Const WS_BORDER As Long = &H800000
 Private Const WS_DLGFRAME As Long = &H400000
 Private Const WS_EX_TRANSPARENT As Long = &H20
@@ -990,6 +991,7 @@ Private VBFlexGridEditBackColor As OLE_COLOR, VBFlexGridEditForeColor As OLE_COL
 Private VBFlexGridEditBackColorBrush As Long
 Private VBFlexGridComboEditable As String
 Private VBFlexGridComboDropDownCombo As Boolean
+Private VBFlexGridComboRect As RECT
 Private VBFlexGridWheelScrollLines As Long
 Private VBFlexGridFocused As Boolean
 Private VBFlexGridNoRedraw As Boolean
@@ -3534,7 +3536,7 @@ Me.Enabled = UserControl.Enabled
 If PropRedraw = False Then Me.Redraw = False
 Me.FormatString = PropFormatString
 Call SetScrollBars
-If VBFlexGridDesignMode = False Then Call FlexSetSubclass(UserControl.hWnd, Me, 4)
+If VBFlexGridDesignMode = False Then Call FlexSetSubclass(UserControl.hWnd, Me, 5)
 UserControl.BackColor = PropBackColorBkg
 End Sub
 
@@ -3665,7 +3667,8 @@ IsFixedCell = CBool(VBFlexGridEditRow < PropFixedRows Or VBFlexGridEditCol < Pro
 Call GetCellText(VBFlexGridEditRow, VBFlexGridEditCol, Text)
 Dim dwStyle As Long, dwExStyle As Long
 dwStyle = WS_CHILD
-If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING Or WS_EX_LEFTSCROLLBAR
+dwExStyle = 0
+If VBFlexGridRTLReading = True Or VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING Or WS_EX_LEFTSCROLLBAR
 Dim Alignment As FlexAlignmentConstants
 With VBFlexGridCells.Rows(VBFlexGridEditRow).Cols(VBFlexGridEditCol)
 If .Alignment = -1 Then
@@ -3791,12 +3794,21 @@ If VBFlexGridEditHandle <> 0 Then
     VBFlexGridEditTextChanged = False
     VBFlexGridEditAlreadyValidated = False
     If Not ComboEditable = vbNullString Then
-        VBFlexGridComboButtonHandle = CreateWindowEx(0, StrPtr("Static"), 0, WS_CHILD Or SS_OWNERDRAW Or SS_NOTIFY, EditRect.Right - 1, EditRect.Top, ComboButtonWidth, (EditRect.Bottom - EditRect.Top) - 1, VBFlexGridHandle, ID_COMBOBUTTONCHILD, App.hInstance, ByVal 0&)
+        dwStyle = WS_CHILD Or SS_OWNERDRAW Or SS_NOTIFY
+        dwExStyle = 0
+        If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
+        If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
+        VBFlexGridComboButtonHandle = CreateWindowEx(dwExStyle, StrPtr("Static"), 0, dwStyle, EditRect.Right - 1, EditRect.Top, ComboButtonWidth, (EditRect.Bottom - EditRect.Top) - 1, VBFlexGridHandle, ID_COMBOBUTTONCHILD, App.hInstance, ByVal 0&)
         If VBFlexGridComboButtonHandle <> 0 Then
+            dwStyle = WS_POPUP Or WS_BORDER Or WS_VSCROLL Or LBS_NOTIFY Or LBS_SORT
+            dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
+            If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
+            If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
+            SetRect VBFlexGridComboRect, CellRangeRect.Left, EditRect.Bottom, CellRangeRect.Right, EditRect.Bottom
             Dim WndRect As RECT
-            SetRect WndRect, CellRangeRect.Left, EditRect.Bottom, CellRangeRect.Right, EditRect.Bottom
+            LSet WndRect = VBFlexGridComboRect
             MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
-            VBFlexGridComboListHandle = CreateWindowEx(WS_EX_TOOLWINDOW Or WS_EX_TOPMOST, StrPtr("ComboLBox"), 0, WS_POPUP Or WS_BORDER Or WS_VSCROLL Or LBS_NOTIFY Or LBS_SORT, WndRect.Left, WndRect.Top, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
+            VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), 0, dwStyle, WndRect.Left, WndRect.Top, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
             If VBFlexGridComboListHandle <> 0 Then
                 SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
                 Dim Pos1 As Long, Pos2 As Long, Temp As String, i As Long
@@ -3839,7 +3851,8 @@ If VBFlexGridEditHandle <> 0 Then
         End If
     End If
     Call FlexSetSubclass(VBFlexGridEditHandle, Me, 2)
-    If VBFlexGridComboListHandle <> 0 Then Call FlexSetSubclass(VBFlexGridComboListHandle, Me, 3)
+    If VBFlexGridComboButtonHandle <> 0 Then Call FlexSetSubclass(VBFlexGridComboButtonHandle, Me, 3)
+    If VBFlexGridComboListHandle <> 0 Then Call FlexSetSubclass(VBFlexGridComboListHandle, Me, 4)
     SetWindowPos VBFlexGridEditHandle, 0, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_FRAMECHANGED
     RaiseEvent EditSetupWindow(VBFlexGridEditBackColor, VBFlexGridEditForeColor)
     VBFlexGridEditBackColorBrush = CreateSolidBrush(WinColor(VBFlexGridEditBackColor))
@@ -3905,21 +3918,23 @@ Dim Row As Long, Col As Long
 ' When the edit control has been destroyed it could be started again resulting that the edit row and col will be overwritten.
 Row = VBFlexGridEditRow
 Col = VBFlexGridEditCol
+If VBFlexGridComboButtonHandle <> 0 Then
+    Call FlexRemoveSubclass(VBFlexGridComboButtonHandle)
+    ShowWindow VBFlexGridComboButtonHandle, SW_HIDE
+    SetParent VBFlexGridComboButtonHandle, 0
+    DestroyWindow VBFlexGridComboButtonHandle
+End If
+If VBFlexGridComboListHandle <> 0 Then
+    Call FlexRemoveSubclass(VBFlexGridComboListHandle)
+    DestroyWindow VBFlexGridComboListHandle
+End If
 Call FlexRemoveSubclass(VBFlexGridEditHandle)
 ShowWindow VBFlexGridEditHandle, SW_HIDE
 SetParent VBFlexGridEditHandle, 0
 DestroyWindow VBFlexGridEditHandle
 VBFlexGridEditHandle = 0
-If VBFlexGridComboButtonHandle <> 0 Then
-    ShowWindow VBFlexGridComboButtonHandle, SW_HIDE
-    SetParent VBFlexGridComboButtonHandle, 0
-    DestroyWindow VBFlexGridComboButtonHandle
-    VBFlexGridComboButtonHandle = 0
-End If
-If VBFlexGridComboListHandle <> 0 Then
-    DestroyWindow VBFlexGridComboListHandle
-    VBFlexGridComboListHandle = 0
-End If
+VBFlexGridComboButtonHandle = 0
+VBFlexGridComboListHandle = 0
 VBFlexGridEditRectChanged = False
 If VBFlexGridEditTempFontHandle <> 0 Then
     DeleteObject VBFlexGridEditTempFontHandle
@@ -11132,7 +11147,8 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 Then
             If VBFlexGridComboListHandle <> 0 Then
                 If IsWindowVisible(VBFlexGridComboListHandle) = 0 Then
                     Dim WndRect As RECT
-                    GetWindowRect VBFlexGridEditHandle, WndRect
+                    LSet WndRect = VBFlexGridComboRect
+                    MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
                     SetWindowPos VBFlexGridComboListHandle, 0, WndRect.Left, WndRect.Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
                 End If
                 SetCapture VBFlexGridComboListHandle
@@ -11164,6 +11180,32 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 Then
     Else
         If Not (dwLong And ODS_DISABLED) = ODS_DISABLED Then
             SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or ODS_DISABLED
+            InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
+        End If
+    End If
+End If
+End Sub
+
+Private Function ComboButtonGetHot() As Boolean
+If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 Then
+    Dim dwLong As Long
+    dwLong = GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA)
+    ComboButtonGetHot = CBool((dwLong And ODS_HOTLIGHT) = ODS_HOTLIGHT)
+End If
+End Function
+
+Private Sub ComboButtonSetHot(ByVal Value As Boolean)
+If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 Then
+    Dim dwLong As Long
+    dwLong = GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA)
+    If Value = True Then
+        If Not (dwLong And ODS_HOTLIGHT) = ODS_HOTLIGHT Then
+            SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or ODS_HOTLIGHT
+            InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
+        End If
+    Else
+        If (dwLong And ODS_HOTLIGHT) = ODS_HOTLIGHT Then
+            SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong And Not ODS_HOTLIGHT
             InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
         End If
     End If
@@ -11316,8 +11358,10 @@ Select Case dwRefData
     Case 2
         FSubclass_Message = WindowProcEdit(hWnd, wMsg, wParam, lParam)
     Case 3
-        FSubclass_Message = WindowProcComboList(hWnd, wMsg, wParam, lParam)
+        FSubclass_Message = WindowProcComboButton(hWnd, wMsg, wParam, lParam)
     Case 4
+        FSubclass_Message = WindowProcComboList(hWnd, wMsg, wParam, lParam)
+    Case 5
         FSubclass_Message = WindowProcUserControl(hWnd, wMsg, wParam, lParam)
 End Select
 End Function
@@ -11556,18 +11600,18 @@ Select Case wMsg
             Select Case HiWord(lParam)
                 Case WM_LBUTTONDOWN
                     If VBFlexGridComboButtonHandle <> 0 Then
-                        Dim P As POINTAPI
-                        Pos = GetMessagePos()
-                        P.X = Get_X_lParam(Pos)
-                        P.Y = Get_Y_lParam(Pos)
-                        ScreenToClient hWnd, P
-                        If ChildWindowFromPoint(hWnd, P.X, P.Y) = VBFlexGridComboButtonHandle Then
-                            If IsWindowEnabled(VBFlexGridComboButtonHandle) <> 0 Then
-                                WindowProcControl = MA_ACTIVATE
-                            Else
+                        If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then
+                            ' If the combo button window is disabled the mouse message will go trough it and could trigger ending of the editing.
+                            ' To avoid this a check is needed and return MA_ACTIVATEANDEAT, if necessary.
+                            Dim P As POINTAPI
+                            Pos = GetMessagePos()
+                            P.X = Get_X_lParam(Pos)
+                            P.Y = Get_Y_lParam(Pos)
+                            ScreenToClient hWnd, P
+                            If ChildWindowFromPoint(hWnd, P.X, P.Y) = VBFlexGridComboButtonHandle Then
                                 WindowProcControl = MA_ACTIVATEANDEAT
+                                Exit Function
                             End If
-                            Exit Function
                         End If
                     End If
                     If LoWord(lParam) = HTCLIENT And VBFlexGridEditTextChanged = True Then
@@ -11892,8 +11936,9 @@ Select Case wMsg
         If DIS.CtlType = ODT_STATIC And DIS.CtlID = ID_COMBOBUTTONCHILD And DIS.hWndItem = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> 0 Then
             Dim Flags As Long
             Flags = DFCS_SCROLLCOMBOBOX
-            If (GetWindowLong(DIS.hWndItem, GWL_USERDATA) And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
             If (GetWindowLong(DIS.hWndItem, GWL_USERDATA) And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
+            If (GetWindowLong(DIS.hWndItem, GWL_USERDATA) And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
+            If (GetWindowLong(DIS.hWndItem, GWL_USERDATA) And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
             Dim Brush As Long
             If VBFlexGridEditBackColorBrush <> 0 Then
                 Brush = VBFlexGridEditBackColorBrush
@@ -12239,6 +12284,30 @@ Select Case wMsg
 End Select
 WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
 If wMsg = WM_KILLFOCUS Then DestroyEdit False, FlexEditCloseModeLostFocus
+End Function
+
+Private Function WindowProcComboButton(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Select Case wMsg
+    Case WM_MOUSEACTIVATE
+        ' It is necessary to break the chain and return MA_ACTIVATE for this window.
+        ' This enables the parent window - when it receives WM_MOUSEACTIVATE - to destroy this child window.
+        WindowProcComboButton = MA_ACTIVATE
+        Exit Function
+    Case WM_MOUSEMOVE
+        If ComboButtonGetHot() = False Then
+            Call ComboButtonSetHot(True)
+            Dim TME As TRACKMOUSEEVENTSTRUCT
+            With TME
+            .cbSize = LenB(TME)
+            .hWndTrack = hWnd
+            .dwFlags = TME_LEAVE
+            End With
+            TrackMouseEvent TME
+        End If
+    Case WM_MOUSELEAVE
+        Call ComboButtonSetHot(False)
+End Select
+WindowProcComboButton = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
 End Function
 
 Private Function WindowProcComboList(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
