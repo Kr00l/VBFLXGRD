@@ -989,8 +989,8 @@ Private VBFlexGridEditTempFontHandle As Long
 Private VBFlexGridEditBackColor As OLE_COLOR, VBFlexGridEditForeColor As OLE_COLOR
 Private VBFlexGridEditBackColorBrush As Long
 Private VBFlexGridComboEditable As String
-Private VBFlexGridComboDropDownCombo As Boolean
-Private VBFlexGridComboRect As RECT
+Private VBFlexGridComboReadOnly As Boolean
+Private VBFlexGridComboListRect As RECT
 Private VBFlexGridWheelScrollLines As Long
 Private VBFlexGridFocused As Boolean
 Private VBFlexGridNoRedraw As Boolean
@@ -3658,7 +3658,7 @@ Else
     If (Col >= 0 And Col <= (PropCols - 1)) Then VBFlexGridEditCol = Col Else VBFlexGridEditCol = VBFlexGridCol
     VBFlexGridEditReason = Reason
     VBFlexGridEditCloseMode = -1
-    VBFlexGridComboDropDownCombo = False
+    VBFlexGridComboReadOnly = False
 End If
 If VBFlexGridFocused = False Then SetFocusAPI UserControl.hWnd
 Dim IsFixedCell As Boolean, Text As String
@@ -3726,10 +3726,10 @@ If Not ComboEditable = vbNullString Then
     If (((CellRangeRect.Right - CellRangeRect.Left) - 1) - ComboButtonWidth) < 0 Then ComboButtonWidth = ((CellRangeRect.Right - CellRangeRect.Left) - 1)
     If Left$(ComboEditable, 1) = "|" Then
         ComboEditable = Mid$(ComboEditable, 2, Len(ComboEditable) - 1)
-        VBFlexGridComboDropDownCombo = True
+        VBFlexGridComboReadOnly = False
         If (dwStyle And ES_READONLY) = ES_READONLY Then dwStyle = dwStyle And Not ES_READONLY
     Else
-        VBFlexGridComboDropDownCombo = False
+        VBFlexGridComboReadOnly = True
         If Not (dwStyle And ES_READONLY) = ES_READONLY Then dwStyle = dwStyle Or ES_READONLY
     End If
 End If
@@ -3804,9 +3804,9 @@ If VBFlexGridEditHandle <> 0 Then
             dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
             If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
             If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
-            SetRect VBFlexGridComboRect, CellRangeRect.Left, EditRect.Bottom, CellRangeRect.Right, EditRect.Bottom
+            SetRect VBFlexGridComboListRect, CellRangeRect.Left, EditRect.Bottom, CellRangeRect.Right, EditRect.Bottom
             Dim WndRect As RECT
-            LSet WndRect = VBFlexGridComboRect
+            LSet WndRect = VBFlexGridComboListRect
             MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
             VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), 0, dwStyle, WndRect.Left, WndRect.Top, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
             If VBFlexGridComboListHandle <> 0 Then
@@ -3859,7 +3859,7 @@ If VBFlexGridEditHandle <> 0 Then
     SetFocusAPI VBFlexGridEditHandle
     If VBFlexGridComboButtonHandle <> 0 Then
         ShowWindow VBFlexGridComboButtonHandle, SW_SHOW
-        If VBFlexGridComboDropDownCombo = False Then Call ComboShowDropDown(True)
+        If VBFlexGridComboReadOnly = True And VBFlexGridComboListHandle <> 0 Then Call ComboShowDropDown(True)
     End If
     RaiseEvent EnterEdit
     CreateEdit = True
@@ -3945,7 +3945,7 @@ If VBFlexGridEditBackColorBrush <> 0 Then
 End If
 VBFlexGridEditRow = -1
 VBFlexGridEditCol = -1
-VBFlexGridComboDropDownCombo = False
+VBFlexGridComboReadOnly = False
 If Discard = False And VBFlexGridEditTextChanged = True Then
     RaiseEvent AfterEdit(Row, Col, True)
 Else
@@ -11130,8 +11130,8 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
             SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
             If VBFlexGridComboListHandle <> 0 Then
                 Dim WndRect As RECT
-                SetRect VBFlexGridComboRect, RC.Left, RC.Bottom, RC.Right, RC.Bottom
-                LSet WndRect = VBFlexGridComboRect
+                SetRect VBFlexGridComboListRect, RC.Left, RC.Bottom, RC.Right, RC.Bottom
+                LSet WndRect = VBFlexGridComboListRect
                 MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
                 SetWindowPos VBFlexGridComboListHandle, 0, WndRect.Left, WndRect.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
             End If
@@ -11158,7 +11158,7 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 Then
             If VBFlexGridComboListHandle <> 0 Then
                 If IsWindowVisible(VBFlexGridComboListHandle) = 0 Then
                     Dim WndRect As RECT
-                    LSet WndRect = VBFlexGridComboRect
+                    LSet WndRect = VBFlexGridComboListRect
                     MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
                     SetWindowPos VBFlexGridComboListHandle, 0, WndRect.Left, WndRect.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
                 End If
@@ -11897,7 +11897,7 @@ Select Case wMsg
                 Case EN_CHANGE
                     If LoWord(wParam) = ID_EDITCHILD And lParam = VBFlexGridEditHandle And VBFlexGridEditHandle <> 0 Then
                         If VBFlexGridEditChangeFrozen = False Then
-                            If VBFlexGridComboDropDownCombo = True And VBFlexGridComboListHandle <> 0 Then
+                            If VBFlexGridComboReadOnly = False And VBFlexGridComboListHandle <> 0 Then
                                 Dim Index As Long
                                 Index = SendMessage(VBFlexGridComboListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Me.EditText))
                                 If Not Index = LB_ERR Then
@@ -12218,7 +12218,7 @@ Select Case wMsg
             KeyChar = CUIntToInt(wParam And &HFFFF&)
         End If
         RaiseEvent EditKeyPress(KeyChar)
-        If VBFlexGridComboDropDownCombo = False And VBFlexGridComboListHandle <> 0 Then
+        If VBFlexGridComboReadOnly = True And VBFlexGridComboListHandle <> 0 Then
             SendMessage VBFlexGridComboListHandle, wMsg, wParam, ByVal lParam
             Exit Function
         End If
@@ -12354,7 +12354,7 @@ Select Case wMsg
     Case WM_LBUTTONDOWN, WM_LBUTTONDBLCLK
         If Not ComboListSelFromPt(Get_X_lParam(lParam), Get_Y_lParam(lParam)) = LB_ERR Then
             Call ComboListCommitSel
-            If VBFlexGridComboDropDownCombo = False Then
+            If VBFlexGridComboReadOnly = True Then
                 Call ComboShowDropDown(False)
                 DestroyEdit False, FlexEditCloseModeReturn
                 Exit Function
