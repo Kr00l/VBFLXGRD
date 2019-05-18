@@ -11120,7 +11120,8 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
             SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
             If VBFlexGridComboListHandle <> 0 Then
                 Dim WndRect As RECT
-                SetRect WndRect, RC.Left, RC.Bottom, 0, 0
+                SetRect VBFlexGridComboRect, RC.Left, RC.Bottom, RC.Right, RC.Bottom
+                LSet WndRect = VBFlexGridComboRect
                 MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
                 SetWindowPos VBFlexGridComboListHandle, 0, WndRect.Left, WndRect.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
             End If
@@ -11149,7 +11150,7 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 Then
                     Dim WndRect As RECT
                     LSet WndRect = VBFlexGridComboRect
                     MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
-                    SetWindowPos VBFlexGridComboListHandle, 0, WndRect.Left, WndRect.Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
+                    SetWindowPos VBFlexGridComboListHandle, 0, WndRect.Left, WndRect.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
                 End If
                 SetCapture VBFlexGridComboListHandle
             End If
