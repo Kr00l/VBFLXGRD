@@ -639,7 +639,6 @@ Private Declare Function BeginPaint Lib "user32" (ByVal hWnd As Long, ByRef lpPa
 Private Declare Function EndPaint Lib "user32" (ByVal hWnd As Long, ByRef lpPaint As PAINTSTRUCT) As Long
 Private Declare Function CreateRectRgn Lib "gdi32" (ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function ExtSelectClipRgn Lib "gdi32" (ByVal hDC As Long, ByVal hRgn As Long, ByVal fnMode As Long) As Long
-Private Declare Function GetRgnBox Lib "gdi32" (ByVal hRgn As Long, ByRef lpRect As RECT) As Long
 Private Declare Function RedrawWindow Lib "user32" (ByVal hWnd As Long, ByVal lprcUpdate As Long, ByVal hrgnUpdate As Long, ByVal fuRedraw As Long) As Long
 Private Declare Function InvalidateRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As Any, ByVal bErase As Long) As Long
 Private Declare Function UpdateWindow Lib "user32" (ByVal hWnd As Long) As Long
@@ -3726,6 +3725,7 @@ If Not ComboEditable = vbNullString Then
     If (EditRect.Right - 1) < EditRect.Left Then EditRect.Right = (EditRect.Left + 1)
     If (((CellRangeRect.Right - CellRangeRect.Left) - 1) - ComboButtonWidth) < 0 Then ComboButtonWidth = ((CellRangeRect.Right - CellRangeRect.Left) - 1)
     If Left$(ComboEditable, 1) = "|" Then
+        ComboEditable = Mid$(ComboEditable, 2, Len(ComboEditable) - 1)
         VBFlexGridComboDropDownCombo = True
         If (dwStyle And ES_READONLY) = ES_READONLY Then dwStyle = dwStyle And Not ES_READONLY
     Else
@@ -3793,7 +3793,7 @@ If VBFlexGridEditHandle <> 0 Then
     End If
     VBFlexGridEditTextChanged = False
     VBFlexGridEditAlreadyValidated = False
-    If Not ComboEditable = vbNullString Then
+    If ComboButtonWidth > 0 Then
         dwStyle = WS_CHILD Or SS_OWNERDRAW Or SS_NOTIFY
         dwExStyle = 0
         If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
@@ -3812,7 +3812,6 @@ If VBFlexGridEditHandle <> 0 Then
             If VBFlexGridComboListHandle <> 0 Then
                 SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
                 Dim Pos1 As Long, Pos2 As Long, Temp As String, i As Long
-                If Left$(ComboEditable, 1) = "|" Then ComboEditable = Mid$(ComboEditable, 2, Len(ComboEditable) - 1)
                 Do
                     Pos1 = InStr(Pos1 + 1, ComboEditable, "|")
                     If Pos1 > 0 Then
@@ -6799,12 +6798,23 @@ If VBFlexGridHandle <> 0 Then
     If hDC <> 0 Then
         hDCBmp = CreateCompatibleDC(hDC)
         If hDCBmp <> 0 Then
-            Dim hRgn As Long, RC As RECT
-            Call DrawGrid(0, hRgn, True)
-            If hRgn <> 0 Then
-                GetRgnBox hRgn, RC
-                DeleteObject hRgn
-            End If
+            Dim RC As RECT, iRow As Long, iCol As Long
+            With RC
+            .Top = 0
+            For iRow = 0 To (PropFixedRows - 1)
+                .Bottom = .Bottom + GetRowHeight(iRow)
+            Next iRow
+            For iRow = VBFlexGridTopRow To (PropRows - 1)
+                .Bottom = .Bottom + GetRowHeight(iRow)
+            Next iRow
+            .Left = 0
+            For iCol = 0 To (PropFixedCols - 1)
+                .Right = .Right + GetColWidth(iCol)
+            Next iCol
+            For iCol = VBFlexGridLeftCol To (PropCols - 1)
+                .Right = .Right + GetColWidth(iCol)
+            Next iCol
+            End With
             If PropPictureType = FlexPictureTypeColor Then
                 hBmp = CreateCompatibleBitmap(hDC, RC.Right - RC.Left, RC.Bottom - RC.Top)
             ElseIf PropPictureType = FlexPictureTypeMonochrome Then
@@ -12179,6 +12189,12 @@ Select Case wMsg
             Const PM_NOREMOVE As Long = &H0
             If PeekMessage(Msg, hWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE) <> 0 Then VBFlexGridCharCodeCache = Msg.wParam
         ElseIf wMsg = WM_SYSKEYDOWN Then
+            If VBFlexGridEditRectChanged = True Then
+                VBFlexGridEditRectChanged = False
+                VBFlexGridEditRectChangedFrozen = True
+                Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
+                VBFlexGridEditRectChangedFrozen = False
+            End If
             RaiseEvent EditKeyDown(KeyCode, GetShiftStateFromMsg())
             If VBFlexGridEditHandle <> 0 Then
                 If KeyCode = vbKeyReturn Then
