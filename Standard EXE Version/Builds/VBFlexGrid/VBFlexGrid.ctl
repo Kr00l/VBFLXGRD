@@ -11022,7 +11022,7 @@ End Function
 
 Private Sub SetVisualStylesToolTip()
 If VBFlexGridHandle <> 0 Then
-    If VBFlexGridToolTipHandle <> 0 And EnabledVisualStyles = True Then
+    If VBFlexGridToolTipHandle <> 0 And VBFlexGridEnabledVisualStyles = True Then
         If PropVisualStyles = True Then
             ActivateVisualStyles VBFlexGridToolTipHandle
         Else
