@@ -20,6 +20,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
+#Const ImplementThemedComboButton = True
 #Const ImplementDataSource = True ' True = Required: msdatsrc.tlb
 #Const ImplementFlexDataSource = True ' True = Required: IVBFlexDataSource.cls
 
@@ -708,6 +709,26 @@ Private Declare Function ClipCursor Lib "user32" (ByRef lpRect As Any) As Long
 Private Declare Function GetCapture Lib "user32" () As Long
 Private Declare Function SetCapture Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function ReleaseCapture Lib "user32" () As Long
+
+#If ImplementThemedComboButton = True Then
+
+Private Enum UxThemeComboBoxParts
+CP_DROPDOWNBUTTON = 1
+End Enum
+Private Enum UxThemeComboBoxStates
+CBXS_NORMAL = 1
+CBXS_HOT = 2
+CBXS_PRESSED = 3
+CBXS_DISABLED = 4
+End Enum
+Private Declare Function IsThemeBackgroundPartiallyTransparent Lib "uxtheme" (ByVal Theme As Long, iPartId As Long, iStateId As Long) As Long
+Private Declare Function DrawThemeParentBackground Lib "uxtheme" (ByVal hWnd As Long, ByVal hDC As Long, ByRef pRect As RECT) As Long
+Private Declare Function DrawThemeBackground Lib "uxtheme" (ByVal Theme As Long, ByVal hDC As Long, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pRect As RECT, ByRef pClipRect As RECT) As Long
+Private Declare Function OpenThemeData Lib "uxtheme" (ByVal hWnd As Long, ByVal pszClassList As Long) As Long
+Private Declare Function CloseThemeData Lib "uxtheme" (ByVal Theme As Long) As Long
+
+#End If
+
 Private Const ICC_STANDARD_CLASSES As Long = &H4000
 Private Const ICC_TAB_CLASSES As Long = &H8
 Private Const ID_EDITCHILD As Long = 100, ID_COMBOBUTTONCHILD As Long = 101
@@ -854,6 +875,7 @@ Private Const SW_SHOWNA As Long = &H8
 Private Const WM_SETFOCUS As Long = &H7
 Private Const WM_KILLFOCUS As Long = &H8
 Private Const WM_COMMAND As Long = &H111
+Private Const WM_THEMECHANGED As Long = &H31A
 Private Const WM_KEYDOWN As Long = &H100
 Private Const WM_KEYUP As Long = &H101
 Private Const WM_CHAR As Long = &H102
@@ -1000,6 +1022,7 @@ Private VBFlexGridMouseOver As Boolean
 Private VBFlexGridDesignMode As Boolean, VBFlexGridTopDesignMode As Boolean
 Private VBFlexGridRTLLayout As Boolean, VBFlexGridRTLReading As Boolean
 Private VBFlexGridAlignable As Boolean
+Private VBFlexGridEnabledVisualStyles As Boolean
 Private VBFlexGridSort As FlexSortConstants
 
 #If ImplementFlexDataSource = True Then
@@ -1993,7 +2016,8 @@ End Property
 
 Public Property Let VisualStyles(ByVal Value As Boolean)
 PropVisualStyles = Value
-If VBFlexGridHandle <> 0 And EnabledVisualStyles() = True Then
+VBFlexGridEnabledVisualStyles = EnabledVisualStyles()
+If VBFlexGridHandle <> 0 And VBFlexGridEnabledVisualStyles = True Then
     If PropVisualStyles = True Then
         ActivateVisualStyles VBFlexGridHandle
     Else
@@ -11941,15 +11965,12 @@ Select Case wMsg
             End If
             Exit Function
         End If
+    Case WM_THEMECHANGED
+        VBFlexGridEnabledVisualStyles = EnabledVisualStyles()
     Case WM_DRAWITEM
         Dim DIS As DRAWITEMSTRUCT
         CopyMemory DIS, ByVal lParam, LenB(DIS)
         If DIS.CtlType = ODT_STATIC And DIS.CtlID = ID_COMBOBUTTONCHILD And DIS.hWndItem = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> 0 Then
-            Dim Flags As Long
-            Flags = DFCS_SCROLLCOMBOBOX
-            If (GetWindowLong(DIS.hWndItem, GWL_USERDATA) And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
-            If (GetWindowLong(DIS.hWndItem, GWL_USERDATA) And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
-            If (GetWindowLong(DIS.hWndItem, GWL_USERDATA) And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
             Dim Brush As Long
             If VBFlexGridEditBackColorBrush <> 0 Then
                 Brush = VBFlexGridEditBackColorBrush
@@ -11957,7 +11978,51 @@ Select Case wMsg
                 Brush = GetSysColorBrush(COLOR_WINDOW)
             End If
             FillRect DIS.hDC, DIS.RCItem, Brush
-            DrawFrameControl DIS.hDC, DIS.RCItem, DFC_SCROLL, Flags
+            DIS.ItemState = GetWindowLong(DIS.hWndItem, GWL_USERDATA)
+            
+            #If ImplementThemedComboButton = True Then
+                
+                Dim Theme As Long
+                If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then Theme = OpenThemeData(VBFlexGridHandle, StrPtr("ComboBox"))
+                If Theme <> 0 Then
+                    Dim ComboBoxPart As Long, ComboBoxState As Long
+                    ComboBoxPart = CP_DROPDOWNBUTTON
+                    If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
+                        If Not (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
+                            If Not (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then
+                                ComboBoxState = CBXS_NORMAL
+                            Else
+                                ComboBoxState = CBXS_HOT
+                            End If
+                        Else
+                            ComboBoxState = CBXS_PRESSED
+                        End If
+                    Else
+                        ComboBoxState = CBXS_DISABLED
+                    End If
+                    If IsThemeBackgroundPartiallyTransparent(Theme, ComboBoxPart, ComboBoxState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
+                    DrawThemeBackground Theme, DIS.hDC, ComboBoxPart, ComboBoxState, DIS.RCItem, DIS.RCItem
+                    CloseThemeData Theme
+                Else
+                    Dim Flags As Long
+                    Flags = DFCS_SCROLLCOMBOBOX
+                    If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
+                    If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
+                    If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
+                    DrawFrameControl DIS.hDC, DIS.RCItem, DFC_SCROLL, Flags
+                End If
+                
+            #Else
+                
+                Dim Flags As Long
+                Flags = DFCS_SCROLLCOMBOBOX
+                If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
+                If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
+                If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
+                DrawFrameControl DIS.hDC, DIS.RCItem, DFC_SCROLL, Flags
+                
+            #End If
+            
             WindowProcControl = 1
             Exit Function
         End If
