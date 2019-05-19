@@ -3862,7 +3862,7 @@ If VBFlexGridEditHandle <> 0 Then
             End If
         End If
     End If
-    If EnabledVisualStyles() = True Then
+    If VBFlexGridEnabledVisualStyles = True Then
         If PropVisualStyles = True Then
             ActivateVisualStyles VBFlexGridEditHandle
             If VBFlexGridComboButtonHandle <> 0 Then ActivateVisualStyles VBFlexGridComboButtonHandle
@@ -10974,7 +10974,7 @@ End Function
 
 Private Sub SetVisualStylesToolTip()
 If VBFlexGridHandle <> 0 Then
-    If VBFlexGridToolTipHandle <> 0 And EnabledVisualStyles() = True Then
+    If VBFlexGridToolTipHandle <> 0 And EnabledVisualStyles = True Then
         If PropVisualStyles = True Then
             ActivateVisualStyles VBFlexGridToolTipHandle
         Else
