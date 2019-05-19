@@ -10,4 +10,4 @@ PPVBFlexGridGeneral = 64, 81, 1276, 754, C, 110, 164, 916, 837, C
 PPVBFlexGridStyle = 0, 0, 0, 0, C, 150, 150, 1359, 823, C
 InputForm = 0, 0, 0, 0, C, 175, 175, 1384, 848, C
 IVBFlexDataSource = 0, 0, 0, 0, C
-UserEditingForm = 111, 184, 1323, 857, C, 78, 163, 1290, 836, C
+UserEditingForm = 217, 191, 1429, 864, C, 78, 163, 1290, 836, C

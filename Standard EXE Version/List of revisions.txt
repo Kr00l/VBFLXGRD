@@ -2,6 +2,7 @@ List of revisions:
 
 19-May-2019
 - Bugfix in the Picture property. (related to 08-May-2019 update)
+- Combo button window now drawm themed, if applicable.
 
 18-May-2019
 - Bugfix concerning RightToLeftLayout for in-cell editing combo button and combo list window.
