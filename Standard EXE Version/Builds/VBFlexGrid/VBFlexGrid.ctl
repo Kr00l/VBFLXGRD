@@ -56,6 +56,7 @@ Private FlexFindDirectionDown, FlexFindDirectionUp
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
 Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
+Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -283,6 +284,11 @@ FlexEditCloseModeTab = 4
 FlexEditCloseModeShiftTab = 5
 FlexEditCloseModeNavigationKey = 6
 End Enum
+Public Enum FlexComboModeConstants
+FlexComboModeNone = 0
+FlexComboModeDropDown = 1
+FlexComboModeEditable = 2
+End Enum
 Private Type RECT
 Left As Long
 Top As Long
@@ -507,7 +513,8 @@ Alignment As FlexAlignmentConstants
 FixedAlignment As FlexAlignmentConstants
 Merge As Boolean
 Sort As FlexSortConstants
-ComboEditable As String
+ComboMode As FlexComboModeConstants
+ComboItems As String
 End Type
 Private Type TCOLS
 Cols() As TCELL
@@ -1010,7 +1017,8 @@ Private VBFlexGridEditRectChangedFrozen As Boolean
 Private VBFlexGridEditTempFontHandle As Long
 Private VBFlexGridEditBackColor As OLE_COLOR, VBFlexGridEditForeColor As OLE_COLOR
 Private VBFlexGridEditBackColorBrush As Long
-Private VBFlexGridComboEditable As String
+Private VBFlexGridComboMode As FlexComboModeConstants
+Private VBFlexGridComboItems As String
 Private VBFlexGridComboReadOnly As Boolean
 Private VBFlexGridComboListRect As RECT
 Private VBFlexGridWheelScrollLines As Long
@@ -3730,7 +3738,7 @@ If (dwStyle And WS_DLGFRAME) = WS_DLGFRAME Then dwStyle = dwStyle And Not WS_DLG
 If (dwExStyle And WS_EX_STATICEDGE) = WS_EX_STATICEDGE Then dwExStyle = dwExStyle And Not WS_EX_STATICEDGE
 If (dwExStyle And WS_EX_CLIENTEDGE) = WS_EX_CLIENTEDGE Then dwExStyle = dwExStyle And Not WS_EX_CLIENTEDGE
 If (dwExStyle And WS_EX_WINDOWEDGE) = WS_EX_WINDOWEDGE Then dwExStyle = dwExStyle And Not WS_EX_WINDOWEDGE
-Dim CellRangeRect As RECT, ClientRect As RECT, EditRect As RECT, ComboEditable As String, ComboButtonWidth As Long
+Dim CellRangeRect As RECT, ClientRect As RECT, EditRect As RECT, ComboMode As FlexComboModeConstants, ComboItems As String, ComboButtonWidth As Long
 Call GetMergedRangeStruct(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditMergedRange)
 Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
 Call GetCellRangeRect(VBFlexGridEditMergedRange, False, CellRangeRect)
@@ -3738,24 +3746,26 @@ GetClientRect VBFlexGridHandle, ClientRect
 LSet EditRect = CellRangeRect
 If EditRect.Bottom > ClientRect.Bottom Then EditRect.Bottom = ClientRect.Bottom
 If EditRect.Right > ClientRect.Right Then EditRect.Right = ClientRect.Right
-If Not VBFlexGridComboEditable = vbNullString Then
-    ComboEditable = VBFlexGridComboEditable
-ElseIf Not VBFlexGridColsInfo(VBFlexGridEditCol).ComboEditable = vbNullString Then
-    ComboEditable = VBFlexGridColsInfo(VBFlexGridEditCol).ComboEditable
+If VBFlexGridComboMode <> FlexComboModeNone Then
+    ComboMode = VBFlexGridComboMode
+    ComboItems = VBFlexGridComboItems
+ElseIf VBFlexGridColsInfo(VBFlexGridEditCol).ComboMode <> FlexComboModeNone Then
+    ComboMode = VBFlexGridColsInfo(VBFlexGridEditCol).ComboMode
+    ComboItems = VBFlexGridColsInfo(VBFlexGridEditCol).ComboItems
 End If
-If Not ComboEditable = vbNullString Then
+If ComboMode <> FlexComboModeNone Then
     ComboButtonWidth = GetSystemMetrics(SM_CXVSCROLL)
     EditRect.Right = EditRect.Right - ComboButtonWidth
     If (EditRect.Right - 1) < EditRect.Left Then EditRect.Right = (EditRect.Left + 1)
     If (((CellRangeRect.Right - CellRangeRect.Left) - 1) - ComboButtonWidth) < 0 Then ComboButtonWidth = ((CellRangeRect.Right - CellRangeRect.Left) - 1)
-    If Left$(ComboEditable, 1) = "|" Then
-        ComboEditable = Mid$(ComboEditable, 2, Len(ComboEditable) - 1)
-        VBFlexGridComboReadOnly = False
-        If (dwStyle And ES_READONLY) = ES_READONLY Then dwStyle = dwStyle And Not ES_READONLY
-    Else
-        VBFlexGridComboReadOnly = True
-        If Not (dwStyle And ES_READONLY) = ES_READONLY Then dwStyle = dwStyle Or ES_READONLY
-    End If
+    Select Case ComboMode
+        Case FlexComboModeDropDown
+            VBFlexGridComboReadOnly = True
+            If Not (dwStyle And ES_READONLY) = ES_READONLY Then dwStyle = dwStyle Or ES_READONLY
+        Case Else
+            VBFlexGridComboReadOnly = False
+            If (dwStyle And ES_READONLY) = ES_READONLY Then dwStyle = dwStyle And Not ES_READONLY
+    End Select
 End If
 VBFlexGridEditHandle = CreateWindowEx(dwExStyle, StrPtr("Edit"), 0, dwStyle, EditRect.Left, EditRect.Top, (EditRect.Right - EditRect.Left) - 1, (EditRect.Bottom - EditRect.Top) - 1, VBFlexGridHandle, ID_EDITCHILD, App.hInstance, ByVal 0&)
 If VBFlexGridEditHandle <> 0 Then
@@ -3837,11 +3847,11 @@ If VBFlexGridEditHandle <> 0 Then
                 SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
                 Dim Pos1 As Long, Pos2 As Long, Temp As String, i As Long
                 Do
-                    Pos1 = InStr(Pos1 + 1, ComboEditable, "|")
+                    Pos1 = InStr(Pos1 + 1, ComboItems, "|")
                     If Pos1 > 0 Then
-                        Temp = Mid$(ComboEditable, Pos2 + 1, Pos1 - Pos2 - 1)
+                        Temp = Mid$(ComboItems, Pos2 + 1, Pos1 - Pos2 - 1)
                     Else
-                        Temp = Mid$(ComboEditable, Pos2 + 1)
+                        Temp = Mid$(ComboItems, Pos2 + 1)
                     End If
                     SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, i, ByVal StrPtr(Temp)
                     Pos2 = Pos1
@@ -3883,7 +3893,7 @@ If VBFlexGridEditHandle <> 0 Then
     SetFocusAPI VBFlexGridEditHandle
     If VBFlexGridComboButtonHandle <> 0 Then
         ShowWindow VBFlexGridComboButtonHandle, SW_SHOW
-        If VBFlexGridComboReadOnly = True And VBFlexGridComboListHandle <> 0 Then Call ComboShowDropDown(True)
+        If ComboMode = FlexComboModeDropDown Then Call ComboShowDropDown(True)
     End If
     RaiseEvent EnterEdit
     CreateEdit = True
@@ -5133,7 +5143,7 @@ End Property
 Public Property Let ColSort(ByVal Index As Long, ByVal Value As FlexSortConstants)
 If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 Select Case Value
-    Case FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending
+    Case -1, FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending
     Case Else
         Err.Raise 380
 End Select
@@ -5147,21 +5157,44 @@ Else
 End If
 End Property
 
-Public Property Get ColComboEditable(ByVal Index As Long) As String
-Attribute ColComboEditable.VB_Description = "Returns/sets the list to be used as a drop-down when editing a cell for the specified column."
-Attribute ColComboEditable.VB_MemberFlags = "400"
+Public Property Get ColComboMode(ByVal Index As Long) As FlexComboModeConstants
+Attribute ColComboMode.VB_Description = "Returns/sets the combo functionality mode for the specified column."
+Attribute ColComboMode.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
-ColComboEditable = VBFlexGridColsInfo(Index).ComboEditable
+ColComboMode = VBFlexGridColsInfo(Index).ComboMode
 End Property
 
-Public Property Let ColComboEditable(ByVal Index As Long, ByVal Value As String)
+Public Property Let ColComboMode(ByVal Index As Long, ByVal Value As FlexComboModeConstants)
 If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Select Case Value
+    Case -1, FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable
+    Case Else
+        Err.Raise 380
+End Select
 If Index > -1 Then
-    VBFlexGridColsInfo(Index).ComboEditable = Value
+    VBFlexGridColsInfo(Index).ComboMode = Value
 Else
     Dim i As Long
     For i = 0 To (PropCols - 1)
-        VBFlexGridColsInfo(i).ComboEditable = Value
+        VBFlexGridColsInfo(i).ComboMode = Value
+    Next i
+End If
+End Property
+
+Public Property Get ColComboItems(ByVal Index As Long) As String
+Attribute ColComboItems.VB_Description = "Returns/sets the list to be used as a drop-down when editing a cell for the specified column."
+Attribute ColComboItems.VB_MemberFlags = "400"
+ColComboItems = VBFlexGridColsInfo(Index).ComboItems
+End Property
+
+Public Property Let ColComboItems(ByVal Index As Long, ByVal Value As String)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).ComboItems = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).ComboItems = Value
     Next i
 End If
 End Property
@@ -6993,18 +7026,33 @@ Public Property Let EditSelText(ByVal Value As String)
 If VBFlexGridEditHandle <> 0 Then SendMessage VBFlexGridEditHandle, EM_REPLACESEL, 1, ByVal StrPtr(Value)
 End Property
 
-Public Property Get ComboEditable() As String
-Attribute ComboEditable.VB_Description = "Returns/sets the list to be used as a drop-down when editing a cell."
-Attribute ComboEditable.VB_MemberFlags = "400"
-ComboEditable = VBFlexGridComboEditable
+Public Property Get ComboMode() As FlexComboModeConstants
+Attribute ComboMode.VB_Description = "Returns/sets the combo functionality mode."
+Attribute ComboMode.VB_MemberFlags = "400"
+ComboMode = VBFlexGridComboMode
 End Property
 
-Public Property Let ComboEditable(ByVal Value As String)
-VBFlexGridComboEditable = Value
+Public Property Let ComboMode(ByVal Value As FlexComboModeConstants)
+Select Case Value
+    Case FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable
+        VBFlexGridComboMode = Value
+    Case Else
+        Err.Raise 380
+End Select
+End Property
+
+Public Property Get ComboItems() As String
+Attribute ComboItems.VB_Description = "Returns/sets the list to be used as a drop-down when editing a cell."
+Attribute ComboItems.VB_MemberFlags = "400"
+ComboItems = VBFlexGridComboItems
+End Property
+
+Public Property Let ComboItems(ByVal Value As String)
+VBFlexGridComboItems = Value
 End Property
 
 Public Property Get ComboList(ByVal Index As Long) As String
-Attribute ComboList.VB_Description = "Returns the items contained in a combo list."
+Attribute ComboList.VB_Description = "Returns the items contained in a drop-down list."
 Attribute ComboList.VB_MemberFlags = "400"
 If VBFlexGridComboListHandle <> 0 Then
     Dim Length As Long
@@ -7019,13 +7067,13 @@ End If
 End Property
 
 Public Property Get ComboListCount() As Long
-Attribute ComboListCount.VB_Description = "Returns the number of items in the combo list."
+Attribute ComboListCount.VB_Description = "Returns the number of items in the drop-down list."
 Attribute ComboListCount.VB_MemberFlags = "400"
 If VBFlexGridComboListHandle <> 0 Then ComboListCount = SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&)
 End Property
 
 Public Property Get ComboListIndex() As Long
-Attribute ComboListIndex.VB_Description = "Returns/sets the index of the currently selected item in the combo list."
+Attribute ComboListIndex.VB_Description = "Returns/sets the index of the currently selected item in the drop-down list."
 Attribute ComboListIndex.VB_MemberFlags = "400"
 If VBFlexGridComboListHandle <> 0 Then ComboListIndex = SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&)
 End Property
@@ -11167,11 +11215,14 @@ End If
 End Sub
 
 Private Function ComboGetDroppedState() As Boolean
-If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 Then ComboGetDroppedState = CBool((GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA) And ODS_SELECTED) = ODS_SELECTED)
+If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then ComboGetDroppedState = CBool((GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA) And ODS_SELECTED) = ODS_SELECTED)
 End Function
 
 Private Sub ComboShowDropDown(ByVal Value As Boolean)
-If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 Then
+Static InProc As Boolean
+If InProc = True Then Exit Sub
+If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
+    InProc = True
     Dim dwLong As Long
     dwLong = GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA)
     If Value = True Then
@@ -11179,27 +11230,24 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 Then
             RaiseEvent ComboDropDown
             SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or ODS_SELECTED
             InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
-            If VBFlexGridComboListHandle <> 0 Then
-                If IsWindowVisible(VBFlexGridComboListHandle) = 0 Then
-                    Dim WndRect As RECT
-                    LSet WndRect = VBFlexGridComboListRect
-                    MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
-                    SetWindowPos VBFlexGridComboListHandle, 0, WndRect.Left, WndRect.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
-                End If
-                SetCapture VBFlexGridComboListHandle
+            If IsWindowVisible(VBFlexGridComboListHandle) = 0 Then
+                Dim WndRect As RECT
+                LSet WndRect = VBFlexGridComboListRect
+                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
+                SetWindowPos VBFlexGridComboListHandle, 0, WndRect.Left, WndRect.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
             End If
+            SetCapture VBFlexGridComboListHandle
         End If
     Else
         If (dwLong And ODS_SELECTED) = ODS_SELECTED Then
             SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong And Not ODS_SELECTED
             InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
-            If VBFlexGridComboListHandle <> 0 Then
-                If GetCapture() = VBFlexGridComboListHandle Then ReleaseCapture
-                If IsWindowVisible(VBFlexGridComboListHandle) <> 0 Then ShowWindow VBFlexGridComboListHandle, SW_HIDE
-            End If
+            If GetCapture() = VBFlexGridComboListHandle Then ReleaseCapture
+            If IsWindowVisible(VBFlexGridComboListHandle) <> 0 Then ShowWindow VBFlexGridComboListHandle, SW_HIDE
             RaiseEvent ComboCloseUp
         End If
     End If
+    InProc = False
 End If
 End Sub
 
@@ -12171,15 +12219,15 @@ Select Case wMsg
                 If VBFlexGridEditHandle <> 0 Then
                     Select Case KeyCode
                         Case vbKeyEscape
-                            If VBFlexGridComboButtonHandle <> 0 Then Call ComboShowDropDown(False)
+                            If VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then Call ComboShowDropDown(False)
                             If DestroyEdit(True, FlexEditCloseModeEscape) = True Then Exit Function
                         Case vbKeyF4
-                            If VBFlexGridComboButtonHandle <> 0 Then
+                            If VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
                                 Call ComboShowDropDown(Not ComboGetDroppedState())
                                 Exit Function
                             End If
                         Case vbKeyReturn
-                            If VBFlexGridComboButtonHandle <> 0 Then
+                            If VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
                                 If ComboGetDroppedState() = True Then
                                     Call ComboListCommitSel
                                     Call ComboShowDropDown(False)
@@ -12264,7 +12312,7 @@ Select Case wMsg
             If VBFlexGridEditHandle <> 0 Then
                 If KeyCode = vbKeyReturn Then
                     PostMessage hWnd, WM_CHAR, vbKeyReturn, ByVal 0&
-                ElseIf VBFlexGridComboButtonHandle <> 0 Then
+                ElseIf VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
                     If KeyCode = vbKeyDown Or KeyCode = vbKeyUp Then Call ComboShowDropDown(Not ComboGetDroppedState())
                 End If
             Else
