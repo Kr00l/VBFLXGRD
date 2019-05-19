@@ -4,9 +4,9 @@ Begin VB.Form UserEditingForm
    ClientHeight    =   6900
    ClientLeft      =   120
    ClientTop       =   450
-   ClientWidth     =   12510
+   ClientWidth     =   13830
    ScaleHeight     =   6900
-   ScaleWidth      =   12510
+   ScaleWidth      =   13830
    StartUpPosition =   3  'Windows Default
    Begin VB.Frame Frame2 
       Caption         =   "Edit on return key (by code)"
@@ -70,7 +70,7 @@ Begin VB.Form UserEditingForm
       Cancel          =   -1  'True
       Caption         =   "Cancel"
       Height          =   495
-      Left            =   9720
+      Left            =   11040
       TabIndex        =   9
       Top             =   4800
       Width           =   2655
@@ -81,15 +81,15 @@ Begin VB.Form UserEditingForm
       TabIndex        =   1
       Text            =   "Other control to test validation"
       Top             =   4800
-      Width           =   9375
+      Width           =   10575
    End
    Begin VBFlexGridDemo.VBFlexGrid VBFlexGrid1 
       Height          =   4215
       Left            =   240
       TabIndex        =   0
       Top             =   360
-      Width           =   12135
-      _ExtentX        =   21405
+      Width           =   13455
+      _ExtentX        =   23733
       _ExtentY        =   7435
       Rows            =   25
       Cols            =   12
@@ -104,7 +104,7 @@ Begin VB.Form UserEditingForm
       Left            =   240
       TabIndex        =   10
       Top             =   120
-      Width           =   12135
+      Width           =   13455
    End
 End
 Attribute VB_Name = "UserEditingForm"
@@ -123,8 +123,8 @@ Private Const COL_NOTALLOWED As Long = 6
 Private Const COL_NOCLOSEBYNAVIGATIONKEY As Long = 7
 Private Const COL_SINGLELINE As Long = 8
 Private Const COL_MERGEDCELLS As Long = 9
-Private Const COL_DROPDOWNLIST As Long = 10
-Private Const COL_DROPDOWNCOMBO As Long = 11
+Private Const COL_COMBODROPDOWN As Long = 10
+Private Const COL_COMBOEDITABLE As Long = 11
 
 Private Sub Command1_Click()
 Unload Me
@@ -155,17 +155,19 @@ For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 1 Step 2
     VBFlexGrid1.TextMatrix(i, COL_MERGEDCELLS) = Chr(64 + i)
     VBFlexGrid1.TextMatrix(i + 1, COL_MERGEDCELLS) = Chr(64 + i)
 Next i
-VBFlexGrid1.ColComboEditable(COL_DROPDOWNLIST) = "Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
+VBFlexGrid1.ColComboMode(COL_COMBODROPDOWN) = FlexComboModeDropDown
+VBFlexGrid1.ColComboItems(COL_COMBODROPDOWN) = "Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
-    VBFlexGrid1.TextMatrix(i, COL_DROPDOWNLIST) = "Arnold"
-    VBFlexGrid1.TextMatrix(i + 1, COL_DROPDOWNLIST) = "Bob"
-    VBFlexGrid1.TextMatrix(i + 2, COL_DROPDOWNLIST) = "Charlie"
+    VBFlexGrid1.TextMatrix(i, COL_COMBODROPDOWN) = "Arnold"
+    VBFlexGrid1.TextMatrix(i + 1, COL_COMBODROPDOWN) = "Bob"
+    VBFlexGrid1.TextMatrix(i + 2, COL_COMBODROPDOWN) = "Charlie"
 Next i
-VBFlexGrid1.ColComboEditable(COL_DROPDOWNCOMBO) = "|Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
+VBFlexGrid1.ColComboMode(COL_COMBOEDITABLE) = FlexComboModeEditable
+VBFlexGrid1.ColComboItems(COL_COMBOEDITABLE) = "Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
-    VBFlexGrid1.TextMatrix(i, COL_DROPDOWNCOMBO) = "Arnold"
-    VBFlexGrid1.TextMatrix(i + 1, COL_DROPDOWNCOMBO) = "Bob"
-    VBFlexGrid1.TextMatrix(i + 2, COL_DROPDOWNCOMBO) = "Charlie"
+    VBFlexGrid1.TextMatrix(i, COL_COMBOEDITABLE) = "Arnold"
+    VBFlexGrid1.TextMatrix(i + 1, COL_COMBOEDITABLE) = "Bob"
+    VBFlexGrid1.TextMatrix(i + 2, COL_COMBOEDITABLE) = "Charlie"
 Next i
 VBFlexGrid1.AutoSize 0, VBFlexGrid1.Cols - 1, FlexAutoSizeModeColWidth, FlexAutoSizeScopeAll
 End Sub

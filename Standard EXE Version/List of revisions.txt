@@ -1,5 +1,13 @@
 List of revisions:
 
+20-May-2019
+- Removed ComboEditable/ColComboEditable as it got replaced by ComboMode/ColComboMode and ComboItems/ColComboItems.
+- New ComboMode/ColComboMode property with FlexComboModeConstants
+  - FlexComboModeNone -> No combo button, normal editing.
+  - FlexComboModeDropDown -> Allows to modify by drop-down list only.
+  - FlexComboModeEditable -> Allows to modify by edit and drop-down list.
+- New ComboItems/ColComboItems property that defines the list items to be used when ComboMode is DropDown or Editable.
+
 19-May-2019
 - Bugfix in the Picture property. (related to 08-May-2019 update)
 - Combo button window now drawm themed, if applicable.
