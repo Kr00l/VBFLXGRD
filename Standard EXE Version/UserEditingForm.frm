@@ -92,7 +92,7 @@ Begin VB.Form UserEditingForm
       _ExtentX        =   23733
       _ExtentY        =   7435
       Rows            =   25
-      Cols            =   12
+      Cols            =   13
       AllowUserEditing=   -1  'True
       AllowUserResizing=   3
       MergeCells      =   1
@@ -113,6 +113,19 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
+Private Const CC_RGBINIT As Long = &H1
+Private Type TCHOOSECOLOR
+lStructSize As Long
+hWndOwner As Long
+hInstance As Long
+RGBResult As Long
+lpCustColors As Long
+Flags As Long
+lCustData As Long
+lpfnHook As Long
+lpTemplateName As Long
+End Type
+Private Declare Function ChooseColor Lib "comdlg32" Alias "ChooseColorW" (ByRef lpChooseColor As TCHOOSECOLOR) As Long
 Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
 Private Const COL_NORMAL As Long = 1
 Private Const COL_ONLYNUMBERS As Long = 2
@@ -125,6 +138,7 @@ Private Const COL_SINGLELINE As Long = 8
 Private Const COL_MERGEDCELLS As Long = 9
 Private Const COL_COMBODROPDOWN As Long = 10
 Private Const COL_COMBOEDITABLE As Long = 11
+Private Const COL_COMBOBUTTON As Long = 12
 
 Private Sub Command1_Click()
 Unload Me
@@ -169,6 +183,8 @@ For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
     VBFlexGrid1.TextMatrix(i + 1, COL_COMBOEDITABLE) = "Bob"
     VBFlexGrid1.TextMatrix(i + 2, COL_COMBOEDITABLE) = "Charlie"
 Next i
+VBFlexGrid1.ColComboMode(COL_COMBOBUTTON) = FlexComboModeButton
+VBFlexGrid1.ColComboItems(COL_COMBOBUTTON) = vbNullString
 VBFlexGrid1.AutoSize 0, VBFlexGrid1.Cols - 1, FlexAutoSizeModeColWidth, FlexAutoSizeScopeAll
 End Sub
 
@@ -282,4 +298,32 @@ If Cancel = True Then
         If Cancel = True Then Beep ' Give user a minimal feedback.
     End If
 End If
+End Sub
+
+Private Sub VBFlexGrid1_ComboButtonClick()
+Static CustomColors(0 To 15) As Long, CustomColorsInitialized As Boolean
+Select Case VBFlexGrid1.EditCol
+    Case COL_COMBOBUTTON
+        Dim CHCLR As TCHOOSECOLOR
+        With CHCLR
+        .lStructSize = LenB(CHCLR)
+        .hWndOwner = Me.hWnd
+        .hInstance = App.hInstance
+        .Flags = CC_RGBINIT
+        If CustomColorsInitialized = False Then
+            Dim i As Long, IntValue As Integer
+            For i = 0 To 15
+                IntValue = 255 - (i * 16)
+                CustomColors(i) = RGB(IntValue, IntValue, IntValue)
+            Next i
+            CustomColorsInitialized = True
+        End If
+        .lpCustColors = VarPtr(CustomColors(0))
+        .RGBResult = WinColor(VBFlexGrid1.Cell(FlexCellBackColor, VBFlexGrid1.EditRow, VBFlexGrid1.EditCol))
+        End With
+        If ChooseColor(CHCLR) <> 0 Then
+            VBFlexGrid1.Cell(FlexCellBackColor, VBFlexGrid1.EditRow, VBFlexGrid1.EditCol) = CHCLR.RGBResult
+            VBFlexGrid1.CancelEdit
+        End If
+End Select
 End Sub

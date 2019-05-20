@@ -1,45 +1,26 @@
 List of revisions:
 
-20-May-2019
-- Removed ComboEditable/ColComboEditable as it got replaced by ComboMode/ColComboMode and ComboItems/ColComboItems.
-- New ComboMode/ColComboMode property with FlexComboModeConstants
-  - FlexComboModeNone -> No combo button, normal editing.
+21-May-2019
+- Included the ComboMode/ColComboMode run-time property that allows to use combo functionality when editing a cell.
+  - FlexComboModeNone -> Normal editing.
   - FlexComboModeDropDown -> Allows to modify by drop-down list only.
-  - FlexComboModeEditable -> Allows to modify by edit and drop-down list.
-- New ComboItems/ColComboItems property that defines the list items to be used when ComboMode is DropDown or Editable.
+  - FlexComboModeEditable -> Allows to modify by normal editing and drop-down list.
+  - FlexComboModeButton -> Allows to modify by button only, which is a request to open a custom editor.
+  ComboButton run-time property is helping to interact with the combo button.
+  - FlexComboButtonUnpressed -> Normal state.
+  - FlexComboButtonPressed -> Shows drop-down list or raises ComboButtonClick. (depending on ComboMode)
+  - FlexComboButtonDisabled -> Cannot click, closes up drop-down list if necessary.
+  ComboItems/ColComboItems run-time property defines the strings to be used for a drop-down list.
+  - Each item is separated with "|", if ComboMode is Button this property is ignored.
+  ComboList/ComboListCount/ComboListIndex run-time property are helping to interact with the drop-down list.
+  ComboDropDown/ComboCloseUp event. (Occurs when ComboMode is DropDown or Editable)
+  ComboButtonClick event. (Occurs when ComboMode is Button)
 
 19-May-2019
 - Bugfix in the Picture property. (related to 08-May-2019 update)
-- Combo button window now drawm themed, if applicable.
-
-18-May-2019
-- Bugfix concerning RightToLeftLayout for in-cell editing combo button and combo list window.
-- Combo button window is now being hot-tracked.
-
-16-May-2019
-- Renaming of properties related to 15-May-2019 update:
-  - ComboList -> ComboEditable
-  - ColComboList -> ColComboEditable
-  - ComboItem -> ComboList
-  - ComboCount -> ComboListCount
-  - ComboIndex -> ComboListIndex
-- Incremental search now enabled for the drop-down list when editing a cell.
-
-15-May-2019
-- Renaming of properties related to 13-May-2019 update:
-  - EditDropDownList -> ComboList
-  - EditDroppedDown -> ComboDroppedDown
-  - hWndEditButton -> hWndComboButton
-  - hWndEditList -> hWndComboList
-- Included ComboCount/ComboItem/ComboIndex run-time property that are valid when using drop-down combo lists.
-- Included ComboDropDown/ComboCloseUp event.
-- Included ColComboList run-time property. It works similar to the ComboList property, except it applies to entire columns.
 
 14-May-2019
 - Eliminated run-time limitation of no support for having fixed cell(s) without cell(s). (e.g. FixedRows = 1 and Rows = 1)
-
-13-May-2019
-- Included the EditDropDownList/EditDroppedDown run-time property that allows to use a drop-down list when editing a cell.
 
 10-May-2019
 - Finetuning concerning RightToLeftLayout for in-cell editing window.
