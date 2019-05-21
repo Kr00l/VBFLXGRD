@@ -704,6 +704,7 @@ Private Declare Function ReleaseDC Lib "user32" (ByVal hWnd As Long, ByVal hDC A
 Private Declare Function GetTextMetrics Lib "gdi32" Alias "GetTextMetricsW" (ByVal hDC As Long, ByRef lpMetrics As TEXTMETRIC) As Long
 Private Declare Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As Long
 Private Declare Function GetSysColorBrush Lib "user32" (ByVal nIndex As Long) As Long
+Private Declare Function GetStockObject Lib "gdi32" (ByVal nIndex As Long) As Long
 Private Declare Function SystemParametersInfo Lib "user32" Alias "SystemParametersInfoW" (ByVal uAction As Long, ByVal uiParam As Long, ByRef lpvParam As Long, ByVal fWinIni As Long) As Long
 Private Declare Function SetBkMode Lib "gdi32" (ByVal hDC As Long, ByVal nBkMode As Long) As Long
 Private Declare Function SetLayout Lib "gdi32" (ByVal hDC As Long, ByVal dwLayout As Long) As Long
@@ -769,6 +770,7 @@ Private Const SWP_NOACTIVATE As Long = &H10
 Private Const SWP_SHOWWINDOW As Long = &H40
 Private Const HWND_DESKTOP As Long = &H0
 Private Const COLOR_WINDOW As Long = 5
+Private Const SYSTEM_FONT As Long = 13
 Private Const DCX_WINDOW As Long = &H1
 Private Const DCX_INTERSECTRGN As Long = &H80
 Private Const DCX_USESTYLE As Long = &H10000
@@ -12139,8 +12141,8 @@ Select Case wMsg
                         If IsThemeBackgroundPartiallyTransparent(Theme, ButtonPart, ButtonState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
                         DrawThemeBackground Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
                         OldBkMode = SetBkMode(DIS.hDC, 1)
-                        If VBFlexGridEditHandle <> 0 Then hFontOld = SelectObject(DIS.hDC, SendMessage(VBFlexGridEditHandle, WM_GETFONT, 0, ByVal 0&))
-                        DrawThemeText Theme, DIS.hDC, ButtonPart, ButtonState, StrPtr("..."), 3, DT_SINGLELINE Or DT_EDITCONTROL Or DT_CENTER Or DT_VCENTER, 0, DIS.RCItem
+                        hFontOld = SelectObject(DIS.hDC, GetStockObject(SYSTEM_FONT))
+                        DrawThemeText Theme, DIS.hDC, ButtonPart, ButtonState, StrPtr("..."), 3, DT_SINGLELINE Or DT_EDITCONTROL Or DT_CENTER Or DT_BOTTOM, 0, DIS.RCItem
                         SetBkMode DIS.hDC, OldBkMode
                         If hFontOld <> 0 Then SelectObject DIS.hDC, hFontOld
                     End If
@@ -12160,8 +12162,8 @@ Select Case wMsg
                     DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
                     If CtlType = DFC_BUTTON Then
                         OldBkMode = SetBkMode(DIS.hDC, 1)
-                        If VBFlexGridEditHandle <> 0 Then hFontOld = SelectObject(DIS.hDC, SendMessage(VBFlexGridEditHandle, WM_GETFONT, 0, ByVal 0&))
-                        DrawText DIS.hDC, StrPtr("..."), 3, DIS.RCItem, DT_SINGLELINE Or DT_EDITCONTROL Or DT_CENTER Or DT_VCENTER
+                        hFontOld = SelectObject(DIS.hDC, GetStockObject(SYSTEM_FONT))
+                        DrawText DIS.hDC, StrPtr("..."), 3, DIS.RCItem, DT_SINGLELINE Or DT_EDITCONTROL Or DT_CENTER Or DT_BOTTOM
                         SetBkMode DIS.hDC, OldBkMode
                         If hFontOld <> 0 Then SelectObject DIS.hDC, hFontOld
                     End If
@@ -12183,8 +12185,8 @@ Select Case wMsg
                 DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
                 If CtlType = DFC_BUTTON Then
                     OldBkMode = SetBkMode(DIS.hDC, 1)
-                    If VBFlexGridEditHandle <> 0 Then hFontOld = SelectObject(DIS.hDC, SendMessage(VBFlexGridEditHandle, WM_GETFONT, 0, ByVal 0&))
-                    DrawText DIS.hDC, StrPtr("..."), 3, DIS.RCItem, DT_SINGLELINE Or DT_EDITCONTROL Or DT_CENTER Or DT_VCENTER
+                    hFontOld = SelectObject(DIS.hDC, GetStockObject(SYSTEM_FONT))
+                    DrawText DIS.hDC, StrPtr("..."), 3, DIS.RCItem, DT_SINGLELINE Or DT_EDITCONTROL Or DT_CENTER Or DT_BOTTOM
                     SetBkMode DIS.hDC, OldBkMode
                     If hFontOld <> 0 Then SelectObject DIS.hDC, hFontOld
                 End If
