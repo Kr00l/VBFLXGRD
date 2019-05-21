@@ -824,7 +824,6 @@ Private Const DT_VCENTER As Long = &H4
 Private Const DT_BOTTOM As Long = &H8
 Private Const DT_WORDBREAK As Long = &H10
 Private Const DT_SINGLELINE As Long = &H20
-Private Const DT_EDITCONTROL As Long = &H2000
 Private Const DT_PATH_ELLIPSIS As Long = &H4000
 Private Const DT_END_ELLIPSIS As Long = &H8000&
 Private Const DT_WORD_ELLIPSIS As Long = &H40000
@@ -12085,6 +12084,7 @@ Select Case wMsg
         CopyMemory DIS, ByVal lParam, LenB(DIS)
         If DIS.CtlType = ODT_STATIC And DIS.CtlID = ID_COMBOBUTTONCHILD And DIS.hWndItem = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> 0 Then
             Dim Brush As Long, OldBkMode As Long, hFontOld As Long
+            Dim CalcRect As RECT, Height As Long, Result As Long
             If VBFlexGridEditBackColorBrush <> 0 Then
                 Brush = VBFlexGridEditBackColorBrush
             Else
@@ -12142,7 +12142,11 @@ Select Case wMsg
                         DrawThemeBackground Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
                         OldBkMode = SetBkMode(DIS.hDC, 1)
                         hFontOld = SelectObject(DIS.hDC, GetStockObject(SYSTEM_FONT))
-                        DrawThemeText Theme, DIS.hDC, ButtonPart, ButtonState, StrPtr("..."), 3, DT_SINGLELINE Or DT_EDITCONTROL Or DT_CENTER Or DT_BOTTOM, 0, DIS.RCItem
+                        LSet CalcRect = DIS.RCItem
+                        Height = DrawText(DIS.hDC, StrPtr("..."), 3, CalcRect, DT_SINGLELINE Or DT_CALCRECT)
+                        Result = (((DIS.RCItem.Bottom - DIS.RCItem.Top) - Height) / 2)
+                        If Result > 0 Then DIS.RCItem.Bottom = DIS.RCItem.Bottom - Result
+                        DrawThemeText Theme, DIS.hDC, ButtonPart, ButtonState, StrPtr("..."), 3, DT_SINGLELINE Or DT_CENTER Or DT_BOTTOM, 0, DIS.RCItem
                         SetBkMode DIS.hDC, OldBkMode
                         If hFontOld <> 0 Then SelectObject DIS.hDC, hFontOld
                     End If
@@ -12163,7 +12167,11 @@ Select Case wMsg
                     If CtlType = DFC_BUTTON Then
                         OldBkMode = SetBkMode(DIS.hDC, 1)
                         hFontOld = SelectObject(DIS.hDC, GetStockObject(SYSTEM_FONT))
-                        DrawText DIS.hDC, StrPtr("..."), 3, DIS.RCItem, DT_SINGLELINE Or DT_EDITCONTROL Or DT_CENTER Or DT_BOTTOM
+                        LSet CalcRect = DIS.RCItem
+                        Height = DrawText(DIS.hDC, StrPtr("..."), 3, CalcRect, DT_SINGLELINE Or DT_CALCRECT)
+                        Result = (((DIS.RCItem.Bottom - DIS.RCItem.Top) - Height) / 2)
+                        If Result > 0 Then DIS.RCItem.Bottom = DIS.RCItem.Bottom - Result
+                        DrawText DIS.hDC, StrPtr("..."), 3, DIS.RCItem, DT_SINGLELINE Or DT_CENTER Or DT_BOTTOM
                         SetBkMode DIS.hDC, OldBkMode
                         If hFontOld <> 0 Then SelectObject DIS.hDC, hFontOld
                     End If
@@ -12186,7 +12194,11 @@ Select Case wMsg
                 If CtlType = DFC_BUTTON Then
                     OldBkMode = SetBkMode(DIS.hDC, 1)
                     hFontOld = SelectObject(DIS.hDC, GetStockObject(SYSTEM_FONT))
-                    DrawText DIS.hDC, StrPtr("..."), 3, DIS.RCItem, DT_SINGLELINE Or DT_EDITCONTROL Or DT_CENTER Or DT_BOTTOM
+                    LSet CalcRect = DIS.RCItem
+                    Height = DrawText(DIS.hDC, StrPtr("..."), 3, CalcRect, DT_SINGLELINE Or DT_CALCRECT)
+                    Result = (((DIS.RCItem.Bottom - DIS.RCItem.Top) - Height) / 2)
+                    If Result > 0 Then DIS.RCItem.Bottom = DIS.RCItem.Bottom - Result
+                    DrawText DIS.hDC, StrPtr("..."), 3, DIS.RCItem, DT_SINGLELINE Or DT_CENTER Or DT_BOTTOM
                     SetBkMode DIS.hDC, OldBkMode
                     If hFontOld <> 0 Then SelectObject DIS.hDC, hFontOld
                 End If
