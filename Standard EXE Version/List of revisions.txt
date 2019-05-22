@@ -1,20 +1,21 @@
 List of revisions:
 
-21-May-2019
+22-May-2019
 - Included the ComboMode/ColComboMode run-time property that allows to use combo functionality when editing a cell, it returns/sets.
   - FlexComboModeNone -> Normal editing.
   - FlexComboModeDropDown -> Allows to modify by drop-down list only.
   - FlexComboModeEditable -> Allows to modify by normal editing and drop-down list.
   - FlexComboModeButton -> Allows to modify by button only, which is a request to open a custom editor.
-- Included ComboButton run-time property which is helping to interact with the combo button by code, it returns/sets:
-  - FlexComboButtonUnpressed -> Normal state.
-  - FlexComboButtonPressed -> Shows drop-down list or raises ComboButtonClick. (depending on ComboMode)
-  - FlexComboButtonDisabled -> Cannot click, grayed and closes up drop-down list if necessary.
+- Included the ComboButtonValue run-time property which sets the value of the combo button by code, it returns/sets:
+  - FlexComboButtonValueUnpressed -> Normal.
+  - FlexComboButtonValuePressed -> Shows drop-down list or raises ComboButtonClick. (depending on ComboMode)
+  - FlexComboButtonValueDisabled -> Cannot click, grayed and closes up drop-down list if necessary.
 - Included ComboItems/ColComboItems run-time property defines the strings to be used for a drop-down list.
   Each item is separated with "|". If ComboMode property is Button then this property is ignored.
 - ComboList/ComboListCount/ComboListIndex run-time property are helping to interact with the drop-down list by code.
 - ComboDropDown/ComboCloseUp event, which occurs only when ComboMode is DropDown or Editable.
 - ComboButtonClick event, which occurs only when ComboMode is Button.
+- Included ComboButtonDrawMode run-time property and corresponding ComboButtonOwnerDraw event.
 
 19-May-2019
 - Bugfix in the Picture property. (related to 08-May-2019 update)
