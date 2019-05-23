@@ -1,5 +1,9 @@
 List of revisions:
 
+23-May-2019
+- Usage of SPI_GETFOCUSBORDERWIDTH/SPI_GETFOCUSBORDERHEIGHT for correct focus rect drawing.
+- Minor bugfix related to 14-May-2019 update.
+
 22-May-2019
 - Included the ComboMode/ColComboMode run-time property that allows to use combo functionality when editing a cell, it returns/sets.
   - FlexComboModeNone -> Normal editing.
