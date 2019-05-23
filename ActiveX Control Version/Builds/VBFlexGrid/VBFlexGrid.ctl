@@ -812,8 +812,9 @@ Private Const SB_BOTTOM As Long = 7
 Private Const SM_CXVSCROLL As Long = 2
 Private Const SM_CYHSCROLL As Long = 3
 Private Const SM_CYVSCROLL As Long = 20
-Private Const SM_CXBORDER As Long = &H5
-Private Const SM_CYBORDER As Long = &H6
+Private Const SM_CXHSCROLL As Long = 21
+Private Const SM_CXBORDER As Long = 5
+Private Const SM_CYBORDER As Long = 6
 Private Const SM_CXEDGE As Long = 45
 Private Const SM_CYEDGE As Long = 46
 Private Const SIF_RANGE As Long = &H1
@@ -823,6 +824,8 @@ Private Const SIF_DISABLENOSCROLL As Long = &H8
 Private Const SIF_TRACKPOS As Long = &H10
 Private Const SIF_ALL As Long = (SIF_RANGE Or SIF_PAGE Or SIF_POS Or SIF_TRACKPOS)
 Private Const SPI_GETWHEELSCROLLLINES As Long = &H68
+Private Const SPI_GETFOCUSBORDERHEIGHT As Long = &H2010
+Private Const SPI_GETFOCUSBORDERWIDTH As Long = &H200E
 Private Const RGN_DIFF As Long = 4
 Private Const RGN_COPY As Long = 5
 Private Const DT_NOPREFIX As Long = &H800
@@ -1063,6 +1066,7 @@ Private VBFlexGridComboItems As String
 Private VBFlexGridComboListRect As RECT
 Private VBFlexGridComboButtonClick As Boolean
 Private VBFlexGridWheelScrollLines As Long
+Private VBFlexGridFocusBorder As SIZEAPI
 Private VBFlexGridFocused As Boolean
 Private VBFlexGridNoRedraw As Boolean
 Private VBFlexGridCharCodeCache As Long
@@ -1342,6 +1346,8 @@ VBFlexGridComboMode = FlexComboModeNone
 VBFlexGridComboActiveMode = FlexComboModeNone
 VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal
 SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VBFlexGridWheelScrollLines, 0
+If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VBFlexGridFocusBorder.CX, 0) = 0 Then VBFlexGridFocusBorder.CX = 1
+If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VBFlexGridFocusBorder.CY, 0) = 0 Then VBFlexGridFocusBorder.CY = 1
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -2616,7 +2622,8 @@ End If
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Flags = RCPF_SETSCROLLBARS
-If VBFlexGridRow > (PropRows - 1) Then
+.Row = VBFlexGridRow
+If .Row > (PropRows - 1) Then
     .Mask = .Mask Or RCPM_ROW
     .Row = (PropRows - 1)
 End If
@@ -2632,6 +2639,14 @@ Select Case PropSelectionMode
             .RowSel = (PropRows - 1)
         End If
 End Select
+If .Row < PropFixedRows And PropRows > PropFixedRows Then
+    ' In case there were no scrollable rows before and are now again available.
+    ' Then it is necessary that the active row gets adjusted to the first scrollable row.
+    If Not (.Mask And RCPM_ROW) = RCPM_ROW Then .Mask = .Mask Or RCPM_ROW
+    .Row = PropFixedRows
+    If Not (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then .Mask = .Mask Or RCPM_ROWSEL
+    If PropSelectionMode <> FlexSelectionModeByColumn Then .RowSel = PropFixedRows Else .RowSel = (PropRows - 1)
+End If
 If VBFlexGridTopRow > (PropRows - 1) Then
     .Mask = .Mask Or RCPM_TOPROW
     .Flags = .Flags Or RCPF_CHECKTOPROW
@@ -2697,7 +2712,8 @@ End If
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Flags = RCPF_SETSCROLLBARS
-If VBFlexGridCol > (PropCols - 1) Then
+.Col = VBFlexGridCol
+If .Col > (PropCols - 1) Then
     .Mask = .Mask Or RCPM_COL
     .Col = (PropCols - 1)
 End If
@@ -2713,6 +2729,14 @@ Select Case PropSelectionMode
             .ColSel = (PropCols - 1)
         End If
 End Select
+If .Col < PropFixedCols And PropCols > PropFixedCols Then
+    ' In case there were no scrollable columns before and are now again available.
+    ' Then it is necessary that the active col gets adjusted to the first scrollable column.
+    If Not (.Mask And RCPM_COL) = RCPM_COL Then .Mask = .Mask Or RCPM_COL
+    .Col = PropFixedCols
+    If Not (.Mask And RCPM_COLSEL) = RCPM_COLSEL Then .Mask = .Mask Or RCPM_COLSEL
+    If PropSelectionMode <> FlexSelectionModeByRow Then .ColSel = PropFixedCols Else .ColSel = (PropCols - 1)
+End If
 If VBFlexGridLeftCol > (PropCols - 1) Then
     .Mask = .Mask Or RCPM_LEFTCOL
     .Flags = .Flags Or RCPF_CHECKLEFTCOL
@@ -7961,17 +7985,19 @@ End If
 If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT) = ODS_NOFOCUSRECT Then
     Dim FocusRect As RECT
     With FocusRect
-    .Top = CellRect.Top
     .Left = CellRect.Left
-    If (CellRect.Bottom - 1) > .Top Then .Bottom = CellRect.Bottom - 1 Else .Bottom = CellRect.Bottom + 1
-    If (CellRect.Right - 1) > .Left Then .Right = CellRect.Right - 1 Else .Right = CellRect.Right + 1
+    .Top = CellRect.Top
+    .Right = CellRect.Right - 1
+    .Bottom = CellRect.Bottom - 1
+    If (.Right - VBFlexGridFocusBorder.CX) <= .Left Then .Right = CellRect.Right + 1
+    If (.Bottom - VBFlexGridFocusBorder.CY) <= .Top Then .Bottom = CellRect.Bottom + 1
     DrawFocusRect hDC, FocusRect
     If PropFocusRect = FlexFocusRectHeavy Then
-        If (.Bottom - 1) > (.Top + 1) And (.Right - 1) > (.Left + 1) Then
-            .Top = .Top + 1
-            .Bottom = .Bottom - 1
-            .Left = .Left + 1
-            .Right = .Right - 1
+        If (.Right - VBFlexGridFocusBorder.CX) > (.Left + VBFlexGridFocusBorder.CX) And (.Bottom - VBFlexGridFocusBorder.CY) > (.Top + VBFlexGridFocusBorder.CY) Then
+            .Left = .Left + VBFlexGridFocusBorder.CX
+            .Right = .Right - VBFlexGridFocusBorder.CX
+            .Top = .Top + VBFlexGridFocusBorder.CY
+            .Bottom = .Bottom - VBFlexGridFocusBorder.CY
             DrawFocusRect hDC, FocusRect
         End If
     End If
@@ -8272,17 +8298,19 @@ End If
 If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT) = ODS_NOFOCUSRECT Then
     Dim FocusRect As RECT
     With FocusRect
-    .Top = CellRect.Top
     .Left = CellRect.Left
-    If (CellRect.Bottom - 1) > .Top Then .Bottom = CellRect.Bottom - 1 Else .Bottom = CellRect.Bottom + 1
-    If (CellRect.Right - 1) > .Left Then .Right = CellRect.Right - 1 Else .Right = CellRect.Right + 1
+    .Top = CellRect.Top
+    .Right = CellRect.Right - 1
+    .Bottom = CellRect.Bottom - 1
+    If (.Right - VBFlexGridFocusBorder.CX) <= .Left Then .Right = CellRect.Right + 1
+    If (.Bottom - VBFlexGridFocusBorder.CY) <= .Top Then .Bottom = CellRect.Bottom + 1
     DrawFocusRect hDC, FocusRect
     If PropFocusRect = FlexFocusRectHeavy Then
-        If (.Bottom - 1) > (.Top + 1) And (.Right - 1) > (.Left + 1) Then
-            .Top = .Top + 1
-            .Bottom = .Bottom - 1
-            .Left = .Left + 1
-            .Right = .Right - 1
+        If (.Right - VBFlexGridFocusBorder.CX) > (.Left + VBFlexGridFocusBorder.CX) And (.Bottom - VBFlexGridFocusBorder.CY) > (.Top + VBFlexGridFocusBorder.CY) Then
+            .Left = .Left + VBFlexGridFocusBorder.CX
+            .Right = .Right - VBFlexGridFocusBorder.CX
+            .Top = .Top + VBFlexGridFocusBorder.CY
+            .Bottom = .Bottom - VBFlexGridFocusBorder.CY
             DrawFocusRect hDC, FocusRect
         End If
     End If
@@ -11868,6 +11896,8 @@ Select Case wMsg
         End If
     Case WM_SETTINGCHANGE
         SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VBFlexGridWheelScrollLines, 0
+        If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VBFlexGridFocusBorder.CX, 0) = 0 Then VBFlexGridFocusBorder.CX = 1
+        If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VBFlexGridFocusBorder.CY, 0) = 0 Then VBFlexGridFocusBorder.CY = 1
     Case WM_STYLECHANGED
         If wParam = GWL_EXSTYLE Then
             Dim dwStyleNew As Long
