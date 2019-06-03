@@ -1,5 +1,9 @@
 List of revisions:
 
+03-Jun-2019
+- If drop-down list extends beyond bottom edge of the screen (MinitorFromWindow API) then it will be displayed above the edit window.
+  Just like a normal ComboBox would behave.
+
 23-May-2019
 - Usage of SPI_GETFOCUSBORDERWIDTH/SPI_GETFOCUSBORDERHEIGHT for correct focus rect drawing.
 - Minor bugfix related to 14-May-2019 update.
