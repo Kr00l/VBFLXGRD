@@ -383,6 +383,12 @@ nPage As Long
 nPos As Long
 nTrackPos As Long
 End Type
+Private Type MONITORINFO
+cbSize As Long
+RCMonitor As RECT
+RCWork As RECT
+dwFlags As Long
+End Type
 Private Type TLOCALESIGNATURE
 lsUsb(0 To 15) As Byte
 lsCsbDefault(0 To 1) As Long
@@ -656,6 +662,8 @@ Private Declare Function MoveWindow Lib "user32" (ByVal hWnd As Long, ByVal X As
 Private Declare Function EnableWindow Lib "user32" (ByVal hWnd As Long, ByVal fEnable As Long) As Long
 Private Declare Function IsWindowEnabled Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function IsWindowVisible Lib "user32" (ByVal hWnd As Long) As Long
+Private Declare Function MonitorFromWindow Lib "user32" (ByVal hWnd As Long, ByVal dwFlags As Long) As Long
+Private Declare Function GetMonitorInfo Lib "user32" Alias "GetMonitorInfoW" (ByVal hMonitor As Long, ByRef lpMI As MONITORINFO) As Long
 Private Declare Function LBItemFromPt Lib "comctl32" (ByVal hLB As Long, ByVal PX As Long, ByVal PY As Long, ByVal bAutoScroll As Long) As Long
 Private Declare Function SetFocusAPI Lib "user32" Alias "SetFocus" (ByVal hWnd As Long) As Long
 Private Declare Function GetFocus Lib "user32" () As Long
@@ -780,6 +788,7 @@ Private Const SWP_SHOWWINDOW As Long = &H40
 Private Const HWND_DESKTOP As Long = &H0
 Private Const COLOR_WINDOW As Long = 5
 Private Const SYSTEM_FONT As Long = 13
+Private Const MONITOR_DEFAULTTOPRIMARY As Long = &H1
 Private Const DCX_WINDOW As Long = &H1
 Private Const DCX_INTERSECTRGN As Long = &H80
 Private Const DCX_USESTYLE As Long = &H10000
@@ -923,6 +932,7 @@ Private Const SW_SHOW As Long = &H5
 Private Const SW_SHOWNA As Long = &H8
 Private Const WM_SETFOCUS As Long = &H7
 Private Const WM_KILLFOCUS As Long = &H8
+Private Const WM_SHOWWINDOW As Long = &H18
 Private Const WM_COMMAND As Long = &H111
 Private Const WM_THEMECHANGED As Long = &H31A
 Private Const WM_KEYDOWN As Long = &H100
@@ -3904,7 +3914,7 @@ If VBFlexGridEditHandle <> 0 Then
             dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
             If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
             If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
-            SetRect VBFlexGridComboListRect, CellRangeRect.Left, EditRect.Bottom, CellRangeRect.Right, EditRect.Bottom
+            SetRect VBFlexGridComboListRect, CellRangeRect.Left, EditRect.Top, CellRangeRect.Right, EditRect.Bottom
             Dim WndRect As RECT
             LSet WndRect = VBFlexGridComboListRect
             MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
@@ -11330,7 +11340,7 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
             SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
             If VBFlexGridComboListHandle <> 0 Then
                 Dim WndRect As RECT
-                SetRect VBFlexGridComboListRect, RC.Left, RC.Bottom, RC.Right, RC.Bottom
+                SetRect VBFlexGridComboListRect, RC.Left, RC.Top, RC.Right, RC.Bottom
                 LSet WndRect = VBFlexGridComboListRect
                 MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
                 SetWindowPos VBFlexGridComboListHandle, 0, WndRect.Left, WndRect.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
@@ -11352,10 +11362,19 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGrid
             SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or ODS_SELECTED
             InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
             If IsWindowVisible(VBFlexGridComboListHandle) = 0 Then
-                Dim WndRect As RECT
-                LSet WndRect = VBFlexGridComboListRect
-                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
-                SetWindowPos VBFlexGridComboListHandle, 0, WndRect.Left, WndRect.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
+                Dim WndRect(0 To 1) As RECT
+                LSet WndRect(0) = VBFlexGridComboListRect
+                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect(0), 2
+                GetWindowRect VBFlexGridComboListHandle, WndRect(1)
+                Dim hMonitor As Long, MI As MONITORINFO
+                hMonitor = MonitorFromWindow(VBFlexGridEditHandle, MONITOR_DEFAULTTOPRIMARY)
+                MI.cbSize = LenB(MI)
+                GetMonitorInfo hMonitor, MI
+                If (WndRect(0).Bottom + (WndRect(1).Bottom - WndRect(1).Top)) > MI.RCMonitor.Bottom Then
+                    SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Top - (WndRect(1).Bottom - WndRect(1).Top), 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
+                Else
+                    SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
+                End If
             End If
             SetCapture VBFlexGridComboListHandle
         End If
@@ -12650,15 +12669,20 @@ WindowProcComboButton = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
 End Function
 
 Private Function WindowProcComboList(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-Static NonClientMouseOver As Boolean
+Static NonClientMouseOver As Boolean, LastMouseMoveLParam As Long
 Select Case wMsg
     Case WM_MOUSEACTIVATE
         ' To prevent the popup window from being activated it is necessary to return MA_NOACTIVATE.
         WindowProcComboList = MA_NOACTIVATE
         Exit Function
+    Case WM_SHOWWINDOW
+        LastMouseMoveLParam = 0
     Case WM_MOUSEMOVE
         If SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos()) = HTVSCROLL Then ReleaseCapture
-        ComboListSelFromPt Get_X_lParam(lParam), Get_Y_lParam(lParam)
+        If LastMouseMoveLParam <> lParam Or LastMouseMoveLParam = 0 Then
+            ComboListSelFromPt Get_X_lParam(lParam), Get_Y_lParam(lParam)
+            LastMouseMoveLParam = lParam
+        End If
     Case WM_NCMOUSEMOVE
         If NonClientMouseOver = False Then
             NonClientMouseOver = True
