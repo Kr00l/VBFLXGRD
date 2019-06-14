@@ -1,254 +1,266 @@
 VERSION 5.00
 Begin VB.Form MainForm 
    Caption         =   "VBFlexGrid Demo"
-   ClientHeight    =   7545
+   ClientHeight    =   7590
    ClientLeft      =   165
    ClientTop       =   555
    ClientWidth     =   13830
    KeyPreview      =   -1  'True
-   ScaleHeight     =   7545
+   ScaleHeight     =   7590
    ScaleWidth      =   13830
-   Begin VB.CommandButton Command21 
-      Caption         =   "DragRow"
-      Height          =   315
-      Left            =   12360
-      TabIndex        =   30
-      Top             =   7080
-      Width           =   1335
-   End
-   Begin VB.CommandButton Command20 
-      Caption         =   "RowHidden"
-      Height          =   315
-      Left            =   12360
-      TabIndex        =   29
-      Top             =   6720
-      Width           =   1335
-   End
-   Begin VB.CommandButton Command19 
-      Caption         =   "Open UserEditing Demo (in-cell editing)"
-      Height          =   315
-      Left            =   9480
-      TabIndex        =   24
-      Top             =   6360
-      Width           =   4215
-   End
-   Begin VB.Frame Frame3 
-      Caption         =   "Sorting"
-      Height          =   1575
-      Left            =   6960
-      TabIndex        =   17
-      Top             =   5880
-      Width           =   2415
-      Begin VB.ComboBox Combo2 
-         Height          =   315
-         Left            =   120
-         Style           =   2  'Dropdown List
-         TabIndex        =   21
-         Top             =   1080
-         Width           =   2175
-      End
-      Begin VB.CommandButton Command17 
-         Caption         =   "Sort Asc"
-         Height          =   315
-         Left            =   120
-         TabIndex        =   18
-         Top             =   240
-         Width           =   975
-      End
-      Begin VB.CommandButton Command18 
-         Caption         =   "Sort Desc"
-         Height          =   315
-         Left            =   1200
-         TabIndex        =   19
-         Top             =   240
-         Width           =   975
-      End
-      Begin VB.Label Label2 
-         Caption         =   "SortType"
-         Height          =   255
-         Left            =   120
-         TabIndex        =   20
-         Top             =   840
-         Width           =   2175
-      End
-   End
-   Begin VB.CheckBox Check1 
-      Caption         =   "Partial Search"
-      Height          =   255
-      Left            =   10920
-      TabIndex        =   28
-      Top             =   7080
-      Width           =   1335
-   End
-   Begin VB.CommandButton Command16 
-      Caption         =   "FindItem"
-      Height          =   315
-      Left            =   10920
-      TabIndex        =   27
-      Top             =   6720
-      Width           =   1335
-   End
-   Begin VB.CommandButton Command8 
-      Caption         =   "Get .Clip"
-      Height          =   315
-      Left            =   9480
-      TabIndex        =   25
-      Top             =   6720
-      Width           =   1335
-   End
-   Begin VB.CommandButton Command9 
-      Caption         =   "Set .Clip"
-      Height          =   315
-      Left            =   9480
-      TabIndex        =   26
-      Top             =   7080
-      Width           =   1335
-   End
-   Begin VB.CommandButton Command7 
-      Caption         =   "Printscreen To Clipboard"
-      Height          =   315
-      Left            =   11640
-      TabIndex        =   23
-      Top             =   6000
-      Width           =   2055
-   End
-   Begin VB.CommandButton Command6 
-      Caption         =   "Show Property Pages"
-      Height          =   315
-      Left            =   9480
-      TabIndex        =   22
-      Top             =   6000
-      Width           =   2055
-   End
-   Begin VB.Frame Frame2 
-      Caption         =   "Cell"
-      Height          =   1455
-      Left            =   2760
-      TabIndex        =   7
-      Top             =   6000
-      Width           =   4095
-      Begin VB.CommandButton Command15 
-         Caption         =   "ClearFont"
-         Height          =   315
-         Left            =   2760
-         TabIndex        =   16
-         Top             =   960
-         Width           =   1215
-      End
-      Begin VB.CommandButton Command14 
-         Caption         =   "Font"
-         Height          =   315
-         Left            =   2760
-         TabIndex        =   13
-         Top             =   600
-         Width           =   1215
-      End
-      Begin VB.CommandButton Command13 
-         Caption         =   "ToolTipText"
-         Height          =   315
-         Left            =   2760
-         TabIndex        =   10
-         Top             =   240
-         Width           =   1215
-      End
-      Begin VB.CommandButton Command12 
-         Caption         =   "ClearAll"
-         Height          =   315
-         Left            =   1440
-         TabIndex        =   15
-         Top             =   960
-         Width           =   1215
-      End
-      Begin VB.CommandButton Command11 
-         Caption         =   "ClearContent"
-         Height          =   315
-         Left            =   120
-         TabIndex        =   14
-         Top             =   960
-         Width           =   1215
-      End
-      Begin VB.CommandButton Command10 
-         Caption         =   "EnsureVisible"
-         Height          =   315
-         Left            =   1440
-         TabIndex        =   12
-         Top             =   600
-         Width           =   1215
-      End
-      Begin VB.CommandButton Command5 
-         Caption         =   "Text"
-         Height          =   315
-         Left            =   120
-         TabIndex        =   11
-         Top             =   600
-         Width           =   1215
-      End
-      Begin VB.CommandButton Command4 
-         Caption         =   "ForeColor"
-         Height          =   315
-         Left            =   1440
-         TabIndex        =   9
-         Top             =   240
-         Width           =   1215
-      End
-      Begin VB.CommandButton Command3 
-         Caption         =   "BackColor"
-         Height          =   315
-         Left            =   120
-         TabIndex        =   8
-         Top             =   240
-         Width           =   1215
-      End
-   End
-   Begin VB.Frame Frame1 
-      Caption         =   "CellPicture"
-      Height          =   1455
-      Left            =   120
+   Begin VB.PictureBox PicturePanel 
+      Align           =   2  'Align Bottom
+      BorderStyle     =   0  'None
+      Height          =   1695
+      Left            =   0
+      ScaleHeight     =   1695
+      ScaleWidth      =   13830
       TabIndex        =   1
-      Top             =   6000
-      Width           =   2415
-      Begin VB.PictureBox Picture1 
-         Height          =   375
-         Left            =   120
-         Picture         =   "MainForm.frx":0000
-         ScaleHeight     =   315
-         ScaleWidth      =   435
-         TabIndex        =   2
-         TabStop         =   0   'False
-         Top             =   240
-         Width           =   495
-      End
-      Begin VB.ComboBox Combo1 
+      TabStop         =   0   'False
+      Top             =   5895
+      Width           =   13830
+      Begin VB.CommandButton Command9 
+         Caption         =   "Set .Clip"
          Height          =   315
-         Left            =   120
-         Style           =   2  'Dropdown List
-         TabIndex        =   6
-         Top             =   960
-         Width           =   2175
+         Left            =   9480
+         TabIndex        =   27
+         Top             =   1200
+         Width           =   1335
       End
-      Begin VB.CommandButton Command2 
-         Caption         =   "Clear"
-         Height          =   315
-         Left            =   1560
-         TabIndex        =   4
-         Top             =   240
-         Width           =   735
-      End
-      Begin VB.CommandButton Command1 
-         Caption         =   "Set"
-         Height          =   315
-         Left            =   720
-         TabIndex        =   3
-         Top             =   240
-         Width           =   735
-      End
-      Begin VB.Label Label1 
-         Caption         =   "CellPictureAlignment"
+      Begin VB.CheckBox Check1 
+         Caption         =   "Partial Search"
          Height          =   255
+         Left            =   10920
+         TabIndex        =   29
+         Top             =   1200
+         Width           =   1335
+      End
+      Begin VB.CommandButton Command21 
+         Caption         =   "DragRow"
+         Height          =   315
+         Left            =   12360
+         TabIndex        =   31
+         Top             =   1200
+         Width           =   1335
+      End
+      Begin VB.CommandButton Command8 
+         Caption         =   "Get .Clip"
+         Height          =   315
+         Left            =   9480
+         TabIndex        =   26
+         Top             =   840
+         Width           =   1335
+      End
+      Begin VB.CommandButton Command16 
+         Caption         =   "FindItem"
+         Height          =   315
+         Left            =   10920
+         TabIndex        =   28
+         Top             =   840
+         Width           =   1335
+      End
+      Begin VB.CommandButton Command20 
+         Caption         =   "RowHidden"
+         Height          =   315
+         Left            =   12360
+         TabIndex        =   30
+         Top             =   840
+         Width           =   1335
+      End
+      Begin VB.CommandButton Command6 
+         Caption         =   "Show Property Pages"
+         Height          =   315
+         Left            =   9480
+         TabIndex        =   23
+         Top             =   120
+         Width           =   2055
+      End
+      Begin VB.CommandButton Command7 
+         Caption         =   "Printscreen To Clipboard"
+         Height          =   315
+         Left            =   11640
+         TabIndex        =   24
+         Top             =   120
+         Width           =   2055
+      End
+      Begin VB.CommandButton Command19 
+         Caption         =   "Open UserEditing Demo (in-cell editing)"
+         Height          =   315
+         Left            =   9480
+         TabIndex        =   25
+         Top             =   480
+         Width           =   4215
+      End
+      Begin VB.Frame Frame3 
+         Caption         =   "Sorting"
+         Height          =   1455
+         Left            =   6840
+         TabIndex        =   18
+         Top             =   120
+         Width           =   2415
+         Begin VB.CommandButton Command18 
+            Caption         =   "Sort Desc"
+            Height          =   315
+            Left            =   1200
+            TabIndex        =   20
+            Top             =   240
+            Width           =   975
+         End
+         Begin VB.CommandButton Command17 
+            Caption         =   "Sort Asc"
+            Height          =   315
+            Left            =   120
+            TabIndex        =   19
+            Top             =   240
+            Width           =   975
+         End
+         Begin VB.ComboBox Combo2 
+            Height          =   315
+            Left            =   120
+            Style           =   2  'Dropdown List
+            TabIndex        =   22
+            Top             =   960
+            Width           =   2175
+         End
+         Begin VB.Label Label2 
+            Caption         =   "SortType"
+            Height          =   255
+            Left            =   120
+            TabIndex        =   21
+            Top             =   720
+            Width           =   2175
+         End
+      End
+      Begin VB.Frame Frame2 
+         Caption         =   "Cell"
+         Height          =   1455
+         Left            =   2640
+         TabIndex        =   8
+         Top             =   120
+         Width           =   4095
+         Begin VB.CommandButton Command3 
+            Caption         =   "BackColor"
+            Height          =   315
+            Left            =   120
+            TabIndex        =   9
+            Top             =   240
+            Width           =   1215
+         End
+         Begin VB.CommandButton Command4 
+            Caption         =   "ForeColor"
+            Height          =   315
+            Left            =   1440
+            TabIndex        =   10
+            Top             =   240
+            Width           =   1215
+         End
+         Begin VB.CommandButton Command5 
+            Caption         =   "Text"
+            Height          =   315
+            Left            =   120
+            TabIndex        =   12
+            Top             =   600
+            Width           =   1215
+         End
+         Begin VB.CommandButton Command10 
+            Caption         =   "EnsureVisible"
+            Height          =   315
+            Left            =   1440
+            TabIndex        =   13
+            Top             =   600
+            Width           =   1215
+         End
+         Begin VB.CommandButton Command11 
+            Caption         =   "ClearContent"
+            Height          =   315
+            Left            =   120
+            TabIndex        =   15
+            Top             =   960
+            Width           =   1215
+         End
+         Begin VB.CommandButton Command12 
+            Caption         =   "ClearAll"
+            Height          =   315
+            Left            =   1440
+            TabIndex        =   16
+            Top             =   960
+            Width           =   1215
+         End
+         Begin VB.CommandButton Command13 
+            Caption         =   "ToolTipText"
+            Height          =   315
+            Left            =   2760
+            TabIndex        =   11
+            Top             =   240
+            Width           =   1215
+         End
+         Begin VB.CommandButton Command14 
+            Caption         =   "Font"
+            Height          =   315
+            Left            =   2760
+            TabIndex        =   14
+            Top             =   600
+            Width           =   1215
+         End
+         Begin VB.CommandButton Command15 
+            Caption         =   "ClearFont"
+            Height          =   315
+            Left            =   2760
+            TabIndex        =   17
+            Top             =   960
+            Width           =   1215
+         End
+      End
+      Begin VB.Frame Frame1 
+         Caption         =   "CellPicture"
+         Height          =   1455
          Left            =   120
-         TabIndex        =   5
-         Top             =   720
-         Width           =   2175
+         TabIndex        =   2
+         Top             =   120
+         Width           =   2415
+         Begin VB.CommandButton Command1 
+            Caption         =   "Set"
+            Height          =   315
+            Left            =   720
+            TabIndex        =   4
+            Top             =   240
+            Width           =   735
+         End
+         Begin VB.CommandButton Command2 
+            Caption         =   "Clear"
+            Height          =   315
+            Left            =   1560
+            TabIndex        =   5
+            Top             =   240
+            Width           =   735
+         End
+         Begin VB.ComboBox Combo1 
+            Height          =   315
+            Left            =   120
+            Style           =   2  'Dropdown List
+            TabIndex        =   7
+            Top             =   960
+            Width           =   2175
+         End
+         Begin VB.PictureBox Picture1 
+            Height          =   375
+            Left            =   120
+            Picture         =   "MainForm.frx":0000
+            ScaleHeight     =   315
+            ScaleWidth      =   435
+            TabIndex        =   3
+            TabStop         =   0   'False
+            Top             =   240
+            Width           =   495
+         End
+         Begin VB.Label Label1 
+            Caption         =   "CellPictureAlignment"
+            Height          =   255
+            Left            =   120
+            TabIndex        =   6
+            Top             =   720
+            Width           =   2175
+         End
       End
    End
    Begin VBFlexGridDemo.VBFlexGrid VBFlexGrid1 
@@ -256,8 +268,8 @@ Begin VB.Form MainForm
       Left            =   120
       TabIndex        =   0
       Top             =   120
-      Width           =   13335
-      _ExtentX        =   23521
+      Width           =   13575
+      _ExtentX        =   23945
       _ExtentY        =   9975
       Rows            =   150
       Cols            =   20
@@ -268,7 +280,7 @@ Begin VB.Form MainForm
    Begin VB.Label Label3 
       Height          =   315
       Left            =   12360
-      TabIndex        =   31
+      TabIndex        =   32
       Top             =   7080
       Width           =   1335
    End
@@ -374,6 +386,18 @@ With Combo1
 .ItemData(.NewIndex) = FlexPictureAlignmentStretch
 .AddItem FlexPictureAlignmentTile & " - Tile"
 .ItemData(.NewIndex) = FlexPictureAlignmentTile
+.AddItem FlexPictureAlignmentLeftTopNoOverlap & " - LeftTopNoOverlap"
+.ItemData(.NewIndex) = FlexPictureAlignmentLeftTopNoOverlap
+.AddItem FlexPictureAlignmentLeftCenterNoOverlap & " - LeftCenterNoOverlap"
+.ItemData(.NewIndex) = FlexPictureAlignmentLeftCenterNoOverlap
+.AddItem FlexPictureAlignmentLeftBottomNoOverlap & " - LeftBottomNoOverlap"
+.ItemData(.NewIndex) = FlexPictureAlignmentLeftBottomNoOverlap
+.AddItem FlexPictureAlignmentRightTopNoOverlap & " - RightTopNoOverlap"
+.ItemData(.NewIndex) = FlexPictureAlignmentRightTopNoOverlap
+.AddItem FlexPictureAlignmentRightCenterNoOverlap & " - RightCenterNoOverlap"
+.ItemData(.NewIndex) = FlexPictureAlignmentRightCenterNoOverlap
+.AddItem FlexPictureAlignmentRightBottomNoOverlap & " - RightBottomNoOverlap"
+.ItemData(.NewIndex) = FlexPictureAlignmentRightBottomNoOverlap
 .ListIndex = 0
 End With
 With Combo2
@@ -388,9 +412,11 @@ End With
 End Sub
 
 Private Sub Form_Resize()
-Dim Width As Single
+Dim Width As Single, Height As Single
 Width = Me.ScaleWidth - VBFlexGrid1.Left - Me.ScaleX(8, vbPixels, Me.ScaleMode)
+Height = Me.ScaleHeight - (PicturePanel.Height) - Me.ScaleY(8, vbPixels, Me.ScaleMode)
 If Width > 0 Then VBFlexGrid1.Width = Width
+If Height > 0 Then VBFlexGrid1.Height = Height
 End Sub
 
 Private Sub VBFlexGrid1_DividerDblClick(ByVal Row As Long, ByVal Col As Long)
