@@ -1,5 +1,8 @@
 List of revisions:
 
+14-Jun-2019
+- Included additional PictureAlignment enum constants to allow pictures to not overlap with the text.
+
 03-Jun-2019
 - If drop-down list extends beyond bottom edge of the screen (MinitorFromWindow API) then it will be displayed above the edit window.
   Just like a normal ComboBox would behave.
