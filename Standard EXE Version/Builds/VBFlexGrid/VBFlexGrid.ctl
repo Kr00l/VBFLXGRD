@@ -37,7 +37,7 @@ Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaise
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
 Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
 Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral
-Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
 Private FlexRowSizingModeIndividual, FlexRowSizingModeAll
 Private FlexMergeCellsNever, FlexMergeCellsFree, FlexMergeCellsRestrictRows, FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll, FlexMergeCellsFixedOnly
 Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending
@@ -152,6 +152,12 @@ FlexPictureAlignmentRightCenter = 7
 FlexPictureAlignmentRightBottom = 8
 FlexPictureAlignmentStretch = 9
 FlexPictureAlignmentTile = 10
+FlexPictureAlignmentLeftTopNoOverlap = 20
+FlexPictureAlignmentLeftCenterNoOverlap = 21
+FlexPictureAlignmentLeftBottomNoOverlap = 22
+FlexPictureAlignmentRightTopNoOverlap = 26
+FlexPictureAlignmentRightCenterNoOverlap = 27
+FlexPictureAlignmentRightBottomNoOverlap = 28
 End Enum
 Public Enum FlexRowSizingModeConstants
 FlexRowSizingModeIndividual = 0
@@ -5856,7 +5862,7 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Select Case Value
-    Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+    Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
     Case Else
         Err.Raise Number:=30005, Description:="Invalid Alignment value"
 End Select
@@ -7865,8 +7871,14 @@ If PropFocusRect <> FlexFocusRectNone Then
     If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
-Dim Text As String
+Dim Text As String, TextRect As RECT
 Call GetCellText(iRow, iCol, Text)
+With TextRect
+.Left = CellRect.Left + VBFlexGridDrawInfo.TextWidthSpacing
+.Top = CellRect.Top + VBFlexGridDrawInfo.TextHeightSpacing
+.Right = CellRect.Right - VBFlexGridDrawInfo.TextWidthSpacing
+.Bottom = CellRect.Bottom - VBFlexGridDrawInfo.TextHeightSpacing
+End With
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
 Dim hFontTemp As Long, hFontOld As Long
 If Not .FontName = vbNullString Then
@@ -7911,9 +7923,9 @@ If Not .Picture Is Nothing Then
         PictureLeft = CellRect.Left
         PictureTop = CellRect.Top
         Select Case .PictureAlignment
-            Case FlexPictureAlignmentLeftCenter
+            Case FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftCenterNoOverlap
                 PictureOffsetY = (((CellRect.Bottom - CellRect.Top) - PictureHeight) / 2)
-            Case FlexPictureAlignmentLeftBottom
+            Case FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftBottomNoOverlap
                 PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
             Case FlexPictureAlignmentCenterTop
                 PictureOffsetX = (((CellRect.Right - CellRect.Left) - PictureWidth) / 2)
@@ -7923,12 +7935,12 @@ If Not .Picture Is Nothing Then
             Case FlexPictureAlignmentCenterBottom
                 PictureOffsetX = (((CellRect.Right - CellRect.Left) - PictureWidth) / 2)
                 PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
-            Case FlexPictureAlignmentRightTop
+            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightTopNoOverlap
                 PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
-            Case FlexPictureAlignmentRightCenter
+            Case FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightCenterNoOverlap
                 PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
                 PictureOffsetY = (((CellRect.Bottom - CellRect.Top) - PictureHeight) / 2)
-            Case FlexPictureAlignmentRightBottom
+            Case FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightBottomNoOverlap
                 PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
                 PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
         End Select
@@ -7946,6 +7958,12 @@ If Not .Picture Is Nothing Then
                 PictureTop = CellRect.Top
             Loop While PictureLeft < CellRect.Right
         End If
+        Select Case .PictureAlignment
+            Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                TextRect.Left = TextRect.Left + PictureWidth
+            Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                TextRect.Right = TextRect.Right - PictureWidth
+        End Select
     End If
 End If
 Dim OldTextColor As Long
@@ -8014,13 +8032,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End With
 End If
 If Not Text = vbNullString Then
-    Dim TextRect As RECT, TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, Format As Long
-    With TextRect
-    .Left = CellRect.Left + VBFlexGridDrawInfo.TextWidthSpacing
-    .Top = CellRect.Top + VBFlexGridDrawInfo.TextHeightSpacing
-    .Right = CellRect.Right - VBFlexGridDrawInfo.TextWidthSpacing
-    .Bottom = CellRect.Bottom - VBFlexGridDrawInfo.TextHeightSpacing
-    End With
+    Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, Format As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyleFixed
     Else
@@ -8170,8 +8182,14 @@ If PropFocusRect <> FlexFocusRectNone Then
     If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
-Dim Text As String
+Dim Text As String, TextRect As RECT
 Call GetCellText(iRow, iCol, Text)
+With TextRect
+.Left = CellRect.Left + VBFlexGridDrawInfo.TextWidthSpacing
+.Top = CellRect.Top + VBFlexGridDrawInfo.TextHeightSpacing
+.Right = CellRect.Right - VBFlexGridDrawInfo.TextWidthSpacing
+.Bottom = CellRect.Bottom - VBFlexGridDrawInfo.TextHeightSpacing
+End With
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
 Dim hFontTemp As Long, hFontOld As Long
 If Not .FontName = vbNullString Then
@@ -8224,9 +8242,9 @@ If Not .Picture Is Nothing Then
         PictureLeft = CellRect.Left
         PictureTop = CellRect.Top
         Select Case .PictureAlignment
-            Case FlexPictureAlignmentLeftCenter
+            Case FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftCenterNoOverlap
                 PictureOffsetY = (((CellRect.Bottom - CellRect.Top) - PictureHeight) / 2)
-            Case FlexPictureAlignmentLeftBottom
+            Case FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftBottomNoOverlap
                 PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
             Case FlexPictureAlignmentCenterTop
                 PictureOffsetX = (((CellRect.Right - CellRect.Left) - PictureWidth) / 2)
@@ -8236,12 +8254,12 @@ If Not .Picture Is Nothing Then
             Case FlexPictureAlignmentCenterBottom
                 PictureOffsetX = (((CellRect.Right - CellRect.Left) - PictureWidth) / 2)
                 PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
-            Case FlexPictureAlignmentRightTop
+            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightTopNoOverlap
                 PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
-            Case FlexPictureAlignmentRightCenter
+            Case FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightCenterNoOverlap
                 PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
                 PictureOffsetY = (((CellRect.Bottom - CellRect.Top) - PictureHeight) / 2)
-            Case FlexPictureAlignmentRightBottom
+            Case FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightBottomNoOverlap
                 PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
                 PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
         End Select
@@ -8259,6 +8277,12 @@ If Not .Picture Is Nothing Then
                 PictureTop = CellRect.Top
             Loop While PictureLeft < CellRect.Right
         End If
+        Select Case .PictureAlignment
+            Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                TextRect.Left = TextRect.Left + PictureWidth
+            Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                TextRect.Right = TextRect.Right - PictureWidth
+        End Select
     End If
 End If
 Dim OldTextColor As Long
@@ -8327,13 +8351,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End With
 End If
 If Not Text = vbNullString Then
-    Dim TextRect As RECT, TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, Format As Long
-    With TextRect
-    .Left = CellRect.Left + VBFlexGridDrawInfo.TextWidthSpacing
-    .Top = CellRect.Top + VBFlexGridDrawInfo.TextHeightSpacing
-    .Right = CellRect.Right - VBFlexGridDrawInfo.TextWidthSpacing
-    .Bottom = CellRect.Bottom - VBFlexGridDrawInfo.TextHeightSpacing
-    End With
+    Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, Format As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyle
     Else
