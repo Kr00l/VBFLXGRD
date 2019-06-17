@@ -54,7 +54,7 @@ Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollabl
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
 Private FlexFindDirectionDown, FlexFindDirectionUp
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
-Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick
+Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
 Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
@@ -282,6 +282,7 @@ FlexEditReasonF2 = 1
 FlexEditReasonSpace = 2
 FlexEditReasonKeyPress = 3
 FlexEditReasonDblClick = 4
+FlexEditReasonBackSpace = 5
 End Enum
 Public Enum FlexEditCloseModeConstants
 FlexEditCloseModeCode = 0
@@ -539,6 +540,7 @@ Merge As Boolean
 Sort As FlexSortConstants
 ComboMode As FlexComboModeConstants
 ComboItems As String
+Format As String
 End Type
 Private Type TCOLS
 Cols() As TCELL
@@ -3903,12 +3905,16 @@ If VBFlexGridEditHandle <> 0 Then
         SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X() - 1, (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X()))
     End If
     SendMessage VBFlexGridEditHandle, WM_SETTEXT, 0, ByVal StrPtr(Text)
-    SendMessage VBFlexGridEditHandle, EM_SETSEL, 0, ByVal -1&
-    If Not (dwStyle And ES_READONLY) = ES_READONLY Then
-        If Reason = FlexEditReasonSpace Then SendMessage VBFlexGridEditHandle, EM_SETSEL, -1, ByVal -1&
-    End If
     VBFlexGridEditTextChanged = False
     VBFlexGridEditAlreadyValidated = False
+    SendMessage VBFlexGridEditHandle, EM_SETSEL, 0, ByVal -1&
+    If Not (dwStyle And ES_READONLY) = ES_READONLY Then
+        If Reason = FlexEditReasonSpace Then
+            SendMessage VBFlexGridEditHandle, EM_SETSEL, -1, ByVal -1&
+        ElseIf Reason = FlexEditReasonBackSpace Then
+            SendMessage VBFlexGridEditHandle, EM_REPLACESEL, 1, ByVal 0&
+        End If
+    End If
     If ComboButtonWidth > 0 Then
         dwStyle = WS_CHILD Or SS_OWNERDRAW Or SS_NOTIFY
         dwExStyle = 0
@@ -5270,6 +5276,7 @@ End Property
 Public Property Get ColComboItems(ByVal Index As Long) As String
 Attribute ColComboItems.VB_Description = "Returns/sets the items to be used for the drop-down list when editing a cell for the specified column."
 Attribute ColComboItems.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 ColComboItems = VBFlexGridColsInfo(Index).ComboItems
 End Property
 
@@ -5283,6 +5290,26 @@ Else
         VBFlexGridColsInfo(i).ComboItems = Value
     Next i
 End If
+End Property
+
+Public Property Get ColFormat(ByVal Index As Long) As String
+Attribute ColFormat.VB_Description = "Returns/sets the format used to display numeric values."
+Attribute ColFormat.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColFormat = VBFlexGridColsInfo(Index).Format
+End Property
+
+Public Property Let ColFormat(ByVal Index As Long, ByVal Value As String)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).Format = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).Format = Value
+    Next i
+End If
+Call RedrawGrid
 End Property
 
 Public Property Get MergeRow(ByVal Index As Long) As Boolean
@@ -8032,7 +8059,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End With
 End If
 If Not Text = vbNullString Then
-    Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, Format As Long
+    Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyleFixed
     Else
@@ -8047,54 +8074,55 @@ If Not Text = vbNullString Then
     Else
         Alignment = .Alignment
     End If
-    Format = DT_NOPREFIX
-    If VBFlexGridRTLReading = True Then Format = Format Or DT_RTLREADING
+    DrawFlags = DT_NOPREFIX
+    If VBFlexGridRTLReading = True Then DrawFlags = DrawFlags Or DT_RTLREADING
     Select Case Alignment
         Case FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom
-            Format = Format Or DT_LEFT
+            DrawFlags = DrawFlags Or DT_LEFT
         Case FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom
-            Format = Format Or DT_CENTER
+            DrawFlags = DrawFlags Or DT_CENTER
         Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
-            Format = Format Or DT_RIGHT
+            DrawFlags = DrawFlags Or DT_RIGHT
         Case FlexAlignmentGeneral
             If Not IsNumeric(Text) Then
-                Format = Format Or DT_LEFT
+                DrawFlags = DrawFlags Or DT_LEFT
             Else
-                Format = Format Or DT_RIGHT
+                DrawFlags = DrawFlags Or DT_RIGHT
             End If
     End Select
     If PropWordWrap = True Then
-        Format = Format Or DT_WORDBREAK
+        DrawFlags = DrawFlags Or DT_WORDBREAK
     ElseIf PropSingleLine = True Then
-        Format = Format Or DT_SINGLELINE
+        DrawFlags = DrawFlags Or DT_SINGLELINE
     End If
     Select Case PropEllipsisFormatFixed
         Case FlexEllipsisFormatEnd
-            Format = Format Or DT_END_ELLIPSIS
+            DrawFlags = DrawFlags Or DT_END_ELLIPSIS
         Case FlexEllipsisFormatPath
-            Format = Format Or DT_PATH_ELLIPSIS
+            DrawFlags = DrawFlags Or DT_PATH_ELLIPSIS
         Case FlexEllipsisFormatWord
-            Format = Format Or DT_WORD_ELLIPSIS
+            DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
     End Select
-    If Not (Format And DT_SINGLELINE) = DT_SINGLELINE Then
+    If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+    If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
             Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
                 LSet CalcRect = TextRect
-                Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
+                Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
                 Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
             Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
                 LSet CalcRect = TextRect
-                Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
+                Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
                 Result = ((TextRect.Bottom - TextRect.Top) - Height)
         End Select
         If Result > 0 Then TextRect.Top = TextRect.Top + Result
     Else
         Select Case Alignment
             Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
-                Format = Format Or DT_VCENTER
+                DrawFlags = DrawFlags Or DT_VCENTER
             Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
-                Format = Format Or DT_BOTTOM
+                DrawFlags = DrawFlags Or DT_BOTTOM
         End Select
     End If
     Dim Offset As Long, TempTextColor As Long
@@ -8119,7 +8147,7 @@ If Not Text = vbNullString Then
         .Bottom = .Bottom + Offset
         .Right = .Right + Offset
         End With
-        DrawText hDC, StrPtr(Text), -1, TextRect, Format
+        DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
         SetTextColor hDC, TempTextColor
         With TextRect
         .Top = .Top - Offset
@@ -8128,7 +8156,7 @@ If Not Text = vbNullString Then
         .Right = .Right - Offset
         End With
     End If
-    DrawText hDC, StrPtr(Text), -1, TextRect, Format
+    DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
 End If
 SetTextColor hDC, OldTextColor
 If hFontOld <> 0 Then SelectObject hDC, hFontOld
@@ -8351,7 +8379,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End With
 End If
 If Not Text = vbNullString Then
-    Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, Format As Long
+    Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyle
     Else
@@ -8362,54 +8390,55 @@ If Not Text = vbNullString Then
     Else
         Alignment = .Alignment
     End If
-    Format = DT_NOPREFIX
-    If VBFlexGridRTLReading = True Then Format = Format Or DT_RTLREADING
+    DrawFlags = DT_NOPREFIX
+    If VBFlexGridRTLReading = True Then DrawFlags = DrawFlags Or DT_RTLREADING
     Select Case Alignment
         Case FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom
-            Format = Format Or DT_LEFT
+            DrawFlags = DrawFlags Or DT_LEFT
         Case FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom
-            Format = Format Or DT_CENTER
+            DrawFlags = DrawFlags Or DT_CENTER
         Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
-            Format = Format Or DT_RIGHT
+            DrawFlags = DrawFlags Or DT_RIGHT
         Case FlexAlignmentGeneral
             If Not IsNumeric(Text) Then
-                Format = Format Or DT_LEFT
+                DrawFlags = DrawFlags Or DT_LEFT
             Else
-                Format = Format Or DT_RIGHT
+                DrawFlags = DrawFlags Or DT_RIGHT
             End If
     End Select
     If PropWordWrap = True Then
-        Format = Format Or DT_WORDBREAK
+        DrawFlags = DrawFlags Or DT_WORDBREAK
     ElseIf PropSingleLine = True Then
-        Format = Format Or DT_SINGLELINE
+        DrawFlags = DrawFlags Or DT_SINGLELINE
     End If
     Select Case PropEllipsisFormat
         Case FlexEllipsisFormatEnd
-            Format = Format Or DT_END_ELLIPSIS
+            DrawFlags = DrawFlags Or DT_END_ELLIPSIS
         Case FlexEllipsisFormatPath
-            Format = Format Or DT_PATH_ELLIPSIS
+            DrawFlags = DrawFlags Or DT_PATH_ELLIPSIS
         Case FlexEllipsisFormatWord
-            Format = Format Or DT_WORD_ELLIPSIS
+            DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
     End Select
-    If Not (Format And DT_SINGLELINE) = DT_SINGLELINE Then
+    If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+    If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
             Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
                 LSet CalcRect = TextRect
-                Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
+                Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
                 Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
             Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
                 LSet CalcRect = TextRect
-                Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
+                Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
                 Result = ((TextRect.Bottom - TextRect.Top) - Height)
         End Select
         If Result > 0 Then TextRect.Top = TextRect.Top + Result
     Else
         Select Case Alignment
             Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
-                Format = Format Or DT_VCENTER
+                DrawFlags = DrawFlags Or DT_VCENTER
             Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
-                Format = Format Or DT_BOTTOM
+                DrawFlags = DrawFlags Or DT_BOTTOM
         End Select
     End If
     Dim Offset As Long, TempTextColor As Long
@@ -8434,7 +8463,7 @@ If Not Text = vbNullString Then
         .Bottom = .Bottom + Offset
         .Right = .Right + Offset
         End With
-        DrawText hDC, StrPtr(Text), -1, TextRect, Format
+        DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
         SetTextColor hDC, TempTextColor
         With TextRect
         .Top = .Top - Offset
@@ -8443,7 +8472,7 @@ If Not Text = vbNullString Then
         .Right = .Right - Offset
         End With
     End If
-    DrawText hDC, StrPtr(Text), -1, TextRect, Format
+    DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
 End If
 SetTextColor hDC, OldTextColor
 If hFontOld <> 0 Then SelectObject hDC, hFontOld
@@ -11979,6 +12008,8 @@ Select Case wMsg
                             If CreateEdit(FlexEditReasonF2) = True Then Exit Function
                         Case vbKeySpace
                             If CreateEdit(FlexEditReasonSpace) = True Then Exit Function
+                        Case vbKeyBack
+                            If CreateEdit(FlexEditReasonBackSpace) = True Then Exit Function
                     End Select
                 End If
             ElseIf wMsg = WM_KEYUP Then
