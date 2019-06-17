@@ -1,5 +1,9 @@
 List of revisions:
 
+17-Jun-2019
+- Included the ColFormat run-time property.
+- Included additional FlexEditReasonBackSpace enum const. Pressing the backspace key then starts cell editing and removes all content.
+
 14-Jun-2019
 - Included additional PictureAlignment enum constants to allow pictures to not overlap with the text.
 
