@@ -5264,6 +5264,7 @@ End Property
 Public Property Get ColComboItems(ByVal Index As Long) As String
 Attribute ColComboItems.VB_Description = "Returns/sets the items to be used for the drop-down list when editing a cell for the specified column."
 Attribute ColComboItems.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 ColComboItems = VBFlexGridColsInfo(Index).ComboItems
 End Property
 
