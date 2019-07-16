@@ -9,6 +9,14 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   6600
    ScaleWidth      =   6225
+   Begin VB.CheckBox CheckWantReturn 
+      Caption         =   "WantReturn"
+      Height          =   285
+      Left            =   4200
+      TabIndex        =   48
+      Top             =   3720
+      Width           =   1920
+   End
    Begin VB.CheckBox CheckAllowUserEditing 
       Caption         =   "AllowUserEditing"
       Height          =   285
@@ -607,6 +615,7 @@ End If
 .DisableNoScroll = CBool(CheckDisableNoScroll.Value = vbChecked)
 .ShowInfoTips = CBool(CheckShowInfoTips.Value = vbChecked)
 .ShowLabelTips = CBool(CheckShowLabelTips.Value = vbChecked)
+.WantReturn = CBool(CheckWantReturn.Value = vbChecked)
 End With
 Call PropertyPage_SelectionChanged
 End Sub
@@ -710,6 +719,7 @@ CheckScrollTrack.Value = IIf(.ScrollTrack = True, vbChecked, vbUnchecked)
 CheckDisableNoScroll.Value = IIf(.DisableNoScroll = True, vbChecked, vbUnchecked)
 CheckShowInfoTips.Value = IIf(.ShowInfoTips = True, vbChecked, vbUnchecked)
 CheckShowLabelTips.Value = IIf(.ShowLabelTips = True, vbChecked, vbUnchecked)
+CheckWantReturn.Value = IIf(.WantReturn = True, vbChecked, vbUnchecked)
 End With
 FreezeChanged = False
 End Sub
@@ -1047,6 +1057,11 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckShowLabelTips_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckWantReturn_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub

@@ -1022,6 +1022,7 @@ Private Const TTN_GETDISPINFO As Long = TTN_GETDISPINFOW
 Private Const TTN_SHOW As Long = (TTN_FIRST - 1)
 Implements OLEGuids.IObjectSafety
 Implements OLEGuids.IOleInPlaceActiveObjectVB
+Implements OLEGuids.IOleControlVB
 Implements OLEGuids.IPerPropertyBrowsingVB
 Private VBFlexGridHandle As Long, VBFlexGridEditHandle As Long, VBFlexGridComboButtonHandle As Long, VBFlexGridComboListHandle As Long, VBFlexGridToolTipHandle As Long
 Private VBFlexGridFontHandle As Long, VBFlexGridFontFixedHandle As Long
@@ -1170,6 +1171,7 @@ Private PropClipSeparators As String
 Private PropClipMode As FlexClipModeConstants
 Private PropFormatString As String
 Private PropIMEMode As FlexIMEModeConstants
+Private PropWantReturn As Boolean
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -1259,6 +1261,16 @@ If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
 End If
 End Sub
 
+Private Sub IOleControlVB_GetControlInfo(ByRef Handled As Boolean, ByRef AccelCount As Integer, ByRef AccelTable As Long, ByRef Flags As Long)
+If PropWantReturn = True Then
+    Flags = CTRLINFO_EATS_RETURN
+    Handled = True
+End If
+End Sub
+
+Private Sub IOleControlVB_OnMnemonic(ByRef Handled As Boolean, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal Shift As Long)
+End Sub
+
 Private Sub IPerPropertyBrowsingVB_GetDisplayString(ByRef Handled As Boolean, ByVal DispID As Long, ByRef DisplayName As String)
 If DispID = DispIDMousePointer Then
     Select Case PropMousePointer
@@ -1323,6 +1335,7 @@ Call FlexLoadShellMod
 Call FlexWndRegisterClass
 Call FlexInitCC(ICC_STANDARD_CLASSES)
 Call SetVTableSubclass(Me, VTableInterfaceInPlaceActiveObject)
+Call SetVTableSubclass(Me, VTableInterfaceControl)
 Call SetVTableSubclass(Me, VTableInterfacePerPropertyBrowsing)
 With VBFlexGridDefaultCell
 .TextStyle = -1
@@ -1443,6 +1456,7 @@ PropClipSeparators = vbNullString
 PropClipMode = FlexClipModeNormal
 PropFormatString = vbNullString
 PropIMEMode = FlexIMEModeNoControl
+PropWantReturn = False
 Call CreateVBFlexGrid
 End Sub
 
@@ -1525,6 +1539,7 @@ PropClipSeparators = VarToStr(.ReadProperty("ClipSeparators", vbNullString))
 PropClipMode = .ReadProperty("ClipMode", FlexClipModeNormal)
 PropFormatString = VarToStr(.ReadProperty("FormatString", vbNullString))
 PropIMEMode = .ReadProperty("IMEMode", FlexIMEModeNoControl)
+PropWantReturn = .ReadProperty("WantReturn", False)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -1601,6 +1616,7 @@ With PropBag
 .WriteProperty "ClipMode", PropClipMode, FlexClipModeNormal
 .WriteProperty "FormatString", StrToVar(PropFormatString), vbNullString
 .WriteProperty "IMEMode", PropIMEMode, FlexIMEModeNoControl
+.WriteProperty "WantReturn", PropWantReturn, False
 End With
 End Sub
 
@@ -1707,6 +1723,7 @@ End Sub
 
 Private Sub UserControl_Terminate()
 Call RemoveVTableSubclass(Me, VTableInterfaceInPlaceActiveObject)
+Call RemoveVTableSubclass(Me, VTableInterfaceControl)
 Call RemoveVTableSubclass(Me, VTableInterfacePerPropertyBrowsing)
 Call DestroyVBFlexGrid
 Call FlexWndReleaseClass
@@ -3576,6 +3593,34 @@ If VBFlexGridHandle <> 0 And VBFlexGridDesignMode = False Then
     End If
 End If
 UserControl.PropertyChanged "IMEMode"
+End Property
+
+Public Property Get WantReturn() As Boolean
+Attribute WantReturn.VB_Description = "Returns/sets a value that determines when the user presses RETURN to perform the default button or to allow the flex grid to handle the return key. This property applies only when there is any default button on the form."
+WantReturn = PropWantReturn
+End Property
+
+Public Property Let WantReturn(ByVal Value As Boolean)
+If PropWantReturn = Value Then Exit Property
+PropWantReturn = Value
+If VBFlexGridHandle <> 0 And VBFlexGridDesignMode = False Then
+    Dim PropOleObject As OLEGuids.IOleObject
+    Dim PropClientSite As OLEGuids.IOleClientSite
+    Dim PropUnknown As IUnknown
+    Dim PropControlSite As OLEGuids.IOleControlSite
+    On Error Resume Next
+    Set PropOleObject = Me
+    Set PropClientSite = PropOleObject.GetClientSite
+    Set PropUnknown = PropClientSite
+    Set PropControlSite = PropUnknown
+    PropControlSite.OnControlInfoChanged
+    If GetFocus() = VBFlexGridHandle Then
+        ' If focus is on the control then force the change immediately.
+        PropControlSite.OnFocus 1
+    End If
+    On Error GoTo 0
+End If
+UserControl.PropertyChanged "WantReturn"
 End Property
 
 Private Sub CreateVBFlexGrid()
