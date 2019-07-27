@@ -1,5 +1,9 @@
 List of revisions:
 
+27-Jul-2019
+- Included the DirectionAfterReturn property. It allows to move the position of the current cell when the user presses return (Enter) key.
+  This property works in conjunction with the WrapCellBehavior property. (like the TabBehavior property does)
+
 16-Jul-2019
 - Included the WantReturn property. Indicates when the user presses RETURN to perform the default button or to allow the flex grid to handle the return key.
   But it applies only when there is any default button on the form.
