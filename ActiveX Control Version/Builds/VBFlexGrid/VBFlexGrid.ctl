@@ -9711,6 +9711,7 @@ End Function
 
 Private Sub ProcessKeyDown(ByVal KeyCode As Integer, ByVal Shift As Integer)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
+If VBFlexGridEditHandle <> 0 Then Exit Sub
 Select Case KeyCode
     Case vbKeyUp, vbKeyDown, vbKeyLeft, vbKeyRight, vbKeyPageUp, vbKeyPageDown, vbKeyHome, vbKeyEnd
     Case vbKeyTab
@@ -9726,7 +9727,7 @@ If VBFlexGridRTLLayout = True Then
     End If
 End If
 If PropAllowSelection = False Then
-    If (Shift And vbShiftMask) = vbShiftMask Then Exit Sub
+    If (Shift And vbShiftMask) = vbShiftMask And KeyCode <> vbKeyTab Then Exit Sub
 End If
 Dim RCP As TROWCOLPARAMS, RowsPerPage As Long, ColsPerPage As Long
 With RCP
