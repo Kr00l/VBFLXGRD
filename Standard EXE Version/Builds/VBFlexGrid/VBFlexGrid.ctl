@@ -47,6 +47,7 @@ Private FlexEllipsisFormatNone, FlexEllipsisFormatEnd, FlexEllipsisFormatPath, F
 Private FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearSelection
 Private FlexClearEverything, FlexClearText, FlexClearFormatting
 Private FlexTabControls, FlexTabCells, FlexTabNext
+Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
 Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
 Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
@@ -217,6 +218,13 @@ Public Enum FlexTabBehaviorConstants
 FlexTabControls = 0
 FlexTabCells = 1
 FlexTabNext = 2
+End Enum
+Public Enum FlexDirectionAfterReturnConstants
+FlexDirectionAfterReturnNone = 0
+FlexDirectionAfterReturnUp = 1
+FlexDirectionAfterReturnDown = 2
+FlexDirectionAfterReturnLeft = 3
+FlexDirectionAfterReturnRight = 4
 End Enum
 Public Enum FlexWrapCellBehaviorConstants
 FlexWrapNone = 0
@@ -1164,6 +1172,7 @@ Private PropEllipsisFormatFixed As FlexEllipsisFormatConstants
 Private PropRedraw As Boolean
 Private PropDoubleBuffer As Boolean
 Private PropTabBehavior As FlexTabBehaviorConstants
+Private PropDirectionAfterReturn As FlexDirectionAfterReturnConstants
 Private PropWrapCellBehavior As FlexWrapCellBehaviorConstants
 Private PropShowInfoTips As Boolean
 Private PropShowLabelTips As Boolean
@@ -1449,6 +1458,7 @@ PropEllipsisFormatFixed = FlexEllipsisFormatNone
 PropRedraw = True
 PropDoubleBuffer = True
 PropTabBehavior = FlexTabControls
+PropDirectionAfterReturn = FlexDirectionAfterReturnNone
 PropWrapCellBehavior = FlexWrapNone
 PropShowInfoTips = False
 PropShowLabelTips = False
@@ -1532,6 +1542,7 @@ PropEllipsisFormatFixed = .ReadProperty("EllipsisFormatFixed", FlexEllipsisForma
 PropRedraw = .ReadProperty("Redraw", True)
 PropDoubleBuffer = .ReadProperty("DoubleBuffer", True)
 PropTabBehavior = .ReadProperty("TabBehavior", FlexTabControls)
+PropDirectionAfterReturn = .ReadProperty("DirectionAfterReturn", FlexDirectionAfterReturnNone)
 PropWrapCellBehavior = .ReadProperty("WrapCellBehavior", FlexWrapNone)
 PropShowInfoTips = .ReadProperty("ShowInfoTips", False)
 PropShowLabelTips = .ReadProperty("ShowLabelTips", False)
@@ -1609,6 +1620,7 @@ With PropBag
 .WriteProperty "Redraw", PropRedraw, True
 .WriteProperty "DoubleBuffer", PropDoubleBuffer, True
 .WriteProperty "TabBehavior", PropTabBehavior, FlexTabControls
+.WriteProperty "DirectionAfterReturn", PropDirectionAfterReturn, FlexDirectionAfterReturnNone
 .WriteProperty "WrapCellBehavior", PropWrapCellBehavior, FlexWrapNone
 .WriteProperty "ShowInfoTips", PropShowInfoTips, False
 .WriteProperty "ShowLabelTips", PropShowLabelTips, False
@@ -3371,6 +3383,21 @@ Select Case Value
         Err.Raise 380
 End Select
 UserControl.PropertyChanged "TabBehavior"
+End Property
+
+Public Property Get DirectionAfterReturn() As FlexDirectionAfterReturnConstants
+Attribute DirectionAfterReturn.VB_Description = "Returns/sets a value that determines the relative position of the next cell when the user presses the return (Enter) key."
+DirectionAfterReturn = PropDirectionAfterReturn
+End Property
+
+Public Property Let DirectionAfterReturn(ByVal Value As FlexDirectionAfterReturnConstants)
+Select Case Value
+    Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
+        PropDirectionAfterReturn = Value
+    Case Else
+        Err.Raise 380
+End Select
+UserControl.PropertyChanged "DirectionAfterReturn"
 End Property
 
 Public Property Get WrapCellBehavior() As FlexWrapCellBehaviorConstants
@@ -9802,10 +9829,13 @@ End Function
 
 Private Sub ProcessKeyDown(ByVal KeyCode As Integer, ByVal Shift As Integer)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
+If VBFlexGridEditHandle <> 0 Then Exit Sub
 Select Case KeyCode
     Case vbKeyUp, vbKeyDown, vbKeyLeft, vbKeyRight, vbKeyPageUp, vbKeyPageDown, vbKeyHome, vbKeyEnd
     Case vbKeyTab
         If PropTabBehavior = FlexTabControls Then Exit Sub
+    Case vbKeyReturn
+        If PropDirectionAfterReturn = FlexDirectionAfterReturnNone Then Exit Sub
     Case Else
         Exit Sub
 End Select
@@ -9817,7 +9847,7 @@ If VBFlexGridRTLLayout = True Then
     End If
 End If
 If PropAllowSelection = False Then
-    If (Shift And vbShiftMask) = vbShiftMask Then Exit Sub
+    If (Shift And vbShiftMask) = vbShiftMask And KeyCode <> vbKeyTab And KeyCode <> vbKeyReturn Then Exit Sub
 End If
 Dim RCP As TROWCOLPARAMS, RowsPerPage As Long, ColsPerPage As Long
 With RCP
@@ -10233,6 +10263,138 @@ Select Case PropSelectionMode
                 Else
                     ' Void
                 End If
+            Case vbKeyReturn
+                If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
+                    Select Case PropDirectionAfterReturn
+                        Case FlexDirectionAfterReturnUp
+                            If .Row > GetFirstMovableRow() Then
+                                Call MovePreviousRow(.Row)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastRow(.Row)
+                            End If
+                        Case FlexDirectionAfterReturnDown
+                            If .Row < GetLastMovableRow() Then
+                                Call MoveNextRow(.Row)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstRow(.Row)
+                            End If
+                        Case FlexDirectionAfterReturnLeft
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Col > GetFirstMovableCol() Then
+                                    Call MovePreviousCol(.Col)
+                                Else
+                                    If .Row > GetFirstMovableRow() Then
+                                        Call MoveLastCol(.Col)
+                                        Call MovePreviousRow(.Row)
+                                    Else
+                                        If PropWrapCellBehavior = FlexWrapGrid Then
+                                            Call MoveLastCol(.Col)
+                                            Call MoveLastRow(.Row)
+                                        End If
+                                    End If
+                                End If
+                            Else
+                                Call MovePreviousCol(.Col)
+                            End If
+                        Case FlexDirectionAfterReturnRight
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Col < GetLastMovableCol() Then
+                                    Call MoveNextCol(.Col)
+                                Else
+                                    If .Row < GetLastMovableRow() Then
+                                        Call MoveFirstCol(.Col)
+                                        Call MoveNextRow(.Row)
+                                    Else
+                                        If PropWrapCellBehavior = FlexWrapGrid Then
+                                            Call MoveFirstCol(.Col)
+                                            Call MoveFirstRow(.Row)
+                                        End If
+                                    End If
+                                End If
+                            Else
+                                Call MoveNextCol(.Col)
+                            End If
+                    End Select
+                    .RowSel = .Row
+                    .ColSel = .Col
+                    If .TopRow > .Row Then
+                        .TopRow = .Row
+                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                    End If
+                    If .LeftCol > .Col Then
+                        .LeftCol = .Col
+                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    End If
+                ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
+                    Select Case PropDirectionAfterReturn
+                        Case FlexDirectionAfterReturnUp
+                            If .Row < GetLastMovableRow() Then
+                                Call MoveNextRow(.Row)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstRow(.Row)
+                            End If
+                        Case FlexDirectionAfterReturnDown
+                            If .Row > GetFirstMovableRow() Then
+                                Call MovePreviousRow(.Row)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastRow(.Row)
+                            End If
+                        Case FlexDirectionAfterReturnLeft
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Col < GetLastMovableCol() Then
+                                    Call MoveNextCol(.Col)
+                                Else
+                                    If .Row < GetLastMovableRow() Then
+                                        Call MoveFirstCol(.Col)
+                                        Call MoveNextRow(.Row)
+                                    Else
+                                        If PropWrapCellBehavior = FlexWrapGrid Then
+                                            Call MoveFirstCol(.Col)
+                                            Call MoveFirstRow(.Row)
+                                        End If
+                                    End If
+                                End If
+                            Else
+                                Call MoveNextCol(.Col)
+                            End If
+                        Case FlexDirectionAfterReturnRight
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Col > GetFirstMovableCol() Then
+                                    Call MovePreviousCol(.Col)
+                                Else
+                                    If .Row > GetFirstMovableRow() Then
+                                        Call MoveLastCol(.Col)
+                                        Call MovePreviousRow(.Row)
+                                    Else
+                                        If PropWrapCellBehavior = FlexWrapGrid Then
+                                            Call MoveLastCol(.Col)
+                                            Call MoveLastRow(.Row)
+                                        End If
+                                    End If
+                                End If
+                            Else
+                                Call MovePreviousCol(.Col)
+                            End If
+                    End Select
+                    .RowSel = .Row
+                    .ColSel = .Col
+                    If .TopRow > .Row Then
+                        .TopRow = .Row
+                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                    End If
+                    If .LeftCol > .Col Then
+                        .LeftCol = .Col
+                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    End If
+                ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
+                    ' Void
+                Else
+                    ' Void
+                End If
         End Select
     Case FlexSelectionModeByRow
         Select Case KeyCode
@@ -10512,6 +10674,88 @@ Select Case PropSelectionMode
                 Else
                     ' Void
                 End If
+            Case vbKeyReturn
+                If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
+                    Select Case PropDirectionAfterReturn
+                        Case FlexDirectionAfterReturnUp
+                            If .Row > GetFirstMovableRow() Then
+                                Call MovePreviousRow(.Row)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastRow(.Row)
+                            End If
+                        Case FlexDirectionAfterReturnDown
+                            If .Row < GetLastMovableRow() Then
+                                Call MoveNextRow(.Row)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstRow(.Row)
+                            End If
+                        Case FlexDirectionAfterReturnLeft
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Row > GetFirstMovableRow() Then
+                                    Call MovePreviousRow(.Row)
+                                Else
+                                    If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastRow(.Row)
+                                End If
+                            End If
+                        Case FlexDirectionAfterReturnRight
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Row < GetLastMovableRow() Then
+                                    Call MoveNextRow(.Row)
+                                Else
+                                    If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstRow(.Row)
+                                End If
+                            End If
+                    End Select
+                    .RowSel = .Row
+                    .ColSel = (PropCols - 1)
+                    If .TopRow > .Row Then
+                        .TopRow = .Row
+                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                    End If
+                ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
+                    Select Case PropDirectionAfterReturn
+                        Case FlexDirectionAfterReturnUp
+                            If .Row < GetLastMovableRow() Then
+                                Call MoveNextRow(.Row)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstRow(.Row)
+                            End If
+                        Case FlexDirectionAfterReturnDown
+                            If .Row > GetFirstMovableRow() Then
+                                Call MovePreviousRow(.Row)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastRow(.Row)
+                            End If
+                        Case FlexDirectionAfterReturnLeft
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Row < GetLastMovableRow() Then
+                                    Call MoveNextRow(.Row)
+                                Else
+                                    If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstRow(.Row)
+                                End If
+                            End If
+                        Case FlexDirectionAfterReturnRight
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Row > GetFirstMovableRow() Then
+                                    Call MovePreviousRow(.Row)
+                                Else
+                                    If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastRow(.Row)
+                                End If
+                            End If
+                    End Select
+                    .RowSel = .Row
+                    .ColSel = (PropCols - 1)
+                    If .TopRow > .Row Then
+                        .TopRow = .Row
+                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                    End If
+                ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
+                    ' Void
+                Else
+                    ' Void
+                End If
         End Select
     Case FlexSelectionModeByColumn
         Select Case KeyCode
@@ -10735,6 +10979,88 @@ Select Case PropSelectionMode
                             If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastCol(.Col)
                         End If
                     End If
+                    .RowSel = (PropRows - 1)
+                    .ColSel = .Col
+                    If .LeftCol > .Col Then
+                        .LeftCol = .Col
+                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    End If
+                ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
+                    ' Void
+                Else
+                    ' Void
+                End If
+            Case vbKeyReturn
+                If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
+                    Select Case PropDirectionAfterReturn
+                        Case FlexDirectionAfterReturnUp
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Col > GetFirstMovableCol() Then
+                                    Call MovePreviousCol(.Col)
+                                Else
+                                    If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastCol(.Col)
+                                End If
+                            End If
+                        Case FlexDirectionAfterReturnDown
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Col < GetLastMovableCol() Then
+                                    Call MoveNextCol(.Col)
+                                Else
+                                    If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstCol(.Col)
+                                End If
+                            End If
+                        Case FlexDirectionAfterReturnLeft
+                            If .Col > GetFirstMovableCol() Then
+                                Call MovePreviousCol(.Col)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastCol(.Col)
+                            End If
+                        Case FlexDirectionAfterReturnRight
+                            If .Col < GetLastMovableCol() Then
+                                Call MoveNextRow(.Col)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstRow(.Col)
+                            End If
+                    End Select
+                    .RowSel = (PropRows - 1)
+                    .ColSel = .Col
+                    If .LeftCol > .Col Then
+                        .LeftCol = .Col
+                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    End If
+                ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
+                    Select Case PropDirectionAfterReturn
+                        Case FlexDirectionAfterReturnUp
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Col < GetLastMovableCol() Then
+                                    Call MoveNextCol(.Col)
+                                Else
+                                    If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstCol(.Col)
+                                End If
+                            End If
+                        Case FlexDirectionAfterReturnDown
+                            If PropWrapCellBehavior <> FlexWrapNone Then
+                                If .Col > GetFirstMovableCol() Then
+                                    Call MovePreviousCol(.Col)
+                                Else
+                                    If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastCol(.Col)
+                                End If
+                            End If
+                        Case FlexDirectionAfterReturnLeft
+                            If .Col < GetLastMovableCol() Then
+                                Call MoveNextRow(.Col)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstRow(.Col)
+                            End If
+                        Case FlexDirectionAfterReturnRight
+                            If .Col > GetFirstMovableCol() Then
+                                Call MovePreviousCol(.Col)
+                            Else
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveLastCol(.Col)
+                            End If
+                    End Select
                     .RowSel = (PropRows - 1)
                     .ColSel = .Col
                     If .LeftCol > .Col Then
