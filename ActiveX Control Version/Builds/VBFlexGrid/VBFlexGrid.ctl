@@ -11354,6 +11354,53 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
 End If
 End Sub
 
+Private Function ValidateEditOnMouseActivateMsg(ByVal lParam As Long, ByRef RetVal As Long) As Boolean
+If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
+    Select Case HiWord(lParam)
+        Case WM_LBUTTONDOWN
+            If VBFlexGridComboButtonHandle <> 0 Then
+                If VBFlexGridComboButtonClick = False Then
+                    If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then
+                        ' If the combo button window is disabled the mouse message will go trough it and could trigger ending of the editing.
+                        ' To avoid this a check is needed and return MA_ACTIVATEANDEAT, if necessary.
+                        Dim Pos As Long, P As POINTAPI
+                        Pos = GetMessagePos()
+                        P.X = Get_X_lParam(Pos)
+                        P.Y = Get_Y_lParam(Pos)
+                        ScreenToClient VBFlexGridHandle, P
+                        If ChildWindowFromPoint(VBFlexGridHandle, P.X, P.Y) = VBFlexGridComboButtonHandle Then
+                            RetVal = MA_ACTIVATEANDEAT
+                            ValidateEditOnMouseActivateMsg = True
+                            Exit Function
+                        End If
+                    End If
+                Else
+                    RetVal = MA_ACTIVATEANDEAT
+                    ValidateEditOnMouseActivateMsg = True
+                    Exit Function
+                End If
+            End If
+            If LoWord(lParam) = HTCLIENT And VBFlexGridEditTextChanged = True Then
+                Dim Cancel As Boolean
+                VBFlexGridEditValidateInProc = True
+                RaiseEvent ValidateEdit(Cancel)
+                VBFlexGridEditValidateInProc = False
+                If VBFlexGridEditHandle <> 0 Then
+                    VBFlexGridEditValidateCancel = Cancel
+                    If Cancel = True Then
+                        ' Edit control remains active and will not be destroyed.
+                        RetVal = MA_ACTIVATEANDEAT
+                        ValidateEditOnMouseActivateMsg = True
+                        Exit Function
+                    Else
+                        VBFlexGridEditAlreadyValidated = True
+                    End If
+                End If
+            End If
+    End Select
+End If
+End Function
+
 Private Sub ComboShowDropDown(ByVal Value As Boolean)
 If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
     Dim dwLong As Long
@@ -11832,57 +11879,37 @@ Select Case wMsg
                         If Err.Number = 380 Then
                             WindowProcControl = MA_ACTIVATEANDEAT
                         Else
+                            If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then
+                                If ValidateEditOnMouseActivateMsg(lParam, WindowProcControl) = True Then
+                                    SetFocusAPI .hWnd
+                                Else
+                                    SetFocusAPI .hWnd
+                                    WindowProcControl = MA_NOACTIVATE
+                                End If
+                            Else
+                                SetFocusAPI .hWnd
+                                WindowProcControl = MA_NOACTIVATE
+                            End If
+                        End If
+                    Else
+                        If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then
+                            If ValidateEditOnMouseActivateMsg(lParam, WindowProcControl) = True Then
+                                SetFocusAPI .hWnd
+                            Else
+                                SetFocusAPI .hWnd
+                                WindowProcControl = MA_NOACTIVATE
+                            End If
+                        Else
                             SetFocusAPI .hWnd
                             WindowProcControl = MA_NOACTIVATE
                         End If
-                    Else
-                        SetFocusAPI .hWnd
-                        WindowProcControl = MA_NOACTIVATE
                     End If
                     End With
                     On Error GoTo 0
                     Exit Function
             End Select
-        End If
-        If VBFlexGridEditHandle <> 0 Then
-            Select Case HiWord(lParam)
-                Case WM_LBUTTONDOWN
-                    If VBFlexGridComboButtonHandle <> 0 Then
-                        If VBFlexGridComboButtonClick = False Then
-                            If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then
-                                ' If the combo button window is disabled the mouse message will go trough it and could trigger ending of the editing.
-                                ' To avoid this a check is needed and return MA_ACTIVATEANDEAT, if necessary.
-                                Dim P As POINTAPI
-                                Pos = GetMessagePos()
-                                P.X = Get_X_lParam(Pos)
-                                P.Y = Get_Y_lParam(Pos)
-                                ScreenToClient hWnd, P
-                                If ChildWindowFromPoint(hWnd, P.X, P.Y) = VBFlexGridComboButtonHandle Then
-                                    WindowProcControl = MA_ACTIVATEANDEAT
-                                    Exit Function
-                                End If
-                            End If
-                        Else
-                            WindowProcControl = MA_ACTIVATEANDEAT
-                            Exit Function
-                        End If
-                    End If
-                    If LoWord(lParam) = HTCLIENT And VBFlexGridEditTextChanged = True Then
-                        VBFlexGridEditValidateInProc = True
-                        RaiseEvent ValidateEdit(Cancel)
-                        VBFlexGridEditValidateInProc = False
-                        If VBFlexGridEditHandle <> 0 Then
-                            VBFlexGridEditValidateCancel = Cancel
-                            If Cancel = True Then
-                                ' Edit control remains active and will not be destroyed.
-                                WindowProcControl = MA_ACTIVATEANDEAT
-                                Exit Function
-                            Else
-                                VBFlexGridEditAlreadyValidated = True
-                            End If
-                        End If
-                    End If
-            End Select
+        ElseIf VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then
+            If ValidateEditOnMouseActivateMsg(lParam, WindowProcControl) = True Then Exit Function
         End If
     Case WM_SETCURSOR
         If LoWord(lParam) = HTCLIENT Then
@@ -12576,6 +12603,8 @@ Select Case wMsg
     Case WM_IME_CHAR
         SendMessage hWnd, WM_CHAR, wParam, ByVal lParam
         Exit Function
+    Case WM_LBUTTONDOWN
+        If GetFocus() <> hWnd Then SetFocusAPI UserControl.hWnd
     Case WM_NCCALCSIZE, WM_NCHITTEST, WM_NCPAINT
         Dim RC As RECT
         Select Case wMsg
