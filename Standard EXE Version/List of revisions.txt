@@ -1,5 +1,8 @@
 List of revisions:
 
+17-Aug-2019
+- Minor internal improvement for ValidateEdit behavior.
+
 27-Jul-2019
 - Included the DirectionAfterReturn property. It allows to move the position of the current cell when the user presses return (Enter) key.
   This property works in conjunction with the WrapCellBehavior property. (like the TabBehavior property does)
