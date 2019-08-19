@@ -322,7 +322,7 @@ Select Case VBFlexGrid1.EditCol
         End With
         If ChooseColor(CHCLR) <> 0 Then
             VBFlexGrid1.Cell(FlexCellBackColor, VBFlexGrid1.EditRow, VBFlexGrid1.EditCol) = CHCLR.RGBResult
-            VBFlexGrid1.CancelEdit
+            VBFlexGrid1.CommitEdit
         End If
 End Select
 End Sub
