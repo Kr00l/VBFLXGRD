@@ -3751,6 +3751,7 @@ End Sub
 Private Function CreateEdit(ByVal Reason As FlexEditReasonConstants, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Boolean
 Static InProc As Boolean
 If VBFlexGridHandle = 0 Or VBFlexGridEditHandle <> 0 Or InProc = True Then Exit Function
+If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then Exit Function
 If VBFlexGridDesignMode = True Then Exit Function
 If Row = -1 Then Row = VBFlexGridRow
 If Col = -1 Then Col = VBFlexGridCol
@@ -4042,10 +4043,14 @@ If VBFlexGridComboListHandle <> 0 Then
     DestroyWindow VBFlexGridComboListHandle
 End If
 Call FlexRemoveSubclass(VBFlexGridEditHandle)
-ShowWindow VBFlexGridEditHandle, SW_HIDE
-SetParent VBFlexGridEditHandle, 0
-DestroyWindow VBFlexGridEditHandle
+Dim hWndTemp As Long
+' Temporary cache is necessary as the variable needs to be cleared for internal control before the edit window is destroyed.
+hWndTemp = VBFlexGridEditHandle
 VBFlexGridEditHandle = 0
+ShowWindow hWndTemp, SW_HIDE
+SetParent hWndTemp, 0
+DestroyWindow hWndTemp
+hWndTemp = 0
 VBFlexGridComboButtonHandle = 0
 VBFlexGridComboListHandle = 0
 VBFlexGridEditRectChanged = False
@@ -11666,9 +11671,7 @@ Dim HTI As THITTESTINFO, Pos As Long, Cancel As Boolean
 Select Case wMsg
     Case WM_SETFOCUS
         If wParam <> UserControl.hWnd Then SetFocusAPI UserControl.hWnd: Exit Function
-        If VBFlexGridEditValidateCancel = True Or VBFlexGridComboButtonClick = True Then
-            If VBFlexGridEditHandle <> 0 Then SetFocusAPI VBFlexGridEditHandle: Exit Function
-        End If
+        If VBFlexGridEditHandle <> 0 Then SetFocusAPI VBFlexGridEditHandle: Exit Function
         Call ActivateIPAO(Me)
     Case WM_KILLFOCUS
         Call DeActivateIPAO
@@ -12682,6 +12685,11 @@ Select Case wMsg
         ' This enables the parent window - when it receives WM_MOUSEACTIVATE - to destroy this child window.
         WindowProcComboButton = MA_ACTIVATE
         Exit Function
+    Case WM_LBUTTONDOWN
+        ' In case the edit window is still active due to failed validation then this ensures that the focus is properly set when clicked from outside.
+        If VBFlexGridEditHandle <> 0 Then
+            If GetFocus() <> VBFlexGridEditHandle Then SetFocusAPI UserControl.hWnd
+        End If
     Case WM_MOUSEMOVE
         If ComboButtonGetState(ODS_HOTLIGHT) = False Then
             Call ComboButtonSetState(ODS_HOTLIGHT, True)
