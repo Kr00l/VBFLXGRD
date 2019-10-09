@@ -1,5 +1,10 @@
 List of revisions:
 
+09-Oct-2019
+- Change of how to achieve DPI-awareness to the controls for non-integral DPI.
+  It's just a better technique now which reduces the number of resizes.
+  However, the change has no visible impact for the end-user.
+
 19-Aug-2019
 - Minor internal improvement for ValidateEdit behavior.
 
