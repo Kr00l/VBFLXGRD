@@ -1939,13 +1939,7 @@ If VBFlexGridDesignMode = False Then
         Set .DataSource = PropDataSource
         If .State <> 0 Then
             If .RecordCount > -1 Then ' The cursor type of the Recordset affects whether the number of records can be determined.
-                If .RecordCount > 0 Then
-                    ' In ADO a .MoveLast and .MoveFirst to fully populate the Recordset is not necessary. (unlike to DAO)
-                    .MoveFirst
-                    Me.Rows = PropFixedRows + .RecordCount
-                Else
-                    Me.Rows = PropFixedRows + 1
-                End If
+                Me.Rows = PropFixedRows + .RecordCount
                 Me.Cols = PropFixedCols + .Fields.Count
                 Dim iRow As Long, iCol As Long
                 If PropFixedRows > 0 Then
@@ -1953,23 +1947,24 @@ If VBFlexGridDesignMode = False Then
                         Me.TextMatrix(0, iCol + PropFixedCols) = .Fields(iCol).Name
                     Next iCol
                 End If
-                iRow = PropFixedRows
-                If .RecordCount > 0 Then
-                    Do Until .EOF
-                        For iCol = PropFixedCols To (PropCols - 1)
-                            If Not IsNull(.Fields(iCol - PropFixedCols).Value) Then
-                                Me.TextMatrix(iRow, iCol) = .Fields(iCol - PropFixedCols).Value
+                If Not .EOF Then
+                    Dim ArrRows As Variant
+                    ArrRows = .GetRows(, 1) ' adBookmarkFirst
+                    Dim LBoundCols As Long, UBoundCols As Long
+                    LBoundCols = LBound(ArrRows, 1)
+                    UBoundCols = UBound(ArrRows, 1)
+                    Dim LBoundRows As Long, UBoundRows As Long
+                    LBoundRows = LBound(ArrRows, 2)
+                    UBoundRows = UBound(ArrRows, 2)
+                    For iRow = LBoundRows To UBoundRows
+                        For iCol = LBoundCols To UBoundCols
+                            If Not IsNull(ArrRows(iCol, iRow)) Then
+                                Me.TextMatrix((iRow + (0 - LBoundRows)) + PropFixedRows, (iCol + (0 - LBoundCols)) + PropFixedCols) = ArrRows(iCol, iRow)
                             Else
-                                Me.TextMatrix(iRow, iCol) = vbNullString
+                                Me.TextMatrix((iRow + (0 - LBoundRows)) + PropFixedRows, (iCol + (0 - LBoundCols)) + PropFixedCols) = vbNullString
                             End If
                         Next iCol
-                        .MoveNext
-                        iRow = iRow + 1
-                    Loop
-                Else
-                    For iCol = PropFixedCols To (PropCols - 1)
-                        Me.TextMatrix(iRow, iCol) = vbNullString
-                    Next iCol
+                    Next iRow
                 End If
             End If
         End If
