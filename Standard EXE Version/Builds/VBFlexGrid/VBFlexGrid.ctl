@@ -1947,7 +1947,7 @@ If VBFlexGridDesignMode = False Then
                         Me.TextMatrix(0, iCol + PropFixedCols) = .Fields(iCol).Name
                     Next iCol
                 End If
-                If Not .EOF Then
+                If .RecordCount > 0 Then
                     Dim ArrRows As Variant
                     ArrRows = .GetRows(, 1) ' adBookmarkFirst
                     Dim LBoundCols As Long, UBoundCols As Long
