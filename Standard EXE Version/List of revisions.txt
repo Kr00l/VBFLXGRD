@@ -1,5 +1,8 @@
 List of revisions:
 
+23-Dec-2019
+- Major performance boost for the 'DataSource' property. (ADO.GetRows now used)
+
 09-Oct-2019
 - Change of how to achieve DPI-awareness to the controls for non-integral DPI.
   It's just a better technique now which reduces the number of resizes.
