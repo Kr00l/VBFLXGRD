@@ -167,6 +167,22 @@ End If
 VTableInterfaceSupported = CBool(HResult = S_OK)
 End Function
 
+Public Sub SyncObjectRectsToContainer(ByVal This As Object)
+On Error GoTo CATCH_EXCEPTION
+Dim PropOleObject As OLEGuids.IOleObject
+Dim PropOleInPlaceObject As OLEGuids.IOleInPlaceObject
+Dim PropOleInPlaceSite As OLEGuids.IOleInPlaceSite
+Dim PosRect As OLEGuids.OLERECT
+Dim ClipRect As OLEGuids.OLERECT
+Dim FrameInfo As OLEGuids.OLEINPLACEFRAMEINFO
+Set PropOleObject = This
+Set PropOleInPlaceObject = This
+Set PropOleInPlaceSite = PropOleObject.GetClientSite
+PropOleInPlaceSite.GetWindowContext Nothing, Nothing, VarPtr(PosRect), VarPtr(ClipRect), VarPtr(FrameInfo)
+PropOleInPlaceObject.SetObjectRects VarPtr(PosRect), VarPtr(ClipRect)
+CATCH_EXCEPTION:
+End Sub
+
 Public Sub ActivateIPAO(ByVal This As Object)
 On Error GoTo CATCH_EXCEPTION
 Dim PropOleObject As OLEGuids.IOleObject
@@ -203,19 +219,17 @@ Dim PropOleObject As OLEGuids.IOleObject
 Dim PropOleInPlaceSite As OLEGuids.IOleInPlaceSite
 Dim PropOleInPlaceFrame As OLEGuids.IOleInPlaceFrame
 Dim PropOleInPlaceUIWindow As OLEGuids.IOleInPlaceUIWindow
-Dim PropOleInPlaceActiveObject As OLEGuids.IOleInPlaceActiveObject
 Dim PosRect As OLEGuids.OLERECT
 Dim ClipRect As OLEGuids.OLERECT
 Dim FrameInfo As OLEGuids.OLEINPLACEFRAMEINFO
 Set PropOleObject = VTableIPAOData.OriginalIOleIPAO
-Set PropOleInPlaceActiveObject = VTableIPAOData.OriginalIOleIPAO
 Set PropOleInPlaceSite = PropOleObject.GetClientSite
 PropOleInPlaceSite.GetWindowContext PropOleInPlaceFrame, PropOleInPlaceUIWindow, VarPtr(PosRect), VarPtr(ClipRect), VarPtr(FrameInfo)
-PropOleInPlaceFrame.SetActiveObject PropOleInPlaceActiveObject, vbNullString
-If Not PropOleInPlaceUIWindow Is Nothing Then PropOleInPlaceUIWindow.SetActiveObject PropOleInPlaceActiveObject, vbNullString
+PropOleInPlaceFrame.SetActiveObject Nothing, vbNullString
+If Not PropOleInPlaceUIWindow Is Nothing Then PropOleInPlaceUIWindow.SetActiveObject Nothing, vbNullString
+CATCH_EXCEPTION:
 Set VTableIPAOData.OriginalIOleIPAO = Nothing
 Set VTableIPAOData.IOleIPAO = Nothing
-CATCH_EXCEPTION:
 End Sub
 
 Private Function GetVTableIPAO() As Long
@@ -330,17 +344,14 @@ End If
 End Sub
 
 Public Sub OnControlInfoChanged(ByVal This As Object, Optional ByVal OnFocus As Boolean)
+On Error GoTo CATCH_EXCEPTION
 Dim PropOleObject As OLEGuids.IOleObject
-Dim PropClientSite As OLEGuids.IOleClientSite
-Dim PropUnknown As IUnknown
-Dim PropControlSite As OLEGuids.IOleControlSite
-On Error Resume Next
+Dim PropOleControlSite As OLEGuids.IOleControlSite
 Set PropOleObject = This
-Set PropClientSite = PropOleObject.GetClientSite
-Set PropUnknown = PropClientSite
-Set PropControlSite = PropUnknown
-PropControlSite.OnControlInfoChanged
-If OnFocus = True Then PropControlSite.OnFocus 1
+Set PropOleControlSite = PropOleObject.GetClientSite
+PropOleControlSite.OnControlInfoChanged
+If OnFocus = True Then PropOleControlSite.OnFocus 1
+CATCH_EXCEPTION:
 End Sub
 
 Private Function IOleControl_GetControlInfo(ByVal This As Object, ByRef CI As OLEGuids.OLECONTROLINFO) As Long

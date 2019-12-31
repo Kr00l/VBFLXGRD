@@ -9,28 +9,60 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   6600
    ScaleWidth      =   6225
+   Begin VB.ComboBox ComboDirectionAfterReturn 
+      Height          =   315
+      Left            =   1800
+      Style           =   2  'Dropdown List
+      TabIndex        =   33
+      Top             =   4800
+      Width           =   2235
+   End
+   Begin VB.CheckBox CheckWantReturn 
+      Caption         =   "WantReturn"
+      Height          =   285
+      Left            =   4200
+      TabIndex        =   50
+      Top             =   3720
+      Width           =   1920
+   End
+   Begin VB.CheckBox CheckAllowUserEditing 
+      Caption         =   "AllowUserEditing"
+      Height          =   285
+      Left            =   4200
+      TabIndex        =   45
+      Top             =   1920
+      Width           =   1920
+   End
+   Begin VB.ComboBox ComboIMEMode 
+      Height          =   315
+      Left            =   1800
+      Style           =   2  'Dropdown List
+      TabIndex        =   41
+      Top             =   6240
+      Width           =   2235
+   End
    Begin VB.ComboBox ComboClipMode 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   37
-      Top             =   5520
+      TabIndex        =   39
+      Top             =   5880
       Width           =   2235
    End
    Begin VB.TextBox TextClipSeparators 
       Height          =   315
       Left            =   1800
       MaxLength       =   2
-      TabIndex        =   35
-      Top             =   5160
+      TabIndex        =   37
+      Top             =   5520
       Width           =   2235
    End
    Begin VB.ComboBox ComboWrapCellBehavior 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   33
-      Top             =   4800
+      TabIndex        =   35
+      Top             =   5160
       Width           =   2235
    End
    Begin VB.ComboBox ComboTabBehavior 
@@ -101,39 +133,39 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ShowLabelTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   44
-      Top             =   3000
+      TabIndex        =   49
+      Top             =   3360
       Width           =   1920
    End
    Begin VB.CheckBox CheckShowInfoTips 
       Caption         =   "ShowInfoTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   43
-      Top             =   2640
+      TabIndex        =   48
+      Top             =   3000
       Width           =   1920
    End
    Begin VB.CheckBox CheckDisableNoScroll 
       Caption         =   "DisableNoScroll"
       Height          =   285
       Left            =   4200
-      TabIndex        =   42
-      Top             =   2280
+      TabIndex        =   47
+      Top             =   2640
       Width           =   1920
    End
    Begin VB.CheckBox CheckScrollTrack 
       Caption         =   "ScrollTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   41
-      Top             =   1920
+      TabIndex        =   46
+      Top             =   2280
       Width           =   1920
    End
    Begin VB.CheckBox CheckAllowSelection 
       Caption         =   "AllowSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   40
+      TabIndex        =   44
       Top             =   1560
       Width           =   1920
    End
@@ -141,7 +173,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowBigSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   39
+      TabIndex        =   43
       Top             =   1200
       Width           =   1920
    End
@@ -177,7 +209,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "MouseTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   38
+      TabIndex        =   42
       Top             =   840
       Width           =   1920
    End
@@ -223,28 +255,44 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Top             =   120
       Width           =   1620
    End
+   Begin VB.Label LabelDirectionAfterReturn 
+      Caption         =   "DirectionAfterReturn:"
+      Height          =   240
+      Left            =   120
+      TabIndex        =   32
+      Top             =   4800
+      Width           =   1620
+   End
+   Begin VB.Label LabelIMEMode 
+      Caption         =   "IMEMode:"
+      Height          =   240
+      Left            =   120
+      TabIndex        =   40
+      Top             =   6240
+      Width           =   1620
+   End
    Begin VB.Label LabelClipMode 
       Caption         =   "ClipMode:"
       Height          =   240
       Left            =   120
-      TabIndex        =   36
-      Top             =   5520
+      TabIndex        =   38
+      Top             =   5880
       Width           =   1620
    End
    Begin VB.Label LabelClipSeparators 
       Caption         =   "ClipSeparators:"
       Height          =   240
       Left            =   120
-      TabIndex        =   34
-      Top             =   5160
+      TabIndex        =   36
+      Top             =   5520
       Width           =   1620
    End
    Begin VB.Label LabelWrapCellBehavior 
       Caption         =   "WrapCellBehavior:"
       Height          =   240
       Left            =   120
-      TabIndex        =   32
-      Top             =   4800
+      TabIndex        =   34
+      Top             =   5160
       Width           =   1620
    End
    Begin VB.Label LabelTabBehavior 
@@ -460,6 +508,10 @@ With ComboSelectionMode
 .ItemData(.NewIndex) = FlexSelectionModeByRow
 .AddItem FlexSelectionModeByColumn & " - ByColumn"
 .ItemData(.NewIndex) = FlexSelectionModeByColumn
+.AddItem FlexSelectionModeFreeByRow & " - FreeByRow"
+.ItemData(.NewIndex) = FlexSelectionModeFreeByRow
+.AddItem FlexSelectionModeFreeByColumn & " - FreeByColumn"
+.ItemData(.NewIndex) = FlexSelectionModeFreeByColumn
 End With
 With ComboAllowUserResizing
 .AddItem FlexAllowUserResizingNone & " - None"
@@ -485,6 +537,18 @@ With ComboTabBehavior
 .AddItem FlexTabNext & " - Next"
 .ItemData(.NewIndex) = FlexTabNext
 End With
+With ComboDirectionAfterReturn
+.AddItem FlexDirectionAfterReturnNone & " - None"
+.ItemData(.NewIndex) = FlexDirectionAfterReturnNone
+.AddItem FlexDirectionAfterReturnUp & " - Up"
+.ItemData(.NewIndex) = FlexDirectionAfterReturnUp
+.AddItem FlexDirectionAfterReturnDown & " - Down"
+.ItemData(.NewIndex) = FlexDirectionAfterReturnDown
+.AddItem FlexDirectionAfterReturnLeft & " - Left"
+.ItemData(.NewIndex) = FlexDirectionAfterReturnLeft
+.AddItem FlexDirectionAfterReturnRight & " - Right"
+.ItemData(.NewIndex) = FlexDirectionAfterReturnRight
+End With
 With ComboWrapCellBehavior
 .AddItem FlexWrapNone & " - None"
 .ItemData(.NewIndex) = FlexWrapNone
@@ -498,6 +562,30 @@ With ComboClipMode
 .ItemData(.NewIndex) = FlexClipModeNormal
 .AddItem FlexClipModeExcludeHidden & " - ExcludeHidden"
 .ItemData(.NewIndex) = FlexClipModeExcludeHidden
+End With
+With ComboIMEMode
+.AddItem FlexIMEModeNoControl & " - NoControl"
+.ItemData(.NewIndex) = FlexIMEModeNoControl
+.AddItem FlexIMEModeOn & " - On"
+.ItemData(.NewIndex) = FlexIMEModeOn
+.AddItem FlexIMEModeOff & " - Off"
+.ItemData(.NewIndex) = FlexIMEModeOff
+.AddItem FlexIMEModeDisable & " - Disable"
+.ItemData(.NewIndex) = FlexIMEModeDisable
+.AddItem FlexIMEModeHiragana & " - Hiragana"
+.ItemData(.NewIndex) = FlexIMEModeHiragana
+.AddItem FlexIMEModeKatakana & " - Katakana"
+.ItemData(.NewIndex) = FlexIMEModeKatakana
+.AddItem FlexIMEModeKatakanaHalf & " - KatakanaHalf"
+.ItemData(.NewIndex) = FlexIMEModeKatakanaHalf
+.AddItem FlexIMEModeAlphaFull & " - AlphaFull"
+.ItemData(.NewIndex) = FlexIMEModeAlphaFull
+.AddItem FlexIMEModeAlpha & " - Alpha"
+.ItemData(.NewIndex) = FlexIMEModeAlpha
+.AddItem FlexIMEModeHangulFull & " - HangulFull"
+.ItemData(.NewIndex) = FlexIMEModeHangulFull
+.AddItem FlexIMEModeHangul & " - Hangul"
+.ItemData(.NewIndex) = FlexIMEModeHangul
 End With
 End Sub
 
@@ -515,18 +603,25 @@ If FontFixedCleared = True Then
     FontFixedCleared = False
 End If
 .MousePointer = ComboMousePointer.ItemData(ComboMousePointer.ListIndex)
-Dim OldFixedRows As Long, OldFixedCols As Long
-OldFixedRows = .FixedRows
-OldFixedCols = .FixedCols
 .Rows = CLng(TextRows.Text)
 If .Rows > 0 Then
-    If OldFixedRows > .FixedRows Then TextFixedRows.Text = CStr(.FixedRows)
-    .FixedRows = CLng(TextFixedRows.Text)
+    If CLng(TextFixedRows.Text) >= .Rows Then
+        .FixedRows = .Rows - 1
+        MsgBox "FixedRows must be at least one less than Rows value", vbExclamation + vbOKOnly
+        TextFixedRows.Text = CStr(.FixedRows)
+    Else
+        .FixedRows = CLng(TextFixedRows.Text)
+    End If
 End If
 .Cols = CLng(TextCols.Text)
 If .Cols > 0 Then
-    If OldFixedCols > .FixedCols Then TextFixedCols.Text = CStr(.FixedCols)
-    .FixedCols = CLng(TextFixedCols.Text)
+    If CLng(TextFixedCols.Text) >= .Cols Then
+        .FixedCols = .Cols - 1
+        MsgBox "FixedCols must be at least one less than Cols value", vbExclamation + vbOKOnly
+        TextFixedCols.Text = CStr(.FixedCols)
+    Else
+        .FixedCols = CLng(TextFixedCols.Text)
+    End If
 End If
 .ScrollBars = ComboScrollBars.ItemData(ComboScrollBars.ListIndex)
 .HighLight = ComboHighLight.ItemData(ComboHighLight.ListIndex)
@@ -536,16 +631,20 @@ End If
 .AllowUserResizing = ComboAllowUserResizing.ItemData(ComboAllowUserResizing.ListIndex)
 .RowSizingMode = ComboRowSizingMode.ItemData(ComboRowSizingMode.ListIndex)
 .TabBehavior = ComboTabBehavior.ItemData(ComboTabBehavior.ListIndex)
+.DirectionAfterReturn = ComboDirectionAfterReturn.ItemData(ComboDirectionAfterReturn.ListIndex)
 .WrapCellBehavior = ComboWrapCellBehavior.ItemData(ComboWrapCellBehavior.ListIndex)
 .ClipSeparators = TextClipSeparators.Text
 .ClipMode = ComboClipMode.ItemData(ComboClipMode.ListIndex)
+.IMEMode = ComboIMEMode.ItemData(ComboIMEMode.ListIndex)
 .MouseTrack = CBool(CheckMouseTrack.Value = vbChecked)
 .AllowBigSelection = CBool(CheckAllowBigSelection.Value = vbChecked)
 .AllowSelection = CBool(CheckAllowSelection.Value = vbChecked)
+.AllowUserEditing = CBool(CheckAllowUserEditing.Value = vbChecked)
 .ScrollTrack = CBool(CheckScrollTrack.Value = vbChecked)
 .DisableNoScroll = CBool(CheckDisableNoScroll.Value = vbChecked)
 .ShowInfoTips = CBool(CheckShowInfoTips.Value = vbChecked)
 .ShowLabelTips = CBool(CheckShowLabelTips.Value = vbChecked)
+.WantReturn = CBool(CheckWantReturn.Value = vbChecked)
 End With
 Call PropertyPage_SelectionChanged
 End Sub
@@ -622,6 +721,12 @@ For i = 0 To ComboTabBehavior.ListCount - 1
         Exit For
     End If
 Next i
+For i = 0 To ComboDirectionAfterReturn.ListCount - 1
+    If ComboDirectionAfterReturn.ItemData(i) = .DirectionAfterReturn Then
+        ComboDirectionAfterReturn.ListIndex = i
+        Exit For
+    End If
+Next i
 For i = 0 To ComboWrapCellBehavior.ListCount - 1
     If ComboWrapCellBehavior.ItemData(i) = .WrapCellBehavior Then
         ComboWrapCellBehavior.ListIndex = i
@@ -635,13 +740,21 @@ For i = 0 To ComboClipMode.ListCount - 1
         Exit For
     End If
 Next i
+For i = 0 To ComboIMEMode.ListCount - 1
+    If ComboIMEMode.ItemData(i) = .IMEMode Then
+        ComboIMEMode.ListIndex = i
+        Exit For
+    End If
+Next i
 CheckMouseTrack.Value = IIf(.MouseTrack = True, vbChecked, vbUnchecked)
 CheckAllowBigSelection.Value = IIf(.AllowBigSelection = True, vbChecked, vbUnchecked)
 CheckAllowSelection.Value = IIf(.AllowSelection = True, vbChecked, vbUnchecked)
+CheckAllowUserEditing.Value = IIf(.AllowUserEditing = True, vbChecked, vbUnchecked)
 CheckScrollTrack.Value = IIf(.ScrollTrack = True, vbChecked, vbUnchecked)
 CheckDisableNoScroll.Value = IIf(.DisableNoScroll = True, vbChecked, vbUnchecked)
 CheckShowInfoTips.Value = IIf(.ShowInfoTips = True, vbChecked, vbUnchecked)
 CheckShowLabelTips.Value = IIf(.ShowLabelTips = True, vbChecked, vbUnchecked)
+CheckWantReturn.Value = IIf(.WantReturn = True, vbChecked, vbUnchecked)
 End With
 FreezeChanged = False
 End Sub
@@ -897,6 +1010,11 @@ If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
 
+Private Sub ComboDirectionAfterReturn_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
 Private Sub ComboWrapCellBehavior_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
@@ -938,6 +1056,11 @@ If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
 
+Private Sub ComboIMEMode_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
 Private Sub CheckMouseTrack_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
@@ -949,6 +1072,11 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckAllowSelection_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckAllowUserEditing_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
@@ -969,6 +1097,11 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckShowLabelTips_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckWantReturn_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub

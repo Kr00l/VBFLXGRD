@@ -1,5 +1,159 @@
 List of revisions:
 
+23-Dec-2019
+- Major performance boost for the 'DataSource' property. (ADO's GetRows method now used)
+
+09-Oct-2019
+- Change of how to achieve DPI-awareness to the controls for non-integral DPI.
+  It's just a better technique now which reduces the number of resizes.
+  However, the change has no visible impact for the end-user.
+
+19-Aug-2019
+- Minor internal improvement for ValidateEdit behavior.
+
+27-Jul-2019
+- Included the DirectionAfterReturn property. It allows to move the position of the current cell when the user presses return (Enter) key.
+  This property works in conjunction with the WrapCellBehavior property. (like the TabBehavior property does)
+
+16-Jul-2019
+- Included the WantReturn property. Indicates when the user presses RETURN to perform the default button or to allow the flex grid to handle the return key.
+  But it applies only when there is any default button on the form.
+
+17-Jun-2019
+- Included the ColFormat run-time property.
+- Included additional FlexEditReasonBackSpace enum const. Pressing the backspace key then starts cell editing and removes all content.
+
+14-Jun-2019
+- Included additional PictureAlignment enum constants to allow pictures to not overlap with the text.
+
+03-Jun-2019
+- If drop-down list extends beyond bottom edge of the screen (MonitorFromWindow API) then it will be displayed above the edit window.
+  Just like a normal ComboBox would behave.
+
+23-May-2019
+- Usage of SPI_GETFOCUSBORDERWIDTH/SPI_GETFOCUSBORDERHEIGHT for correct focus rect drawing.
+- Minor bugfix related to 14-May-2019 update.
+
+22-May-2019
+- Included the ComboMode/ColComboMode run-time property that allows to use combo functionality when editing a cell, it returns/sets.
+  - FlexComboModeNone -> Normal editing.
+  - FlexComboModeDropDown -> Allows to modify by drop-down list only.
+  - FlexComboModeEditable -> Allows to modify by normal editing and drop-down list.
+  - FlexComboModeButton -> Allows to modify by button only, which is a request to open a custom editor.
+- Included the ComboButtonValue run-time property which sets the value of the combo button by code, it returns/sets:
+  - FlexComboButtonValueUnpressed -> Normal.
+  - FlexComboButtonValuePressed -> Shows drop-down list or raises ComboButtonClick. (depending on ComboMode)
+  - FlexComboButtonValueDisabled -> Cannot click, grayed and closes up drop-down list if necessary.
+- Included ComboItems/ColComboItems run-time property defines the strings to be used for a drop-down list.
+  Each item is separated with "|". If ComboMode property is Button then this property is ignored.
+- ComboList/ComboListCount/ComboListIndex run-time property are helping to interact with the drop-down list by code.
+- ComboDropDown/ComboCloseUp event, which occurs only when ComboMode is DropDown or Editable.
+- ComboButtonClick event, which occurs only when ComboMode is Button.
+- Included ComboButtonDrawMode run-time property and corresponding ComboButtonOwnerDraw event.
+
+19-May-2019
+- Bugfix in the Picture property. (related to 08-May-2019 update)
+
+14-May-2019
+- Eliminated run-time limitation of no support for having fixed cell(s) without cell(s). (e.g. FixedRows = 1 and Rows = 1)
+
+10-May-2019
+- Finetuning concerning RightToLeftLayout for in-cell editing window.
+
+09-May-2019
+- Bugfix related to 08-May-2019 update.
+
+08-May-2019
+- Major drawing performance boost. (~20%)
+
+07-May-2019
+- Bugfix related to 06-May-2019 update concerning in-cell editing window.
+
+06-May-2019
+- When in-cell editing window is scrolled off then any key input will now bring it back into view.
+- Included WS_CLIPCHILDREN on VBFlexGridWndClass creation.
+
+05-May-2019
+- Included enum FlexSelectionModeFreeByRow and FlexSelectionModeFreeByColumn in the SelectionMode property.
+
+01-May-2019
+- Row/Col params in the BeforeEdit event now ByRef instead ByVal.
+
+25-Apr-2019
+- Finetuning with WM_NCCALCSIZE/WM_NCHITTEST/WM_NCPAINT for in-cell editing window.
+
+23-Apr-2019
+- Bugfix in the internal FlexTopParentValidateControls function.
+
+17-Apr-2019
+- Bugfix related to 15-Apr-2019 update when scrolling while editing fixed cells.
+- Finetuning with EM_SETMARGINS for in-cell editing window.
+
+15-Apr-2019
+- Scrolling will now update the in-cell editing window accordingly.
+
+13-Apr-2019
+- Included the in-cell editing functionality.
+  - AllowUserEditing property.
+  - StartEdit/CancelEdit/CommitEdit method. (works even if AllowUserEditing is False)
+  - BeforeEdit/EnterEdit/ValidateEdit/LeaveEdit/AfterEdit events.
+  - EditSetupStyle/EditSetupWindow/EditQueryClose/EditChange/EditKeyDown/EditKeyUp/EditKeyPress events.
+  - hWndEdit/EditRow/EditCol/EditReason/EditCloseMode read-only run-time property.
+  - EditText/EditMaxLength/EditSelStart/EditSelLength/EditSelText run-time property.
+- Included the IMEMode property.
+- Included the GetMergedRange method.
+
+12-Apr-2019
+- Merged cells are now able to fetch custom data source 'FlexDataSource'.
+
+11-Apr-2019
+- Minor modification in the internal ProcessKeyDown method.
+
+10-Apr-2019
+- Minor modification in the WM_LBUTTONDOWN handler.
+
+04-Apr-2019
+- Included optional parameter Row and Col in the CellEnsureVisible method.
+  So instead the current cell an arbitrary cell can now be ensured to be visible, scrolling if necessary.
+
+03-Apr-2019
+- Bugfix in CellWrapBehavior property.
+  It didn't work as expected when there were hidden or zero height/width rows/cols.
+
+02-Apr-2019
+- Bugfix in FormatString property when no alignment prefix for a column was specified.
+  FlexAlignmentGeneral is now used then instead of FlexAlignmentLeftCenter.
+
+26-Mar-2019
+- Minor bugfix in the WM_MOUSEACTIVATE handler.
+
+24-Mar-2019
+- Compatibility fix for the CellWidth/CellHeight property.
+
+18-Mar-2019
+- Internal performance improvement.
+
+10-Mar-2019
+- Improvement in VTableHandle.bas concerning 'DeactivateIPAO'.
+
+02-Mar-2019
+- More user friendly behavior when SelectionMode is ByRow/ByCol and pressing cursor keys.
+
+26-Feb-2019
+- Included the CellClick and CellDblClick event.
+
+30-Jan-2019
+- CellPicture property can now render 32bpp alpha bitmaps.
+
+23-Jan-2019
+- VBA bugfix.
+
+17-Jan-2019
+- Improvement in VTableHandle.bas concerning 'DeactivateIPAO'.
+
+09-Nov-2018
+- Internal improvement concerning design-mode handling.
+
 26-Oct-2018
 - Bugfix related to 25-Oct-2018 update.
 - Minor internal improvements.
