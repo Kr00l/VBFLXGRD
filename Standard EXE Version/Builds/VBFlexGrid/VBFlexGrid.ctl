@@ -1345,9 +1345,9 @@ Private Sub UserControl_Initialize()
 Call FlexLoadShellMod
 Call FlexWndRegisterClass
 Call FlexInitCC(ICC_STANDARD_CLASSES)
-Call SetVTableSubclass(Me, VTableInterfaceInPlaceActiveObject)
-Call SetVTableSubclass(Me, VTableInterfaceControl)
-Call SetVTableSubclass(Me, VTableInterfacePerPropertyBrowsing)
+Call SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
+Call SetVTableHandling(Me, VTableInterfaceControl)
+Call SetVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 With VBFlexGridDefaultCell
 .TextStyle = -1
 .Alignment = -1
@@ -1733,9 +1733,9 @@ InProc = False
 End Sub
 
 Private Sub UserControl_Terminate()
-Call RemoveVTableSubclass(Me, VTableInterfaceInPlaceActiveObject)
-Call RemoveVTableSubclass(Me, VTableInterfaceControl)
-Call RemoveVTableSubclass(Me, VTableInterfacePerPropertyBrowsing)
+Call RemoveVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
+Call RemoveVTableHandling(Me, VTableInterfaceControl)
+Call RemoveVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 Call DestroyVBFlexGrid
 Call FlexWndReleaseClass
 Call FlexReleaseShellMod

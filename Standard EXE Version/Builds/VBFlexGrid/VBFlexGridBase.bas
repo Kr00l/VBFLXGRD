@@ -382,18 +382,21 @@ End Sub
 
 Private Sub FlexIDEStopProtectionHandler()
 On Error Resume Next
-Call RemoveAllVTableSubclass(VTableInterfaceInPlaceActiveObject)
-Call RemoveAllVTableSubclass(VTableInterfaceControl)
-Call RemoveAllVTableSubclass(VTableInterfacePerPropertyBrowsing)
-Dim AppForm As Form, CurrControl As Control
-For Each AppForm In Forms
+Dim AppForm As VB.Form, CurrControl As VB.Control
+For Each AppForm In VB.Forms
     For Each CurrControl In AppForm.Controls
+        Call RemoveVTableHandling(CurrControl.Object, VTableInterfaceInPlaceActiveObject)
+        Call RemoveVTableHandling(CurrControl.Object, VTableInterfaceControl)
+        Call RemoveVTableHandling(CurrControl.Object, VTableInterfacePerPropertyBrowsing)
         If TypeOf CurrControl Is VBFlexGrid Then
             Call FlexRemoveSubclass(CurrControl.hWnd)
             Call FlexRemoveSubclass(CurrControl.hWndUserControl)
         End If
     Next CurrControl
 Next AppForm
+Call StopVTableHandling(VTableInterfaceInPlaceActiveObject)
+Call StopVTableHandling(VTableInterfaceControl)
+Call StopVTableHandling(VTableInterfacePerPropertyBrowsing)
 End Sub
 
 Private Function HookIATEntry(ByVal Module As String, ByVal Lib As String, ByVal Fnc As String, ByVal NewAddr As Long) As Long
