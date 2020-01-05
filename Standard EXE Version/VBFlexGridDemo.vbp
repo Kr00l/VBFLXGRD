@@ -7,7 +7,6 @@ Module=VisualStyles; Common\VisualStyles.bas
 Module=Startup; Common\Startup.bas
 Module=VTableHandle; Builds\VTableHandle.bas
 Module=Common; Common\Common.bas
-Class=VTableSubclass; Builds\VTableSubclass.cls
 UserControl=Builds\VBFlexGrid\VBFlexGrid.ctl
 Module=VBFlexGridBase; Builds\VBFlexGrid\VBFlexGridBase.bas
 PropertyPage=Builds\VBFlexGrid\PPVBFlexGridGeneral.pag
