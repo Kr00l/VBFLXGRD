@@ -53,6 +53,7 @@ Private Declare Function UnregisterClass Lib "user32" Alias "UnregisterClassW" (
 Private Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
 Private Declare Function GetWindowLong Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long) As Long
+Private Declare Function DestroyWindow Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function DllGetVersion Lib "comctl32" (ByRef pdvi As DLLVERSIONINFO) As Long
 Private Declare Function GetVersionEx Lib "kernel32" Alias "GetVersionExW" (ByRef lpVersionInfo As OSVERSIONINFO) As Long
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryW" (ByVal lpLibFileName As Long) As Long
@@ -363,7 +364,7 @@ Public Sub FlexInitIDEStopProtection()
 
 If InIDE() = True Then
     Dim ASMWrapper As Long, RestorePointer As Long, OldAddress As Long
-    ASMWrapper = VirtualAlloc(ByVal 0, 20, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
+    ASMWrapper = VirtualAlloc(ByVal 0&, 20, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
     OldAddress = GetProcAddress(GetModuleHandle(StrPtr("vba6.dll")), "EbProjectReset")
     RestorePointer = HookIATEntry("vb6.exe", "vba6.dll", "EbProjectReset", ASMWrapper)
     WriteCall ASMWrapper, AddressOf FlexIDEStopProtectionHandler
@@ -385,12 +386,17 @@ On Error Resume Next
 Dim AppForm As VB.Form, CurrControl As VB.Control
 For Each AppForm In VB.Forms
     For Each CurrControl In AppForm.Controls
+        Call RemoveVisualStyleFixes(AppForm)
         Call RemoveVTableHandling(CurrControl.Object, VTableInterfaceInPlaceActiveObject)
         Call RemoveVTableHandling(CurrControl.Object, VTableInterfaceControl)
         Call RemoveVTableHandling(CurrControl.Object, VTableInterfacePerPropertyBrowsing)
         If TypeOf CurrControl Is VBFlexGrid Then
-            Call FlexRemoveSubclass(CurrControl.hWnd)
             Call FlexRemoveSubclass(CurrControl.hWndUserControl)
+            If CurrControl.hWndEdit <> 0 Then Call FlexRemoveSubclass(CurrControl.hWndEdit)
+            If CurrControl.hWndComboButton <> 0 Then Call FlexRemoveSubclass(CurrControl.hWndComboButton)
+            If CurrControl.hWndComboList <> 0 Then Call FlexRemoveSubclass(CurrControl.hWndComboList)
+            SetWindowLong CurrControl.hWnd, 0, 0
+            DestroyWindow CurrControl.hWnd
         End If
     Next CurrControl
 Next AppForm
