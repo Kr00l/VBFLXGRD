@@ -144,7 +144,7 @@ Unload Me
 End Sub
 
 Private Sub Form_Load()
-SetupVisualStyles Me
+Call SetupVisualStyleFixes(Me)
 Dim i As Long, j As Long
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1
     VBFlexGrid1.TextMatrix(i, 0) = i

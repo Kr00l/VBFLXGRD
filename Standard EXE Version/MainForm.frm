@@ -343,7 +343,7 @@ End If
 End Property
 
 Private Sub Form_Load()
-SetupVisualStyles Me
+Call SetupVisualStyleFixes(Me)
 Dim i As Long, j As Long, DecStr As String, StartDate As Date
 DecStr = Mid$(1.1, 2, 1)
 StartDate = DateSerial(Year(Now()), 1, 1)
