@@ -16,7 +16,7 @@ If App.PrevInstance = True And InIDE() = False Then
     End If
 Else
     Call FlexInitIDEStopProtection
-    Call InitVisualStyleFixes
+    Call InitVisualStylesFixes
     MainForm.Show vbModeless
 End If
 End Sub
