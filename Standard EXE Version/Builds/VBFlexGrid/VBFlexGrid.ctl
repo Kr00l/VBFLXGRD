@@ -5751,34 +5751,18 @@ With VBFlexGridCells
 If PropClipMode = FlexClipModeNormal Then
     Do
         Pos1 = InStr(Pos1 + 1, Value, RowSeparator)
-        If Pos1 > 0 Then
-            If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
-                Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1)
-                Do
-                    Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
-                    If Pos3 > 0 Then
-                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1))
-                    Else
-                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
-                    End If
-                    Pos4 = Pos3
-                    iCol = iCol + 1
-                Loop Until Pos3 = 0
-            End If
-        Else
-            If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
-                Temp = Mid$(Value, Pos2 + 1)
-                Do
-                    Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
-                    If Pos3 > 0 Then
-                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1))
-                    Else
-                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
-                    End If
-                    Pos4 = Pos3
-                    iCol = iCol + 1
-                Loop Until Pos3 = 0
-            End If
+        If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
+            If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1) Else Temp = Mid$(Value, Pos2 + 1)
+            Do
+                Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
+                If Pos3 > 0 Then
+                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1))
+                Else
+                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                End If
+                Pos4 = Pos3
+                iCol = iCol + 1
+            Loop Until Pos3 = 0
         End If
         Pos2 = Pos1
         Pos4 = 0
@@ -5790,46 +5774,25 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     Do
         If (.Rows(SelRange.TopRow + iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
             Pos1 = InStr(Pos1 + 1, Value, RowSeparator)
-            If Pos1 > 0 Then
-                If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
-                    Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1)
-                    Do
-                        If (VBFlexGridColsInfo(SelRange.LeftCol + iCol).State And CLIS_HIDDEN) = 0 Then
-                            Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
-                            If Pos3 > 0 Then
-                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1))
-                            Else
-                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
-                            End If
-                            Pos4 = Pos3
-                            iCol = iCol + 1
-                            ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= SelRange.RightCol)
+            
+            If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
+                If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1) Else Temp = Mid$(Value, Pos2 + 1)
+                Do
+                    If (VBFlexGridColsInfo(SelRange.LeftCol + iCol).State And CLIS_HIDDEN) = 0 Then
+                        Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
+                        If Pos3 > 0 Then
+                            If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1))
                         Else
-                            iCol = iCol + 1
-                            ColLoop = CBool((SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                            If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
                         End If
-                    Loop Until ColLoop = False
-                End If
-            Else
-                If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
-                    Temp = Mid$(Value, Pos2 + 1)
-                    Do
-                        If (VBFlexGridColsInfo(SelRange.LeftCol + iCol).State And CLIS_HIDDEN) = 0 Then
-                            Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
-                            If Pos3 > 0 Then
-                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1))
-                            Else
-                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
-                            End If
-                            Pos4 = Pos3
-                            iCol = iCol + 1
-                            ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= SelRange.RightCol)
-                        Else
-                            iCol = iCol + 1
-                            ColLoop = CBool((SelRange.LeftCol + iCol) <= SelRange.RightCol)
-                        End If
-                    Loop Until ColLoop = False
-                End If
+                        Pos4 = Pos3
+                        iCol = iCol + 1
+                        ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                    Else
+                        iCol = iCol + 1
+                        ColLoop = CBool((SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                    End If
+                Loop Until ColLoop = False
             End If
             Pos2 = Pos1
             Pos4 = 0
@@ -9307,7 +9270,11 @@ If hDC <> 0 Then
             If IsFixedCell = False Then
                 Alignment = VBFlexGridColsInfo(iCol).Alignment
             Else
-                Alignment = VBFlexGridColsInfo(iCol).FixedAlignment
+                If VBFlexGridColsInfo(iCol).FixedAlignment = -1 Then
+                    Alignment = VBFlexGridColsInfo(iCol).Alignment
+                Else
+                    Alignment = VBFlexGridColsInfo(iCol).FixedAlignment
+                End If
             End If
         Else
             Alignment = .Alignment
