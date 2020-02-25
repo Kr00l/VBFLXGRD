@@ -5774,7 +5774,6 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     Do
         If (.Rows(SelRange.TopRow + iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
             Pos1 = InStr(Pos1 + 1, Value, RowSeparator)
-            
             If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
                 If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1) Else Temp = Mid$(Value, Pos2 + 1)
                 Do
