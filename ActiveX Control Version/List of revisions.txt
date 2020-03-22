@@ -1,5 +1,8 @@
 List of revisions:
 
+22-Mar-2020
+- Revision update. (Version 1.4.2)
+
 24-Feb-2020
 - Revision update. (Version 1.4.1)
 
