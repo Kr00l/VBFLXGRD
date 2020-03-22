@@ -1,5 +1,8 @@
 List of revisions:
 
+22-Mar-2020
+- Bugfix in the CreateGDIFontFromOLEFont function. (Common.bas)
+
 24-Feb-2020
 - Bugfix in the ShowLabelTips property that it didn't show on fixed cells.
 
