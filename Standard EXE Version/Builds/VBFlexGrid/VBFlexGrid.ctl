@@ -9741,7 +9741,7 @@ Private Sub MoveNextRow(ByRef iRow As Long)
 Dim i As Long, Cancel As Boolean
 i = iRow
 Do
-    If iRow < (PropRows - 1) Then i = i + 1 Else Cancel = True
+    If i < (PropRows - 1) Then i = i + 1 Else Cancel = True
 Loop Until GetRowHeight(i) > 0 Or Cancel = True
 If Cancel = False Then iRow = i
 End Sub
@@ -9777,7 +9777,7 @@ Private Sub MoveNextCol(ByRef iCol As Long)
 Dim i As Long, Cancel As Boolean
 i = iCol
 Do
-    If iCol < (PropCols - 1) Then i = i + 1 Else Cancel = True
+    If i < (PropCols - 1) Then i = i + 1 Else Cancel = True
 Loop Until GetColWidth(i) > 0 Or Cancel = True
 If Cancel = False Then iCol = i
 End Sub
