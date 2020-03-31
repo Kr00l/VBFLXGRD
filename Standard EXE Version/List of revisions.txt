@@ -1,5 +1,8 @@
 List of revisions:
 
+31-Mar-2020
+- Bugfix in the internal MoveNextRow and MoveNextCol function.
+
 22-Mar-2020
 - Bugfix in the CreateGDIFontFromOLEFont function. (Common.bas)
 
