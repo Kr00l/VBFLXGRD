@@ -942,7 +942,7 @@ Private Const WS_HSCROLL As Long = &H100000
 Private Const WS_VSCROLL As Long = &H200000
 Private Const WM_NOTIFY As Long = &H4E
 Private Const WM_NOTIFYFORMAT As Long = &H55
-Private Const WM_MOUSEACTIVATE As Long = &H21, MA_ACTIVATE As Long = &H1, MA_ACTIVATEANDEAT As Long = &H2, MA_NOACTIVATE As Long = &H3, MA_NOACTIVATEANDEAT As Long = &H4, HTBORDER As Long = 18
+Private Const WM_MOUSEACTIVATE As Long = &H21, MA_ACTIVATE As Long = &H1, MA_ACTIVATEANDEAT As Long = &H2, MA_NOACTIVATE As Long = &H3, MA_NOACTIVATEANDEAT As Long = &H4
 Private Const WM_SETTINGCHANGE As Long = &H1A
 Private Const WM_MOUSEWHEEL As Long = &H20A
 Private Const SW_HIDE As Long = &H0
@@ -982,7 +982,7 @@ Private Const WM_SETFONT As Long = &H30
 Private Const WM_GETFONT As Long = &H31
 Private Const WM_SETREDRAW As Long = &HB
 Private Const WM_SIZE As Long = &H5
-Private Const WM_SETCURSOR As Long = &H20, HTCLIENT As Long = 1
+Private Const WM_SETCURSOR As Long = &H20
 Private Const WM_CTLCOLOREDIT As Long = &H133
 Private Const WM_CTLCOLORSTATIC As Long = &H138
 Private Const WM_GETTEXTLENGTH As Long = &HE
@@ -992,7 +992,7 @@ Private Const WM_ERASEBKGND As Long = &H14
 Private Const WM_PAINT As Long = &HF
 Private Const WM_PRINTCLIENT As Long = &H318
 Private Const WM_NCCALCSIZE As Long = &H83
-Private Const WM_NCHITTEST As Long = &H84, HTVSCROLL As Long = 7
+Private Const WM_NCHITTEST As Long = &H84, HTCLIENT As Long = 1, HTVSCROLL As Long = 7, HTBORDER As Long = 18
 Private Const WM_NCPAINT As Long = &H85
 Private Const WM_NCMOUSEMOVE As Long = &HA0
 Private Const WM_NCMOUSELEAVE As Long = &H2A2
@@ -1101,7 +1101,7 @@ Private VBFlexGridNoRedraw As Boolean
 Private VBFlexGridCharCodeCache As Long
 Private VBFlexGridIsClick As Boolean
 Private VBFlexGridMouseOver As Boolean
-Private VBFlexGridDesignMode As Boolean, VBFlexGridTopDesignMode As Boolean
+Private VBFlexGridDesignMode As Boolean
 Private VBFlexGridRTLLayout As Boolean, VBFlexGridRTLReading As Boolean
 Private VBFlexGridAlignable As Boolean
 Private VBFlexGridEnabledVisualStyles As Boolean
@@ -1113,6 +1113,7 @@ Private VBFlexGridFlexDataSource As IVBFlexDataSource
 
 #End If
 
+Private UCNoSetFocusFwd As Boolean
 Private DispIDMousePointer As Long
 
 #If ImplementDataSource = True Then
@@ -1397,7 +1398,6 @@ If DispIDMousePointer = 0 Then DispIDMousePointer = GetDispID(Me, "MousePointer"
 On Error Resume Next
 If UserControl.ParentControls.Count = 0 Then VBFlexGridAlignable = False Else VBFlexGridAlignable = True
 VBFlexGridDesignMode = Not Ambient.UserMode
-VBFlexGridTopDesignMode = Not GetTopUserControl(Me).Ambient.UserMode
 On Error GoTo 0
 
 #If ImplementDataSource = True Then
@@ -1477,7 +1477,6 @@ If DispIDMousePointer = 0 Then DispIDMousePointer = GetDispID(Me, "MousePointer"
 On Error Resume Next
 If UserControl.ParentControls.Count = 0 Then VBFlexGridAlignable = False Else VBFlexGridAlignable = True
 VBFlexGridDesignMode = Not Ambient.UserMode
-VBFlexGridTopDesignMode = Not GetTopUserControl(Me).Ambient.UserMode
 On Error GoTo 0
 With PropBag
 
@@ -12288,51 +12287,14 @@ Select Case wMsg
         WindowProcControl = 0
         Exit Function
     Case WM_MOUSEACTIVATE
-        Static InProc As Boolean
-        If VBFlexGridTopDesignMode = False And GetFocus() <> VBFlexGridHandle And (GetFocus() <> VBFlexGridEditHandle Or VBFlexGridEditHandle = 0) Then
-            If InProc = True Or LoWord(lParam) = HTBORDER Then WindowProcControl = MA_ACTIVATEANDEAT: Exit Function
-            Select Case HiWord(lParam)
-                Case WM_LBUTTONDOWN
-                    On Error Resume Next
-                    With UserControl
-                    If .Extender.CausesValidation = True Then
-                        InProc = True
-                        Call FlexTopParentValidateControls(Me)
-                        InProc = False
-                        If Err.Number = 380 Then
-                            WindowProcControl = MA_ACTIVATEANDEAT
-                        Else
-                            If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then
-                                If ValidateEditOnMouseActivateMsg(lParam, WindowProcControl) = True Then
-                                    SetFocusAPI .hWnd
-                                Else
-                                    SetFocusAPI .hWnd
-                                    WindowProcControl = MA_NOACTIVATE
-                                End If
-                            Else
-                                SetFocusAPI .hWnd
-                                WindowProcControl = MA_NOACTIVATE
-                            End If
-                        End If
-                    Else
-                        If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then
-                            If ValidateEditOnMouseActivateMsg(lParam, WindowProcControl) = True Then
-                                SetFocusAPI .hWnd
-                            Else
-                                SetFocusAPI .hWnd
-                                WindowProcControl = MA_NOACTIVATE
-                            End If
-                        Else
-                            SetFocusAPI .hWnd
-                            WindowProcControl = MA_NOACTIVATE
-                        End If
-                    End If
-                    End With
-                    On Error GoTo 0
-                    Exit Function
-            End Select
-        ElseIf VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then
-            If ValidateEditOnMouseActivateMsg(lParam, WindowProcControl) = True Then Exit Function
+        If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then
+            If ValidateEditOnMouseActivateMsg(lParam, WindowProcControl) = True Then
+                ' In case the edit window is still active due to failed validation then this ensures that the focus is properly set when clicked from outside.
+                If VBFlexGridEditHandle <> 0 Then
+                    If GetFocus() <> VBFlexGridEditHandle Then SetFocusAPI UserControl.hWnd
+                End If
+                Exit Function
+            End If
         End If
     Case WM_SETCURSOR
         If LoWord(lParam) = HTCLIENT Then
@@ -13029,7 +12991,7 @@ Select Case wMsg
         SendMessage hWnd, WM_CHAR, wParam, ByVal lParam
         Exit Function
     Case WM_LBUTTONDOWN
-        If GetFocus() <> hWnd Then SetFocusAPI UserControl.hWnd
+        If GetFocus() <> hWnd Then UCNoSetFocusFwd = True: SetFocusAPI UserControl.hWnd: UCNoSetFocusFwd = False
     Case WM_NCCALCSIZE, WM_NCHITTEST, WM_NCPAINT
         Dim RC As RECT
         Select Case wMsg
@@ -13192,5 +13154,5 @@ Select Case wMsg
         End If
 End Select
 WindowProcUserControl = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
-If wMsg = WM_SETFOCUS Then SetFocusAPI VBFlexGridHandle
+If wMsg = WM_SETFOCUS And UCNoSetFocusFwd = False Then SetFocusAPI VBFlexGridHandle
 End Function
