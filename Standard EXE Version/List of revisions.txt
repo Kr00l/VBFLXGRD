@@ -1,5 +1,9 @@
 List of revisions:
 
+07-Apr-2020
+- Major internal improvement as no WM_MOUSEACTIVATE overhead necessary anymore.
+  This results for 'FlexTopParentValidateControls' being obselete and was removed!
+
 31-Mar-2020
 - Bugfix in the internal MoveNextRow and MoveNextCol function.
 
