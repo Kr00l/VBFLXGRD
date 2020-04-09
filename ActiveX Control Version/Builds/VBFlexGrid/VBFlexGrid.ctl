@@ -5904,7 +5904,7 @@ End If
 Call RedrawGrid
 End Property
 
-Public Property Get CellPicture() As IPicture
+Public Property Get CellPicture() As IPictureDisp
 Attribute CellPicture.VB_Description = "Returns/sets an picture to be displayed in the current cell or in a range of cells."
 Attribute CellPicture.VB_MemberFlags = "400"
 If VBFlexGridRow < 0 Then
@@ -5915,11 +5915,11 @@ End If
 Set CellPicture = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Picture
 End Property
 
-Public Property Let CellPicture(ByVal Value As IPicture)
+Public Property Let CellPicture(ByVal Value As IPictureDisp)
 Set Me.CellPicture = Value
 End Property
 
-Public Property Set CellPicture(ByVal Value As IPicture)
+Public Property Set CellPicture(ByVal Value As IPictureDisp)
 If VBFlexGridRow < 0 Then
     Err.Raise Number:=30009, Description:="Invalid Row value"
 ElseIf VBFlexGridCol < 0 Then
