@@ -1,5 +1,8 @@
 List of revisions:
 
+09-Apr-2020
+- Bugfix in the CellPicture property. It now returns as 'IPictureDisp' instead of 'IPicture'.
+
 07-Apr-2020
 - Major internal improvement as no WM_MOUSEACTIVATE overhead necessary anymore.
   This results for 'FlexTopParentValidateControls' being obselete and was removed!
