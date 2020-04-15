@@ -1,5 +1,8 @@
 List of revisions:
 
+15-Apr-2020
+- Returning a zero KeyChar in the EditKeyPress event will not cause anymore a beep. (like in a TextBox control)
+
 09-Apr-2020
 - Bugfix in the CellPicture property. It now returns as 'IPictureDisp' instead of 'IPicture'.
 
