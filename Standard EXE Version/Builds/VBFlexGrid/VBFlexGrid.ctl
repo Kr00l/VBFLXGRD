@@ -12975,11 +12975,15 @@ Select Case wMsg
             KeyChar = CUIntToInt(wParam And &HFFFF&)
         End If
         RaiseEvent EditKeyPress(KeyChar)
+        If (wParam And &HFFFF&) <> 0 And KeyChar = 0 Then
+            Exit Function
+        Else
+            wParam = CIntToUInt(KeyChar)
+        End If
         If VBFlexGridComboActiveMode = FlexComboModeDropDown And VBFlexGridComboListHandle <> 0 Then
             SendMessage VBFlexGridComboListHandle, wMsg, wParam, ByVal lParam
             Exit Function
         End If
-        wParam = CIntToUInt(KeyChar)
     Case WM_UNICHAR
         If wParam = UNICODE_NOCHAR Then WindowProcEdit = 1 Else SendMessage hWnd, WM_CHAR, wParam, ByVal lParam
         Exit Function
@@ -13144,12 +13148,12 @@ Select Case wMsg
             Dim P As POINTAPI
             P.X = Get_X_lParam(lParam)
             P.Y = Get_Y_lParam(lParam)
-            If P.X > 0 And P.Y > 0 Then
-                ScreenToClient VBFlexGridHandle, P
-                RaiseEvent ContextMenu(UserControl.ScaleX(P.X, vbPixels, vbContainerPosition), UserControl.ScaleY(P.Y, vbPixels, vbContainerPosition))
-            ElseIf P.X = -1 And P.Y = -1 Then
+            If P.X = -1 And P.Y = -1 Then
                 ' If the user types SHIFT + F10 then the X and Y coordinates are -1.
                 RaiseEvent ContextMenu(-1, -1)
+            Else
+                ScreenToClient VBFlexGridHandle, P
+                RaiseEvent ContextMenu(UserControl.ScaleX(P.X, vbPixels, vbContainerPosition), UserControl.ScaleY(P.Y, vbPixels, vbContainerPosition))
             End If
         End If
 End Select
