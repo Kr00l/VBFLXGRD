@@ -1194,7 +1194,7 @@ End Sub
 Private Sub IObjectSafety_SetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByVal dwOptionsSetMask As Long, ByVal dwEnabledOptions As Long)
 End Sub
 
-Private Sub IOleInPlaceActiveObjectVB_TranslateAccelerator(ByRef Handled As Boolean, ByRef RetVal As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal Shift As Long)
+Private Sub IOleInPlaceActiveObjectVB_TranslateAccelerator(ByRef Handled As Boolean, ByRef RetVal As Long, ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal Shift As Long)
 If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
     Dim KeyCode As Integer, IsInputKey As Boolean
     KeyCode = wParam And &HFF&
@@ -1205,11 +1205,7 @@ If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
     End If
     Select Case KeyCode
         Case vbKeyUp, vbKeyDown, vbKeyLeft, vbKeyRight, vbKeyPageDown, vbKeyPageUp, vbKeyHome, vbKeyEnd
-            If VBFlexGridEditHandle = 0 Then
-                SendMessage VBFlexGridHandle, wMsg, wParam, ByVal lParam
-            Else
-                SendMessage VBFlexGridEditHandle, wMsg, wParam, ByVal lParam
-            End If
+            SendMessage hWnd, wMsg, wParam, ByVal lParam
             Handled = True
         Case vbKeyTab
             Select Case PropTabBehavior
@@ -1252,21 +1248,17 @@ If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
                     End Select
             End Select
             If IsInputKey = True Then
-                If VBFlexGridEditHandle = 0 Then
-                    SendMessage VBFlexGridHandle, wMsg, wParam, ByVal lParam
-                Else
-                    SendMessage VBFlexGridEditHandle, wMsg, wParam, ByVal lParam
-                End If
+                SendMessage hWnd, wMsg, wParam, ByVal lParam
                 Handled = True
             End If
         Case vbKeyReturn, vbKeyEscape
             If VBFlexGridEditHandle = 0 Then
                 If IsInputKey = True Then
-                    SendMessage VBFlexGridHandle, wMsg, wParam, ByVal lParam
+                    SendMessage hWnd, wMsg, wParam, ByVal lParam
                     Handled = True
                 End If
             Else
-                SendMessage VBFlexGridEditHandle, wMsg, wParam, ByVal lParam
+                SendMessage hWnd, wMsg, wParam, ByVal lParam
                 Handled = True
             End If
     End Select
@@ -1280,7 +1272,7 @@ If PropWantReturn = True Then
 End If
 End Sub
 
-Private Sub IOleControlVB_OnMnemonic(ByRef Handled As Boolean, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal Shift As Long)
+Private Sub IOleControlVB_OnMnemonic(ByRef Handled As Boolean, ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal Shift As Long)
 End Sub
 
 Private Sub IPerPropertyBrowsingVB_GetDisplayString(ByRef Handled As Boolean, ByVal DispID As Long, ByRef DisplayName As String)
