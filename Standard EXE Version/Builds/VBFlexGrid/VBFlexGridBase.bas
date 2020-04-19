@@ -81,6 +81,7 @@ Private Const CS_VREDRAW As Long = &H1, CS_HREDRAW As Long = &H2
 Private Const CS_DBLCLKS As Long = &H8
 Private Const IDC_ARROW As Long = 32512
 Private ShellModHandle As Long, ShellModCount As Long
+Private FlexSubclassProcPtr As Long
 Private FlexClassAtom As Integer, FlexRefCount As Long
 Private FlexSplitterBrush As Long
 
@@ -194,12 +195,13 @@ End Function
 
 Public Sub FlexSetSubclass(ByVal hWnd As Long, ByVal This As VBFlexGrid, ByVal dwRefData As Long, Optional ByVal Name As String)
 If hWnd = 0 Then Exit Sub
-If Name = vbNullString Then Name = "VBFlexGrid"
+If Name = vbNullString Then Name = "Flex"
 If GetProp(hWnd, StrPtr(Name & "SubclassInit")) = 0 Then
+    If FlexSubclassProcPtr = 0 Then FlexSubclassProcPtr = ProcPtr(AddressOf FlexSubclassProc)
     If FlexW2KCompatibility() = False Then
-        SetWindowSubclass hWnd, AddressOf FlexSubclassProc, ObjPtr(This), dwRefData
+        SetWindowSubclass hWnd, FlexSubclassProcPtr, ObjPtr(This), dwRefData
     Else
-        SetWindowSubclass_W2K hWnd, AddressOf FlexSubclassProc, ObjPtr(This), dwRefData
+        SetWindowSubclass_W2K hWnd, FlexSubclassProcPtr, ObjPtr(This), dwRefData
     End If
     SetProp hWnd, StrPtr(Name & "SubclassID"), ObjPtr(This)
     SetProp hWnd, StrPtr(Name & "SubclassInit"), 1
@@ -216,12 +218,12 @@ End Function
 
 Public Sub FlexRemoveSubclass(ByVal hWnd As Long, Optional ByVal Name As String)
 If hWnd = 0 Then Exit Sub
-If Name = vbNullString Then Name = "VBFlexGrid"
+If Name = vbNullString Then Name = "Flex"
 If GetProp(hWnd, StrPtr(Name & "SubclassInit")) = 1 Then
     If FlexW2KCompatibility() = False Then
-        RemoveWindowSubclass hWnd, AddressOf FlexSubclassProc, GetProp(hWnd, StrPtr(Name & "SubclassID"))
+        RemoveWindowSubclass hWnd, FlexSubclassProcPtr, GetProp(hWnd, StrPtr(Name & "SubclassID"))
     Else
-        RemoveWindowSubclass_W2K hWnd, AddressOf FlexSubclassProc, GetProp(hWnd, StrPtr(Name & "SubclassID"))
+        RemoveWindowSubclass_W2K hWnd, FlexSubclassProcPtr, GetProp(hWnd, StrPtr(Name & "SubclassID"))
     End If
     RemoveProp hWnd, StrPtr(Name & "SubclassID")
     RemoveProp hWnd, StrPtr(Name & "SubclassInit")
@@ -236,9 +238,9 @@ Select Case wMsg
     Case WM_NCDESTROY, WM_UAHDESTROYWINDOW
         FlexSubclassProc = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
         If FlexW2KCompatibility() = False Then
-            RemoveWindowSubclass hWnd, AddressOf VBFlexGridBase.FlexSubclassProc, uIdSubclass
+            RemoveWindowSubclass hWnd, FlexSubclassProcPtr, uIdSubclass
         Else
-            RemoveWindowSubclass_W2K hWnd, AddressOf VBFlexGridBase.FlexSubclassProc, uIdSubclass
+            RemoveWindowSubclass_W2K hWnd, FlexSubclassProcPtr, uIdSubclass
         End If
         Exit Function
 End Select
