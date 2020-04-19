@@ -1,5 +1,8 @@
 List of revisions:
 
+19-Apr-2020
+- Internal improvement in VBFlexGridBase.bas.
+
 15-Apr-2020
 - Modified OLEGuids.tlb as following: (compiled with same uuid)
   - included hWnd param for IOleInPlaceActiveObjectVB and IOleControlVB
