@@ -1,5 +1,8 @@
 List of revisions:
 
+26-Apr-2020
+- Bugfix in the GetClipboardText function in Common.bas.
+
 19-Apr-2020
 - Internal improvement in VBFlexGridBase.bas.
 
