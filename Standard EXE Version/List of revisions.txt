@@ -1,9 +1,14 @@
 List of revisions:
 
 10-May-2020
-- Performance boost for drawing. (~2%)
-  Usage of Polyline API (not PolylineTo !) instead of MoveToEx and LineTo. (for the grid lines)
-  Polyline is at device driver level, thus faster than LineTo and it doesn't change current position.
+- Performance boost for drawing the grid.
+  - ~2% for
+    Usage of Polyline API (not PolylineTo !) instead of MoveToEx and LineTo. (for the grid lines)
+    Polyline is at device driver level, thus faster than LineTo and it doesn't change current position.
+  - ~1% for
+    Usage of PatBlt API instead of FillRect. (FillRect is a wrapper of PatBlt SelectObject'ing the specified Brush)
+  - ~5% for
+    Preserving the memory bitmap (DoubleBuffer) for WM_PAINT and re-create only upon WM_SIZE.
 
 26-Apr-2020
 - Bugfix in the GetClipboardText function in Common.bas.
