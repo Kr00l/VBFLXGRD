@@ -494,6 +494,7 @@ Private Type TDRAWINFO
 SelRange As TCELLRANGE
 TextWidthSpacing As Long
 TextHeightSpacing As Long
+GridLinePoints(0 To 5) As POINTAPI
 End Type
 Private Type TMERGEDRAWCOLINFO
 RowOffset As Long
@@ -716,8 +717,7 @@ Private Declare Function SetViewportOrgEx Lib "gdi32" (ByVal hDC As Long, ByVal 
 Private Declare Function SetRect Lib "user32" (ByRef lpRect As RECT, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function CreateSolidBrush Lib "gdi32" (ByVal crColor As Long) As Long
 Private Declare Function CreatePen Lib "gdi32" (ByVal nPenStyle As Long, ByVal nWidth As Long, ByVal crColor As Long) As Long
-Private Declare Function MoveToEx Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByRef lpPoint As Any) As Long
-Private Declare Function LineTo Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long) As Long
+Private Declare Function Polyline Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint As POINTAPI, ByVal nCount As Long) As Long
 Private Declare Function FillRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal hBrush As Long) As Long
 Private Declare Function DrawFocusRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT) As Long
 Private Declare Function DrawFrameControl Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
@@ -7420,8 +7420,8 @@ ElseIf hDC = 0 Then
     Exit Sub
 End If
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
-Dim iRow As Long, iCol As Long
-Dim ClientRect As RECT, CellRect As RECT, GridRect As RECT, FixedCX As Long, FixedCY As Long
+Dim iRow As Long, iCol As Long, FixedCX As Long, FixedCY As Long
+Dim ClientRect As RECT, CellRect As RECT, GridRect As RECT
 Dim OldBkMode As Long, hFontOld As Long
 GetClientRect VBFlexGridHandle, ClientRect
 Call GetSelRangeStruct(VBFlexGridDrawInfo.SelRange)
@@ -7444,10 +7444,24 @@ If PropMergeCells = FlexMergeCellsNever Then
     For iRow = 0 To (PropFixedRows - 1)
         .Bottom = .Top + GetRowHeight(iRow)
         If .Bottom > .Top Then
+            VBFlexGridDrawInfo.GridLinePoints(0).Y = .Bottom - 1
+            VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
+            VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
+            VBFlexGridDrawInfo.GridLinePoints(3).Y = .Top
+            VBFlexGridDrawInfo.GridLinePoints(4).Y = .Top
+            VBFlexGridDrawInfo.GridLinePoints(5).Y = .Bottom
             .Left = FixedCX
             For iCol = VBFlexGridLeftCol To (PropCols - 1)
                 .Right = .Left + GetColWidth(iCol)
-                If .Right > .Left Then Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+                If .Right > .Left Then
+                    VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                    VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
+                    VBFlexGridDrawInfo.GridLinePoints(2).X = .Right - 1
+                    VBFlexGridDrawInfo.GridLinePoints(3).X = .Right - 2
+                    VBFlexGridDrawInfo.GridLinePoints(4).X = .Left
+                    VBFlexGridDrawInfo.GridLinePoints(5).X = .Left
+                    Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+                End If
                 .Left = .Right
                 If NoClip = False And .Right > ClientRect.Right Then Exit For
             Next iCol
@@ -7462,10 +7476,24 @@ If PropMergeCells = FlexMergeCellsNever Then
         For iRow = 0 To (PropFixedRows - 1)
             .Bottom = .Top + GetRowHeight(iRow)
             If .Bottom > .Top Then
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = .Bottom - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
+                VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
+                VBFlexGridDrawInfo.GridLinePoints(3).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(4).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(5).Y = .Bottom
                 .Left = 0
                 For iCol = 0 To (PropFixedCols - 1)
                     .Right = .Left + GetColWidth(iCol)
-                    If .Right > .Left Then Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+                    If .Right > .Left Then
+                        VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                        VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
+                        VBFlexGridDrawInfo.GridLinePoints(2).X = .Right - 1
+                        VBFlexGridDrawInfo.GridLinePoints(3).X = .Right - 2
+                        VBFlexGridDrawInfo.GridLinePoints(4).X = .Left
+                        VBFlexGridDrawInfo.GridLinePoints(5).X = .Left
+                        Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+                    End If
                     .Left = .Right
                     If NoClip = False And .Right > ClientRect.Right Then Exit For
                 Next iCol
@@ -7479,10 +7507,24 @@ If PropMergeCells = FlexMergeCellsNever Then
         For iRow = VBFlexGridTopRow To (PropRows - 1)
             .Bottom = .Top + GetRowHeight(iRow)
             If .Bottom > .Top Then
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = .Bottom - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
+                VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
+                VBFlexGridDrawInfo.GridLinePoints(3).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(4).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(5).Y = .Bottom
                 .Left = 0
                 For iCol = 0 To (PropFixedCols - 1)
                     .Right = .Left + GetColWidth(iCol)
-                    If .Right > .Left Then Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+                    If .Right > .Left Then
+                        VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                        VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
+                        VBFlexGridDrawInfo.GridLinePoints(2).X = .Right - 1
+                        VBFlexGridDrawInfo.GridLinePoints(3).X = .Right - 2
+                        VBFlexGridDrawInfo.GridLinePoints(4).X = .Left
+                        VBFlexGridDrawInfo.GridLinePoints(5).X = .Left
+                        Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+                    End If
                     .Left = .Right
                     If NoClip = False And .Right > ClientRect.Right Then Exit For
                 Next iCol
@@ -7491,19 +7533,35 @@ If PropMergeCells = FlexMergeCellsNever Then
             If NoClip = False And .Bottom > ClientRect.Bottom Then Exit For
         Next iRow
     End If
-    If hFontOld <> 0 Then
-        SelectObject hDC, hFontOld
-        hFontOld = 0
+    If VBFlexGridFontFixedHandle <> 0 Then
+        If hFontOld <> 0 Then
+            SelectObject hDC, hFontOld
+            hFontOld = 0
+        End If
+        hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
     End If
-    hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
     .Top = FixedCY
     For iRow = VBFlexGridTopRow To (PropRows - 1)
         .Bottom = .Top + GetRowHeight(iRow)
         If .Bottom > .Top Then
+            VBFlexGridDrawInfo.GridLinePoints(0).Y = .Bottom - 1
+            VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
+            VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
+            VBFlexGridDrawInfo.GridLinePoints(3).Y = .Top
+            VBFlexGridDrawInfo.GridLinePoints(4).Y = .Top
+            VBFlexGridDrawInfo.GridLinePoints(5).Y = .Bottom
             .Left = FixedCX
             For iCol = VBFlexGridLeftCol To (PropCols - 1)
                 .Right = .Left + GetColWidth(iCol)
-                If .Right > .Left Then Call DrawCell(hDC, CellRect, iRow, iCol)
+                If .Right > .Left Then
+                    VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                    VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
+                    VBFlexGridDrawInfo.GridLinePoints(2).X = .Right - 1
+                    VBFlexGridDrawInfo.GridLinePoints(3).X = .Right - 2
+                    VBFlexGridDrawInfo.GridLinePoints(4).X = .Left
+                    VBFlexGridDrawInfo.GridLinePoints(5).X = .Left
+                    Call DrawCell(hDC, CellRect, iRow, iCol)
+                End If
                 .Left = .Right
                 If NoClip = False And .Right > ClientRect.Right Then Exit For
             Next iCol
@@ -7603,7 +7661,21 @@ Else
             End If
             .Left = .Left - VBFlexGridMergeDrawInfo.Row.Width
             .Top = .Top - VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
-            If .Bottom > .Top And .Right > .Left Then Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+            If .Bottom > .Top And .Right > .Left Then
+                VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = .Bottom - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
+                VBFlexGridDrawInfo.GridLinePoints(2).X = .Right - 1
+                VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
+                VBFlexGridDrawInfo.GridLinePoints(3).X = .Right - 2
+                VBFlexGridDrawInfo.GridLinePoints(3).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(4).X = .Left
+                VBFlexGridDrawInfo.GridLinePoints(4).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(5).X = .Left
+                VBFlexGridDrawInfo.GridLinePoints(5).Y = .Bottom
+                Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+            End If
             .Left = .Left + VBFlexGridMergeDrawInfo.Row.Width
             .Top = .Top + VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
             .Left = .Right
@@ -7696,7 +7768,21 @@ Else
                 End If
                 .Left = .Left - VBFlexGridMergeDrawInfo.Row.Width
                 .Top = .Top - VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
-                If .Bottom > .Top And .Right > .Left Then Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+                If .Bottom > .Top And .Right > .Left Then
+                    VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                    VBFlexGridDrawInfo.GridLinePoints(0).Y = .Bottom - 1
+                    VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
+                    VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
+                    VBFlexGridDrawInfo.GridLinePoints(2).X = .Right - 1
+                    VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
+                    VBFlexGridDrawInfo.GridLinePoints(3).X = .Right - 2
+                    VBFlexGridDrawInfo.GridLinePoints(3).Y = .Top
+                    VBFlexGridDrawInfo.GridLinePoints(4).X = .Left
+                    VBFlexGridDrawInfo.GridLinePoints(4).Y = .Top
+                    VBFlexGridDrawInfo.GridLinePoints(5).X = .Left
+                    VBFlexGridDrawInfo.GridLinePoints(5).Y = .Bottom
+                    Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+                End If
                 .Left = .Left + VBFlexGridMergeDrawInfo.Row.Width
                 .Top = .Top + VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
                 .Left = .Right
@@ -7788,7 +7874,21 @@ Else
                 End If
                 .Left = .Left - VBFlexGridMergeDrawInfo.Row.Width
                 .Top = .Top - VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
-                If .Bottom > .Top And .Right > .Left Then Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+                If .Bottom > .Top And .Right > .Left Then
+                    VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                    VBFlexGridDrawInfo.GridLinePoints(0).Y = .Bottom - 1
+                    VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
+                    VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
+                    VBFlexGridDrawInfo.GridLinePoints(2).X = .Right - 1
+                    VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
+                    VBFlexGridDrawInfo.GridLinePoints(3).X = .Right - 2
+                    VBFlexGridDrawInfo.GridLinePoints(3).Y = .Top
+                    VBFlexGridDrawInfo.GridLinePoints(4).X = .Left
+                    VBFlexGridDrawInfo.GridLinePoints(4).Y = .Top
+                    VBFlexGridDrawInfo.GridLinePoints(5).X = .Left
+                    VBFlexGridDrawInfo.GridLinePoints(5).Y = .Bottom
+                    Call DrawFixedCell(hDC, CellRect, iRow, iCol)
+                End If
                 .Left = .Left + VBFlexGridMergeDrawInfo.Row.Width
                 .Top = .Top + VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
                 .Left = .Right
@@ -7798,11 +7898,13 @@ Else
             If NoClip = False And .Bottom > ClientRect.Bottom Then Exit For
         Next iRow
     End If
-    If hFontOld <> 0 Then
-        SelectObject hDC, hFontOld
-        hFontOld = 0
+    If VBFlexGridFontFixedHandle <> 0 Then
+        If hFontOld <> 0 Then
+            SelectObject hDC, hFontOld
+            hFontOld = 0
+        End If
+        hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
     End If
-    hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
     ReDim VBFlexGridMergeDrawInfo.Row.Cols(VBFlexGridLeftCol To (PropCols - 1)) As TMERGEDRAWCOLINFO
     .Top = FixedCY
     For iRow = VBFlexGridTopRow To (PropRows - 1)
@@ -7884,7 +7986,21 @@ Else
             End If
             .Left = .Left - VBFlexGridMergeDrawInfo.Row.Width
             .Top = .Top - VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
-            If .Bottom > .Top And .Right > .Left Then Call DrawCell(hDC, CellRect, iRow, iCol)
+            If .Bottom > .Top And .Right > .Left Then
+                VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = .Bottom - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
+                VBFlexGridDrawInfo.GridLinePoints(2).X = .Right - 1
+                VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
+                VBFlexGridDrawInfo.GridLinePoints(3).X = .Right - 2
+                VBFlexGridDrawInfo.GridLinePoints(3).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(4).X = .Left
+                VBFlexGridDrawInfo.GridLinePoints(4).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(5).X = .Left
+                VBFlexGridDrawInfo.GridLinePoints(5).Y = .Bottom
+                Call DrawCell(hDC, CellRect, iRow, iCol)
+            End If
             .Left = .Left + VBFlexGridMergeDrawInfo.Row.Width
             .Top = .Top + VBFlexGridMergeDrawInfo.Row.Cols(iCol).Height
             .Left = .Right
@@ -7906,12 +8022,15 @@ End If
 End With
 SetBkMode hDC, OldBkMode
 With GridRect
-Dim hPenOld As Long, P As POINTAPI
+Dim hPenOld As Long
 hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
-MoveToEx hDC, .Left, .Bottom - 1, P
-LineTo hDC, .Right - 1, .Bottom - 1
-LineTo hDC, .Right - 1, .Top - 1
-MoveToEx hDC, P.X, P.Y, ByVal 0&
+VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+VBFlexGridDrawInfo.GridLinePoints(0).Y = .Bottom - 1
+VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
+VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
+VBFlexGridDrawInfo.GridLinePoints(2).X = .Right - 1
+VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
+Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 3
 If hPenOld <> 0 Then
     SelectObject hDC, hPenOld
     hPenOld = 0
@@ -8079,27 +8198,20 @@ Dim hPenOld As Long, P As POINTAPI
 Select Case PropGridLinesFixed
     Case FlexGridLineFlat, FlexGridLineDashes, FlexGridLineDots
         hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
-        MoveToEx hDC, CellRect.Left, CellRect.Bottom - 1, P
-        LineTo hDC, CellRect.Right - 1, CellRect.Bottom - 1
-        LineTo hDC, CellRect.Right - 1, CellRect.Top - 1
-        MoveToEx hDC, P.X, P.Y, ByVal 0&
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 3
     Case FlexGridLineInset, FlexGridLineRaised
         If PropGridLinesFixed = FlexGridLineInset Then
-            hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
-        ElseIf PropGridLinesFixed = FlexGridLineRaised Then
             hPenOld = SelectObject(hDC, VBFlexGridGridLineBlackPen)
-        End If
-        MoveToEx hDC, CellRect.Left, CellRect.Bottom - 1, P
-        LineTo hDC, CellRect.Left, CellRect.Top
-        LineTo hDC, CellRect.Right - 1, CellRect.Top
-        If PropGridLinesFixed = FlexGridLineInset Then
-            SelectObject hDC, VBFlexGridGridLineBlackPen
         ElseIf PropGridLinesFixed = FlexGridLineRaised Then
-            SelectObject hDC, VBFlexGridGridLineWhitePen
+            hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
         End If
-        LineTo hDC, CellRect.Right - 1, CellRect.Bottom - 1
-        LineTo hDC, CellRect.Left, CellRect.Bottom - 1
-        MoveToEx hDC, P.X, P.Y, ByVal 0&
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 3
+        If PropGridLinesFixed = FlexGridLineInset Then
+            SelectObject hDC, VBFlexGridGridLineWhitePen
+        ElseIf PropGridLinesFixed = FlexGridLineRaised Then
+            SelectObject hDC, VBFlexGridGridLineBlackPen
+        End If
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(3), 3
 End Select
 If hPenOld <> 0 Then
     SelectObject hDC, hPenOld
@@ -8399,27 +8511,20 @@ Dim hPenOld As Long, P As POINTAPI
 Select Case PropGridLines
     Case FlexGridLineFlat, FlexGridLineDashes, FlexGridLineDots
         hPenOld = SelectObject(hDC, VBFlexGridGridLinePen)
-        MoveToEx hDC, CellRect.Left, CellRect.Bottom - 1, P
-        LineTo hDC, CellRect.Right - 1, CellRect.Bottom - 1
-        LineTo hDC, CellRect.Right - 1, CellRect.Top - 1
-        MoveToEx hDC, P.X, P.Y, ByVal 0&
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 3
     Case FlexGridLineInset, FlexGridLineRaised
         If PropGridLines = FlexGridLineInset Then
-            hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
-        ElseIf PropGridLines = FlexGridLineRaised Then
             hPenOld = SelectObject(hDC, VBFlexGridGridLineBlackPen)
-        End If
-        MoveToEx hDC, CellRect.Left, CellRect.Bottom - 1, P
-        LineTo hDC, CellRect.Left, CellRect.Top
-        LineTo hDC, CellRect.Right - 1, CellRect.Top
-        If PropGridLines = FlexGridLineInset Then
-            SelectObject hDC, VBFlexGridGridLineBlackPen
         ElseIf PropGridLines = FlexGridLineRaised Then
-            SelectObject hDC, VBFlexGridGridLineWhitePen
+            hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
         End If
-        LineTo hDC, CellRect.Right - 1, CellRect.Bottom - 1
-        LineTo hDC, CellRect.Left, CellRect.Bottom - 1
-        MoveToEx hDC, P.X, P.Y, ByVal 0&
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 3
+        If PropGridLines = FlexGridLineInset Then
+            SelectObject hDC, VBFlexGridGridLineWhitePen
+        ElseIf PropGridLines = FlexGridLineRaised Then
+            SelectObject hDC, VBFlexGridGridLineBlackPen
+        End If
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(3), 3
 End Select
 If hPenOld <> 0 Then
     SelectObject hDC, hPenOld
