@@ -1,5 +1,10 @@
 List of revisions:
 
+10-May-2020
+- Performance boost for drawing. (~2%)
+  Usage of Polyline API (not PolylineTo !) instead of MoveToEx and LineTo. (for the grid lines)
+  Polyline is at device driver level, thus faster than LineTo and it doesn't change current position.
+
 26-Apr-2020
 - Bugfix in the GetClipboardText function in Common.bas.
 
