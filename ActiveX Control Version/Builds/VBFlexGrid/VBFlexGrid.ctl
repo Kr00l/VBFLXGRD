@@ -451,6 +451,7 @@ Private Const RCPM_ROWSEL As Long = &H4, RCPM_COLSEL As Long = &H8
 Private Const RCPM_TOPROW As Long = &H10, RCPM_LEFTCOL As Long = &H20
 Private Const RCPF_CHECKTOPROW As Long = &H10, RCPF_CHECKLEFTCOL As Long = &H20
 Private Const RCPF_SETSCROLLBARS As Long = &H100
+Private Const RCPF_FORCEREDRAW As Long = &H200
 Private Type TROWCOLPARAMS
 Mask As Long
 Flags As Long
@@ -9841,7 +9842,7 @@ If ScrollChanged = True Then
     End If
 End If
 If NoRedraw = False Then
-    If RowColChanged = True Or SelChanged = True Or ScrollChanged = True Then Call RedrawGrid
+    If RowColChanged = True Or SelChanged = True Or ScrollChanged = True Or (.Flags And RCPF_FORCEREDRAW) = RCPF_FORCEREDRAW Then Call RedrawGrid
 End If
 If (.Flags And RCPF_SETSCROLLBARS) = RCPF_SETSCROLLBARS Then Call SetScrollBars
 If SelChanged = True Then RaiseEvent SelChange
@@ -11517,7 +11518,7 @@ If VBFlexGridCaptureDividerDrag = True Then
     VBFlexGridDividerDragOffset.Y = 0
     With RCP
     .Mask = RCPM_TOPROW Or RCPM_LEFTCOL
-    .Flags = RCPF_CHECKTOPROW Or RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS
+    .Flags = RCPF_CHECKTOPROW Or RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
     .TopRow = VBFlexGridTopRow
     .LeftCol = VBFlexGridLeftCol
     Call SetRowColParams(RCP)
