@@ -9840,7 +9840,9 @@ If ScrollChanged = True Then
         NoRedraw = CheckScrollPos(SB_HORZ)
     End If
 End If
-If NoRedraw = False Then Call RedrawGrid
+If NoRedraw = False Then
+    If RowColChanged = True Or SelChanged = True Or ScrollChanged = True Then Call RedrawGrid
+End If
 If (.Flags And RCPF_SETSCROLLBARS) = RCPF_SETSCROLLBARS Then Call SetScrollBars
 If SelChanged = True Then RaiseEvent SelChange
 If RowColChanged = True Then

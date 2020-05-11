@@ -77,7 +77,6 @@ Private Const WM_CREATE As Long = &H1
 Private Const WM_DESTROY As Long = &H2
 Private Const WM_NCDESTROY As Long = &H82
 Private Const WM_UAHDESTROYWINDOW As Long = &H90
-Private Const CS_VREDRAW As Long = &H1, CS_HREDRAW As Long = &H2
 Private Const CS_DBLCLKS As Long = &H8
 Private Const IDC_ARROW As Long = 32512
 Private ShellModHandle As Long, ShellModCount As Long
@@ -260,7 +259,8 @@ If (FlexClassAtom Or FlexRefCount) = 0 Then
     ClassName = "VBFlexGridWndClass"
     With WCEX
     .cbSize = LenB(WCEX)
-    .dwStyle = CS_VREDRAW Or CS_HREDRAW Or CS_DBLCLKS
+    ' CS_VREDRAW and CS_HREDRAW will not be specified as entire redraw upon resize is not necessary.
+    .dwStyle = CS_DBLCLKS
     .lpfnWndProc = ProcPtr(AddressOf FlexWindowProc)
     .cbWndExtra = 4
     .hInstance = App.hInstance
