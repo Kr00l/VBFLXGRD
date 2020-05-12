@@ -7014,7 +7014,7 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
     .Flags = RCPF_CHECKTOPROW
     .TopRow = VBFlexGridTopRow
 End If
-.Flags = .Flags Or RCPF_SETSCROLLBARS
+.Flags = .Flags Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 Call SetRowColParams(RCP)
 End With
 End Sub
