@@ -1,5 +1,8 @@
 List of revisions:
 
+13-May-2020
+- Performance boost for drawing custom cell background colors.
+
 11-May-2020
 - CS_VREDRAW and CS_HREDRAW are not specified anymore as entire redraw upon resize is not necessary.
 
