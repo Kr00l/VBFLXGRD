@@ -869,6 +869,7 @@ Private Const DT_PATH_ELLIPSIS As Long = &H4000
 Private Const DT_END_ELLIPSIS As Long = &H8000&
 Private Const DT_WORD_ELLIPSIS As Long = &H40000
 Private Const DT_CALCRECT As Long = &H400
+Private Const ETO_OPAQUE As Long = 2
 Private Const ETO_CLIPPED As Long = 4
 Private Const TA_CENTER As Long = 6
 Private Const TA_BASELINE As Long = 24
@@ -8142,11 +8143,9 @@ If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) 
     If .BackColor = -1 Then
         PatBlt hDC, CellRect.Left, CellRect.Top, CellRect.Right - CellRect.Left, CellRect.Bottom - CellRect.Top, vbPatCopy
     Else
-        Brush = CreateSolidBrush(WinColor(.BackColor))
-        If Brush <> 0 Then
-            FillRect hDC, CellRect, Brush
-            DeleteObject Brush
-        End If
+        Brush = SetBkColor(hDC, WinColor(.BackColor))
+        ExtTextOut hDC, 0, 0, ETO_OPAQUE, CellRect, 0, 0, 0
+        SetBkColor hDC, Brush
     End If
 Else
     Brush = SelectObject(hDC, VBFlexGridBackColorSelBrush)
@@ -8459,11 +8458,9 @@ If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) 
             End If
         End If
     Else
-        Brush = CreateSolidBrush(WinColor(.BackColor))
-        If Brush <> 0 Then
-            FillRect hDC, CellRect, Brush
-            DeleteObject Brush
-        End If
+        Brush = SetBkColor(hDC, WinColor(.BackColor))
+        ExtTextOut hDC, 0, 0, ETO_OPAQUE, CellRect, 0, 0, 0
+        SetBkColor hDC, Brush
     End If
 Else
     Brush = SelectObject(hDC, VBFlexGridBackColorSelBrush)
