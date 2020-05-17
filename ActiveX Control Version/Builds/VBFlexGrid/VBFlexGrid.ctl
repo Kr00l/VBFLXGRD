@@ -1037,7 +1037,7 @@ Implements OLEGuids.IOleInPlaceActiveObjectVB
 Implements OLEGuids.IOleControlVB
 Implements OLEGuids.IPerPropertyBrowsingVB
 Private VBFlexGridHandle As Long, VBFlexGridEditHandle As Long, VBFlexGridComboButtonHandle As Long, VBFlexGridComboListHandle As Long, VBFlexGridToolTipHandle As Long
-Private VBFlexGridDoubleBufferDC As Long, VBFlexGridDoubleBufferBmp As Long
+Private VBFlexGridDoubleBufferDC As Long, VBFlexGridDoubleBufferBmp As Long, VBFlexGridDoubleBufferBmpOld As Long
 Private VBFlexGridFontHandle As Long, VBFlexGridFontFixedHandle As Long
 Private VBFlexGridClientRect As RECT
 Private VBFlexGridIMCHandle As Long
@@ -1636,11 +1636,12 @@ If PropRightToLeft = True And PropRightToLeftLayout = True Then OldLayout = SetL
 If PropDoubleBuffer = True Then
     If VBFlexGridDoubleBufferDC = 0 Then
         VBFlexGridDoubleBufferDC = CreateCompatibleDC(UserControl.hDC)
-        VBFlexGridDoubleBufferBmp = CreateCompatibleBitmap(UserControl.hDC, UserControl.ScaleWidth, UserControl.ScaleHeight)
+        If VBFlexGridDoubleBufferDC <> 0 Then
+            VBFlexGridDoubleBufferBmp = CreateCompatibleBitmap(UserControl.hDC, UserControl.ScaleWidth, UserControl.ScaleHeight)
+            If VBFlexGridDoubleBufferBmp <> 0 Then VBFlexGridDoubleBufferBmpOld = SelectObject(VBFlexGridDoubleBufferDC, VBFlexGridDoubleBufferBmp)
+        End If
     End If
     If VBFlexGridDoubleBufferDC <> 0 And VBFlexGridDoubleBufferBmp <> 0 Then
-        Dim hBmpOld As Long
-        hBmpOld = SelectObject(VBFlexGridDoubleBufferDC, VBFlexGridDoubleBufferBmp)
         If VBFlexGridCellsInit = False Then
             If VBFlexGridBackColorBkgBrush <> 0 Then
                 Dim Brush As Long
@@ -1658,7 +1659,6 @@ If PropDoubleBuffer = True Then
             ExtSelectClipRgn UserControl.hDC, 0, RGN_COPY
             DeleteObject hRgn
         End If
-        SelectObject VBFlexGridDoubleBufferDC, hBmpOld
     End If
 Else
     Call DrawGrid(UserControl.hDC, -1)
@@ -1727,12 +1727,16 @@ If VBFlexGridDesignMode = False Then
     If VBFlexGridHandle <> 0 Then MoveWindow VBFlexGridHandle, 0, 0, .ScaleWidth, .ScaleHeight, 1
 Else
     If VBFlexGridDoubleBufferDC <> 0 Then
+        If VBFlexGridDoubleBufferBmpOld <> 0 Then
+            SelectObject VBFlexGridDoubleBufferDC, VBFlexGridDoubleBufferBmpOld
+            VBFlexGridDoubleBufferBmpOld = 0
+        End If
+        If VBFlexGridDoubleBufferBmp <> 0 Then
+            DeleteObject VBFlexGridDoubleBufferBmp
+            VBFlexGridDoubleBufferBmp = 0
+        End If
         DeleteDC VBFlexGridDoubleBufferDC
         VBFlexGridDoubleBufferDC = 0
-    End If
-    If VBFlexGridDoubleBufferBmp <> 0 Then
-        DeleteObject VBFlexGridDoubleBufferBmp
-        VBFlexGridDoubleBufferBmp = 0
     End If
     SetRect VBFlexGridClientRect, 0, 0, .ScaleWidth, .ScaleHeight
     Call SetScrollBars
@@ -3778,12 +3782,16 @@ If VBFlexGridDesignMode = False Then
 End If
 VBFlexGridHandle = 0
 If VBFlexGridDoubleBufferDC <> 0 Then
+    If VBFlexGridDoubleBufferBmpOld <> 0 Then
+        SelectObject VBFlexGridDoubleBufferDC, VBFlexGridDoubleBufferBmpOld
+        VBFlexGridDoubleBufferBmpOld = 0
+    End If
+    If VBFlexGridDoubleBufferBmp <> 0 Then
+        DeleteObject VBFlexGridDoubleBufferBmp
+        VBFlexGridDoubleBufferBmp = 0
+    End If
     DeleteDC VBFlexGridDoubleBufferDC
     VBFlexGridDoubleBufferDC = 0
-End If
-If VBFlexGridDoubleBufferBmp <> 0 Then
-    DeleteObject VBFlexGridDoubleBufferBmp
-    VBFlexGridDoubleBufferBmp = 0
 End If
 Call EraseFlexGridCells
 If VBFlexGridFontHandle <> 0 Then
@@ -12225,12 +12233,16 @@ Select Case wMsg
         Exit Function
     Case WM_SIZE
         If VBFlexGridDoubleBufferDC <> 0 Then
+            If VBFlexGridDoubleBufferBmpOld <> 0 Then
+                SelectObject VBFlexGridDoubleBufferDC, VBFlexGridDoubleBufferBmpOld
+                VBFlexGridDoubleBufferBmpOld = 0
+            End If
+            If VBFlexGridDoubleBufferBmp <> 0 Then
+                DeleteObject VBFlexGridDoubleBufferBmp
+                VBFlexGridDoubleBufferBmp = 0
+            End If
             DeleteDC VBFlexGridDoubleBufferDC
             VBFlexGridDoubleBufferDC = 0
-        End If
-        If VBFlexGridDoubleBufferBmp <> 0 Then
-            DeleteObject VBFlexGridDoubleBufferBmp
-            VBFlexGridDoubleBufferBmp = 0
         End If
         GetClientRect hWnd, VBFlexGridClientRect
         Dim RCP As TROWCOLPARAMS
@@ -12346,10 +12358,52 @@ Select Case wMsg
             WindowProcControl = 0
             Exit Function
         End If
-    Case WM_PAINT, WM_PRINTCLIENT
-        Dim hRgn As Long, hBmpOld As Long
-        If wMsg = WM_PRINTCLIENT Then
-            Dim hDCBmp As Long, hBmp As Long
+    Case WM_PAINT
+        If wParam = 0 Then
+            Dim PS As PAINTSTRUCT, hDC As Long, hRgn As Long
+            hDC = BeginPaint(hWnd, PS)
+            With PS
+            If PropDoubleBuffer = True Then
+                If VBFlexGridDoubleBufferDC = 0 Then
+                    VBFlexGridDoubleBufferDC = CreateCompatibleDC(hDC)
+                    If VBFlexGridDoubleBufferDC <> 0 Then
+                        VBFlexGridDoubleBufferBmp = CreateCompatibleBitmap(hDC, VBFlexGridClientRect.Right - VBFlexGridClientRect.Left, VBFlexGridClientRect.Bottom - VBFlexGridClientRect.Top)
+                        If VBFlexGridDoubleBufferBmp <> 0 Then VBFlexGridDoubleBufferBmpOld = SelectObject(VBFlexGridDoubleBufferDC, VBFlexGridDoubleBufferBmp)
+                    End If
+                End If
+                If VBFlexGridDoubleBufferDC <> 0 And VBFlexGridDoubleBufferBmp <> 0 Then
+                    If .fErase <> 0 Then
+                        If VBFlexGridBackColorBkgBrush <> 0 Then FillRect VBFlexGridDoubleBufferDC, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
+                        Call DrawGrid(VBFlexGridDoubleBufferDC, -1)
+                    Else
+                        Call DrawGrid(VBFlexGridDoubleBufferDC, hRgn)
+                        If hRgn <> 0 Then ExtSelectClipRgn hDC, hRgn, RGN_COPY
+                    End If
+                    With PS.RCPaint
+                    BitBlt hDC, .Left, .Top, .Right - .Left, .Bottom - .Top, VBFlexGridDoubleBufferDC, .Left, .Top, vbSrcCopy
+                    End With
+                    If hRgn <> 0 Then
+                        ExtSelectClipRgn hDC, 0, RGN_COPY
+                        DeleteObject hRgn
+                    End If
+                End If
+            Else
+                If .fErase <> 0 Then
+                    Call DrawGrid(hDC, hRgn)
+                    If hRgn <> 0 Then ExtSelectClipRgn hDC, hRgn, RGN_DIFF
+                    If VBFlexGridBackColorBkgBrush <> 0 Then FillRect hDC, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
+                Else
+                    Call DrawGrid(hDC, -1)
+                End If
+                If hRgn <> 0 Then
+                    ExtSelectClipRgn hDC, 0, RGN_COPY
+                    DeleteObject hRgn
+                End If
+            End If
+            End With
+            EndPaint hWnd, PS
+        Else
+            Dim hDCBmp As Long, hBmp As Long, hBmpOld As Long
             hDCBmp = CreateCompatibleDC(wParam)
             If hDCBmp <> 0 Then
                 hBmp = CreateCompatibleBitmap(wParam, VBFlexGridClientRect.Right - VBFlexGridClientRect.Left, VBFlexGridClientRect.Bottom - VBFlexGridClientRect.Top)
@@ -12365,51 +12419,11 @@ Select Case wMsg
                 End If
                 DeleteDC hDCBmp
             End If
-            WindowProcControl = 0
-            Exit Function
         End If
-        Dim PS As PAINTSTRUCT, hDC As Long
-        hDC = BeginPaint(hWnd, PS)
-        With PS
-        If wParam <> 0 Then hDC = wParam
-        If PropDoubleBuffer = True Then
-            If VBFlexGridDoubleBufferDC = 0 Then
-                VBFlexGridDoubleBufferDC = CreateCompatibleDC(hDC)
-                VBFlexGridDoubleBufferBmp = CreateCompatibleBitmap(hDC, VBFlexGridClientRect.Right - VBFlexGridClientRect.Left, VBFlexGridClientRect.Bottom - VBFlexGridClientRect.Top)
-            End If
-            If VBFlexGridDoubleBufferDC <> 0 And VBFlexGridDoubleBufferBmp <> 0 Then
-                hBmpOld = SelectObject(VBFlexGridDoubleBufferDC, VBFlexGridDoubleBufferBmp)
-                If .fErase <> 0 Then
-                    If VBFlexGridBackColorBkgBrush <> 0 Then FillRect VBFlexGridDoubleBufferDC, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
-                    Call DrawGrid(VBFlexGridDoubleBufferDC, -1)
-                Else
-                    Call DrawGrid(VBFlexGridDoubleBufferDC, hRgn)
-                    If hRgn <> 0 Then ExtSelectClipRgn hDC, hRgn, RGN_COPY
-                End If
-                With PS.RCPaint
-                BitBlt hDC, .Left, .Top, .Right - .Left, .Bottom - .Top, VBFlexGridDoubleBufferDC, .Left, .Top, vbSrcCopy
-                End With
-                If hRgn <> 0 Then
-                    ExtSelectClipRgn hDC, 0, RGN_COPY
-                    DeleteObject hRgn
-                End If
-                SelectObject VBFlexGridDoubleBufferBmp, hBmpOld
-            End If
-        Else
-            If .fErase <> 0 Then
-                Call DrawGrid(hDC, hRgn)
-                If hRgn <> 0 Then ExtSelectClipRgn hDC, hRgn, RGN_DIFF
-                If VBFlexGridBackColorBkgBrush <> 0 Then FillRect hDC, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
-            Else
-                Call DrawGrid(hDC, -1)
-            End If
-            If hRgn <> 0 Then
-                ExtSelectClipRgn hDC, 0, RGN_COPY
-                DeleteObject hRgn
-            End If
-        End If
-        End With
-        EndPaint hWnd, PS
+        WindowProcControl = 0
+        Exit Function
+    Case WM_PRINTCLIENT
+        SendMessage hWnd, WM_PAINT, wParam, ByVal lParam
         WindowProcControl = 0
         Exit Function
     Case WM_MOUSEACTIVATE
