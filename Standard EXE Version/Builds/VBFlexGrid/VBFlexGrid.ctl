@@ -1340,8 +1340,8 @@ End Sub
 
 Private Sub UserControl_Initialize()
 Call FlexLoadShellMod
-Call FlexWndRegisterClass
 Call FlexInitCC(ICC_STANDARD_CLASSES)
+Call FlexWndRegisterClass
 Call SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
 Call SetVTableHandling(Me, VTableInterfaceControl)
 Call SetVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
@@ -5716,18 +5716,19 @@ Attribute Clip.VB_Description = "Returns/sets the contents of the cells in a sel
 Attribute Clip.VB_MemberFlags = "400"
 If VBFlexGridRow < 0 Or VBFlexGridCol < 0 Then Err.Raise 7
 Dim i As Long, j As Long, SelRange As TCELLRANGE, Buffer As String
+Dim StrColl As VBA.Collection, StrSize As Long, StrItem As Variant
 Dim ColSeparator As String, RowSeparator As String
+Call GetSelRangeStruct(SelRange)
+Set StrColl = New VBA.Collection
 ColSeparator = GetColSeparator()
 RowSeparator = GetRowSeparator()
-Call GetSelRangeStruct(SelRange)
 If PropClipMode = FlexClipModeNormal Then
     For i = SelRange.TopRow To SelRange.BottomRow
         For j = SelRange.LeftCol To SelRange.RightCol
-            Call GetCellTextAppend(i, j, Buffer)
-            If Len(Buffer) > 1000 Then Clip = Clip & Buffer: Buffer = vbNullString
-            If j < SelRange.RightCol Then Buffer = Buffer & ColSeparator
+            Call GetCellText(i, j, Buffer)
+            If j < SelRange.RightCol Then StrColl.Add Buffer & ColSeparator Else StrColl.Add Buffer
         Next j
-        If i < SelRange.BottomRow Then Buffer = Buffer & RowSeparator
+        If i < SelRange.BottomRow Then StrColl.Add RowSeparator
     Next i
 ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     For i = SelRange.BottomRow To SelRange.TopRow Step -1
@@ -5740,16 +5741,25 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
         If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_HIDDEN) = 0 Then
             For j = SelRange.LeftCol To SelRange.RightCol
                 If (VBFlexGridColsInfo(j).State And CLIS_HIDDEN) = 0 Then
-                    Call GetCellTextAppend(i, j, Buffer)
-                    If Len(Buffer) > 1000 Then Clip = Clip & Buffer: Buffer = vbNullString
-                    If j < SelRange.RightCol Then Buffer = Buffer & ColSeparator
+                    Call GetCellText(i, j, Buffer)
+                    If j < SelRange.RightCol Then StrColl.Add Buffer & ColSeparator Else StrColl.Add Buffer
                 End If
             Next j
-            If i < SelRange.BottomRow Then Buffer = Buffer & RowSeparator
+            If i < SelRange.BottomRow Then StrColl.Add RowSeparator
         End If
     Next i
 End If
-If Len(Buffer) > 0 Then Clip = Clip & Buffer
+For Each StrItem In StrColl
+    StrSize = StrSize + Len(StrItem)
+Next StrItem
+If StrSize > 0 Then
+    Clip = String$(StrSize, vbNullChar)
+    StrSize = 1
+    For Each StrItem In StrColl
+        If StrSize <= Len(Clip) Then Mid$(Clip, StrSize, Len(StrItem)) = StrItem
+        StrSize = StrSize + Len(StrItem)
+    Next StrItem
+End If
 End Property
 
 Public Property Let Clip(ByVal Value As String)
@@ -9005,29 +9015,6 @@ End If
 #Else
 
 VBFlexGridCells.Rows(iRow).Cols(iCol).Text = TextIn
-
-#End If
-
-End Sub
-
-Private Sub GetCellTextAppend(ByVal iRow As Long, ByVal iCol As Long, ByRef TextOut As String)
-If PropRows < 1 Or PropCols < 1 Then Exit Sub
-
-#If ImplementFlexDataSource = True Then
-
-If VBFlexGridFlexDataSource Is Nothing Then
-    TextOut = TextOut & VBFlexGridCells.Rows(iRow).Cols(iCol).Text
-Else
-    If iRow >= PropFixedRows Then
-        TextOut = TextOut & VBFlexGridFlexDataSource.GetData(iCol, iRow - PropFixedRows)
-    Else
-        TextOut = TextOut & VBFlexGridCells.Rows(iRow).Cols(iCol).Text
-    End If
-End If
-
-#Else
-
-TextOut = TextOut & VBFlexGridCells.Rows(iRow).Cols(iCol).Text
 
 #End If
 
