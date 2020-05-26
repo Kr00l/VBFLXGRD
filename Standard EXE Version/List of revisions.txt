@@ -3,7 +3,7 @@ List of revisions:
 26-May-2020
 - Massive performance boost for Get .Clip property.
   The string concatenation was done by using small buffer chunks putting together.
-  Now the VB6 poor man's string builder is used from wqweto. (using a VBA.Collection)
+  Now the VB6 poor man's string builder is used from wqweto. (but using a string array instead of a collection)
 
 13-May-2020
 - Performance boost for drawing custom cell background colors.
