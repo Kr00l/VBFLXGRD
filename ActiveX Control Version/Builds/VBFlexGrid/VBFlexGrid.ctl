@@ -5715,50 +5715,85 @@ Public Property Get Clip() As String
 Attribute Clip.VB_Description = "Returns/sets the contents of the cells in a selected region."
 Attribute Clip.VB_MemberFlags = "400"
 If VBFlexGridRow < 0 Or VBFlexGridCol < 0 Then Err.Raise 7
-Dim i As Long, j As Long, SelRange As TCELLRANGE, Buffer As String
-Dim StrColl As VBA.Collection, StrSize As Long, StrItem As Variant
+Dim iRow As Long, iCol As Long, SelRange As TCELLRANGE, Buffer As String
+Dim UBoundRows As Long, UBoundCols As Long
+Dim StrArr() As String, StrSize As Long
 Dim ColSeparator As String, RowSeparator As String
 Call GetSelRangeStruct(SelRange)
-Set StrColl = New VBA.Collection
+If PropClipMode = FlexClipModeNormal Then
+    UBoundRows = (SelRange.BottomRow - SelRange.TopRow)
+    UBoundCols = (SelRange.RightCol - SelRange.LeftCol)
+ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+    UBoundRows = -1
+    UBoundCols = -1
+    For iRow = SelRange.TopRow To SelRange.BottomRow
+        If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then UBoundRows = UBoundRows + 1
+    Next iRow
+    For iCol = SelRange.LeftCol To SelRange.RightCol
+        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then UBoundCols = UBoundCols + 1
+    Next iCol
+End If
+If UBoundRows > -1 And UBoundCols > -1 Then ReDim StrArr(0 To UBoundRows, 0 To UBoundCols) As String
 ColSeparator = GetColSeparator()
 RowSeparator = GetRowSeparator()
 If PropClipMode = FlexClipModeNormal Then
-    For i = SelRange.TopRow To SelRange.BottomRow
-        For j = SelRange.LeftCol To SelRange.RightCol
-            Call GetCellText(i, j, Buffer)
-            If j < SelRange.RightCol Then StrColl.Add Buffer & ColSeparator Else StrColl.Add Buffer
-        Next j
-        If i < SelRange.BottomRow Then StrColl.Add RowSeparator
-    Next i
+    For iRow = SelRange.TopRow To SelRange.BottomRow
+        For iCol = SelRange.LeftCol To SelRange.RightCol
+            Call GetCellText(iRow, iCol, Buffer)
+            If iCol < SelRange.RightCol Then
+                StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & ColSeparator
+            ElseIf iRow < SelRange.BottomRow Then
+                StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & RowSeparator
+            Else
+                StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer
+            End If
+        Next iCol
+    Next iRow
 ElseIf PropClipMode = FlexClipModeExcludeHidden Then
-    For i = SelRange.BottomRow To SelRange.TopRow Step -1
-        If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN Then SelRange.BottomRow = SelRange.BottomRow - 1 Else Exit For
-    Next i
-    For j = SelRange.RightCol - 1 To SelRange.LeftCol Step -1
-        If (VBFlexGridColsInfo(j).State And CLIS_HIDDEN) = CLIS_HIDDEN Then SelRange.RightCol = SelRange.RightCol - 1 Else Exit For
-    Next j
-    For i = SelRange.TopRow To SelRange.BottomRow
-        If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_HIDDEN) = 0 Then
-            For j = SelRange.LeftCol To SelRange.RightCol
-                If (VBFlexGridColsInfo(j).State And CLIS_HIDDEN) = 0 Then
-                    Call GetCellText(i, j, Buffer)
-                    If j < SelRange.RightCol Then StrColl.Add Buffer & ColSeparator Else StrColl.Add Buffer
+    ' Adjust bottom row and right col so the separators are placed correctly.
+    For iRow = SelRange.BottomRow To SelRange.TopRow Step -1
+        If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN Then SelRange.BottomRow = SelRange.BottomRow - 1 Else Exit For
+    Next iRow
+    For iCol = SelRange.RightCol To SelRange.LeftCol Step -1
+        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN Then SelRange.RightCol = SelRange.RightCol - 1 Else Exit For
+    Next iCol
+    Dim ArrRowAdj As Long, ArrColAdj As Long
+    For iRow = SelRange.TopRow To SelRange.BottomRow
+        If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+            For iCol = SelRange.LeftCol To SelRange.RightCol
+                If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & ColSeparator
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & RowSeparator
+                    Else
+                        StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer
+                    End If
+                Else
+                    ArrColAdj = ArrColAdj + 1
                 End If
-            Next j
-            If i < SelRange.BottomRow Then StrColl.Add RowSeparator
+            Next iCol
+        Else
+            ArrRowAdj = ArrRowAdj + 1
         End If
-    Next i
+        ArrColAdj = 0
+    Next iRow
 End If
-For Each StrItem In StrColl
-    StrSize = StrSize + Len(StrItem)
-Next StrItem
+For iRow = 0 To UBoundRows
+    For iCol = 0 To UBoundCols
+        StrSize = StrSize + Len(StrArr(iRow, iCol))
+    Next iCol
+Next iRow
 If StrSize > 0 Then
     Clip = String$(StrSize, vbNullChar)
     StrSize = 1
-    For Each StrItem In StrColl
-        If StrSize <= Len(Clip) Then Mid$(Clip, StrSize, Len(StrItem)) = StrItem
-        StrSize = StrSize + Len(StrItem)
-    Next StrItem
+    For iRow = 0 To UBoundRows
+        For iCol = 0 To UBoundCols
+            If StrSize <= Len(Clip) Then Mid$(Clip, StrSize, Len(StrArr(iRow, iCol))) = StrArr(iRow, iCol)
+            StrSize = StrSize + Len(StrArr(iRow, iCol))
+        Next iCol
+    Next iRow
 End If
 End Property
 
