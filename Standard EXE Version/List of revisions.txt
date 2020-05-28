@@ -1,5 +1,8 @@
 List of revisions:
 
+28-May-2020
+- WM_UNICHAR handler now supports surrogate pairs. (UTF32 conversion)
+
 26-May-2020
 - Massive performance boost for Get .Clip property.
   The string concatenation was done by using small buffer chunks putting together.
