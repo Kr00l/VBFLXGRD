@@ -1,5 +1,9 @@
 List of revisions:
 
+05-Jul-2020
+- The ellipsis on a ComboButton can now drawn with COLOR_HOTLIGHT when mouse is over it.
+  This only affects when visual styles are off.
+
 28-May-2020
 - WM_UNICHAR handler now supports surrogate pairs. (UTF32 conversion)
 
