@@ -739,6 +739,7 @@ Private Declare Function ReleaseDC Lib "user32" (ByVal hWnd As Long, ByVal hDC A
 Private Declare Function GetTextMetrics Lib "gdi32" Alias "GetTextMetricsW" (ByVal hDC As Long, ByRef lpMetrics As TEXTMETRIC) As Long
 Private Declare Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As Long
 Private Declare Function GetSysColorBrush Lib "user32" (ByVal nIndex As Long) As Long
+Private Declare Function GetSysColor Lib "user32" (ByVal nIndex As Long) As Long
 Private Declare Function GetStockObject Lib "gdi32" (ByVal nIndex As Long) As Long
 Private Declare Function SystemParametersInfo Lib "user32" Alias "SystemParametersInfoW" (ByVal uAction As Long, ByVal uiParam As Long, ByRef lpvParam As Long, ByVal fWinIni As Long) As Long
 Private Declare Function SetBkMode Lib "gdi32" (ByVal hDC As Long, ByVal nBkMode As Long) As Long
@@ -806,6 +807,7 @@ Private Const SWP_NOACTIVATE As Long = &H10
 Private Const SWP_SHOWWINDOW As Long = &H40
 Private Const HWND_DESKTOP As Long = &H0
 Private Const COLOR_WINDOW As Long = 5
+Private Const COLOR_HOTLIGHT As Long = 26
 Private Const SYSTEM_FONT As Long = 13
 Private Const MONITOR_DEFAULTTOPRIMARY As Long = &H1
 Private Const DCX_WINDOW As Long = &H1
@@ -12794,6 +12796,7 @@ Select Case wMsg
             FillRect DIS.hDC, DIS.RCItem, Brush
             DIS.ItemState = GetWindowLong(DIS.hWndItem, GWL_USERDATA)
             If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
+                Dim OldTextColor As Long
                 
                 #If ImplementThemedComboButton = True Then
                     
@@ -12843,7 +12846,9 @@ Select Case wMsg
                             If IsThemeBackgroundPartiallyTransparent(Theme, ButtonPart, ButtonState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
                             DrawThemeBackground Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
                             GetThemeBackgroundContentRect Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
+                            OldTextColor = SetTextColor(DIS.hDC, WinColor(vbButtonText))
                             Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                            SetTextColor DIS.hDC, OldTextColor
                         End If
                         CloseThemeData Theme
                     Else
@@ -12859,7 +12864,15 @@ Select Case wMsg
                         If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
                         If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
                         DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
-                        If CtlType = DFC_BUTTON Then Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                        If CtlType = DFC_BUTTON Then
+                            If (Flags And DFCS_HOT) = DFCS_HOT Then
+                                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
+                            Else
+                                OldTextColor = SetTextColor(DIS.hDC, WinColor(vbButtonText))
+                            End If
+                            Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                            SetTextColor DIS.hDC, OldTextColor
+                        End If
                     End If
                     
                 #Else
@@ -12876,7 +12889,15 @@ Select Case wMsg
                     If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
                     If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
                     DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
-                    If CtlType = DFC_BUTTON Then Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                    If CtlType = DFC_BUTTON Then
+                        If (Flags And DFCS_HOT) = DFCS_HOT Then
+                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
+                        Else
+                            OldTextColor = SetTextColor(DIS.hDC, WinColor(vbButtonText))
+                        End If
+                        Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                        SetTextColor DIS.hDC, OldTextColor
+                    End If
                     
                 #End If
                 
