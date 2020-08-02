@@ -1,5 +1,8 @@
 List of revisions:
 
+02-Aug-2020
+- Internal function ComboShowDropDown will call RefreshMousePointer function when current hCursor is NULL.
+
 05-Jul-2020
 - The ellipsis on a ComboButton can now drawn with COLOR_HOTLIGHT when mouse is over it.
   This only affects when visual styles are off.
