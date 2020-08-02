@@ -759,6 +759,7 @@ Private Declare Function PtInRect Lib "user32" (ByRef lpRect As RECT, ByVal X As
 Private Declare Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hInstance As Long, ByVal lpCursorName As Any) As Long
 Private Declare Function SetCursor Lib "user32" (ByVal hCursor As Long) As Long
 Private Declare Function GetCursorPos Lib "user32" (ByRef lpPoint As POINTAPI) As Long
+Private Declare Function GetCursor Lib "user32" () As Long
 Private Declare Function ClipCursor Lib "user32" (ByRef lpRect As Any) As Long
 Private Declare Function GetCapture Lib "user32" () As Long
 Private Declare Function SetCapture Lib "user32" (ByVal hWnd As Long) As Long
@@ -2327,6 +2328,7 @@ Select Case Value
     Case Else
         Err.Raise 380
 End Select
+If VBFlexGridDesignMode = False Then Call RefreshMousePointer
 UserControl.PropertyChanged "MousePointer"
 End Property
 
@@ -11985,6 +11987,13 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGrid
     dwLong = GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA)
     If Value = True Then
         If Not (dwLong And ODS_SELECTED) = ODS_SELECTED And Not (dwLong And ODS_DISABLED) = ODS_DISABLED Then
+            If GetCursor() = 0 Then
+                ' The mouse cursor can be hidden when showing the drop-down list upon a change event.
+                ' Reason is that the edit control hides the cursor and a following mouse move will show it again.
+                ' However, the drop-down list will set a mouse capture and thus the cursor keeps hidden.
+                ' Solution is to refresh the cursor by sending a WM_SETCURSOR.
+                Call RefreshMousePointer(VBFlexGridEditHandle)
+            End If
             RaiseEvent ComboDropDown
             SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or ODS_SELECTED
             InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
