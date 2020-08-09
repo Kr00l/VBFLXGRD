@@ -1,5 +1,8 @@
 Attribute VB_Name = "VBFlexGridBase"
 Option Explicit
+
+#Const ImplementPreTranslateMsg = True ' True = OCX supports accelerator keys in a VBA environment
+
 Private Type TINITCOMMONCONTROLSEX
 dwSize As Long
 dwICC As Long
@@ -50,6 +53,7 @@ Private Declare Function UnregisterClass Lib "user32" Alias "UnregisterClassW" (
 Private Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
 Private Declare Function GetWindowLong Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long) As Long
+Private Declare Function DestroyWindow Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function DllGetVersion Lib "comctl32" (ByRef pdvi As DLLVERSIONINFO) As Long
 Private Declare Function GetVersionEx Lib "kernel32" Alias "GetVersionExW" (ByRef lpVersionInfo As OSVERSIONINFO) As Long
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryW" (ByVal lpLibFileName As Long) As Long
@@ -79,6 +83,31 @@ Private ShellModHandle As Long, ShellModCount As Long
 Private FlexSubclassProcPtr As Long
 Private FlexClassAtom As Integer, FlexRefCount As Long
 Private FlexSplitterBrush As Long
+
+#If ImplementPreTranslateMsg = True Then
+
+Private Type POINTAPI
+X As Long
+Y As Long
+End Type
+Private Type TMSG
+hWnd As Long
+Message As Long
+wParam As Long
+lParam As Long
+Time As Long
+PT As POINTAPI
+End Type
+Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
+Private Declare Function SetWindowsHookEx Lib "user32" Alias "SetWindowsHookExW" (ByVal IDHook As Long, ByVal lpfn As Long, ByVal hMod As Long, ByVal dwThreadID As Long) As Long
+Private Declare Function UnhookWindowsHookEx Lib "user32" (ByVal hHook As Long) As Long
+Private Declare Function CallNextHookEx Lib "user32" (ByVal hHook As Long, ByVal nCode As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Private Const WM_USER As Long = &H400
+Private Const UM_PRETRANSLATEMSG As Long = (WM_USER + 333)
+Private FlexPreTranslateMsgHookHandle As Long
+Private FlexPreTranslateMsgHwnd() As Long, FlexPreTranslateMsgCount As Long
+
+#End If
 
 Public Sub FlexLoadShellMod()
 If (ShellModHandle Or ShellModCount) = 0 Then ShellModHandle = LoadLibrary(StrPtr("Shell32.dll"))
@@ -265,3 +294,65 @@ Else
     FlexWindowProc = DefWindowProc(hWnd, wMsg, wParam, lParam)
 End If
 End Function
+
+#If ImplementPreTranslateMsg = True Then
+
+Public Sub FlexPreTranslateMsgAddHook(ByVal hWnd As Long)
+If (FlexPreTranslateMsgHookHandle Or FlexPreTranslateMsgCount) = 0 Then
+    Const WH_GETMESSAGE As Long = 3
+    FlexPreTranslateMsgHookHandle = SetWindowsHookEx(WH_GETMESSAGE, AddressOf FlexPreTranslateMsgHookProc, 0, App.ThreadID)
+    ReDim FlexPreTranslateMsgHwnd(0) As Long
+    FlexPreTranslateMsgHwnd(0) = hWnd
+Else
+    ReDim Preserve FlexPreTranslateMsgHwnd(0 To FlexPreTranslateMsgCount) As Long
+    FlexPreTranslateMsgHwnd(FlexPreTranslateMsgCount) = hWnd
+End If
+FlexPreTranslateMsgCount = FlexPreTranslateMsgCount + 1
+End Sub
+
+Public Sub FlexPreTranslateMsgReleaseHook(ByVal hWnd As Long)
+FlexPreTranslateMsgCount = FlexPreTranslateMsgCount - 1
+If FlexPreTranslateMsgCount = 0 And FlexPreTranslateMsgHookHandle <> 0 Then
+    UnhookWindowsHookEx FlexPreTranslateMsgHookHandle
+    FlexPreTranslateMsgHookHandle = 0
+    Erase FlexPreTranslateMsgHwnd()
+Else
+    If FlexPreTranslateMsgCount > 0 Then
+        Dim i As Long
+        For i = 0 To FlexPreTranslateMsgCount
+            If FlexPreTranslateMsgHwnd(i) = hWnd And i < FlexPreTranslateMsgCount Then
+                FlexPreTranslateMsgHwnd(i) = FlexPreTranslateMsgHwnd(i + 1)
+            End If
+        Next i
+        ReDim Preserve FlexPreTranslateMsgHwnd(0 To FlexPreTranslateMsgCount - 1) As Long
+    End If
+End If
+End Sub
+
+Private Function FlexPreTranslateMsgHookProc(ByVal nCode As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Const HC_ACTION As Long = 0, PM_REMOVE As Long = &H1
+Const WM_KEYFIRST As Long = &H100, WM_KEYLAST As Long = &H108, WM_NULL As Long = &H0
+If nCode >= HC_ACTION And wParam = PM_REMOVE Then
+    Dim Msg As TMSG
+    CopyMemory Msg, ByVal lParam, LenB(Msg)
+    If Msg.Message >= WM_KEYFIRST And Msg.Message <= WM_KEYLAST Then
+        If FlexPreTranslateMsgCount > 0 Then
+            Dim i As Long
+            For i = 0 To FlexPreTranslateMsgCount - 1
+                If Msg.hWnd = FlexPreTranslateMsgHwnd(i) Then
+                    If SendMessage(Msg.hWnd, UM_PRETRANSLATEMSG, 0, ByVal lParam) <> 0 Then
+                        Msg.Message = WM_NULL
+                        Msg.wParam = 0
+                        Msg.lParam = 0
+                        CopyMemory ByVal lParam, Msg, LenB(Msg)
+                        Exit For
+                    End If
+                End If
+            Next i
+        End If
+    End If
+End If
+FlexPreTranslateMsgHookProc = CallNextHookEx(FlexPreTranslateMsgHookHandle, nCode, wParam, lParam)
+End Function
+
+#End If

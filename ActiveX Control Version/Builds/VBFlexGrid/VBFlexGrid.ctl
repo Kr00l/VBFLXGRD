@@ -23,6 +23,7 @@ Option Explicit
 #Const ImplementThemedComboButton = True
 #Const ImplementDataSource = True ' True = Required: msdatsrc.tlb
 #Const ImplementFlexDataSource = True ' True = Required: IVBFlexDataSource.cls
+#Const ImplementPreTranslateMsg = True ' True = OCX supports accelerator keys in a VBA environment
 
 #If False Then
 Private FlexOLEDropModeNone, FlexOLEDropModeManual
@@ -1129,6 +1130,13 @@ Private PropDataSource As MSDATASRC.DataSource, PropDataMember As MSDATASRC.Data
 
 #End If
 
+#If ImplementPreTranslateMsg = True Then
+
+Private Const UM_PRETRANSLATEMSG As Long = (WM_USER + 333)
+Private VBFlexGridUsePreTranslateMsg As Boolean
+
+#End If
+
 Private WithEvents PropFont As StdFont
 Attribute PropFont.VB_VarHelpID = -1
 Private WithEvents PropFontFixed As StdFont
@@ -1345,9 +1353,26 @@ Private Sub UserControl_Initialize()
 Call FlexLoadShellMod
 Call FlexInitCC(ICC_STANDARD_CLASSES)
 Call FlexWndRegisterClass
+
+#If ImplementPreTranslateMsg = True Then
+
+Const IID_IOleInPlaceActiveObject As String = "{00000117-0000-0000-C000-000000000046}"
+If VTableInterfaceSupported(Me, IID_IOleInPlaceActiveObject) = False Then
+    VBFlexGridUsePreTranslateMsg = True
+Else
+    Call SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
+    Call SetVTableHandling(Me, VTableInterfaceControl)
+    Call SetVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
+End If
+
+#Else
+
 Call SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
 Call SetVTableHandling(Me, VTableInterfaceControl)
 Call SetVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
+
+#End If
+
 With VBFlexGridDefaultCell
 .TextStyle = -1
 .Alignment = -1
@@ -1749,9 +1774,23 @@ InProc = False
 End Sub
 
 Private Sub UserControl_Terminate()
+
+#If ImplementPreTranslateMsg = True Then
+
+If VBFlexGridUsePreTranslateMsg = False Then
+    Call RemoveVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
+    Call RemoveVTableHandling(Me, VTableInterfaceControl)
+    Call RemoveVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
+End If
+
+#Else
+
 Call RemoveVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
 Call RemoveVTableHandling(Me, VTableInterfaceControl)
 Call RemoveVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
+
+#End If
+
 Call DestroyVBFlexGrid
 Call FlexWndReleaseClass
 Call FlexReleaseShellMod
@@ -3737,7 +3776,18 @@ Me.Enabled = UserControl.Enabled
 If PropRedraw = False Then Me.Redraw = False
 Me.FormatString = PropFormatString
 Call SetScrollBars
-If VBFlexGridDesignMode = False Then Call FlexSetSubclass(UserControl.hWnd, Me, 5)
+If VBFlexGridDesignMode = False Then
+    Call FlexSetSubclass(UserControl.hWnd, Me, 5)
+    
+    #If ImplementPreTranslateMsg = True Then
+    
+    If VBFlexGridUsePreTranslateMsg = True Then
+        If VBFlexGridHandle <> 0 Then Call FlexPreTranslateMsgAddHook(VBFlexGridHandle)
+    End If
+    
+    #End If
+    
+End If
 UserControl.BackColor = PropBackColorBkg
 End Sub
 
@@ -3774,6 +3824,13 @@ If VBFlexGridHandle = 0 Then Exit Sub
 Call FlexRemoveSubclass(UserControl.hWnd)
 Call DestroyToolTip
 If VBFlexGridDesignMode = False Then
+    
+    #If ImplementPreTranslateMsg = True Then
+    
+    If VBFlexGridUsePreTranslateMsg = True Then Call FlexPreTranslateMsgReleaseHook(VBFlexGridHandle)
+    
+    #End If
+    
     SetWindowLong VBFlexGridHandle, 0, 0
     If VBFlexGridIMCHandle <> 0 Then
         ImmAssociateContext VBFlexGridHandle, 0
@@ -4081,6 +4138,13 @@ If VBFlexGridEditHandle <> 0 Then
             If VBFlexGridComboActiveMode = FlexComboModeDropDown Then Call ComboShowDropDown(True)
         End If
     End If
+    
+    #If ImplementPreTranslateMsg = True Then
+    
+    If VBFlexGridUsePreTranslateMsg = True Then Call FlexPreTranslateMsgAddHook(VBFlexGridEditHandle)
+    
+    #End If
+    
     RaiseEvent EnterEdit
     CreateEdit = True
 End If
@@ -4134,6 +4198,13 @@ End If
 InProc = True
 VBFlexGridEditCloseMode = CloseMode
 RaiseEvent LeaveEdit
+
+#If ImplementPreTranslateMsg = True Then
+
+If VBFlexGridUsePreTranslateMsg = True Then Call FlexPreTranslateMsgReleaseHook(VBFlexGridEditHandle)
+
+#End If
+
 Dim Row As Long, Col As Long
 ' It is necessary to preserve the edit row and col from here on.
 ' When the edit control has been destroyed it could be started again resulting that the edit row and col will be overwritten.
@@ -12233,6 +12304,29 @@ Do While Last > First
 Loop
 End Sub
 
+#If ImplementPreTranslateMsg = True Then
+
+Private Function PreTranslateMsg(ByVal lParam As Long) As Long
+PreTranslateMsg = 0
+If lParam <> 0 Then
+    Dim Msg As TMSG, Handled As Boolean, RetVal As Long
+    CopyMemory Msg, ByVal lParam, LenB(Msg)
+    IOleInPlaceActiveObjectVB_TranslateAccelerator Handled, RetVal, Msg.hWnd, Msg.Message, Msg.wParam, Msg.lParam, GetShiftStateFromMsg()
+    If Handled = True Then
+        PreTranslateMsg = 1
+    ElseIf PropWantReturn = True Then
+        If Msg.Message = WM_KEYDOWN Or Msg.Message = WM_KEYUP Then
+            If (Msg.wParam And &HFF&) = vbKeyReturn Then
+                SendMessage Msg.hWnd, Msg.Message, Msg.wParam, ByVal Msg.lParam
+                PreTranslateMsg = 1
+            End If
+        End If
+    End If
+End If
+End Function
+
+#End If
+
 Friend Function FSubclass_Message(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal dwRefData As Long) As Long
 Select Case dwRefData
     Case 1
@@ -12254,9 +12348,29 @@ Select Case wMsg
     Case WM_SETFOCUS
         If wParam <> UserControl.hWnd Then SetFocusAPI UserControl.hWnd: Exit Function
         If VBFlexGridEditHandle <> 0 Then SetFocusAPI VBFlexGridEditHandle: Exit Function
+        
+        #If ImplementPreTranslateMsg = True Then
+        
+        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me)
+        
+        #Else
+        
         Call ActivateIPAO(Me)
+        
+        #End If
+        
     Case WM_KILLFOCUS
+        
+        #If ImplementPreTranslateMsg = True Then
+        
+        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO
+        
+        #Else
+        
         Call DeActivateIPAO
+        
+        #End If
+        
     Case WM_GETFONT
         WindowProcControl = VBFlexGridFontHandle
         Exit Function
@@ -12808,84 +12922,59 @@ Select Case wMsg
                 Dim OldTextColor As Long
                 
                 #If ImplementThemedComboButton = True Then
-                    
-                    Dim Theme As Long
-                    If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then
-                        If VBFlexGridComboListHandle <> 0 Then
-                            Theme = OpenThemeData(VBFlexGridHandle, StrPtr("ComboBox"))
-                        Else
-                            Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
-                        End If
-                    End If
-                    If Theme <> 0 Then
-                        If VBFlexGridComboListHandle <> 0 Then
-                            Dim ComboBoxPart As Long, ComboBoxState As Long
-                            ComboBoxPart = CP_DROPDOWNBUTTON
-                            If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
-                                If Not (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
-                                    If Not (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then
-                                        ComboBoxState = CBXS_NORMAL
-                                    Else
-                                        ComboBoxState = CBXS_HOT
-                                    End If
-                                Else
-                                    ComboBoxState = CBXS_PRESSED
-                                End If
-                            Else
-                                ComboBoxState = CBXS_DISABLED
-                            End If
-                            If IsThemeBackgroundPartiallyTransparent(Theme, ComboBoxPart, ComboBoxState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
-                            DrawThemeBackground Theme, DIS.hDC, ComboBoxPart, ComboBoxState, DIS.RCItem, DIS.RCItem
-                        Else
-                            Dim ButtonPart As Long, ButtonState As Long
-                            ButtonPart = BP_PUSHBUTTON
-                            If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
-                                If Not (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
-                                    If Not (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then
-                                        ButtonState = PBS_NORMAL
-                                    Else
-                                        ButtonState = PBS_HOT
-                                    End If
-                                Else
-                                    ButtonState = PBS_PRESSED
-                                End If
-                            Else
-                                ButtonState = PBS_DISABLED
-                            End If
-                            If IsThemeBackgroundPartiallyTransparent(Theme, ButtonPart, ButtonState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
-                            DrawThemeBackground Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
-                            GetThemeBackgroundContentRect Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
-                            OldTextColor = SetTextColor(DIS.hDC, WinColor(vbButtonText))
-                            Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-                            SetTextColor DIS.hDC, OldTextColor
-                        End If
-                        CloseThemeData Theme
+                
+                Dim Theme As Long
+                If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then
+                    If VBFlexGridComboListHandle <> 0 Then
+                        Theme = OpenThemeData(VBFlexGridHandle, StrPtr("ComboBox"))
                     Else
-                        Dim CtlType As Long, Flags As Long
-                        If VBFlexGridComboListHandle <> 0 Then
-                            CtlType = DFC_SCROLL
-                            Flags = DFCS_SCROLLCOMBOBOX
-                        Else
-                            CtlType = DFC_BUTTON
-                            Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
-                        End If
-                        If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
-                        If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
-                        If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
-                        DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
-                        If CtlType = DFC_BUTTON Then
-                            If (Flags And DFCS_HOT) = DFCS_HOT Then
-                                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
-                            Else
-                                OldTextColor = SetTextColor(DIS.hDC, WinColor(vbButtonText))
-                            End If
-                            Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-                            SetTextColor DIS.hDC, OldTextColor
-                        End If
+                        Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
                     End If
-                    
-                #Else
-                    
+                End If
+                If Theme <> 0 Then
+                    If VBFlexGridComboListHandle <> 0 Then
+                        Dim ComboBoxPart As Long, ComboBoxState As Long
+                        ComboBoxPart = CP_DROPDOWNBUTTON
+                        If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
+                            If Not (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
+                                If Not (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then
+                                    ComboBoxState = CBXS_NORMAL
+                                Else
+                                    ComboBoxState = CBXS_HOT
+                                End If
+                            Else
+                                ComboBoxState = CBXS_PRESSED
+                            End If
+                        Else
+                            ComboBoxState = CBXS_DISABLED
+                        End If
+                        If IsThemeBackgroundPartiallyTransparent(Theme, ComboBoxPart, ComboBoxState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
+                        DrawThemeBackground Theme, DIS.hDC, ComboBoxPart, ComboBoxState, DIS.RCItem, DIS.RCItem
+                    Else
+                        Dim ButtonPart As Long, ButtonState As Long
+                        ButtonPart = BP_PUSHBUTTON
+                        If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
+                            If Not (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
+                                If Not (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then
+                                    ButtonState = PBS_NORMAL
+                                Else
+                                    ButtonState = PBS_HOT
+                                End If
+                            Else
+                                ButtonState = PBS_PRESSED
+                            End If
+                        Else
+                            ButtonState = PBS_DISABLED
+                        End If
+                        If IsThemeBackgroundPartiallyTransparent(Theme, ButtonPart, ButtonState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
+                        DrawThemeBackground Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
+                        GetThemeBackgroundContentRect Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
+                        OldTextColor = SetTextColor(DIS.hDC, WinColor(vbButtonText))
+                        Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                        SetTextColor DIS.hDC, OldTextColor
+                    End If
+                    CloseThemeData Theme
+                Else
                     Dim CtlType As Long, Flags As Long
                     If VBFlexGridComboListHandle <> 0 Then
                         CtlType = DFC_SCROLL
@@ -12907,7 +12996,32 @@ Select Case wMsg
                         Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
                         SetTextColor DIS.hDC, OldTextColor
                     End If
-                    
+                End If
+                
+                #Else
+                
+                Dim CtlType As Long, Flags As Long
+                If VBFlexGridComboListHandle <> 0 Then
+                    CtlType = DFC_SCROLL
+                    Flags = DFCS_SCROLLCOMBOBOX
+                Else
+                    CtlType = DFC_BUTTON
+                    Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
+                End If
+                If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
+                If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
+                If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
+                DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
+                If CtlType = DFC_BUTTON Then
+                    If (Flags And DFCS_HOT) = DFCS_HOT Then
+                        OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
+                    Else
+                        OldTextColor = SetTextColor(DIS.hDC, WinColor(vbButtonText))
+                    End If
+                    Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                    SetTextColor DIS.hDC, OldTextColor
+                End If
+                
                 #End If
                 
             Else
@@ -12918,6 +13032,15 @@ Select Case wMsg
             WindowProcControl = 1
             Exit Function
         End If
+    
+    #If ImplementPreTranslateMsg = True Then
+    
+    Case UM_PRETRANSLATEMSG
+        WindowProcControl = PreTranslateMsg(lParam)
+        Exit Function
+    
+    #End If
+    
 End Select
 WindowProcControl = DefWindowProc(hWnd, wMsg, wParam, lParam)
 Select Case wMsg
@@ -13033,9 +13156,29 @@ End Function
 Private Function WindowProcEdit(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 Select Case wMsg
     Case WM_SETFOCUS
+        
+        #If ImplementPreTranslateMsg = True Then
+        
+        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me)
+        
+        #Else
+        
         Call ActivateIPAO(Me)
+        
+        #End If
+        
     Case WM_KILLFOCUS
+        
+        #If ImplementPreTranslateMsg = True Then
+        
+        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO
+        
+        #Else
+        
         Call DeActivateIPAO
+        
+        #End If
+        
     Case WM_MOUSEACTIVATE
         ' It is necessary to break the chain and return MA_ACTIVATE for this window.
         ' This enables the parent window - when it receives WM_MOUSEACTIVATE - to destroy this child window.
@@ -13277,6 +13420,15 @@ Select Case wMsg
                 WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
                 Exit Function
         End Select
+    
+    #If ImplementPreTranslateMsg = True Then
+    
+    Case UM_PRETRANSLATEMSG
+        WindowProcEdit = PreTranslateMsg(lParam)
+        Exit Function
+    
+    #End If
+    
 End Select
 WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
 If wMsg = WM_KILLFOCUS Then DestroyEdit False, FlexEditCloseModeLostFocus
