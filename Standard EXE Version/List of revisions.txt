@@ -1,5 +1,8 @@
 List of revisions:
 
+09-Aug-2020
+- OCX supports accelerator keys in a VBA environment.
+
 02-Aug-2020
 - Internal function ComboShowDropDown will call RefreshMousePointer function when current hCursor is NULL.
 
