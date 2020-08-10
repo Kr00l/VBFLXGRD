@@ -1,8 +1,8 @@
 Attribute VB_Name = "VBFlexGridBase"
 Option Explicit
 
-#Const ImplementIDEStopProtection = True
-#Const ImplementPreTranslateMsg = False ' True = OCX supports accelerator keys in a VBA environment
+#Const ImplementIDEStopProtection = (VBFLXGRD_OCX = 0)
+#Const ImplementPreTranslateMsg = (VBFLXGRD_OCX <> 0)
 
 Private Type TINITCOMMONCONTROLSEX
 dwSize As Long

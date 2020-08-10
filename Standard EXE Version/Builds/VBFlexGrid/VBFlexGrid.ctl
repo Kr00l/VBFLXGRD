@@ -23,7 +23,7 @@ Option Explicit
 #Const ImplementThemedComboButton = True
 #Const ImplementDataSource = True ' True = Required: msdatsrc.tlb
 #Const ImplementFlexDataSource = True ' True = Required: IVBFlexDataSource.cls
-#Const ImplementPreTranslateMsg = False ' True = OCX supports accelerator keys in a VBA environment
+#Const ImplementPreTranslateMsg = (VBFLXGRD_OCX <> 0)
 
 #If False Then
 Private FlexOLEDropModeNone, FlexOLEDropModeManual
@@ -1361,9 +1361,9 @@ If VTableInterfaceSupported(Me, IID_IOleInPlaceActiveObject) = False Then
     VBFlexGridUsePreTranslateMsg = True
 Else
     Call SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
-    Call SetVTableHandling(Me, VTableInterfaceControl)
-    Call SetVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 End If
+Call SetVTableHandling(Me, VTableInterfaceControl)
+Call SetVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 
 #Else
 
@@ -1777,11 +1777,9 @@ Private Sub UserControl_Terminate()
 
 #If ImplementPreTranslateMsg = True Then
 
-If VBFlexGridUsePreTranslateMsg = False Then
-    Call RemoveVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
-    Call RemoveVTableHandling(Me, VTableInterfaceControl)
-    Call RemoveVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
-End If
+If VBFlexGridUsePreTranslateMsg = False Then Call RemoveVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
+Call RemoveVTableHandling(Me, VTableInterfaceControl)
+Call RemoveVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 
 #Else
 
