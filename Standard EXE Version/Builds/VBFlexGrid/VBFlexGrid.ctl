@@ -331,10 +331,6 @@ Private Type SIZEAPI
 CX As Long
 CY As Long
 End Type
-Private Type NCCALCSIZE_PARAMS
-RC(0 To 2) As RECT
-lpWPOS As Long
-End Type
 Private Type TRACKMOUSEEVENTSTRUCT
 cbSize As Long
 dwFlags As Long
@@ -715,7 +711,6 @@ Private Declare Function GetMessagePos Lib "user32" () As Long
 Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As RECT) As Long
 Private Declare Function GetWindowRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As RECT) As Long
 Private Declare Function MapWindowPoints Lib "user32" (ByVal hWndFrom As Long, ByVal hWndTo As Long, ByRef lppt As Any, ByVal cPoints As Long) As Long
-Private Declare Function SetViewportOrgEx Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByRef lpPoint As POINTAPI) As Long
 Private Declare Function SetRect Lib "user32" (ByRef lpRect As RECT, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function CreateSolidBrush Lib "gdi32" (ByVal crColor As Long) As Long
 Private Declare Function CreatePen Lib "gdi32" (ByVal nPenStyle As Long, ByVal nWidth As Long, ByVal crColor As Long) As Long
@@ -2703,7 +2698,7 @@ ElseIf Value < 1 And PropRows > 0 Then
 ElseIf Value <> PropRows And PropCols > 0 Then
     ReDim Preserve VBFlexGridCells.Rows(0 To (Value - 1)) As TCOLS
     If Value > PropRows Then
-        Dim i As Long, j As Long
+        Dim i As Long
         ReDim Preserve VBFlexGridCells.Rows(0 To (Value - 1)) As TCOLS
         PropRows = PropRows + 1 ' First new row.
         For i = (PropRows - 1) To (Value - 1)

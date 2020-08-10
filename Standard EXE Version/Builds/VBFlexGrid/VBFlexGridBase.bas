@@ -1,19 +1,11 @@
 Attribute VB_Name = "VBFlexGridBase"
 Option Explicit
 
-#Const ImplementIDEStopProtection = (VBFLXGRD_OCX = 0)
 #Const ImplementPreTranslateMsg = (VBFLXGRD_OCX <> 0)
 
 Private Type TINITCOMMONCONTROLSEX
 dwSize As Long
 dwICC As Long
-End Type
-Private Type DLLVERSIONINFO
-cbSize As Long
-dwMajor As Long
-dwMinor As Long
-dwBuildNumber As Long
-dwPlatformID As Long
 End Type
 Private Type OSVERSIONINFO
 dwOSVersionInfoSize As Long
@@ -54,16 +46,12 @@ Private Declare Function UnregisterClass Lib "user32" Alias "UnregisterClassW" (
 Private Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
 Private Declare Function GetWindowLong Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long) As Long
-Private Declare Function DestroyWindow Lib "user32" (ByVal hWnd As Long) As Long
-Private Declare Function DllGetVersion Lib "comctl32" (ByRef pdvi As DLLVERSIONINFO) As Long
 Private Declare Function GetVersionEx Lib "kernel32" Alias "GetVersionExW" (ByRef lpVersionInfo As OSVERSIONINFO) As Long
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryW" (ByVal lpLibFileName As Long) As Long
 Private Declare Function FreeLibrary Lib "kernel32" (ByVal hLibModule As Long) As Long
 Private Declare Function CreateBitmapIndirect Lib "gdi32" (ByRef lpBitmap As BITMAP) As Long
 Private Declare Function CreatePatternBrush Lib "gdi32" (ByVal hBitmap As Long) As Long
 Private Declare Function DeleteObject Lib "gdi32" (ByVal hObject As Long) As Long
-Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleW" (ByVal lpModuleName As Long) As Long
-Private Declare Function GetProcAddress Lib "kernel32" (ByVal hModule As Long, ByVal lpProcName As String) As Long
 Private Declare Function SetProp Lib "user32" Alias "SetPropW" (ByVal hWnd As Long, ByVal lpString As Long, ByVal hData As Long) As Long
 Private Declare Function GetProp Lib "user32" Alias "GetPropW" (ByVal hWnd As Long, ByVal lpString As Long) As Long
 Private Declare Function RemoveProp Lib "user32" Alias "RemovePropW" (ByVal hWnd As Long, ByVal lpString As Long) As Long
@@ -107,73 +95,6 @@ Private Const WM_USER As Long = &H400
 Private Const UM_PRETRANSLATEMSG As Long = (WM_USER + 333)
 Private FlexPreTranslateMsgHookHandle As Long
 Private FlexPreTranslateMsgHwnd() As Long, FlexPreTranslateMsgCount As Long
-
-#End If
-
-#If ImplementIDEStopProtection = True Then
-
-Private Declare Function VirtualAlloc Lib "kernel32" (ByRef lpAddress As Long, ByVal dwSize As Long, ByVal flAllocType As Long, ByVal flProtect As Long) As Long
-Private Declare Function VirtualProtect Lib "kernel32" (ByVal lpAddress As Long, ByVal dwSize As Long, ByVal flNewProtect As Long, ByRef lpflOldProtect As Long) As Long
-Private Const MEM_COMMIT As Long = &H1000
-Private Const PAGE_EXECUTE_READWRITE As Long = &H40
-Private Type IMAGE_DATA_DIRECTORY
-VirtualAddress As Long
-Size As Long
-End Type
-Private Type IMAGE_OPTIONAL_HEADER32
-Magic As Integer
-MajorLinkerVersion As Byte
-MinorLinkerVersion As Byte
-SizeOfCode As Long
-SizeOfInitalizedData As Long
-SizeOfUninitalizedData As Long
-AddressOfEntryPoint As Long
-BaseOfCode As Long
-BaseOfData As Long
-ImageBase As Long
-SectionAlignment As Long
-FileAlignment As Long
-MajorOperatingSystemVer As Integer
-MinorOperatingSystemVer As Integer
-MajorImageVersion As Integer
-MinorImageVersion As Integer
-MajorSubsystemVersion As Integer
-MinorSubsystemVersion As Integer
-Reserved1 As Long
-SizeOfImage As Long
-SizeOfHeaders As Long
-CheckSum As Long
-Subsystem As Integer
-DllCharacteristics As Integer
-SizeOfStackReserve As Long
-SizeOfStackCommit As Long
-SizeOfHeapReserve As Long
-SizeOfHeapCommit As Long
-LoaderFlags As Long
-NumberOfRvaAndSizes As Long
-DataDirectory(15) As IMAGE_DATA_DIRECTORY
-End Type
-Private Type IMAGE_DOS_HEADER
-e_magic As Integer
-e_cblp As Integer
-e_cp As Integer
-e_crlc As Integer
-e_cparhdr As Integer
-e_minalloc As Integer
-e_maxalloc As Integer
-e_ss As Integer
-e_sp As Integer
-e_csum As Integer
-e_ip As Integer
-e_cs As Integer
-e_lfarlc As Integer
-e_onvo As Integer
-e_res(0 To 3) As Integer
-e_oemid As Integer
-e_oeminfo As Integer
-e_res2(0 To 9) As Integer
-e_lfanew As Long
-End Type
 
 #End If
 
@@ -422,106 +343,5 @@ If nCode >= HC_ACTION And wParam = PM_REMOVE Then
 End If
 FlexPreTranslateMsgHookProc = CallNextHookEx(FlexPreTranslateMsgHookHandle, nCode, wParam, lParam)
 End Function
-
-#End If
-
-Public Sub FlexInitIDEStopProtection()
-
-#If ImplementIDEStopProtection = True Then
-
-If InIDE() = True Then
-    Dim ASMWrapper As Long, RestorePointer As Long, OldAddress As Long
-    ASMWrapper = VirtualAlloc(ByVal 0&, 20, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
-    OldAddress = GetProcAddress(GetModuleHandle(StrPtr("vba6.dll")), "EbProjectReset")
-    RestorePointer = HookIATEntry("vb6.exe", "vba6.dll", "EbProjectReset", ASMWrapper)
-    WriteCall ASMWrapper, AddressOf FlexIDEStopProtectionHandler
-    WriteByte ASMWrapper, &HC7 ' MOV
-    WriteByte ASMWrapper, &H5
-    WriteLong ASMWrapper, RestorePointer ' IAT Entry
-    WriteLong ASMWrapper, OldAddress ' Address from EbProjectReset
-    WriteJump ASMWrapper, OldAddress
-End If
-
-#End If
-
-End Sub
-
-#If ImplementIDEStopProtection = True Then
-
-Private Sub FlexIDEStopProtectionHandler()
-On Error Resume Next
-Dim AppForm As VB.Form, CurrControl As VB.Control
-For Each AppForm In VB.Forms
-    Call RemoveVisualStylesFixes(AppForm)
-    For Each CurrControl In AppForm.Controls
-        Call RemoveVTableHandling(CurrControl.Object, VTableInterfaceInPlaceActiveObject)
-        Call RemoveVTableHandling(CurrControl.Object, VTableInterfaceControl)
-        Call RemoveVTableHandling(CurrControl.Object, VTableInterfacePerPropertyBrowsing)
-        If TypeOf CurrControl Is VBFlexGrid Then
-            Call FlexRemoveSubclass(CurrControl.hWndUserControl)
-            If CurrControl.hWndEdit <> 0 Then Call FlexRemoveSubclass(CurrControl.hWndEdit)
-            If CurrControl.hWndComboButton <> 0 Then Call FlexRemoveSubclass(CurrControl.hWndComboButton)
-            If CurrControl.hWndComboList <> 0 Then Call FlexRemoveSubclass(CurrControl.hWndComboList)
-            SetWindowLong CurrControl.hWnd, 0, 0
-            DestroyWindow CurrControl.hWnd
-        End If
-    Next CurrControl
-Next AppForm
-Call StopVTableHandling(VTableInterfaceInPlaceActiveObject)
-Call StopVTableHandling(VTableInterfaceControl)
-Call StopVTableHandling(VTableInterfacePerPropertyBrowsing)
-End Sub
-
-Private Function HookIATEntry(ByVal Module As String, ByVal Lib As String, ByVal Fnc As String, ByVal NewAddr As Long) As Long
-Dim hMod As Long, OldLibFncAddr As Long
-Dim lpIAT As Long, IATLen As Long, IATPos As Long
-Dim DOSHdr As IMAGE_DOS_HEADER
-Dim PEHdr As IMAGE_OPTIONAL_HEADER32
-hMod = GetModuleHandle(StrPtr(Module))
-If hMod = 0 Then Exit Function
-OldLibFncAddr = GetProcAddress(GetModuleHandle(StrPtr(Lib)), Fnc)
-If OldLibFncAddr = 0 Then Exit Function
-CopyMemory DOSHdr, ByVal hMod, LenB(DOSHdr)
-CopyMemory PEHdr, ByVal UnsignedAdd(hMod, DOSHdr.e_lfanew), LenB(PEHdr)
-Const IMAGE_NT_SIGNATURE As Long = &H4550
-If PEHdr.Magic = IMAGE_NT_SIGNATURE Then
-    lpIAT = UnsignedAdd(PEHdr.DataDirectory(15).VirtualAddress, hMod)
-    IATLen = PEHdr.DataDirectory(15).Size
-    IATPos = lpIAT
-    Do Until CLngToULng(IATPos) >= CLngToULng(UnsignedAdd(lpIAT, IATLen))
-        If DeRef(IATPos) = OldLibFncAddr Then
-            VirtualProtect IATPos, 4, PAGE_EXECUTE_READWRITE, 0
-            CopyMemory ByVal IATPos, NewAddr, 4
-            HookIATEntry = IATPos
-            Exit Do
-        End If
-        IATPos = UnsignedAdd(IATPos, 4)
-    Loop
-End If
-End Function
-
-Private Function DeRef(ByVal Addr As Long) As Long
-CopyMemory DeRef, ByVal Addr, 4
-End Function
-
-Private Sub WriteJump(ByRef ASM As Long, ByRef Addr As Long)
-WriteByte ASM, &HE9
-WriteLong ASM, Addr - ASM - 4
-End Sub
-
-Private Sub WriteCall(ByRef ASM As Long, ByRef Addr As Long)
-WriteByte ASM, &HE8
-WriteLong ASM, Addr - ASM - 4
-End Sub
-
-Private Sub WriteLong(ByRef ASM As Long, ByRef Lng As Long)
-CopyMemory ByVal ASM, Lng, 4
-ASM = ASM + 4
-End Sub
-
-Private Sub WriteByte(ByRef ASM As Long, ByRef B As Byte)
-CopyMemory ByVal ASM, B, 1
-ASM = ASM + 1
-End Sub
 
 #End If
