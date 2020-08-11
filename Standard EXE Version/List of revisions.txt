@@ -1,5 +1,8 @@
 List of revisions:
 
+11-Aug-2020
+- Bugfix in the ForeColorFixed property.
+
 09-Aug-2020
 - OCX supports accelerator keys in a VBA environment.
 
