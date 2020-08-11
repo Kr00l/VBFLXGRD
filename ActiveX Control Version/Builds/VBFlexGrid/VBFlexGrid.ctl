@@ -8333,7 +8333,7 @@ End If
 Dim OldTextColor As Long
 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) = ODS_FOCUS Then
     If Not Text = vbNullString Then
-        If Not .ForeColor = -1 Then
+        If .ForeColor = -1 Then
             OldTextColor = SetTextColor(hDC, WinColor(PropForeColorFixed))
         Else
             OldTextColor = SetTextColor(hDC, WinColor(.ForeColor))
