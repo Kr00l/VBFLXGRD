@@ -1351,12 +1351,7 @@ Call FlexWndRegisterClass
 
 #If ImplementPreTranslateMsg = True Then
 
-Const IID_IOleInPlaceActiveObject As String = "{00000117-0000-0000-C000-000000000046}"
-If VTableInterfaceSupported(Me, IID_IOleInPlaceActiveObject) = False Then
-    VBFlexGridUsePreTranslateMsg = True
-Else
-    Call SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
-End If
+If SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject) = False Then VBFlexGridUsePreTranslateMsg = True
 Call SetVTableHandling(Me, VTableInterfaceControl)
 Call SetVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 
