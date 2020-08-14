@@ -2383,6 +2383,7 @@ Else
         End If
     End If
 End If
+If VBFlexGridDesignMode = False Then Call RefreshMousePointer
 UserControl.PropertyChanged "MouseIcon"
 End Property
 
