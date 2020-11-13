@@ -1,5 +1,5 @@
 Type=Control
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\WINDOWS\system32\STDOLE2.TLB#OLE Automation
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\WINDOWS\system32\stdole2.tlb#OLE Automation
 Reference=*\G{5A2B9220-BF07-11E6-9598-0800200C9A66}#1.0#0#..\..\..\..\WINDOWS\system32\OLEGuids.tlb#OLE Guid and interface definitions
 Reference=*\G{7C0FFAB0-CD84-11D0-949A-00A0C91110ED}#1.0#0#..\..\..\..\WINDOWS\system32\msdatsrc.tlb#Microsoft Data Source Interfaces for ActiveX Data Binding Type Library
 Module=Common; Common\Common.bas
@@ -21,7 +21,7 @@ Description="VB FlexGrid Control 1.4"
 CompatibleMode="0"
 MajorVer=1
 MinorVer=4
-RevisionVer=27
+RevisionVer=28
 AutoIncrementVer=0
 ServerSupportFiles=0
 CondComp="VBFLXGRD_OCX = 1"
