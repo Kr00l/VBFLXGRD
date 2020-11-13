@@ -9840,6 +9840,15 @@ Private Sub SetRowColParams(ByRef RCP As TROWCOLPARAMS)
 Dim RowColChanged As Boolean, SelChanged As Boolean, ScrollChanged As Boolean
 Dim NoRedraw As Boolean, Cancel As Boolean
 With RCP
+Select Case PropScrollBars
+    Case vbSBNone
+        If (.Mask And RCPM_TOPROW) = RCPM_TOPROW Then .Mask = .Mask And Not RCPM_TOPROW
+        If (.Mask And RCPM_LEFTCOL) = RCPM_LEFTCOL Then .Mask = .Mask And Not RCPM_LEFTCOL
+    Case vbHorizontal
+        If (.Mask And RCPM_TOPROW) = RCPM_TOPROW Then .Mask = .Mask And Not RCPM_TOPROW
+    Case vbVertical
+        If (.Mask And RCPM_LEFTCOL) = RCPM_LEFTCOL Then .Mask = .Mask And Not RCPM_LEFTCOL
+End Select
 If (.Mask And RCPM_ROW) = RCPM_ROW Then
     If .Row > (PropRows - 1) Then .Row = (PropRows - 1)
     If VBFlexGridRow <> .Row Then RowColChanged = True
