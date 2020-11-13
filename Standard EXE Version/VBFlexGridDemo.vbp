@@ -1,7 +1,7 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\Windows\system32\stdole2.tlb#OLE Automation
-Reference=*\G{5A2B9220-BF07-11E6-9598-0800200C9A66}#1.0#0#..\..\..\..\Windows\system32\OLEGuids.tlb#OLE Guid and interface definitions
-Reference=*\G{7C0FFAB0-CD84-11D0-949A-00A0C91110ED}#1.0#0#..\..\..\..\Windows\System32\msdatsrc.tlb#Microsoft Data Source Interfaces for ActiveX Data Binding Type Library
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\Windows\SysWOW64\stdole2.tlb#OLE Automation
+Reference=*\G{5A2B9220-BF07-11E6-9598-0800200C9A66}#1.0#0#..\..\..\..\Windows\SysWOW64\OLEGuids.tlb#OLE Guid and interface definitions
+Reference=*\G{7C0FFAB0-CD84-11D0-949A-00A0C91110ED}#1.0#0#..\..\..\..\Windows\SysWOW64\msdatsrc.tlb#Microsoft Data Source Interfaces for ActiveX Data Binding Type Library
 Form=MainForm.frm
 Form=InputForm.frm
 Form=UserEditingForm.frm

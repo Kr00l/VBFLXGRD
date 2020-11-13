@@ -1,5 +1,9 @@
 List of revisions:
 
+13-Nov-2020
+- Bugfix that the ScrollBars property did not made a limitation for the scrolling.
+  This is the same behavior now as in the in the MS(H)FlexGrid control.
+
 11-Aug-2020
 - Bugfix in the ForeColorFixed property.
 
