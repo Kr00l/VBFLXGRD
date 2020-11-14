@@ -447,6 +447,7 @@ Private Const RCPM_ROW As Long = &H1, RCPM_COL As Long = &H2
 Private Const RCPM_ROWSEL As Long = &H4, RCPM_COLSEL As Long = &H8
 Private Const RCPM_TOPROW As Long = &H10, RCPM_LEFTCOL As Long = &H20
 Private Const RCPF_CHECKTOPROW As Long = &H10, RCPF_CHECKLEFTCOL As Long = &H20
+Private Const RCPF_FORCETOPROWMASK As Long = &H40, RCPF_FORCELEFTCOLMASK As Long = &H80
 Private Const RCPF_SETSCROLLBARS As Long = &H100
 Private Const RCPF_FORCEREDRAW As Long = &H200
 Private Type TROWCOLPARAMS
@@ -2735,7 +2736,12 @@ If .Row < PropFixedRows And PropRows > PropFixedRows Then
 End If
 If VBFlexGridTopRow > (PropRows - 1) Then
     .Mask = .Mask Or RCPM_TOPROW
-    .Flags = .Flags Or RCPF_CHECKTOPROW
+    Select Case PropScrollBars
+        Case vbVertical, vbBoth
+            .Flags = .Flags Or RCPF_CHECKTOPROW
+        Case Else
+            .Flags = .Flags Or RCPF_FORCETOPROWMASK
+    End Select
     .TopRow = (PropRows - 1)
 End If
 Call SetRowColParams(RCP)
@@ -2825,7 +2831,12 @@ If .Col < PropFixedCols And PropCols > PropFixedCols Then
 End If
 If VBFlexGridLeftCol > (PropCols - 1) Then
     .Mask = .Mask Or RCPM_LEFTCOL
-    .Flags = .Flags Or RCPF_CHECKLEFTCOL
+    Select Case PropScrollBars
+        Case vbHorizontal, vbBoth
+            .Flags = .Flags Or RCPF_CHECKLEFTCOL
+        Case Else
+            .Flags = .Flags Or RCPF_FORCELEFTCOLMASK
+    End Select
     .LeftCol = (PropCols - 1)
 End If
 Call SetRowColParams(RCP)
@@ -9842,12 +9853,20 @@ Dim NoRedraw As Boolean, Cancel As Boolean
 With RCP
 Select Case PropScrollBars
     Case vbSBNone
-        If (.Mask And RCPM_TOPROW) = RCPM_TOPROW Then .Mask = .Mask And Not RCPM_TOPROW
-        If (.Mask And RCPM_LEFTCOL) = RCPM_LEFTCOL Then .Mask = .Mask And Not RCPM_LEFTCOL
+        If Not (.Flags And RCPF_FORCETOPROWMASK) = RCPF_FORCETOPROWMASK Then
+            If (.Mask And RCPM_TOPROW) = RCPM_TOPROW Then .Mask = .Mask And Not RCPM_TOPROW
+        End If
+        If Not (.Flags And RCPF_FORCELEFTCOLMASK) = RCPF_FORCELEFTCOLMASK Then
+            If (.Mask And RCPM_LEFTCOL) = RCPM_LEFTCOL Then .Mask = .Mask And Not RCPM_LEFTCOL
+        End If
     Case vbHorizontal
-        If (.Mask And RCPM_TOPROW) = RCPM_TOPROW Then .Mask = .Mask And Not RCPM_TOPROW
+        If Not (.Flags And RCPF_FORCETOPROWMASK) = RCPF_FORCETOPROWMASK Then
+            If (.Mask And RCPM_TOPROW) = RCPM_TOPROW Then .Mask = .Mask And Not RCPM_TOPROW
+        End If
     Case vbVertical
-        If (.Mask And RCPM_LEFTCOL) = RCPM_LEFTCOL Then .Mask = .Mask And Not RCPM_LEFTCOL
+        If Not (.Flags And RCPF_FORCELEFTCOLMASK) = RCPF_FORCELEFTCOLMASK Then
+            If (.Mask And RCPM_LEFTCOL) = RCPM_LEFTCOL Then .Mask = .Mask And Not RCPM_LEFTCOL
+        End If
 End Select
 If (.Mask And RCPM_ROW) = RCPM_ROW Then
     If .Row > (PropRows - 1) Then .Row = (PropRows - 1)
