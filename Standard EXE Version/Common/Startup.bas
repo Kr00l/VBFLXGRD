@@ -15,7 +15,6 @@ If App.PrevInstance = True And InIDE() = False Then
         AppActivate "VBFlexGrid Demo"
     End If
 Else
-    Call FlexInitIDEStopProtection
     Call InitVisualStylesFixes
     MainForm.Show vbModeless
 End If
