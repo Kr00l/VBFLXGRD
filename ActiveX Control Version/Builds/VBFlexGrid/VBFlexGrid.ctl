@@ -1989,8 +1989,12 @@ If VBFlexGridDesignMode = False Then
                 Me.Cols = PropFixedCols + .Fields.Count
                 Dim iRow As Long, iCol As Long
                 If PropFixedRows > 0 Then
+                    For iCol = 0 To (PropFixedCols - 1)
+                        VBFlexGridColsInfo(iCol).Key = vbNullString
+                    Next iCol
                     For iCol = 0 To (.Fields.Count - 1)
                         Me.TextMatrix(0, iCol + PropFixedCols) = .Fields(iCol).Name
+                        VBFlexGridColsInfo(iCol + PropFixedCols).Key = .Fields(iCol).Name
                     Next iCol
                 End If
                 If .RecordCount > 0 Then
