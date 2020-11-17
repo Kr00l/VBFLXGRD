@@ -1,5 +1,8 @@
 List of revisions:
 
+17-Nov-2020
+- Setting ADO DataSource will predefine the column keys. (.ColKey(i) property)
+
 14-Nov-2020
 - Exception for Rows/Cols property to be able to scroll, if necessary.
   This is related to 13-Nov-2020 update.
