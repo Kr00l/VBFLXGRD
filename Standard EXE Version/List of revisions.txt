@@ -1,5 +1,8 @@
 List of revisions:
 
+26-Jan-2021
+- Rows/Cols/FixedRows/FixedCols property now using RCPF_FORCEREDRAW.
+
 17-Nov-2020
 - Setting ADO DataSource will predefine the column keys. (.ColKey(i) property)
 
