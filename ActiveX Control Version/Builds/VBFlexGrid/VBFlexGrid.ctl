@@ -2613,7 +2613,7 @@ PropFixedRows = Value
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_ROW Or RCPM_TOPROW
-.Flags = RCPF_SETSCROLLBARS
+.Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 .Row = PropFixedRows
 .TopRow = PropFixedRows
 Select Case PropSelectionMode
@@ -2655,7 +2655,7 @@ PropFixedCols = Value
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_COL Or RCPM_LEFTCOL
-.Flags = RCPF_SETSCROLLBARS
+.Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 .Col = PropFixedCols
 .LeftCol = PropFixedCols
 Select Case PropSelectionMode
@@ -2712,7 +2712,7 @@ Else
 End If
 Dim RCP As TROWCOLPARAMS
 With RCP
-.Flags = RCPF_SETSCROLLBARS
+.Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 .Row = VBFlexGridRow
 If .Row > (PropRows - 1) Then
     .Mask = .Mask Or RCPM_ROW
@@ -2807,7 +2807,7 @@ Else
 End If
 Dim RCP As TROWCOLPARAMS
 With RCP
-.Flags = RCPF_SETSCROLLBARS
+.Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 .Col = VBFlexGridCol
 If .Col > (PropCols - 1) Then
     .Mask = .Mask Or RCPM_COL
