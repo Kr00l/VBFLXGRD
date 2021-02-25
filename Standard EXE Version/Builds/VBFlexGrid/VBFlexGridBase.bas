@@ -169,7 +169,7 @@ Select Case wMsg
         Exit Function
     Case WM_NCDESTROY, WM_UAHDESTROYWINDOW
         FlexSubclassProc = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
-        If FlexW2KCompatibility() = False Then
+        If FlexSubclassW2K > -1 Then
             RemoveWindowSubclass hWnd, FlexSubclassProcPtr, uIdSubclass
         Else
             RemoveWindowSubclassW2K hWnd, FlexSubclassProcPtr, uIdSubclass
