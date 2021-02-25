@@ -1,5 +1,8 @@
 List of revisions:
 
+25-Feb-2021
+- Some minor internal improvements.
+
 26-Jan-2021
 - FixedRows property now using RCPF_FORCETOPROWMASK.
 - FixedCols property now using RCPF_FORCELEFTCOLMASK.
