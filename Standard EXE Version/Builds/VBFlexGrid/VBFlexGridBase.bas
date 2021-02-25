@@ -7,14 +7,6 @@ Private Type TINITCOMMONCONTROLSEX
 dwSize As Long
 dwICC As Long
 End Type
-Private Type OSVERSIONINFO
-dwOSVersionInfoSize As Long
-dwMajorVersion As Long
-dwMinorVersion As Long
-dwBuildNumber As Long
-dwPlatformID As Long
-szCSDVersion(0 To ((128 * 2) - 1)) As Byte
-End Type
 Private Type WNDCLASSEX
 cbSize As Long
 dwStyle As Long
@@ -46,7 +38,8 @@ Private Declare Function UnregisterClass Lib "user32" Alias "UnregisterClassW" (
 Private Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
 Private Declare Function GetWindowLong Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long) As Long
-Private Declare Function GetVersionEx Lib "kernel32" Alias "GetVersionExW" (ByRef lpVersionInfo As OSVERSIONINFO) As Long
+Private Declare Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hInstance As Long, ByVal lpCursorName As Any) As Long
+Private Declare Function GetProcAddress Lib "kernel32" (ByVal hModule As Long, ByVal lpProcName As Any) As Long
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryW" (ByVal lpLibFileName As Long) As Long
 Private Declare Function FreeLibrary Lib "kernel32" (ByVal hLibModule As Long) As Long
 Private Declare Function CreateBitmapIndirect Lib "gdi32" (ByRef lpBitmap As BITMAP) As Long
@@ -58,10 +51,9 @@ Private Declare Function RemoveProp Lib "user32" Alias "RemovePropW" (ByVal hWnd
 Private Declare Function SetWindowSubclass Lib "comctl32" (ByVal hWnd As Long, ByVal pfnSubclass As Long, ByVal uIdSubclass As Long, ByVal dwRefData As Long) As Long
 Private Declare Function RemoveWindowSubclass Lib "comctl32" (ByVal hWnd As Long, ByVal pfnSubclass As Long, ByVal uIdSubclass As Long) As Long
 Private Declare Function DefSubclassProc Lib "comctl32" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-Private Declare Function SetWindowSubclass_W2K Lib "comctl32" Alias "#410" (ByVal hWnd As Long, ByVal pfnSubclass As Long, ByVal uIdSubclass As Long, ByVal dwRefData As Long) As Long
-Private Declare Function RemoveWindowSubclass_W2K Lib "comctl32" Alias "#412" (ByVal hWnd As Long, ByVal pfnSubclass As Long, ByVal uIdSubclass As Long) As Long
-Private Declare Function DefSubclassProc_W2K Lib "comctl32" Alias "#413" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-Private Declare Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hInstance As Long, ByVal lpCursorName As Any) As Long
+Private Declare Function SetWindowSubclassW2K Lib "comctl32" Alias "#410" (ByVal hWnd As Long, ByVal pfnSubclass As Long, ByVal uIdSubclass As Long, ByVal dwRefData As Long) As Long
+Private Declare Function RemoveWindowSubclassW2K Lib "comctl32" Alias "#412" (ByVal hWnd As Long, ByVal pfnSubclass As Long, ByVal uIdSubclass As Long) As Long
+Private Declare Function DefSubclassProcW2K Lib "comctl32" Alias "#413" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 Private Const WM_CREATE As Long = &H1
 Private Const WM_DESTROY As Long = &H2
 Private Const WM_NCDESTROY As Long = &H82
@@ -70,6 +62,7 @@ Private Const CS_DBLCLKS As Long = &H8
 Private Const IDC_ARROW As Long = 32512
 Private ShellModHandle As Long, ShellModCount As Long
 Private FlexSubclassProcPtr As Long
+Private FlexSubclassW2K As Integer
 Private FlexClassAtom As Integer, FlexRefCount As Long
 Private FlexSplitterBrush As Long
 
@@ -120,34 +113,27 @@ End With
 InitCommonControlsEx ICCEX
 End Sub
 
-Public Function FlexW2KCompatibility() As Boolean
-Static Done As Boolean, Value As Boolean
-If Done = False Then
-    Dim Version As OSVERSIONINFO
-    On Error Resume Next
-    Version.dwOSVersionInfoSize = LenB(Version)
-    If GetVersionEx(Version) <> 0 Then
-        With Version
-        Const VER_PLATFORM_WIN32_NT As Long = 2
-        If .dwPlatformID = VER_PLATFORM_WIN32_NT Then
-            If .dwMajorVersion = 5 And .dwMinorVersion = 0 Then Value = True
-        End If
-        End With
-    End If
-    Done = True
-End If
-FlexW2KCompatibility = Value
-End Function
-
 Public Sub FlexSetSubclass(ByVal hWnd As Long, ByVal This As VBFlexGrid, ByVal dwRefData As Long, Optional ByVal Name As String)
 If hWnd = 0 Then Exit Sub
 If Name = vbNullString Then Name = "Flex"
 If GetProp(hWnd, StrPtr(Name & "SubclassInit")) = 0 Then
     If FlexSubclassProcPtr = 0 Then FlexSubclassProcPtr = ProcPtr(AddressOf FlexSubclassProc)
-    If FlexW2KCompatibility() = False Then
+    If FlexSubclassW2K = 0 Then
+        Dim hLib As Long
+        hLib = LoadLibrary(StrPtr("comctl32.dll"))
+        If hLib <> 0 Then
+            If GetProcAddress(hLib, "SetWindowSubclass") <> 0 Then
+                FlexSubclassW2K = 1
+            ElseIf GetProcAddress(hLib, 410&) <> 0 Then
+                FlexSubclassW2K = -1
+            End If
+            FreeLibrary hLib
+        End If
+    End If
+    If FlexSubclassW2K > -1 Then
         SetWindowSubclass hWnd, FlexSubclassProcPtr, ObjPtr(This), dwRefData
     Else
-        SetWindowSubclass_W2K hWnd, FlexSubclassProcPtr, ObjPtr(This), dwRefData
+        SetWindowSubclassW2K hWnd, FlexSubclassProcPtr, ObjPtr(This), dwRefData
     End If
     SetProp hWnd, StrPtr(Name & "SubclassID"), ObjPtr(This)
     SetProp hWnd, StrPtr(Name & "SubclassInit"), 1
@@ -155,10 +141,10 @@ End If
 End Sub
 
 Public Function FlexDefaultProc(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-If FlexW2KCompatibility() = False Then
+If FlexSubclassW2K > -1 Then
     FlexDefaultProc = DefSubclassProc(hWnd, wMsg, wParam, lParam)
 Else
-    FlexDefaultProc = DefSubclassProc_W2K(hWnd, wMsg, wParam, lParam)
+    FlexDefaultProc = DefSubclassProcW2K(hWnd, wMsg, wParam, lParam)
 End If
 End Function
 
@@ -166,10 +152,10 @@ Public Sub FlexRemoveSubclass(ByVal hWnd As Long, Optional ByVal Name As String)
 If hWnd = 0 Then Exit Sub
 If Name = vbNullString Then Name = "Flex"
 If GetProp(hWnd, StrPtr(Name & "SubclassInit")) = 1 Then
-    If FlexW2KCompatibility() = False Then
+    If FlexSubclassW2K > -1 Then
         RemoveWindowSubclass hWnd, FlexSubclassProcPtr, GetProp(hWnd, StrPtr(Name & "SubclassID"))
     Else
-        RemoveWindowSubclass_W2K hWnd, FlexSubclassProcPtr, GetProp(hWnd, StrPtr(Name & "SubclassID"))
+        RemoveWindowSubclassW2K hWnd, FlexSubclassProcPtr, GetProp(hWnd, StrPtr(Name & "SubclassID"))
     End If
     RemoveProp hWnd, StrPtr(Name & "SubclassID")
     RemoveProp hWnd, StrPtr(Name & "SubclassInit")
@@ -186,7 +172,7 @@ Select Case wMsg
         If FlexW2KCompatibility() = False Then
             RemoveWindowSubclass hWnd, FlexSubclassProcPtr, uIdSubclass
         Else
-            RemoveWindowSubclass_W2K hWnd, FlexSubclassProcPtr, uIdSubclass
+            RemoveWindowSubclassW2K hWnd, FlexSubclassProcPtr, uIdSubclass
         End If
         Exit Function
 End Select
