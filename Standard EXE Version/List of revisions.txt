@@ -1,5 +1,9 @@
 List of revisions:
 
+27-Feb-2021
+- Bugfix in the AutoSize method when using IVBFlexDataSource.
+- FindItem function can now be used (not disabled anymore) when using IVBFlexDataSource.
+
 25-Feb-2021
 - Some minor internal improvements.
 
