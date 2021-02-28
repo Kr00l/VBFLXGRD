@@ -13395,10 +13395,7 @@ Select Case wMsg
             Case WM_NCHITTEST
                 GetWindowRect hWnd, RC
                 DefWindowProc hWnd, WM_NCCALCSIZE, 0, ByVal VarPtr(RC)
-                Dim P As POINTAPI
-                P.X = Get_X_lParam(lParam)
-                P.Y = Get_Y_lParam(lParam)
-                If PtInRect(RC, P.X, P.Y) <> 0 Then
+                If PtInRect(RC, Get_X_lParam(lParam), Get_Y_lParam(lParam)) <> 0 Then
                     WindowProcEdit = HTCLIENT
                 Else
                     WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
@@ -13534,7 +13531,7 @@ Select Case wMsg
                 ' If the user types SHIFT + F10 then the X and Y coordinates are -1.
                 RaiseEvent ContextMenu(-1, -1)
             Else
-                ScreenToClient VBFlexGridHandle, P
+                ScreenToClient UserControl.hWnd, P
                 RaiseEvent ContextMenu(UserControl.ScaleX(P.X, vbPixels, vbContainerPosition), UserControl.ScaleY(P.Y, vbPixels, vbContainerPosition))
             End If
         End If
