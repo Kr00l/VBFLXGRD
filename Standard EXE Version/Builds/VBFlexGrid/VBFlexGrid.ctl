@@ -27,6 +27,7 @@ Option Explicit
 
 #If False Then
 Private FlexOLEDropModeNone, FlexOLEDropModeManual
+Private FlexMousePointerDefault, FlexMousePointerArrow, FlexMousePointerCrosshair, FlexMousePointerIbeam, FlexMousePointerHand, FlexMousePointerSizePointer, FlexMousePointerSizeNESW, FlexMousePointerSizeNS, FlexMousePointerSizeNWSE, FlexMousePointerSizeWE, FlexMousePointerUpArrow, FlexMousePointerHourglass, FlexMousePointerNoDrop, FlexMousePointerArrowHourglass, FlexMousePointerArrowQuestion, FlexMousePointerSizeAll, FlexMousePointerArrowCD, FlexMousePointerCustom
 Private FlexRightToLeftModeNoControl, FlexRightToLeftModeVBAME, FlexRightToLeftModeSystemLocale, FlexRightToLeftModeUserLocale, FlexRightToLeftModeOSLanguage
 Private FlexBorderStyleNone, FlexBorderStyleSingle, FlexBorderStyleThin, FlexBorderStyleSunken, FlexBorderStyleRaised
 Private FlexAllowUserResizingNone, FlexAllowUserResizingColumns, FlexAllowUserResizingRows, FlexAllowUserResizingBoth
@@ -65,6 +66,26 @@ Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
 FlexOLEDropModeManual = vbOLEDropManual
+End Enum
+Public Enum FlexMousePointerConstants
+FlexMousePointerDefault = 0
+FlexMousePointerArrow = 1
+FlexMousePointerCrosshair = 2
+FlexMousePointerIbeam = 3
+FlexMousePointerHand = 4
+FlexMousePointerSizePointer = 5
+FlexMousePointerSizeNESW = 6
+FlexMousePointerSizeNS = 7
+FlexMousePointerSizeNWSE = 8
+FlexMousePointerSizeWE = 9
+FlexMousePointerUpArrow = 10
+FlexMousePointerHourglass = 11
+FlexMousePointerNoDrop = 12
+FlexMousePointerArrowHourglass = 13
+FlexMousePointerArrowQuestion = 14
+FlexMousePointerSizeAll = 15
+FlexMousePointerArrowCD = 16
+FlexMousePointerCustom = 99
 End Enum
 Public Enum FlexRightToLeftModeConstants
 FlexRightToLeftModeNoControl = 0
@@ -605,6 +626,8 @@ Public Event EditQueryClose(ByVal CloseMode As FlexEditCloseModeConstants, ByRef
 Attribute EditQueryClose.VB_Description = "Occurs whenever the edit mode is about to be closed, except when the edit control loses the focus."
 Public Event EditChange()
 Attribute EditChange.VB_Description = "Occurs when the contents of a control have changed."
+Public Event EditContextMenu(ByRef Handled As Boolean, ByVal X As Single, ByVal Y As Single)
+Attribute EditContextMenu.VB_Description = "Occurs when the user clicked the right mouse button or types SHIFT + F10."
 Public Event EditKeyDown(KeyCode As Integer, Shift As Integer)
 Attribute EditKeyDown.VB_Description = "Occurs when the user presses a key while an object has the focus."
 Public Event EditKeyUp(KeyCode As Integer, Shift As Integer)
@@ -1035,7 +1058,6 @@ Private Const TTN_SHOW As Long = (TTN_FIRST - 1)
 Implements OLEGuids.IObjectSafety
 Implements OLEGuids.IOleInPlaceActiveObjectVB
 Implements OLEGuids.IOleControlVB
-Implements OLEGuids.IPerPropertyBrowsingVB
 Private VBFlexGridHandle As Long, VBFlexGridEditHandle As Long, VBFlexGridComboButtonHandle As Long, VBFlexGridComboListHandle As Long, VBFlexGridToolTipHandle As Long
 Private VBFlexGridDoubleBufferDC As Long, VBFlexGridDoubleBufferBmp As Long, VBFlexGridDoubleBufferBmpOld As Long
 Private VBFlexGridFontHandle As Long, VBFlexGridFontFixedHandle As Long
@@ -1118,7 +1140,6 @@ Private VBFlexGridFlexDataSource As IVBFlexDataSource
 #End If
 
 Private UCNoSetFocusFwd As Boolean
-Private DispIDMousePointer As Long
 
 #If ImplementDataSource = True Then
 
@@ -1286,65 +1307,6 @@ End Sub
 Private Sub IOleControlVB_OnMnemonic(ByRef Handled As Boolean, ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal Shift As Long)
 End Sub
 
-Private Sub IPerPropertyBrowsingVB_GetDisplayString(ByRef Handled As Boolean, ByVal DispID As Long, ByRef DisplayName As String)
-If DispID = DispIDMousePointer Then
-    Select Case PropMousePointer
-        Case 0: DisplayName = "0 - Default"
-        Case 1: DisplayName = "1 - Arrow"
-        Case 2: DisplayName = "2 - Cross"
-        Case 3: DisplayName = "3 - I-Beam"
-        Case 4: DisplayName = "4 - Hand"
-        Case 5: DisplayName = "5 - Size"
-        Case 6: DisplayName = "6 - Size NE SW"
-        Case 7: DisplayName = "7 - Size N S"
-        Case 8: DisplayName = "8 - Size NW SE"
-        Case 9: DisplayName = "9 - Size W E"
-        Case 10: DisplayName = "10 - Up Arrow"
-        Case 11: DisplayName = "11 - Hourglass"
-        Case 12: DisplayName = "12 - No Drop"
-        Case 13: DisplayName = "13 - Arrow and Hourglass"
-        Case 14: DisplayName = "14 - Arrow and Question"
-        Case 15: DisplayName = "15 - Size All"
-        Case 16: DisplayName = "16 - Arrow and CD"
-        Case 99: DisplayName = "99 - Custom"
-    End Select
-    Handled = True
-End If
-End Sub
-
-Private Sub IPerPropertyBrowsingVB_GetPredefinedStrings(ByRef Handled As Boolean, ByVal DispID As Long, ByRef StringsOut() As String, ByRef CookiesOut() As Long)
-If DispID = DispIDMousePointer Then
-    ReDim StringsOut(0 To (17 + 1)) As String
-    ReDim CookiesOut(0 To (17 + 1)) As Long
-    StringsOut(0) = "0 - Default": CookiesOut(0) = 0
-    StringsOut(1) = "1 - Arrow": CookiesOut(1) = 1
-    StringsOut(2) = "2 - Cross": CookiesOut(2) = 2
-    StringsOut(3) = "3 - I-Beam": CookiesOut(3) = 3
-    StringsOut(4) = "4 - Hand": CookiesOut(4) = 4
-    StringsOut(5) = "5 - Size": CookiesOut(5) = 5
-    StringsOut(6) = "6 - Size NE SW": CookiesOut(6) = 6
-    StringsOut(7) = "7 - Size N S": CookiesOut(7) = 7
-    StringsOut(8) = "8 - Size NW SE": CookiesOut(8) = 8
-    StringsOut(9) = "9 - Size W E": CookiesOut(9) = 9
-    StringsOut(10) = "10 - Up Arrow": CookiesOut(10) = 10
-    StringsOut(11) = "11 - Hourglass": CookiesOut(11) = 11
-    StringsOut(12) = "12 - No Drop": CookiesOut(12) = 12
-    StringsOut(13) = "13 - Arrow and Hourglass": CookiesOut(13) = 13
-    StringsOut(14) = "14 - Arrow and Question": CookiesOut(14) = 14
-    StringsOut(15) = "15 - Size All": CookiesOut(15) = 15
-    StringsOut(16) = "16 - Arrow and CD": CookiesOut(16) = 16
-    StringsOut(17) = "99 - Custom": CookiesOut(17) = 99
-    Handled = True
-End If
-End Sub
-
-Private Sub IPerPropertyBrowsingVB_GetPredefinedValue(ByRef Handled As Boolean, ByVal DispID As Long, ByVal Cookie As Long, ByRef Value As Variant)
-If DispID = DispIDMousePointer Then
-    Value = Cookie
-    Handled = True
-End If
-End Sub
-
 Private Sub UserControl_Initialize()
 Call FlexLoadShellMod
 Call FlexInitCC(ICC_STANDARD_CLASSES)
@@ -1354,13 +1316,11 @@ Call FlexWndRegisterClass
 
 If SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject) = False Then VBFlexGridUsePreTranslateMsg = True
 Call SetVTableHandling(Me, VTableInterfaceControl)
-Call SetVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 
 #Else
 
 Call SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
 Call SetVTableHandling(Me, VTableInterfaceControl)
-Call SetVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 
 #End If
 
@@ -1409,7 +1369,6 @@ If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VBFlexGridFocusBorder.CY, 0
 End Sub
 
 Private Sub UserControl_InitProperties()
-If DispIDMousePointer = 0 Then DispIDMousePointer = GetDispID(Me, "MousePointer")
 On Error Resume Next
 If UserControl.ParentControls.Count = 0 Then VBFlexGridAlignable = False Else VBFlexGridAlignable = True
 VBFlexGridDesignMode = Not Ambient.UserMode
@@ -1488,7 +1447,6 @@ Call CreateVBFlexGrid
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
-If DispIDMousePointer = 0 Then DispIDMousePointer = GetDispID(Me, "MousePointer")
 On Error Resume Next
 If UserControl.ParentControls.Count = 0 Then VBFlexGridAlignable = False Else VBFlexGridAlignable = True
 VBFlexGridDesignMode = Not Ambient.UserMode
@@ -2348,12 +2306,12 @@ End Select
 UserControl.PropertyChanged "OLEDropMode"
 End Property
 
-Public Property Get MousePointer() As Integer
+Public Property Get MousePointer() As FlexMousePointerConstants
 Attribute MousePointer.VB_Description = "Returns/sets the type of mouse pointer displayed when over part of an object."
 MousePointer = PropMousePointer
 End Property
 
-Public Property Let MousePointer(ByVal Value As Integer)
+Public Property Let MousePointer(ByVal Value As FlexMousePointerConstants)
 Select Case Value
     Case 0 To 16, 99
         PropMousePointer = Value
@@ -13367,6 +13325,20 @@ Select Case wMsg
     Case WM_IME_CHAR
         SendMessage hWnd, WM_CHAR, wParam, ByVal lParam
         Exit Function
+    Case WM_CONTEXTMENU
+        If wParam = hWnd Then
+            Dim P As POINTAPI, Handled As Boolean
+            P.X = Get_X_lParam(lParam)
+            P.Y = Get_Y_lParam(lParam)
+            If P.X = -1 And P.Y = -1 Then
+                ' If the user types SHIFT + F10 then the X and Y coordinates are -1.
+                RaiseEvent EditContextMenu(Handled, -1, -1)
+            Else
+                ScreenToClient UserControl.hWnd, P
+                RaiseEvent EditContextMenu(Handled, UserControl.ScaleX(P.X, vbPixels, vbContainerPosition), UserControl.ScaleY(P.Y, vbPixels, vbContainerPosition))
+            End If
+            If Handled = True Then Exit Function
+        End If
     Case WM_LBUTTONDOWN
         If GetFocus() <> hWnd Then UCNoSetFocusFwd = True: SetFocusAPI UserControl.hWnd: UCNoSetFocusFwd = False
     Case WM_NCCALCSIZE, WM_NCHITTEST, WM_NCPAINT
@@ -13395,10 +13367,7 @@ Select Case wMsg
             Case WM_NCHITTEST
                 GetWindowRect hWnd, RC
                 DefWindowProc hWnd, WM_NCCALCSIZE, 0, ByVal VarPtr(RC)
-                Dim P As POINTAPI
-                P.X = Get_X_lParam(lParam)
-                P.Y = Get_Y_lParam(lParam)
-                If PtInRect(RC, P.X, P.Y) <> 0 Then
+                If PtInRect(RC, Get_X_lParam(lParam), Get_Y_lParam(lParam)) <> 0 Then
                     WindowProcEdit = HTCLIENT
                 Else
                     WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
@@ -13534,7 +13503,7 @@ Select Case wMsg
                 ' If the user types SHIFT + F10 then the X and Y coordinates are -1.
                 RaiseEvent ContextMenu(-1, -1)
             Else
-                ScreenToClient VBFlexGridHandle, P
+                ScreenToClient UserControl.hWnd, P
                 RaiseEvent ContextMenu(UserControl.ScaleX(P.X, vbPixels, vbContainerPosition), UserControl.ScaleY(P.Y, vbPixels, vbContainerPosition))
             End If
         End If
