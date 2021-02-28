@@ -1,5 +1,10 @@
 List of revisions:
 
+28-Feb-2021
+- Included new enum 'FlexMousePointerConstants' which the MousePointer property now uses.
+  Reason is that the VBA environment does not support IPerPropertyBrowsing.
+- Included the EditContextMenu event.
+
 27-Feb-2021
 - Bugfix in the AutoSize method when using IVBFlexDataSource.
 - FindItem function can now be used (not disabled anymore) when using IVBFlexDataSource.
