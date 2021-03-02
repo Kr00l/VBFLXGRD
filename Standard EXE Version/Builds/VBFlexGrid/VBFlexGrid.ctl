@@ -512,8 +512,8 @@ DrawFlags As Long
 End Type
 Private Type TDRAWINFO
 SelRange As TCELLRANGE
-TextWidthSpacing As Long
-TextHeightSpacing As Long
+CellTextWidthPadding As Long
+CellTextHeightPadding As Long
 GridLinePoints(0 To 5) As POINTAPI
 End Type
 Private Type TMERGEDRAWCOLINFO
@@ -528,8 +528,8 @@ End Type
 Private Type TMERGEDRAWINFO
 Row As TMERGEDRAWROWINFO
 End Type
-Private Const CELL_TEXT_WIDTH_SPACING_DIP As Long = 3
-Private Const CELL_TEXT_HEIGHT_SPACING_DIP As Long = 1
+Private Const CELL_TEXT_WIDTH_PADDING_DIP As Long = 3
+Private Const CELL_TEXT_HEIGHT_PADDING_DIP As Long = 1
 Private Type TCELL
 Text As String
 TextStyle As FlexTextStyleConstants
@@ -4015,9 +4015,9 @@ If VBFlexGridEditHandle <> 0 Then
     End With
     SendMessage VBFlexGridEditHandle, WM_SETFONT, hFont, ByVal 0&
     If VBFlexGridRTLLayout = False Then
-        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X(), (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X()) - 1)
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X(), (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()) - 1)
     Else
-        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X() - 1, (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X()))
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X() - 1, (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()))
     End If
     SendMessage VBFlexGridEditHandle, WM_SETTEXT, 0, ByVal StrPtr(Text)
     VBFlexGridEditTextChanged = False
@@ -7525,8 +7525,8 @@ Dim iRow As Long, iCol As Long, FixedCX As Long, FixedCY As Long
 Dim CellRect As RECT, GridRect As RECT
 Dim OldBkMode As Long, hFontOld As Long, Brush As Long
 Call GetSelRangeStruct(VBFlexGridDrawInfo.SelRange)
-VBFlexGridDrawInfo.TextWidthSpacing = CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X()
-VBFlexGridDrawInfo.TextHeightSpacing = CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()
+VBFlexGridDrawInfo.CellTextWidthPadding = CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()
+VBFlexGridDrawInfo.CellTextHeightPadding = CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()
 For iCol = 0 To (PropFixedCols - 1)
     FixedCX = FixedCX + GetColWidth(iCol)
 Next iCol
@@ -8200,10 +8200,10 @@ If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 Dim Text As String, TextRect As RECT
 Call GetCellText(iRow, iCol, Text)
 With TextRect
-.Left = CellRect.Left + VBFlexGridDrawInfo.TextWidthSpacing
-.Top = CellRect.Top + VBFlexGridDrawInfo.TextHeightSpacing
-.Right = CellRect.Right - VBFlexGridDrawInfo.TextWidthSpacing
-.Bottom = CellRect.Bottom - VBFlexGridDrawInfo.TextHeightSpacing
+.Left = CellRect.Left + VBFlexGridDrawInfo.CellTextWidthPadding
+.Top = CellRect.Top + VBFlexGridDrawInfo.CellTextHeightPadding
+.Right = CellRect.Right - VBFlexGridDrawInfo.CellTextWidthPadding
+.Bottom = CellRect.Bottom - VBFlexGridDrawInfo.CellTextHeightPadding
 End With
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
 Dim hFontTemp As Long, hFontOld As Long
@@ -8505,10 +8505,10 @@ If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 Dim Text As String, TextRect As RECT
 Call GetCellText(iRow, iCol, Text)
 With TextRect
-.Left = CellRect.Left + VBFlexGridDrawInfo.TextWidthSpacing
-.Top = CellRect.Top + VBFlexGridDrawInfo.TextHeightSpacing
-.Right = CellRect.Right - VBFlexGridDrawInfo.TextWidthSpacing
-.Bottom = CellRect.Bottom - VBFlexGridDrawInfo.TextHeightSpacing
+.Left = CellRect.Left + VBFlexGridDrawInfo.CellTextWidthPadding
+.Top = CellRect.Top + VBFlexGridDrawInfo.CellTextHeightPadding
+.Right = CellRect.Right - VBFlexGridDrawInfo.CellTextWidthPadding
+.Bottom = CellRect.Bottom - VBFlexGridDrawInfo.CellTextHeightPadding
 End With
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
 Dim hFontTemp As Long, hFontOld As Long
@@ -9130,38 +9130,38 @@ End If
 End Function
 
 Private Function GetTextSize(ByVal iRow As Long, ByVal iCol As Long, ByVal Text As String) As SIZEAPI
-If PropRows < 1 Or PropCols < 1 Then Exit Function
-If VBFlexGridHandle <> 0 Then
-    Dim hDC As Long
-    hDC = GetDC(VBFlexGridHandle)
-    If hDC <> 0 Then
-        Dim hFontTemp As Long
-        With VBFlexGridCells.Rows(iRow).Cols(iCol)
-        If .FontName = vbNullString Then
-            If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
-                SelectObject hDC, VBFlexGridFontHandle
-            Else
-                If VBFlexGridFontFixedHandle = 0 Then
-                    SelectObject hDC, VBFlexGridFontHandle
-                Else
-                    SelectObject hDC, VBFlexGridFontFixedHandle
-                End If
-            End If
+If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Function
+Dim hDC As Long
+hDC = GetDC(VBFlexGridHandle)
+If hDC <> 0 Then
+    Dim hFontTemp As Long, hFontOld As Long
+    With VBFlexGridCells.Rows(iRow).Cols(iCol)
+    If .FontName = vbNullString Then
+        If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
+            hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
         Else
-            Dim TempFont As StdFont
-            Set TempFont = New StdFont
-            TempFont.Name = .FontName
-            TempFont.Size = .FontSize
-            TempFont.Bold = .FontBold
-            TempFont.Italic = .FontItalic
-            TempFont.Strikethrough = .FontStrikeThrough
-            TempFont.Underline = .FontUnderline
-            TempFont.Charset = .FontCharset
-            hFontTemp = CreateGDIFontFromOLEFont(TempFont)
-            SelectObject hDC, hFontTemp
-            Set TempFont = Nothing
+            If VBFlexGridFontFixedHandle = 0 Then
+                hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
+            Else
+                hFontOld = SelectObject(hDC, VBFlexGridFontFixedHandle)
+            End If
         End If
-        End With
+    Else
+        Dim TempFont As StdFont
+        Set TempFont = New StdFont
+        TempFont.Name = .FontName
+        TempFont.Size = .FontSize
+        TempFont.Bold = .FontBold
+        TempFont.Italic = .FontItalic
+        TempFont.Strikethrough = .FontStrikeThrough
+        TempFont.Underline = .FontUnderline
+        TempFont.Charset = .FontCharset
+        hFontTemp = CreateGDIFontFromOLEFont(TempFont)
+        hFontOld = SelectObject(hDC, hFontTemp)
+        Set TempFont = Nothing
+    End If
+    End With
+    If Not Text = vbNullString Then
         Dim Pos1 As Long, Pos2 As Long, Temp As String, Size As SIZEAPI
         If InStr(Text, vbCrLf) Then Text = Replace$(Text, vbCrLf, vbCr)
         If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbCr)
@@ -9179,9 +9179,13 @@ If VBFlexGridHandle <> 0 Then
             End With
             Pos2 = Pos1
         Loop Until Pos1 = 0
-        ReleaseDC VBFlexGridHandle, hDC
-        If hFontTemp <> 0 Then DeleteObject hFontTemp
+    Else
+        Dim TM As TEXTMETRIC
+        If GetTextMetrics(hDC, TM) <> 0 Then GetTextSize.CY = TM.TMHeight
     End If
+    If hFontOld <> 0 Then SelectObject hDC, hFontOld
+    If hFontTemp <> 0 Then DeleteObject hFontTemp
+    ReleaseDC VBFlexGridHandle, hDC
 End If
 End Function
 
@@ -9409,6 +9413,7 @@ If hDC <> 0 Then
         Dim IsFixedCell As Boolean, Text As String
         IsFixedCell = CBool(iRow < PropFixedRows Or iCol < PropFixedCols)
         Call GetCellText(iRow, iCol, Text)
+        If StrPtr(Text) = 0 Then Text = ""
         With VBFlexGridCells.Rows(iRow).Cols(iCol)
         Dim hFontTemp As Long, hFontOld As Long
         If .FontName = vbNullString Then
@@ -9437,10 +9442,10 @@ If hDC <> 0 Then
         End If
         Dim TextRect As RECT, TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, Format As Long
         With TextRect
-        .Left = CellRect.Left + (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X())
-        .Top = CellRect.Top + (CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
-        .Right = CellRect.Right - (CELL_TEXT_WIDTH_SPACING_DIP * PixelsPerDIP_X())
-        .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+        .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
         End With
         If .TextStyle = -1 Then
             If IsFixedCell = False Then
@@ -13359,8 +13364,8 @@ Select Case wMsg
                 ' The NCCALCSIZE_PARAMS struct is not necessary because only the first rectangle is adjusted.
                 ' If wParam is 1 or not, the treatment is the same.
                 CopyMemory RC, ByVal lParam, LenB(RC)
-                RC.Top = RC.Top + (CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
-                RC.Bottom = RC.Bottom - ((CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()) - 1)
+                RC.Top = RC.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+                RC.Bottom = RC.Bottom - ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - 1)
                 CopyMemory ByVal lParam, RC, LenB(RC)
                 WindowProcEdit = 0
                 Exit Function
@@ -13393,10 +13398,10 @@ Select Case wMsg
                     RC.Left = 0
                     RC.Right = (WndRect.Right - WndRect.Left)
                     RC.Top = 0
-                    RC.Bottom = RC.Top + (CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+                    RC.Bottom = RC.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
                     FillRect hDC, RC, Brush
                     RC.Bottom = (WndRect.Bottom - WndRect.Top)
-                    RC.Top = RC.Bottom - ((CELL_TEXT_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()) - 1)
+                    RC.Top = RC.Bottom - ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - 1)
                     FillRect hDC, RC, Brush
                     ReleaseDC hWnd, hDC
                 End If
