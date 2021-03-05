@@ -1,5 +1,9 @@
 List of revisions:
 
+05-Mar-2021
+- Included the FrozenRows/FrozenCols property.
+- Bugfix in the ValidateEdit event when showing a message box inside the event.
+
 02-Mar-2021
 - The TextHeight function does not return 0 anymore when passing an empty string.
   Instead it returns TMHeight (TEXTMETRIC). TextWidth is unchanged and keeps returning 0 on an empty string.
