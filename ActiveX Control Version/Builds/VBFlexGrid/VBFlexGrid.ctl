@@ -4158,8 +4158,8 @@ End Function
 Private Function DestroyEdit(ByVal Discard As Boolean, ByVal CloseMode As FlexEditCloseModeConstants) As Boolean
 Static InProc As Boolean
 If VBFlexGridEditHandle = 0 Or InProc = True Then Exit Function
-Dim Cancel As Boolean
 If CloseMode <> FlexEditCloseModeLostFocus Then
+    Dim Cancel As Boolean
     RaiseEvent EditQueryClose(CloseMode, Cancel)
     If Cancel = True Then Exit Function
 Else
@@ -4169,18 +4169,19 @@ If Discard = False And VBFlexGridEditTextChanged = True Then
     If VBFlexGridEditAlreadyValidated = False Then
         If VBFlexGridEditValidateInProc = False Then
             VBFlexGridEditValidateInProc = True
-            RaiseEvent ValidateEdit(Cancel)
+            VBFlexGridEditValidateCancel = False
+            RaiseEvent ValidateEdit(VBFlexGridEditValidateCancel)
             VBFlexGridEditValidateInProc = False
             If VBFlexGridEditHandle = 0 Then
+                VBFlexGridEditValidateCancel = False
                 DestroyEdit = True
                 Exit Function
             End If
         End If
-        VBFlexGridEditValidateCancel = Cancel
     Else
         VBFlexGridEditAlreadyValidated = False
     End If
-    If Cancel = False Then
+    If VBFlexGridEditValidateCancel = False Then
         Dim Text As String, iRow As Long, iCol As Long
         Text = Me.EditText
         With VBFlexGridEditMergedRange
@@ -12051,13 +12052,12 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
                 End If
             End If
             If LoWord(lParam) = HTCLIENT And VBFlexGridEditTextChanged = True Then
-                Dim Cancel As Boolean
                 VBFlexGridEditValidateInProc = True
-                RaiseEvent ValidateEdit(Cancel)
+                VBFlexGridEditValidateCancel = False
+                RaiseEvent ValidateEdit(VBFlexGridEditValidateCancel)
                 VBFlexGridEditValidateInProc = False
                 If VBFlexGridEditHandle <> 0 Then
-                    VBFlexGridEditValidateCancel = Cancel
-                    If Cancel = True Then
+                    If VBFlexGridEditValidateCancel = True Then
                         ' Edit control remains active and will not be destroyed.
                         RetVal = MA_ACTIVATEANDEAT
                         ValidateEditOnMouseActivateMsg = True
@@ -12065,6 +12065,8 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
                     Else
                         VBFlexGridEditAlreadyValidated = True
                     End If
+                Else
+                    VBFlexGridEditValidateCancel = False
                 End If
             End If
     End Select
