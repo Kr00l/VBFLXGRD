@@ -1,27 +1,41 @@
 VERSION 5.00
 Begin VB.PropertyPage PPVBFlexGridGeneral 
    Caption         =   "General"
-   ClientHeight    =   6600
+   ClientHeight    =   7425
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   6225
    LockControls    =   -1  'True
    PaletteMode     =   0  'Halftone
-   ScaleHeight     =   6600
+   ScaleHeight     =   7425
    ScaleWidth      =   6225
+   Begin VB.TextBox TextFrozenRows 
+      Height          =   315
+      Left            =   1200
+      TabIndex        =   17
+      Top             =   1920
+      Width           =   780
+   End
+   Begin VB.TextBox TextFrozenCols 
+      Height          =   315
+      Left            =   3240
+      TabIndex        =   19
+      Top             =   1920
+      Width           =   780
+   End
    Begin VB.ComboBox ComboDirectionAfterReturn 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   33
-      Top             =   4800
+      TabIndex        =   37
+      Top             =   5160
       Width           =   2235
    End
    Begin VB.CheckBox CheckWantReturn 
       Caption         =   "WantReturn"
       Height          =   285
       Left            =   4200
-      TabIndex        =   50
+      TabIndex        =   54
       Top             =   3720
       Width           =   1920
    End
@@ -29,7 +43,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowUserEditing"
       Height          =   285
       Left            =   4200
-      TabIndex        =   45
+      TabIndex        =   49
       Top             =   1920
       Width           =   1920
    End
@@ -37,103 +51,103 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   41
-      Top             =   6240
+      TabIndex        =   45
+      Top             =   6600
       Width           =   2235
    End
    Begin VB.ComboBox ComboClipMode 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   39
-      Top             =   5880
+      TabIndex        =   43
+      Top             =   6240
       Width           =   2235
    End
    Begin VB.TextBox TextClipSeparators 
       Height          =   315
       Left            =   1800
       MaxLength       =   2
-      TabIndex        =   37
-      Top             =   5520
+      TabIndex        =   41
+      Top             =   5880
       Width           =   2235
    End
    Begin VB.ComboBox ComboWrapCellBehavior 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   35
-      Top             =   5160
+      TabIndex        =   39
+      Top             =   5520
       Width           =   2235
    End
    Begin VB.ComboBox ComboTabBehavior 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   31
-      Top             =   4440
+      TabIndex        =   35
+      Top             =   4800
       Width           =   2235
    End
    Begin VB.ComboBox ComboRowSizingMode 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   29
-      Top             =   4080
+      TabIndex        =   33
+      Top             =   4440
       Width           =   2235
    End
    Begin VB.ComboBox ComboAllowUserResizing 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   27
-      Top             =   3720
+      TabIndex        =   31
+      Top             =   4080
       Width           =   2235
    End
    Begin VB.ComboBox ComboSelectionMode 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   25
-      Top             =   3360
+      TabIndex        =   29
+      Top             =   3720
       Width           =   2235
    End
    Begin VB.ComboBox ComboFillStyle 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   23
-      Top             =   3000
+      TabIndex        =   27
+      Top             =   3360
       Width           =   2235
    End
    Begin VB.ComboBox ComboFocusRect 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   21
-      Top             =   2640
+      TabIndex        =   25
+      Top             =   3000
       Width           =   2235
    End
    Begin VB.ComboBox ComboHighLight 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   19
-      Top             =   2280
+      TabIndex        =   23
+      Top             =   2640
       Width           =   2235
    End
    Begin VB.ComboBox ComboScrollBars 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   17
-      Top             =   1920
+      TabIndex        =   21
+      Top             =   2280
       Width           =   2235
    End
    Begin VB.CheckBox CheckShowLabelTips 
       Caption         =   "ShowLabelTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   49
+      TabIndex        =   53
       Top             =   3360
       Width           =   1920
    End
@@ -141,7 +155,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ShowInfoTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   48
+      TabIndex        =   52
       Top             =   3000
       Width           =   1920
    End
@@ -149,7 +163,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "DisableNoScroll"
       Height          =   285
       Left            =   4200
-      TabIndex        =   47
+      TabIndex        =   51
       Top             =   2640
       Width           =   1920
    End
@@ -157,7 +171,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ScrollTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   46
+      TabIndex        =   50
       Top             =   2280
       Width           =   1920
    End
@@ -165,7 +179,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   44
+      TabIndex        =   48
       Top             =   1560
       Width           =   1920
    End
@@ -173,7 +187,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowBigSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   43
+      TabIndex        =   47
       Top             =   1200
       Width           =   1920
    End
@@ -186,16 +200,16 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    End
    Begin VB.TextBox TextCols 
       Height          =   315
-      Left            =   1200
-      TabIndex        =   13
-      Top             =   1560
+      Left            =   3240
+      TabIndex        =   11
+      Top             =   1200
       Width           =   780
    End
    Begin VB.TextBox TextFixedRows 
       Height          =   315
-      Left            =   3240
-      TabIndex        =   11
-      Top             =   1200
+      Left            =   1200
+      TabIndex        =   13
+      Top             =   1560
       Width           =   780
    End
    Begin VB.TextBox TextRows 
@@ -209,7 +223,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "MouseTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   42
+      TabIndex        =   46
       Top             =   840
       Width           =   1920
    End
@@ -255,108 +269,124 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Top             =   120
       Width           =   1620
    End
+   Begin VB.Label LabelFrozenRows 
+      Caption         =   "FrozenRows:"
+      Height          =   240
+      Left            =   120
+      TabIndex        =   16
+      Top             =   1920
+      Width           =   1020
+   End
+   Begin VB.Label LabelFrozenCols 
+      Caption         =   "FrozenCols:"
+      Height          =   240
+      Left            =   2160
+      TabIndex        =   18
+      Top             =   1920
+      Width           =   1020
+   End
    Begin VB.Label LabelDirectionAfterReturn 
       Caption         =   "DirectionAfterReturn:"
       Height          =   240
       Left            =   120
-      TabIndex        =   32
-      Top             =   4800
+      TabIndex        =   36
+      Top             =   5160
       Width           =   1620
    End
    Begin VB.Label LabelIMEMode 
       Caption         =   "IMEMode:"
       Height          =   240
       Left            =   120
-      TabIndex        =   40
-      Top             =   6240
+      TabIndex        =   44
+      Top             =   6600
       Width           =   1620
    End
    Begin VB.Label LabelClipMode 
       Caption         =   "ClipMode:"
       Height          =   240
       Left            =   120
-      TabIndex        =   38
-      Top             =   5880
+      TabIndex        =   42
+      Top             =   6240
       Width           =   1620
    End
    Begin VB.Label LabelClipSeparators 
       Caption         =   "ClipSeparators:"
       Height          =   240
       Left            =   120
-      TabIndex        =   36
-      Top             =   5520
+      TabIndex        =   40
+      Top             =   5880
       Width           =   1620
    End
    Begin VB.Label LabelWrapCellBehavior 
       Caption         =   "WrapCellBehavior:"
       Height          =   240
       Left            =   120
-      TabIndex        =   34
-      Top             =   5160
+      TabIndex        =   38
+      Top             =   5520
       Width           =   1620
    End
    Begin VB.Label LabelTabBehavior 
       Caption         =   "TabBehavior:"
       Height          =   240
       Left            =   120
-      TabIndex        =   30
-      Top             =   4440
+      TabIndex        =   34
+      Top             =   4800
       Width           =   1620
    End
    Begin VB.Label LabelRowSizingMode 
       Caption         =   "RowSizingMode:"
       Height          =   240
       Left            =   120
-      TabIndex        =   28
-      Top             =   4080
+      TabIndex        =   32
+      Top             =   4440
       Width           =   1620
    End
    Begin VB.Label LabelAllowUserResizing 
       Caption         =   "AllowUserResizing:"
       Height          =   240
       Left            =   120
-      TabIndex        =   26
-      Top             =   3720
+      TabIndex        =   30
+      Top             =   4080
       Width           =   1620
    End
    Begin VB.Label LabelSelectionMode 
       Caption         =   "SelectionMode:"
       Height          =   240
       Left            =   120
-      TabIndex        =   24
-      Top             =   3360
+      TabIndex        =   28
+      Top             =   3720
       Width           =   1620
    End
    Begin VB.Label LabelFillStyle 
       Caption         =   "FillStyle:"
       Height          =   240
       Left            =   120
-      TabIndex        =   22
-      Top             =   3000
+      TabIndex        =   26
+      Top             =   3360
       Width           =   1620
    End
    Begin VB.Label LabelFocusRect 
       Caption         =   "FocusRect:"
       Height          =   240
       Left            =   120
-      TabIndex        =   20
-      Top             =   2640
+      TabIndex        =   24
+      Top             =   3000
       Width           =   1620
    End
    Begin VB.Label LabelHighLight 
       Caption         =   "HighLight:"
       Height          =   240
       Left            =   120
-      TabIndex        =   18
-      Top             =   2280
+      TabIndex        =   22
+      Top             =   2640
       Width           =   1620
    End
    Begin VB.Label LabelScrollBars 
       Caption         =   "ScrollBars:"
       Height          =   240
       Left            =   120
-      TabIndex        =   16
-      Top             =   1920
+      TabIndex        =   20
+      Top             =   2280
       Width           =   1620
    End
    Begin VB.Label LabelFixedCols 
@@ -370,17 +400,17 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    Begin VB.Label LabelCols 
       Caption         =   "Cols:"
       Height          =   240
-      Left            =   120
-      TabIndex        =   12
-      Top             =   1560
+      Left            =   2160
+      TabIndex        =   10
+      Top             =   1200
       Width           =   1020
    End
    Begin VB.Label LabelFixedRows 
       Caption         =   "FixedRows:"
       Height          =   240
-      Left            =   2160
-      TabIndex        =   10
-      Top             =   1200
+      Left            =   120
+      TabIndex        =   12
+      Top             =   1560
       Width           =   1020
    End
    Begin VB.Label LabelRows 
@@ -605,22 +635,32 @@ End If
 .MousePointer = ComboMousePointer.ItemData(ComboMousePointer.ListIndex)
 .Rows = CLng(TextRows.Text)
 If .Rows > 0 Then
-    If CLng(TextFixedRows.Text) >= .Rows Then
-        .FixedRows = .Rows - 1
-        MsgBox "FixedRows must be at least one less than Rows value", vbExclamation + vbOKOnly
+    If CLng(TextFixedRows.Text) >= (.Rows - .FrozenRows) Then
+        MsgBox "FixedRows must be at least one less than Rows minus FrozenRows value", vbExclamation + vbOKOnly
         TextFixedRows.Text = CStr(.FixedRows)
     Else
         .FixedRows = CLng(TextFixedRows.Text)
     End If
+    If CLng(TextFrozenRows.Text) >= (.Rows - .FixedRows) Then
+        MsgBox "FrozenRows must be at least one less than Rows minus FixedRows value", vbExclamation + vbOKOnly
+        TextFrozenRows.Text = CStr(.FrozenRows)
+    Else
+        .FrozenRows = CLng(TextFrozenRows.Text)
+    End If
 End If
 .Cols = CLng(TextCols.Text)
 If .Cols > 0 Then
-    If CLng(TextFixedCols.Text) >= .Cols Then
-        .FixedCols = .Cols - 1
-        MsgBox "FixedCols must be at least one less than Cols value", vbExclamation + vbOKOnly
+    If CLng(TextFixedCols.Text) >= (.Cols - .FrozenCols) Then
+        MsgBox "FixedCols must be at least one less than Cols minus FrozenCols value", vbExclamation + vbOKOnly
         TextFixedCols.Text = CStr(.FixedCols)
     Else
         .FixedCols = CLng(TextFixedCols.Text)
+    End If
+    If CLng(TextFrozenCols.Text) >= (.Cols - .FixedCols) Then
+        MsgBox "FrozenCols must be at least one less than Cols minus FixedCols value", vbExclamation + vbOKOnly
+        TextFrozenCols.Text = CStr(.FrozenCols)
+    Else
+        .FrozenCols = CLng(TextFrozenCols.Text)
     End If
 End If
 .ScrollBars = ComboScrollBars.ItemData(ComboScrollBars.ListIndex)
@@ -670,9 +710,11 @@ For i = 0 To ComboMousePointer.ListCount - 1
     End If
 Next i
 TextRows.Text = CStr(.Rows)
-TextFixedRows.Text = CStr(.FixedRows)
 TextCols.Text = CStr(.Cols)
+TextFixedRows.Text = CStr(.FixedRows)
 TextFixedCols.Text = CStr(.FixedCols)
+TextFrozenRows.Text = CStr(.FrozenRows)
+TextFrozenCols.Text = CStr(.FrozenCols)
 For i = 0 To ComboScrollBars.ListCount - 1
     If ComboScrollBars.ItemData(i) = .ScrollBars Then
         ComboScrollBars.ListIndex = i
@@ -832,52 +874,6 @@ Else
 End If
 End Sub
 
-Private Sub TextFixedRows_GotFocus()
-If Not TextFixedRows.SelStart = 0 Then Exit Sub
-TextFixedRows.SelLength = Len(TextFixedRows.Text)
-End Sub
-
-Private Sub TextFixedRows_LostFocus()
-TextFixedRows.SelStart = 0
-End Sub
-
-Private Sub TextFixedRows_Change()
-If FreezeChanged = True Then Exit Sub
-If TextFixedRows.Text = vbNullString Then
-    TextFixedRows.Text = PropertyPage.SelectedControls(0).FixedRows
-    TextFixedRows.SelStart = 0
-    TextFixedRows.SelLength = Len(TextFixedRows.Text)
-End If
-PropertyPage.Changed = True
-End Sub
-
-Private Sub TextFixedRows_KeyPress(KeyAscii As Integer)
-If KeyAscii < 48 Or KeyAscii > 57 Then If KeyAscii <> 8 Then KeyAscii = 0
-End Sub
-
-Private Sub TextFixedRows_Validate(Cancel As Boolean)
-If Not IsNumeric(TextFixedRows.Text) Then
-    MsgBox "Invalid property value", vbCritical + vbOKOnly
-    TextFixedRows.Text = PropertyPage.SelectedControls(0).FixedRows
-    TextFixedRows.SetFocus
-    Cancel = True
-Else
-    Dim LngValue As Long
-    On Error Resume Next
-    LngValue = CLng(TextFixedRows.Text)
-    Cancel = CBool(Err.Number <> 0)
-    On Error GoTo 0
-    If LngValue < 0 Then Cancel = True
-    If Cancel = False Then
-        TextFixedRows.Text = LngValue
-    Else
-        MsgBox "Invalid property value", vbCritical + vbOKOnly
-        TextFixedRows.Text = PropertyPage.SelectedControls(0).FixedRows
-        TextFixedRows.SetFocus
-    End If
-End If
-End Sub
-
 Private Sub TextCols_GotFocus()
 If Not TextCols.SelStart = 0 Then Exit Sub
 TextCols.SelLength = Len(TextCols.Text)
@@ -924,6 +920,52 @@ Else
 End If
 End Sub
 
+Private Sub TextFixedRows_GotFocus()
+If Not TextFixedRows.SelStart = 0 Then Exit Sub
+TextFixedRows.SelLength = Len(TextFixedRows.Text)
+End Sub
+
+Private Sub TextFixedRows_LostFocus()
+TextFixedRows.SelStart = 0
+End Sub
+
+Private Sub TextFixedRows_Change()
+If FreezeChanged = True Then Exit Sub
+If TextFixedRows.Text = vbNullString Then
+    TextFixedRows.Text = PropertyPage.SelectedControls(0).FixedRows
+    TextFixedRows.SelStart = 0
+    TextFixedRows.SelLength = Len(TextFixedRows.Text)
+End If
+PropertyPage.Changed = True
+End Sub
+
+Private Sub TextFixedRows_KeyPress(KeyAscii As Integer)
+If KeyAscii < 48 Or KeyAscii > 57 Then If KeyAscii <> 8 Then KeyAscii = 0
+End Sub
+
+Private Sub TextFixedRows_Validate(Cancel As Boolean)
+If Not IsNumeric(TextFixedRows.Text) Then
+    MsgBox "Invalid property value", vbCritical + vbOKOnly
+    TextFixedRows.Text = PropertyPage.SelectedControls(0).FixedRows
+    TextFixedRows.SetFocus
+    Cancel = True
+Else
+    Dim LngValue As Long
+    On Error Resume Next
+    LngValue = CLng(TextFixedRows.Text)
+    Cancel = CBool(Err.Number <> 0)
+    On Error GoTo 0
+    If LngValue < 0 Then Cancel = True
+    If Cancel = False Then
+        TextFixedRows.Text = LngValue
+    Else
+        MsgBox "Invalid property value", vbCritical + vbOKOnly
+        TextFixedRows.Text = PropertyPage.SelectedControls(0).FixedRows
+        TextFixedRows.SetFocus
+    End If
+End If
+End Sub
+
 Private Sub TextFixedCols_GotFocus()
 If Not TextFixedCols.SelStart = 0 Then Exit Sub
 TextFixedCols.SelLength = Len(TextFixedCols.Text)
@@ -966,6 +1008,98 @@ Else
         MsgBox "Invalid property value", vbCritical + vbOKOnly
         TextFixedCols.Text = PropertyPage.SelectedControls(0).FixedCols
         TextFixedCols.SetFocus
+    End If
+End If
+End Sub
+
+Private Sub TextFrozenRows_GotFocus()
+If Not TextFrozenRows.SelStart = 0 Then Exit Sub
+TextFrozenRows.SelLength = Len(TextFrozenRows.Text)
+End Sub
+
+Private Sub TextFrozenRows_LostFocus()
+TextFrozenRows.SelStart = 0
+End Sub
+
+Private Sub TextFrozenRows_Change()
+If FreezeChanged = True Then Exit Sub
+If TextFrozenRows.Text = vbNullString Then
+    TextFrozenRows.Text = PropertyPage.SelectedControls(0).FrozenRows
+    TextFrozenRows.SelStart = 0
+    TextFrozenRows.SelLength = Len(TextFrozenRows.Text)
+End If
+PropertyPage.Changed = True
+End Sub
+
+Private Sub TextFrozenRows_KeyPress(KeyAscii As Integer)
+If KeyAscii < 48 Or KeyAscii > 57 Then If KeyAscii <> 8 Then KeyAscii = 0
+End Sub
+
+Private Sub TextFrozenRows_Validate(Cancel As Boolean)
+If Not IsNumeric(TextFrozenRows.Text) Then
+    MsgBox "Invalid property value", vbCritical + vbOKOnly
+    TextFrozenRows.Text = PropertyPage.SelectedControls(0).FrozenRows
+    TextFrozenRows.SetFocus
+    Cancel = True
+Else
+    Dim LngValue As Long
+    On Error Resume Next
+    LngValue = CLng(TextFrozenRows.Text)
+    Cancel = CBool(Err.Number <> 0)
+    On Error GoTo 0
+    If LngValue < 0 Then Cancel = True
+    If Cancel = False Then
+        TextFrozenRows.Text = LngValue
+    Else
+        MsgBox "Invalid property value", vbCritical + vbOKOnly
+        TextFrozenRows.Text = PropertyPage.SelectedControls(0).FrozenRows
+        TextFrozenRows.SetFocus
+    End If
+End If
+End Sub
+
+Private Sub TextFrozenCols_GotFocus()
+If Not TextFrozenCols.SelStart = 0 Then Exit Sub
+TextFrozenCols.SelLength = Len(TextFrozenCols.Text)
+End Sub
+
+Private Sub TextFrozenCols_LostFocus()
+TextFrozenCols.SelStart = 0
+End Sub
+
+Private Sub TextFrozenCols_Change()
+If FreezeChanged = True Then Exit Sub
+If TextFrozenCols.Text = vbNullString Then
+    TextFrozenCols.Text = PropertyPage.SelectedControls(0).FrozenCols
+    TextFrozenCols.SelStart = 0
+    TextFrozenCols.SelLength = Len(TextFrozenCols.Text)
+End If
+PropertyPage.Changed = True
+End Sub
+
+Private Sub TextFrozenCols_KeyPress(KeyAscii As Integer)
+If KeyAscii < 48 Or KeyAscii > 57 Then If KeyAscii <> 8 Then KeyAscii = 0
+End Sub
+
+Private Sub TextFrozenCols_Validate(Cancel As Boolean)
+If Not IsNumeric(TextFrozenCols.Text) Then
+    MsgBox "Invalid property value", vbCritical + vbOKOnly
+    TextFrozenCols.Text = PropertyPage.SelectedControls(0).FrozenCols
+    TextFrozenCols.SetFocus
+    Cancel = True
+Else
+    Dim LngValue As Long
+    On Error Resume Next
+    LngValue = CLng(TextFrozenCols.Text)
+    Cancel = CBool(Err.Number <> 0)
+    On Error GoTo 0
+    If LngValue < 0 Then Cancel = True
+    If Cancel = False Then
+        TextFrozenCols.Text = LngValue
+    Else
+        MsgBox "Invalid property value", vbCritical + vbOKOnly
+        TextFrozenCols.Text = PropertyPage.SelectedControls(0).FrozenCols
+        TextFrozenCols.SetFocus
     End If
 End If
 End Sub
