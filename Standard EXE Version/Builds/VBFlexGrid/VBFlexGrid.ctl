@@ -46,14 +46,14 @@ Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexS
 Private FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
 Private FlexPictureTypeColor, FlexPictureTypeMonochrome
 Private FlexEllipsisFormatNone, FlexEllipsisFormatEnd, FlexEllipsisFormatPath, FlexEllipsisFormatWord
-Private FlexClearEverywhere, FlexClearFixed, FlexClearMovable, FlexClearFrozen, FlexClearScrollable, FlexClearSelection
+Private FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearMovable, FlexClearFrozen, FlexClearSelection
 Private FlexClearEverything, FlexClearText, FlexClearFormatting
 Private FlexTabControls, FlexTabCells, FlexTabNext
 Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
 Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
 Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
-Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable
+Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
 Private FlexFindDirectionDown, FlexFindDirectionUp
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
@@ -228,9 +228,9 @@ End Enum
 Public Enum FlexClearWhereConstants
 FlexClearEverywhere = 0
 FlexClearFixed = 1
-FlexClearMovable = 2
-FlexClearFrozen = 3
-FlexClearScrollable = 4
+FlexClearScrollable = 2
+FlexClearMovable = 3
+FlexClearFrozen = 4
 FlexClearSelection = 5
 End Enum
 Public Enum FlexClearWhatConstants
@@ -286,6 +286,8 @@ Public Enum FlexAutoSizeScopeConstants
 FlexAutoSizeScopeAll = 0
 FlexAutoSizeScopeFixed = 1
 FlexAutoSizeScopeScrollable = 2
+FlexAutoSizeScopeMovable = 3
+FlexAutoSizeScopeFrozen = 4
 End Enum
 Public Enum FlexClipModeConstants
 FlexClipModeNormal = 0
@@ -4507,7 +4509,7 @@ End Sub
 Public Sub Clear(Optional ByVal Where As FlexClearWhereConstants, Optional ByVal What As FlexClearWhatConstants)
 Attribute Clear.VB_Description = "Clears the contents of the flex grid."
 Select Case Where
-    Case FlexClearEverywhere, FlexClearFixed, FlexClearMovable, FlexClearFrozen, FlexClearScrollable, FlexClearSelection
+    Case FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearMovable, FlexClearFrozen, FlexClearSelection
     Case Else
         Err.Raise 380
 End Select
@@ -4586,6 +4588,29 @@ Select Case Where
                     Next iRow
                 Next iCol
         End Select
+    Case FlexClearScrollable
+        Select Case What
+            Case FlexClearEverything
+                For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
+                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
+                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                    Next iCol
+                Next iRow
+            Case FlexClearText
+                For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
+                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
+                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                    Next iCol
+                Next iRow
+            Case FlexClearFormatting
+                For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
+                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
+                        Temp = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
+                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = Temp
+                    Next iCol
+                Next iRow
+        End Select
     Case FlexClearMovable
         Select Case What
             Case FlexClearEverything
@@ -4618,7 +4643,7 @@ Select Case Where
                     Next iCol
                 Next iRow
                 For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
-                    For iRow = PropFixedRows To (PropRows - 1)
+                    For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
                         LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
                     Next iRow
                 Next iCol
@@ -4629,7 +4654,7 @@ Select Case Where
                     Next iCol
                 Next iRow
                 For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
-                    For iRow = PropFixedRows To (PropRows - 1)
+                    For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
                         VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
                     Next iRow
                 Next iCol
@@ -4642,35 +4667,12 @@ Select Case Where
                     Next iCol
                 Next iRow
                 For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
-                    For iRow = PropFixedRows To (PropRows - 1)
+                    For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
                         Temp = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
                         LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
                         VBFlexGridCells.Rows(iRow).Cols(iCol).Text = Temp
                     Next iRow
                 Next iCol
-        End Select
-    Case FlexClearScrollable
-        Select Case What
-            Case FlexClearEverything
-                For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
-                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
-                    Next iCol
-                Next iRow
-            Case FlexClearText
-                For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
-                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
-                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
-                    Next iCol
-                Next iRow
-            Case FlexClearFormatting
-                For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
-                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
-                        Temp = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
-                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = Temp
-                    Next iCol
-                Next iRow
         End Select
     Case FlexClearSelection
         Dim SelRange As TCELLRANGE
@@ -4963,15 +4965,15 @@ Attribute RowPos.VB_Description = "Returns the distance in twips between the upp
 Attribute RowPos.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
 Dim i As Long, Value As Long
-If Index > (PropFixedRows - 1) Then
-    For i = 0 To (PropFixedRows - 1)
+If Index > ((PropFixedRows + PropFrozenRows) - 1) Then
+    For i = 0 To ((PropFixedRows + PropFrozenRows) - 1)
         If i < Index Then Value = Value + GetRowHeight(i)
     Next i
     For i = VBFlexGridTopRow To (Index - 1)
         Value = Value + GetRowHeight(i)
     Next i
     If Index < VBFlexGridTopRow Then
-        For i = PropFixedRows To (VBFlexGridTopRow - 1)
+        For i = (PropFixedRows + PropFrozenRows) To (VBFlexGridTopRow - 1)
             Value = Value - GetRowHeight(i)
         Next i
     End If
@@ -5141,9 +5143,9 @@ End Select
 If VBFlexGridHandle <> 0 Then
     Dim GridRect As RECT, iRow As Long
     With GridRect
-    If Index <= (PropFixedRows - 1) Then
+    If Index <= ((PropFixedRows + PropFrozenRows) - 1) Then
         RowIsVisible = True
-        For iRow = 0 To (PropFixedRows - 1)
+        For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
             If Visibility = FlexVisibilityCompleteOnly Then .Bottom = .Bottom + GetRowHeight(iRow)
             If .Bottom > VBFlexGridClientRect.Bottom Then
                 RowIsVisible = False
@@ -5154,7 +5156,7 @@ If VBFlexGridHandle <> 0 Then
         Next iRow
     ElseIf Index >= VBFlexGridTopRow Then
         RowIsVisible = True
-        For iRow = 0 To (PropFixedRows - 1)
+        For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
             .Bottom = .Bottom + GetRowHeight(iRow)
         Next iRow
         For iRow = VBFlexGridTopRow To (PropRows - 1)
@@ -5182,7 +5184,7 @@ End Select
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Property
 Dim GridRect As RECT, iRow As Long, Count As Long
 With GridRect
-For iRow = 0 To (PropFixedRows - 1)
+For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
     If Visibility = FlexVisibilityPartialOK Then If .Bottom > VBFlexGridClientRect.Bottom Then Exit For
     .Bottom = .Bottom + GetRowHeight(iRow)
     If Visibility = FlexVisibilityCompleteOnly Then If .Bottom > VBFlexGridClientRect.Bottom Then Exit For
@@ -5219,6 +5221,27 @@ FixedRowsVisible = Count
 End With
 End Property
 
+Public Property Get FrozenRowsVisible(Optional ByVal Visibility As FlexVisibilityConstants = FlexVisibilityCompleteOnly) As Long
+Attribute FrozenRowsVisible.VB_Description = "Returns the total number of frozen (movable but non-scrollable) columns or rows visible in the flex grid."
+Attribute FrozenRowsVisible.VB_MemberFlags = "400"
+Select Case Visibility
+    Case FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
+    Case Else
+        Err.Raise 380
+End Select
+If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Property
+Dim GridRect As RECT, iRow As Long, Count As Long
+With GridRect
+For iRow = PropFixedRows To ((PropFixedRows + PropFrozenRows) - 1)
+    If Visibility = FlexVisibilityPartialOK Then If .Bottom > VBFlexGridClientRect.Bottom Then Exit For
+    .Bottom = .Bottom + GetRowHeight(iRow)
+    If Visibility = FlexVisibilityCompleteOnly Then If .Bottom > VBFlexGridClientRect.Bottom Then Exit For
+    Count = Count + 1
+Next iRow
+FrozenRowsVisible = Count
+End With
+End Property
+
 Public Property Get RowsPerPage() As Long
 Attribute RowsPerPage.VB_Description = "Returns the total number of non-fixed (scrollable) columns or rows displayed on the current page to scroll through in the flex grid."
 Attribute RowsPerPage.VB_MemberFlags = "400"
@@ -5230,15 +5253,15 @@ Attribute ColPos.VB_Description = "Returns the distance in twips between the upp
 Attribute ColPos.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 Dim i As Long, Value As Long
-If Index > (PropFixedCols - 1) Then
-    For i = 0 To (PropFixedCols - 1)
+If Index > ((PropFixedCols + PropFrozenCols) - 1) Then
+    For i = 0 To ((PropFixedCols + PropFrozenCols) - 1)
         If i < Index Then Value = Value + GetColWidth(i)
     Next i
     For i = VBFlexGridLeftCol To (Index - 1)
         Value = Value + GetColWidth(i)
     Next i
     If Index < VBFlexGridLeftCol Then
-        For i = PropFixedCols To (VBFlexGridLeftCol - 1)
+        For i = (PropFixedCols + PropFrozenCols) To (VBFlexGridLeftCol - 1)
             Value = Value - GetColWidth(i)
         Next i
     End If
@@ -5411,9 +5434,9 @@ End Select
 If VBFlexGridHandle <> 0 Then
     Dim GridRect As RECT, iCol As Long
     With GridRect
-    If Index <= (PropFixedCols - 1) Then
+    If Index <= ((PropFixedCols + PropFrozenCols) - 1) Then
         ColIsVisible = True
-        For iCol = 0 To (PropFixedCols - 1)
+        For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
             If Visibility = FlexVisibilityCompleteOnly Then .Right = .Right + GetColWidth(iCol)
             If .Right > VBFlexGridClientRect.Right Then
                 ColIsVisible = False
@@ -5424,7 +5447,7 @@ If VBFlexGridHandle <> 0 Then
         Next iCol
     ElseIf Index >= VBFlexGridLeftCol Then
         ColIsVisible = True
-        For iCol = 0 To (PropFixedCols - 1)
+        For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
             .Right = .Right + GetColWidth(iCol)
         Next iCol
         For iCol = VBFlexGridLeftCol To (PropCols - 1)
@@ -5452,7 +5475,7 @@ End Select
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Property
 Dim GridRect As RECT, iCol As Long, Count As Long
 With GridRect
-For iCol = 0 To (PropFixedCols - 1)
+For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
     If Visibility = FlexVisibilityPartialOK Then If .Right > VBFlexGridClientRect.Right Then Exit For
     .Right = .Right + GetColWidth(iCol)
     If Visibility = FlexVisibilityCompleteOnly Then If .Right > VBFlexGridClientRect.Right Then Exit For
@@ -5486,6 +5509,27 @@ For iCol = 0 To (PropFixedCols - 1)
     Count = Count + 1
 Next iCol
 FixedColsVisible = Count
+End With
+End Property
+
+Public Property Get FrozenColsVisible(Optional ByVal Visibility As FlexVisibilityConstants = FlexVisibilityCompleteOnly) As Long
+Attribute FrozenColsVisible.VB_Description = "Returns the total number of frozen (movable but non-scrollable) columns or rows visible in the flex grid."
+Attribute FrozenColsVisible.VB_MemberFlags = "400"
+Select Case Visibility
+    Case FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
+    Case Else
+        Err.Raise 380
+End Select
+If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Property
+Dim GridRect As RECT, iCol As Long, Count As Long
+With GridRect
+For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
+    If Visibility = FlexVisibilityPartialOK Then If .Right > VBFlexGridClientRect.Right Then Exit For
+    .Right = .Right + GetColWidth(iCol)
+    If Visibility = FlexVisibilityCompleteOnly Then If .Right > VBFlexGridClientRect.Right Then Exit For
+    Count = Count + 1
+Next iCol
+FrozenColsVisible = Count
 End With
 End Property
 
@@ -7105,7 +7149,7 @@ Select Case Mode
         Err.Raise 380
 End Select
 Select Case Scope
-    Case FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable
+    Case FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
     Case Else
         Err.Raise 380
 End Select
@@ -7162,7 +7206,45 @@ If Mode = FlexAutoSizeModeColWidth Then
                 With VBFlexGridColsInfo(iCol)
                 If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                     .Width = -1
+                    For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
+                        If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                            Call GetCellText(iRow, iCol, Text)
+                            Size.CX = GetTextSize(iRow, iCol, Text).CX
+                            If Size.CX > 0 Then
+                                Size.CX = Size.CX + Spacing
+                                If Size.CX > .Width Then .Width = Size.CX
+                                If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
+                            End If
+                        End If
+                    Next iRow
+                End If
+                End With
+            Next iCol
+        Case FlexAutoSizeScopeMovable
+            For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+                With VBFlexGridColsInfo(iCol)
+                If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    .Width = -1
                     For iRow = PropFixedRows To (PropRows - 1)
+                        If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                            Call GetCellText(iRow, iCol, Text)
+                            Size.CX = GetTextSize(iRow, iCol, Text).CX
+                            If Size.CX > 0 Then
+                                Size.CX = Size.CX + Spacing
+                                If Size.CX > .Width Then .Width = Size.CX
+                                If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
+                            End If
+                        End If
+                    Next iRow
+                End If
+                End With
+            Next iCol
+        Case FlexAutoSizeScopeFrozen
+            For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+                With VBFlexGridColsInfo(iCol)
+                If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    .Width = -1
+                    For iRow = PropFixedRows To ((PropFixedRows + PropFrozenRows) - 1)
                         If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                             Call GetCellText(iRow, iCol, Text)
                             Size.CX = GetTextSize(iRow, iCol, Text).CX
@@ -7231,7 +7313,45 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
                 With VBFlexGridCells.Rows(iRow).RowInfo
                 If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                     .Height = -1
+                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
+                        If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                            Call GetCellText(iRow, iCol, Text)
+                            Size.CY = GetTextSize(iRow, iCol, Text).CY
+                            If Size.CY > 0 Then
+                                Size.CY = Size.CY + Spacing
+                                If Size.CY > .Height Then .Height = Size.CY
+                                If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
+                            End If
+                        End If
+                    Next iCol
+                End If
+                End With
+            Next iRow
+        Case FlexAutoSizeScopeMovable
+            For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+                With VBFlexGridCells.Rows(iRow).RowInfo
+                If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    .Height = -1
                     For iCol = PropFixedCols To (PropCols - 1)
+                        If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                            Call GetCellText(iRow, iCol, Text)
+                            Size.CY = GetTextSize(iRow, iCol, Text).CY
+                            If Size.CY > 0 Then
+                                Size.CY = Size.CY + Spacing
+                                If Size.CY > .Height Then .Height = Size.CY
+                                If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
+                            End If
+                        End If
+                    Next iCol
+                End If
+                End With
+            Next iRow
+        Case FlexAutoSizeScopeFrozen
+            For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+                With VBFlexGridCells.Rows(iRow).RowInfo
+                If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    .Height = -1
+                    For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
                         If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                             Call GetCellText(iRow, iCol, Text)
                             Size.CY = GetTextSize(iRow, iCol, Text).CY
@@ -9771,10 +9891,10 @@ If iRowHit > -1 And iColHit > -1 Then
             Else
                 HTI.HitResult = FlexHitResultCell
             End If
-        ElseIf iColHit <= (PropFixedCols + PropFrozenCols) Then
+        ElseIf iColHit < (PropFixedCols + PropFrozenCols) Then
             HTI.HitResult = FlexHitResultCell
         End If
-    ElseIf iRowHit < PropFixedRows Then
+    ElseIf (iRowHit < PropFixedRows) Then
         If PropAllowUserResizing <> FlexAllowUserResizingNone Then
             SetRect TempRect, .Left, .Top, .Right, .Bottom
             Call AdjustRectColDividerSpacing(TempRect, iColHit)
@@ -9826,8 +9946,36 @@ If iRowHit > -1 And iColHit > -1 Then
         Else
             HTI.HitResult = FlexHitResultCell
         End If
-    ElseIf iRowHit <= (PropFixedRows + PropFrozenRows) Then
-        HTI.HitResult = FlexHitResultCell
+    ElseIf iRowHit < (PropFixedRows + PropFrozenRows) Then
+        If iColHit >= VBFlexGridLeftCol Then
+            HTI.HitResult = FlexHitResultCell
+        ElseIf iColHit < PropFixedCols Then
+            If PropAllowUserResizing = FlexAllowUserResizingRows Or PropAllowUserResizing = FlexAllowUserResizingBoth Then
+                SetRect TempRect, .Left, .Top, .Right, .Bottom
+                Call AdjustRectRowDividerSpacing(TempRect, iRowHit)
+                If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
+                    HTI.HitResult = FlexHitResultCell
+                Else
+                    TempRect.Bottom = .Bottom
+                    iRowDivider = iRowHit
+                    If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
+                        HTI.HitResult = FlexHitResultDividerRowTop
+                        iRowDivider = iRowDivider - 1
+                        Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
+                            iRowDivider = iRowDivider - 1
+                            If iRowDivider = -1 Then Exit Do
+                        Loop
+                        If iRowDivider = -1 Then HTI.HitResult = FlexHitResultCell
+                    Else
+                        HTI.HitResult = FlexHitResultDividerRowBottom
+                    End If
+                End If
+            Else
+                HTI.HitResult = FlexHitResultCell
+            End If
+        ElseIf iColHit < (PropFixedCols + PropFrozenCols) Then
+            HTI.HitResult = FlexHitResultCell
+        End If
     End If
 Else
     If PropAllowUserResizing <> FlexAllowUserResizingNone Then
@@ -11938,7 +12086,7 @@ ElseIf HTI.HitResult <> FlexHitResultCell Then
         With ClipRect
         If iRow > -1 Then
             For i = 0 To iRow - 1
-                If i >= VBFlexGridTopRow Or i < PropFixedRows Then
+                If i >= VBFlexGridTopRow Or i < (PropFixedRows + PropFrozenRows) Then
                     .Top = .Top + GetRowHeight(i)
                 End If
             Next i
@@ -11948,7 +12096,7 @@ ElseIf HTI.HitResult <> FlexHitResultCell Then
         End If
         If iCol > -1 Then
             For i = 0 To iCol - 1
-                If i >= VBFlexGridLeftCol Or i < PropFixedCols Then
+                If i >= VBFlexGridLeftCol Or i < (PropFixedCols + PropFrozenCols) Then
                     .Left = .Left + GetColWidth(i)
                 End If
             Next i
@@ -12137,7 +12285,7 @@ If VBFlexGridCaptureDividerDrag = True Then
         For i = 0 To iRow - 1
             If i >= VBFlexGridTopRow Then
                 .CY = .CY + GetRowHeight(i)
-            ElseIf i < PropFixedRows Then
+            ElseIf i < (PropFixedRows + PropFrozenRows) Then
                 .CY = .CY + GetRowHeight(i)
             Else
                 i = VBFlexGridTopRow - 1
@@ -12162,7 +12310,7 @@ If VBFlexGridCaptureDividerDrag = True Then
         For i = 0 To iCol - 1
             If i >= VBFlexGridLeftCol Then
                 .CX = .CX + GetColWidth(i)
-            ElseIf i < PropFixedCols Then
+            ElseIf i < (PropFixedCols + PropFrozenCols) Then
                 .CX = .CX + GetColWidth(i)
             Else
                 i = VBFlexGridLeftCol - 1
