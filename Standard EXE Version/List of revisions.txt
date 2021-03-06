@@ -1,6 +1,10 @@
 List of revisions:
 
 06-Mar-2021
+- Included the enum FlexClearFrozen and FlexClearMovable in the Clear method.
+  FlexClearScrollable will not clear the frozen cells. So FlexClearMovable will clear all non-fixed cells.
+
+05-Mar-2021
 - Included the FrozenRows/FrozenCols property.
 - Bugfix in the ValidateEdit event when showing a message box inside the event.
 
