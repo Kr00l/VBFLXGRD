@@ -46,7 +46,7 @@ Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexS
 Private FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
 Private FlexPictureTypeColor, FlexPictureTypeMonochrome
 Private FlexEllipsisFormatNone, FlexEllipsisFormatEnd, FlexEllipsisFormatPath, FlexEllipsisFormatWord
-Private FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearSelection
+Private FlexClearEverywhere, FlexClearFixed, FlexClearMovable, FlexClearFrozen, FlexClearScrollable, FlexClearSelection
 Private FlexClearEverything, FlexClearText, FlexClearFormatting
 Private FlexTabControls, FlexTabCells, FlexTabNext
 Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
@@ -228,8 +228,10 @@ End Enum
 Public Enum FlexClearWhereConstants
 FlexClearEverywhere = 0
 FlexClearFixed = 1
-FlexClearScrollable = 2
-FlexClearSelection = 3
+FlexClearMovable = 2
+FlexClearFrozen = 3
+FlexClearScrollable = 4
+FlexClearSelection = 5
 End Enum
 Public Enum FlexClearWhatConstants
 FlexClearEverything = 0
@@ -2637,7 +2639,7 @@ UserControl.PropertyChanged "FixedCols"
 End Property
 
 Public Property Get FrozenRows() As Long
-Attribute FrozenRows.VB_Description = "Returns/sets the total number of frozen (editable but non-scrollable) columns or rows for the flex grid."
+Attribute FrozenRows.VB_Description = "Returns/sets the total number of frozen (movable but non-scrollable) columns or rows for the flex grid."
 FrozenRows = PropFrozenRows
 End Property
 
@@ -2679,7 +2681,7 @@ UserControl.PropertyChanged "FrozenRows"
 End Property
 
 Public Property Get FrozenCols() As Long
-Attribute FrozenCols.VB_Description = "Returns/sets the total number of frozen (editable but non-scrollable) columns or rows for the flex grid."
+Attribute FrozenCols.VB_Description = "Returns/sets the total number of frozen (movable but non-scrollable) columns or rows for the flex grid."
 FrozenCols = PropFrozenCols
 End Property
 
@@ -2787,8 +2789,8 @@ Select Case PropSelectionMode
         End If
 End Select
 If .Row < PropFixedRows And PropRows > PropFixedRows Then
-    ' In case there were no scrollable rows before and are now again available.
-    ' Then it is necessary that the active row gets adjusted to the first scrollable row.
+    ' In case there were no movable rows before and are now again available.
+    ' Then it is necessary that the active row gets adjusted to the first movable row.
     If Not (.Mask And RCPM_ROW) = RCPM_ROW Then .Mask = .Mask Or RCPM_ROW
     .Row = PropFixedRows
     If Not (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then .Mask = .Mask Or RCPM_ROWSEL
@@ -2890,8 +2892,8 @@ Select Case PropSelectionMode
         End If
 End Select
 If .Col < PropFixedCols And PropCols > PropFixedCols Then
-    ' In case there were no scrollable columns before and are now again available.
-    ' Then it is necessary that the active col gets adjusted to the first scrollable column.
+    ' In case there were no movable columns before and are now again available.
+    ' Then it is necessary that the active col gets adjusted to the first movable column.
     If Not (.Mask And RCPM_COL) = RCPM_COL Then .Mask = .Mask Or RCPM_COL
     .Col = PropFixedCols
     If Not (.Mask And RCPM_COLSEL) = RCPM_COLSEL Then .Mask = .Mask Or RCPM_COLSEL
@@ -4505,7 +4507,7 @@ End Sub
 Public Sub Clear(Optional ByVal Where As FlexClearWhereConstants, Optional ByVal What As FlexClearWhatConstants)
 Attribute Clear.VB_Description = "Clears the contents of the flex grid."
 Select Case Where
-    Case FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearSelection
+    Case FlexClearEverywhere, FlexClearFixed, FlexClearMovable, FlexClearFrozen, FlexClearScrollable, FlexClearSelection
     Case Else
         Err.Raise 380
 End Select
@@ -4584,7 +4586,7 @@ Select Case Where
                     Next iRow
                 Next iCol
         End Select
-    Case FlexClearScrollable
+    Case FlexClearMovable
         Select Case What
             Case FlexClearEverything
                 For iRow = PropFixedRows To (PropRows - 1)
@@ -4601,6 +4603,69 @@ Select Case Where
             Case FlexClearFormatting
                 For iRow = PropFixedRows To (PropRows - 1)
                     For iCol = PropFixedCols To (PropCols - 1)
+                        Temp = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
+                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = Temp
+                    Next iCol
+                Next iRow
+        End Select
+    Case FlexClearFrozen
+        Select Case What
+            Case FlexClearEverything
+                For iRow = PropFixedRows To ((PropFixedRows + PropFrozenRows) - 1)
+                    For iCol = PropFixedCols To (PropCols - 1)
+                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                    Next iCol
+                Next iRow
+                For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
+                    For iRow = PropFixedRows To (PropRows - 1)
+                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                    Next iRow
+                Next iCol
+            Case FlexClearText
+                For iRow = PropFixedRows To ((PropFixedRows + PropFrozenRows) - 1)
+                    For iCol = PropFixedCols To (PropCols - 1)
+                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                    Next iCol
+                Next iRow
+                For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
+                    For iRow = PropFixedRows To (PropRows - 1)
+                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                    Next iRow
+                Next iCol
+            Case FlexClearFormatting
+                For iRow = PropFixedRows To ((PropFixedRows + PropFrozenRows) - 1)
+                    For iCol = PropFixedCols To (PropCols - 1)
+                        Temp = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
+                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = Temp
+                    Next iCol
+                Next iRow
+                For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
+                    For iRow = PropFixedRows To (PropRows - 1)
+                        Temp = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
+                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = Temp
+                    Next iRow
+                Next iCol
+        End Select
+    Case FlexClearScrollable
+        Select Case What
+            Case FlexClearEverything
+                For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
+                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
+                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                    Next iCol
+                Next iRow
+            Case FlexClearText
+                For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
+                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
+                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                    Next iCol
+                Next iRow
+            Case FlexClearFormatting
+                For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
+                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
                         Temp = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
                         LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
                         VBFlexGridCells.Rows(iRow).Cols(iCol).Text = Temp
