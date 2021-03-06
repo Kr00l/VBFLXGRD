@@ -1,8 +1,14 @@
 List of revisions:
 
 06-Mar-2021
-- Included the enum FlexClearFrozen and FlexClearMovable in the Clear method.
-  FlexClearScrollable will not clear the frozen cells. So FlexClearMovable will clear all non-fixed cells.
+- Bugfixes (side-effects) related of FrozenRows/FrozenCols for other properties.
+- Included FrozenRowsVisible/FrozenColsVisible property.
+- Included the enum FlexAutoSizeScopeMovable/FlexAutoSizeScopeFrozen in the AutoSize method.
+  FlexAutoSizeScopeScrollable will not autosize the frozen cells.
+  FlexAutoSizeScopeMovable contains both frozen and scrollable cells.
+- Included the enum FlexClearMovable/FlexClearFrozen in the Clear method.
+  FlexClearScrollable will not clear the frozen cells.
+  FlexClearMovable contains both frozen and scrollable cells.
 
 05-Mar-2021
 - Included the FrozenRows/FrozenCols property.
