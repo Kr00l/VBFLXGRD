@@ -1,5 +1,8 @@
 List of revisions:
 
+08-Mar-2021
+- AutoSize method works now as expected if WordWrap = True and Mode = FlexAutoSizeModeRowHeight.
+
 06-Mar-2021
 - Bugfixes (side-effects) related of FrozenRows/FrozenCols for other properties.
 - Included FrozenRowsVisible/FrozenColsVisible property.
