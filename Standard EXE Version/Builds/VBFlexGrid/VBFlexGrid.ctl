@@ -7278,7 +7278,7 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
                     For iCol = 0 To (PropCols - 1)
                         If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                             Call GetCellText(iRow, iCol, Text)
-                            Size.CY = GetTextSize(iRow, iCol, Text).CY
+                            Size.CY = GetTextHeight(iRow, iCol, Text)
                             If Size.CY > 0 Then
                                 Size.CY = Size.CY + Spacing
                                 If Size.CY > .Height Then .Height = Size.CY
@@ -7297,7 +7297,7 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
                     For iCol = 0 To (PropFixedCols - 1)
                         If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                             Call GetCellText(iRow, iCol, Text)
-                            Size.CY = GetTextSize(iRow, iCol, Text).CY
+                            Size.CY = GetTextHeight(iRow, iCol, Text)
                             If Size.CY > 0 Then
                                 Size.CY = Size.CY + Spacing
                                 If Size.CY > .Height Then .Height = Size.CY
@@ -7316,7 +7316,7 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
                     For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
                         If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                             Call GetCellText(iRow, iCol, Text)
-                            Size.CY = GetTextSize(iRow, iCol, Text).CY
+                            Size.CY = GetTextHeight(iRow, iCol, Text)
                             If Size.CY > 0 Then
                                 Size.CY = Size.CY + Spacing
                                 If Size.CY > .Height Then .Height = Size.CY
@@ -7335,7 +7335,7 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
                     For iCol = PropFixedCols To (PropCols - 1)
                         If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                             Call GetCellText(iRow, iCol, Text)
-                            Size.CY = GetTextSize(iRow, iCol, Text).CY
+                            Size.CY = GetTextHeight(iRow, iCol, Text)
                             If Size.CY > 0 Then
                                 Size.CY = Size.CY + Spacing
                                 If Size.CY > .Height Then .Height = Size.CY
@@ -7354,7 +7354,7 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
                     For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
                         If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                             Call GetCellText(iRow, iCol, Text)
-                            Size.CY = GetTextSize(iRow, iCol, Text).CY
+                            Size.CY = GetTextHeight(iRow, iCol, Text)
                             If Size.CY > 0 Then
                                 Size.CY = Size.CY + Spacing
                                 If Size.CY > .Height Then .Height = Size.CY
@@ -9787,9 +9787,14 @@ If hDC <> 0 Then
     End If
     End With
     If Not Text = vbNullString Then
+        If PropSingleLine = False Then
+            If InStr(Text, vbCrLf) Then Text = Replace$(Text, vbCrLf, vbCr)
+            If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbCr)
+        Else
+            If InStr(Text, vbCr) Then Text = Replace$(Text, vbCr, vbNullString)
+            If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbNullString)
+        End If
         Dim Pos1 As Long, Pos2 As Long, Temp As String, Size As SIZEAPI
-        If InStr(Text, vbCrLf) Then Text = Replace$(Text, vbCrLf, vbCr)
-        If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbCr)
         Do
             Pos1 = InStr(Pos1 + 1, Text, vbCr)
             If Pos1 > 0 Then
@@ -9807,6 +9812,67 @@ If hDC <> 0 Then
     Else
         Dim TM As TEXTMETRIC
         If GetTextMetrics(hDC, TM) <> 0 Then GetTextSize.CY = TM.TMHeight
+    End If
+    If hFontOld <> 0 Then SelectObject hDC, hFontOld
+    If hFontTemp <> 0 Then DeleteObject hFontTemp
+    ReleaseDC VBFlexGridHandle, hDC
+End If
+End Function
+
+Private Function GetTextHeight(ByVal iRow As Long, ByVal iCol As Long, ByVal Text As String) As Long
+If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Function
+Dim hDC As Long
+hDC = GetDC(VBFlexGridHandle)
+If hDC <> 0 Then
+    Dim hFontTemp As Long, hFontOld As Long
+    With VBFlexGridCells.Rows(iRow).Cols(iCol)
+    If .FontName = vbNullString Then
+        If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
+            hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
+        Else
+            If VBFlexGridFontFixedHandle = 0 Then
+                hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
+            Else
+                hFontOld = SelectObject(hDC, VBFlexGridFontFixedHandle)
+            End If
+        End If
+    Else
+        Dim TempFont As StdFont
+        Set TempFont = New StdFont
+        TempFont.Name = .FontName
+        TempFont.Size = .FontSize
+        TempFont.Bold = .FontBold
+        TempFont.Italic = .FontItalic
+        TempFont.Strikethrough = .FontStrikeThrough
+        TempFont.Underline = .FontUnderline
+        TempFont.Charset = .FontCharset
+        hFontTemp = CreateGDIFontFromOLEFont(TempFont)
+        hFontOld = SelectObject(hDC, hFontTemp)
+        Set TempFont = Nothing
+    End If
+    End With
+    If Not Text = vbNullString Then
+        Dim CellRect As RECT, TextRect As RECT, Format As Long
+        Call GetCellRect(iRow, iCol, False, CellRect)
+        With TextRect
+        .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        End With
+        Format = DT_NOPREFIX
+        If VBFlexGridRTLReading = True Then Format = Format Or DT_RTLREADING
+        ' Alignment format will be ignored.
+        If PropWordWrap = True Then
+            Format = Format Or DT_WORDBREAK
+        ElseIf PropSingleLine = True Then
+            Format = Format Or DT_SINGLELINE
+        End If
+        ' Ellipsis format will be ignored.
+        GetTextHeight = DrawText(hDC, StrPtr(Text), -1, TextRect, Format Or DT_CALCRECT)
+    Else
+        Dim TM As TEXTMETRIC
+        If GetTextMetrics(hDC, TM) <> 0 Then GetTextHeight = TM.TMHeight
     End If
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
@@ -10061,130 +10127,119 @@ End Sub
 Private Sub GetLabelInfo(ByVal iRow As Long, ByVal iCol As Long, ByRef LBLI As TLABELINFO)
 LBLI.Flags = 0
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
+Dim CellRect As RECT
+Call GetCellRect(iRow, iCol, False, CellRect)
+If (CellRect.Bottom - CellRect.Top) <= 0 Or (CellRect.Right - CellRect.Left) <= 0 Then Exit Sub
 Dim hDC As Long
 hDC = GetDC(VBFlexGridHandle)
 If hDC <> 0 Then
-    Dim CellRect As RECT
-    Call GetCellRect(iRow, iCol, False, CellRect)
-    If (CellRect.Bottom - CellRect.Top) > 0 And (CellRect.Right - CellRect.Left) > 0 Then
-        Dim IsFixedCell As Boolean, Text As String
-        IsFixedCell = CBool(iRow < PropFixedRows Or iCol < PropFixedCols)
-        Call GetCellText(iRow, iCol, Text)
-        If StrPtr(Text) = 0 Then Text = ""
-        With VBFlexGridCells.Rows(iRow).Cols(iCol)
-        Dim hFontTemp As Long, hFontOld As Long
-        If .FontName = vbNullString Then
-            If IsFixedCell = False Then
+    Dim Text As String
+    Call GetCellText(iRow, iCol, Text)
+    If StrPtr(Text) = 0 Then Text = ""
+    Dim hFontTemp As Long, hFontOld As Long
+    With VBFlexGridCells.Rows(iRow).Cols(iCol)
+    If .FontName = vbNullString Then
+        If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
+            hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
+        Else
+            If VBFlexGridFontFixedHandle = 0 Then
                 hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
             Else
-                If VBFlexGridFontFixedHandle = 0 Then
-                    hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
-                Else
-                    hFontOld = SelectObject(hDC, VBFlexGridFontFixedHandle)
-                End If
+                hFontOld = SelectObject(hDC, VBFlexGridFontFixedHandle)
             End If
-        Else
-            Dim TempFont As StdFont
-            Set TempFont = New StdFont
-            TempFont.Name = .FontName
-            TempFont.Size = .FontSize
-            TempFont.Bold = .FontBold
-            TempFont.Italic = .FontItalic
-            TempFont.Strikethrough = .FontStrikeThrough
-            TempFont.Underline = .FontUnderline
-            TempFont.Charset = .FontCharset
-            hFontTemp = CreateGDIFontFromOLEFont(TempFont)
-            hFontOld = SelectObject(hDC, hFontTemp)
-            Set TempFont = Nothing
         End If
-        Dim TextRect As RECT, TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, Format As Long
-        With TextRect
-        .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-        .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
-        .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-        .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
-        End With
-        If .TextStyle = -1 Then
-            If IsFixedCell = False Then
-                TextStyle = PropTextStyle
-            Else
-                TextStyle = PropTextStyleFixed
-            End If
+    Else
+        Dim TempFont As StdFont
+        Set TempFont = New StdFont
+        TempFont.Name = .FontName
+        TempFont.Size = .FontSize
+        TempFont.Bold = .FontBold
+        TempFont.Italic = .FontItalic
+        TempFont.Strikethrough = .FontStrikeThrough
+        TempFont.Underline = .FontUnderline
+        TempFont.Charset = .FontCharset
+        hFontTemp = CreateGDIFontFromOLEFont(TempFont)
+        hFontOld = SelectObject(hDC, hFontTemp)
+        Set TempFont = Nothing
+    End If
+    End With
+    Dim TextRect As RECT, Alignment As FlexAlignmentConstants, Format As Long
+    With TextRect
+    .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+    .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+    .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+    .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+    End With
+    If VBFlexGridCells.Rows(iRow).Cols(iCol).Alignment = -1 Then
+        If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
+            Alignment = VBFlexGridColsInfo(iCol).Alignment
         Else
-            TextStyle = .TextStyle
-        End If
-        If .Alignment = -1 Then
-            If IsFixedCell = False Then
+            If VBFlexGridColsInfo(iCol).FixedAlignment = -1 Then
                 Alignment = VBFlexGridColsInfo(iCol).Alignment
             Else
-                If VBFlexGridColsInfo(iCol).FixedAlignment = -1 Then
-                    Alignment = VBFlexGridColsInfo(iCol).Alignment
-                Else
-                    Alignment = VBFlexGridColsInfo(iCol).FixedAlignment
-                End If
+                Alignment = VBFlexGridColsInfo(iCol).FixedAlignment
             End If
-        Else
-            Alignment = .Alignment
         End If
-        Format = DT_NOPREFIX
-        If VBFlexGridRTLReading = True Then Format = Format Or DT_RTLREADING
-        Select Case Alignment
-            Case FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom
-                Format = Format Or DT_LEFT
-            Case FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom
-                Format = Format Or DT_CENTER
-            Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
-                Format = Format Or DT_RIGHT
-            Case FlexAlignmentGeneral
-                If Not IsNumeric(Text) Then
-                    Format = Format Or DT_LEFT
-                Else
-                    Format = Format Or DT_RIGHT
-                End If
-        End Select
-        If PropWordWrap = True Then
-            Format = Format Or DT_WORDBREAK
-        ElseIf PropSingleLine = True Then
-            Format = Format Or DT_SINGLELINE
-        End If
-        ' Ellipsis format will be ignored.
-        Dim CalcRect As RECT, Height As Long, Result As Long
-        LSet CalcRect = TextRect
-        Select Case Alignment
-            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
-                Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
-                Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
-                ' DT_VCENTER not applicable to apply here in case of DT_SINGLELINE.
-            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
-                Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
-                Result = ((TextRect.Bottom - TextRect.Top) - Height)
-                ' DT_BOTTOM not applicable to apply here in case of DT_SINGLELINE.
-        End Select
-        If Result > 0 Or (Format And DT_SINGLELINE) = DT_SINGLELINE Then
-            CalcRect.Top = CalcRect.Top + Result
-            CalcRect.Bottom = CalcRect.Bottom + Result
-        End If
-        With LBLI
-        .Flags = LBLI_VALID
-        If TextRect.Right <= VBFlexGridClientRect.Right And TextRect.Bottom <= VBFlexGridClientRect.Bottom Then
-            If CalcRect.Right <= TextRect.Right And CalcRect.Bottom <= TextRect.Bottom Then .Flags = .Flags Or LBLI_UNFOLDED
-        End If
-        If (Format And DT_CENTER) = DT_CENTER Then
-            Result = (((TextRect.Right - TextRect.Left) - (CalcRect.Right - CalcRect.Left)) / 2)
-            CalcRect.Left = CalcRect.Left + Result
-            CalcRect.Right = CalcRect.Right + Result
-        ElseIf (Format And DT_RIGHT) = DT_RIGHT Then
-            Result = ((TextRect.Right - TextRect.Left) - (CalcRect.Right - CalcRect.Left))
-            CalcRect.Left = CalcRect.Left + Result
-            CalcRect.Right = CalcRect.Right + Result
-        End If
-        LSet .RC = CalcRect
-        .DrawFlags = Format
-        End With
-        If hFontOld <> 0 Then SelectObject hDC, hFontOld
-        If hFontTemp <> 0 Then DeleteObject hFontTemp
-        End With
+    Else
+        Alignment = VBFlexGridCells.Rows(iRow).Cols(iCol).Alignment
     End If
+    Format = DT_NOPREFIX
+    If VBFlexGridRTLReading = True Then Format = Format Or DT_RTLREADING
+    Select Case Alignment
+        Case FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom
+            Format = Format Or DT_LEFT
+        Case FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom
+            Format = Format Or DT_CENTER
+        Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
+            Format = Format Or DT_RIGHT
+        Case FlexAlignmentGeneral
+            If Not IsNumeric(Text) Then
+                Format = Format Or DT_LEFT
+            Else
+                Format = Format Or DT_RIGHT
+            End If
+    End Select
+    If PropWordWrap = True Then
+        Format = Format Or DT_WORDBREAK
+    ElseIf PropSingleLine = True Then
+        Format = Format Or DT_SINGLELINE
+    End If
+    ' Ellipsis format will be ignored.
+    Dim CalcRect As RECT, Height As Long, Result As Long
+    LSet CalcRect = TextRect
+    Select Case Alignment
+        Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
+            Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
+            Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
+            ' DT_VCENTER not applicable to apply here in case of DT_SINGLELINE.
+        Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
+            Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
+            Result = ((TextRect.Bottom - TextRect.Top) - Height)
+            ' DT_BOTTOM not applicable to apply here in case of DT_SINGLELINE.
+    End Select
+    If Result > 0 Or (Format And DT_SINGLELINE) = DT_SINGLELINE Then
+        CalcRect.Top = CalcRect.Top + Result
+        CalcRect.Bottom = CalcRect.Bottom + Result
+    End If
+    With LBLI
+    .Flags = LBLI_VALID
+    If TextRect.Right <= VBFlexGridClientRect.Right And TextRect.Bottom <= VBFlexGridClientRect.Bottom Then
+        If CalcRect.Right <= TextRect.Right And CalcRect.Bottom <= TextRect.Bottom Then .Flags = .Flags Or LBLI_UNFOLDED
+    End If
+    If (Format And DT_CENTER) = DT_CENTER Then
+        Result = (((TextRect.Right - TextRect.Left) - (CalcRect.Right - CalcRect.Left)) / 2)
+        CalcRect.Left = CalcRect.Left + Result
+        CalcRect.Right = CalcRect.Right + Result
+    ElseIf (Format And DT_RIGHT) = DT_RIGHT Then
+        Result = ((TextRect.Right - TextRect.Left) - (CalcRect.Right - CalcRect.Left))
+        CalcRect.Left = CalcRect.Left + Result
+        CalcRect.Right = CalcRect.Right + Result
+    End If
+    LSet .RC = CalcRect
+    .DrawFlags = Format
+    End With
+    If hFontOld <> 0 Then SelectObject hDC, hFontOld
+    If hFontTemp <> 0 Then DeleteObject hFontTemp
     ReleaseDC VBFlexGridHandle, hDC
 End If
 End Sub
