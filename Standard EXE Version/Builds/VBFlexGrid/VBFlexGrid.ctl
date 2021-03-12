@@ -4820,6 +4820,34 @@ Col2 = .RightCol
 End With
 End Sub
 
+Public Sub SelectRange(ByVal Row As Long, ByVal Col As Long, Optional ByVal RowSel As Long = -1, Optional ByVal ColSel As Long = -1)
+Attribute SelectRange.VB_Description = "Selects a range of cells or a cell (by omitting the last two parameters) with a single command."
+If RowSel = -1 Then
+    If PropSelectionMode <> FlexSelectionModeByColumn Then
+        RowSel = Row
+    Else
+        RowSel = (PropRows - 1)
+    End If
+End If
+If ColSel = -1 Then
+    If PropSelectionMode <> FlexSelectionModeByRow Then
+        ColSel = Col
+    Else
+        ColSel = (PropCols - 1)
+    End If
+End If
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Or (RowSel < 0 Or RowSel > (PropRows - 1)) Or (ColSel < 0 Or ColSel > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+Dim RCP As TROWCOLPARAMS
+With RCP
+.Mask = RCPM_ROW Or RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL
+.Row = Row
+.Col = Col
+.RowSel = RowSel
+.ColSel = ColSel
+Call SetRowColParams(RCP)
+End With
+End Sub
+
 Public Property Get TopRow() As Long
 Attribute TopRow.VB_Description = "Returns/sets the uppermost row displayed in the flex grid."
 Attribute TopRow.VB_MemberFlags = "400"
@@ -9609,13 +9637,13 @@ Else
     SetRect CellRect, 0, 0, 0, 0
 End If
 For i = 0 To iRow
-    If i >= VBFlexGridTopRow Or i < PropFixedRows Then
+    If i >= VBFlexGridTopRow Or i < (PropFixedRows + PropFrozenRows) Then
         .Top = .Bottom
         .Bottom = .Bottom + GetRowHeight(i)
     End If
 Next i
 For i = 0 To iCol
-    If i >= VBFlexGridLeftCol Or i < PropFixedCols Then
+    If i >= VBFlexGridLeftCol Or i < (PropFixedCols + PropFrozenCols) Then
         .Left = .Right
         .Right = .Right + GetColWidth(i)
     End If
@@ -9852,13 +9880,12 @@ If hDC <> 0 Then
     End If
     End With
     If Not Text = vbNullString Then
-        Dim CellRect As RECT, TextRect As RECT, Format As Long
-        Call GetCellRect(iRow, iCol, False, CellRect)
+        Dim TextRect As RECT, Format As Long
         With TextRect
-        .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-        .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
-        .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-        .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        .Left = (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        .Top = (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        .Right = GetColWidth(iCol) - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        .Bottom = GetRowHeight(iRow) - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
         End With
         Format = DT_NOPREFIX
         If VBFlexGridRTLReading = True Then Format = Format Or DT_RTLREADING
