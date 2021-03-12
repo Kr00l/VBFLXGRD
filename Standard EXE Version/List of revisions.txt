@@ -1,5 +1,9 @@
 List of revisions:
 
+12-Mar-2021
+- Included the SelectRange method.
+  This method selects a range of cells or a cell (by omitting RowSel/ColSel) with a single command.
+
 08-Mar-2021
 - AutoSize method works now as expected if WordWrap = True and Mode = FlexAutoSizeModeRowHeight.
 - AutoSize method works now also as expected if SingleLine = True.
