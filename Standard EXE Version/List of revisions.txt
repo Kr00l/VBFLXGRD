@@ -1,5 +1,8 @@
 List of revisions:
 
+17-Mar-2021
+- Improved CreateGDIFontFromOLEFont function.
+
 12-Mar-2021
 - Included the SelectRange method.
   This method selects a range of cells or a cell (by omitting RowSel/ColSel) with a single command.
