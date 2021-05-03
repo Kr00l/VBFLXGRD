@@ -958,7 +958,6 @@ Private Const WS_EX_TRANSPARENT As Long = &H20
 Private Const WS_EX_CLIENTEDGE As Long = &H200
 Private Const WS_EX_STATICEDGE As Long = &H20000
 Private Const WS_EX_WINDOWEDGE As Long = &H100
-Private Const WS_EX_NOPARENTNOTIFY As Long = &H4
 Private Const WS_EX_NOINHERITLAYOUT As Long = &H100000
 Private Const WS_VISIBLE As Long = &H10000000
 Private Const WS_CHILD As Long = &H40000000
@@ -3779,7 +3778,7 @@ Call InitFlexGridCells
 If VBFlexGridDesignMode = False Then
     Dim dwStyle As Long, dwExStyle As Long
     dwStyle = WS_CHILD Or WS_VISIBLE Or WS_CLIPCHILDREN Or WS_CLIPSIBLINGS
-    dwExStyle = WS_EX_NOPARENTNOTIFY Or WS_EX_NOINHERITLAYOUT
+    dwExStyle = WS_EX_NOINHERITLAYOUT
     If PropRightToLeft = True Then
         If PropRightToLeftLayout = True Then
             dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
