@@ -1,5 +1,8 @@
 List of revisions:
 
+03-May-2021
+- Removed WS_EX_NOPARENTNOTIFY in the window creation as this causes a MDI child window to not get activated.
+
 26-Mar-2021
 - UserControl.DrawStyle set to 5 = Transparent to avoid a wasted/unused GDI pen handle.
 
