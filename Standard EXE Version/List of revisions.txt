@@ -1,5 +1,11 @@
 List of revisions:
 
+18-Aug-2021
+- Bugfixes (side-effects) related of FrozenRows/FrozenCols for BottomRow/RightCol property.
+- Bugfix in the internal GetHitTestInfo function.
+  Now an adjustment is done between the leftmost/topmost column/row and the non-scrollable columns/rows.
+  This affecty only for hit tests of divider column left and row top. (divider column right and row bottom not affected)
+
 03-May-2021
 - Removed WS_EX_NOPARENTNOTIFY in the window creation as this causes a MDI child window to not get activated.
 
