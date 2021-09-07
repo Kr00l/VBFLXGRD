@@ -1,5 +1,8 @@
 List of revisions:
 
+07-Sep-2021
+- Included the ExtendLastCol property.
+
 18-Aug-2021
 - Bugfixes (side-effects) related of FrozenRows/FrozenCols for BottomRow/RightCol property.
 - Bugfix in the internal GetHitTestInfo function.
