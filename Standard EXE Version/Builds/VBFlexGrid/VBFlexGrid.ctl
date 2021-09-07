@@ -476,6 +476,7 @@ Private Const RCPF_CHECKTOPROW As Long = &H10, RCPF_CHECKLEFTCOL As Long = &H20
 Private Const RCPF_FORCETOPROWMASK As Long = &H40, RCPF_FORCELEFTCOLMASK As Long = &H80
 Private Const RCPF_SETSCROLLBARS As Long = &H100
 Private Const RCPF_FORCEREDRAW As Long = &H200
+Private Const RCPF_WM_SIZE As Long = &H400
 Private Type TROWCOLPARAMS
 Mask As Long
 Flags As Long
@@ -1135,6 +1136,7 @@ Private VBFlexGridRTLLayout As Boolean, VBFlexGridRTLReading As Boolean
 Private VBFlexGridAlignable As Boolean
 Private VBFlexGridEnabledVisualStyles As Boolean
 Private VBFlexGridSort As FlexSortConstants
+Private VBFlexGridExtendLastCol As Long
 
 #If ImplementFlexDataSource = True Then
 
@@ -1220,6 +1222,7 @@ Private PropClipMode As FlexClipModeConstants
 Private PropFormatString As String
 Private PropIMEMode As FlexIMEModeConstants
 Private PropWantReturn As Boolean
+Private PropExtendLastCol As Boolean
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -1370,6 +1373,7 @@ VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal
 SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VBFlexGridWheelScrollLines, 0
 If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VBFlexGridFocusBorder.CX, 0) = 0 Then VBFlexGridFocusBorder.CX = 1
 If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VBFlexGridFocusBorder.CY, 0) = 0 Then VBFlexGridFocusBorder.CY = 1
+VBFlexGridExtendLastCol = -1
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -1449,6 +1453,7 @@ PropClipMode = FlexClipModeNormal
 PropFormatString = vbNullString
 PropIMEMode = FlexIMEModeNoControl
 PropWantReturn = False
+PropExtendLastCol = False
 Call CreateVBFlexGrid
 End Sub
 
@@ -1533,6 +1538,7 @@ PropClipMode = .ReadProperty("ClipMode", FlexClipModeNormal)
 PropFormatString = VarToStr(.ReadProperty("FormatString", vbNullString))
 PropIMEMode = .ReadProperty("IMEMode", FlexIMEModeNoControl)
 PropWantReturn = .ReadProperty("WantReturn", False)
+PropExtendLastCol = .ReadProperty("ExtendLastCol", False)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -1613,6 +1619,7 @@ With PropBag
 .WriteProperty "FormatString", StrToVar(PropFormatString), vbNullString
 .WriteProperty "IMEMode", PropIMEMode, FlexIMEModeNoControl
 .WriteProperty "WantReturn", PropWantReturn, False
+.WriteProperty "ExtendLastCol", PropExtendLastCol, False
 End With
 End Sub
 
@@ -2873,6 +2880,7 @@ ElseIf Value <> PropCols And PropRows > 0 Then
 Else
     PropCols = Value
 End If
+VBFlexGridExtendLastCol = GetExtendLastCol()
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
@@ -3770,6 +3778,24 @@ If VBFlexGridHandle <> 0 And VBFlexGridDesignMode = False Then
     On Error GoTo 0
 End If
 UserControl.PropertyChanged "WantReturn"
+End Property
+
+Public Property Get ExtendLastCol() As Boolean
+Attribute ExtendLastCol.VB_Description = "Returns/sets a value that determines whether the last column should be adjusted to fit the width of the flex grid control."
+ExtendLastCol = PropExtendLastCol
+End Property
+
+Public Property Let ExtendLastCol(ByVal Value As Boolean)
+PropExtendLastCol = Value
+VBFlexGridExtendLastCol = GetExtendLastCol()
+Dim RCP As TROWCOLPARAMS
+With RCP
+.Mask = RCPM_LEFTCOL
+.Flags = RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.LeftCol = VBFlexGridLeftCol
+Call SetRowColParams(RCP)
+End With
+UserControl.PropertyChanged "ExtendLastCol"
 End Property
 
 Private Sub CreateVBFlexGrid()
@@ -5334,7 +5360,7 @@ Public Property Get ColWidth(ByVal Index As Long) As Long
 Attribute ColWidth.VB_Description = "Returns/sets the width in twips of the specified column."
 Attribute ColWidth.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
-ColWidth = UserControl.ScaleX(GetColWidth(Index), vbPixels, vbTwips)
+ColWidth = UserControl.ScaleX(GetColWidth_NoExtendLastCol(Index), vbPixels, vbTwips)
 End Property
 
 Public Property Let ColWidth(ByVal Index As Long, ByVal Value As Long)
@@ -5355,6 +5381,11 @@ Else
             VBFlexGridColsInfo(i).Width = -1
         End If
     Next i
+End If
+If VBFlexGridExtendLastCol > -1 Then
+    If Index >= VBFlexGridExtendLastCol Then VBFlexGridExtendLastCol = GetExtendLastCol()
+Else
+    VBFlexGridExtendLastCol = GetExtendLastCol()
 End If
 Dim RCP As TROWCOLPARAMS
 With RCP
@@ -5409,6 +5440,11 @@ Else
             End With
         Next i
     End If
+End If
+If VBFlexGridExtendLastCol > -1 Then
+    If Index >= VBFlexGridExtendLastCol Then VBFlexGridExtendLastCol = GetExtendLastCol()
+Else
+    VBFlexGridExtendLastCol = GetExtendLastCol()
 End If
 Dim RCP As TROWCOLPARAMS
 With RCP
@@ -7764,6 +7800,7 @@ If PropRows < 1 Or PropCols < 1 Then
     VBFlexGridColSel = -1
     VBFlexGridTopRow = -1
     VBFlexGridLeftCol = -1
+    VBFlexGridExtendLastCol = -1
     Exit Sub
 End If
 Dim i As Long, j As Long
@@ -7802,6 +7839,7 @@ Else
 End If
 VBFlexGridTopRow = PropFixedRows + PropFrozenRows
 VBFlexGridLeftCol = PropFixedCols + PropFrozenCols
+VBFlexGridExtendLastCol = GetExtendLastCol()
 End Sub
 
 Private Sub EraseFlexGridCells()
@@ -7815,6 +7853,7 @@ VBFlexGridRowSel = -1
 VBFlexGridColSel = -1
 VBFlexGridTopRow = -1
 VBFlexGridLeftCol = -1
+VBFlexGridExtendLastCol = -1
 End Sub
 
 Private Sub RedrawGrid(Optional ByVal UpdateNow As Boolean)
@@ -9765,19 +9804,51 @@ End Function
 
 Private Function GetColWidth(ByVal iCol As Long) As Long
 If PropRows < 1 Or PropCols < 1 Then Exit Function
+If iCol <> VBFlexGridExtendLastCol Then
+    If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+        If VBFlexGridColsInfo(iCol).Width = -1 Then
+            If iCol > (PropFixedCols - 1) Or VBFlexGridDefaultFixedColWidth = -1 Then
+                GetColWidth = VBFlexGridDefaultColWidth
+            Else
+                GetColWidth = VBFlexGridDefaultFixedColWidth
+            End If
+        Else
+            GetColWidth = VBFlexGridColsInfo(iCol).Width
+        End If
+        If GetColWidth > 0 Then
+            If PropColWidthMin > 0 Then If GetColWidth < PropColWidthMin Then GetColWidth = PropColWidthMin
+            If PropColWidthMax > 0 Then If GetColWidth > PropColWidthMax Then GetColWidth = PropColWidthMax
+        End If
+    End If
+Else
+    GetColWidth = GetColWidth_NoExtendLastCol(iCol)
+    Dim i As Long, CX As Long
+    For i = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+        If i < iCol Then CX = CX + GetColWidth_NoExtendLastCol(i)
+    Next i
+    For i = iCol To VBFlexGridLeftCol Step -1
+        CX = CX + GetColWidth_NoExtendLastCol(i)
+        If CX > VBFlexGridClientRect.Right Then Exit For
+    Next i
+    If (VBFlexGridClientRect.Right - CX) > 0 Then GetColWidth = GetColWidth + (VBFlexGridClientRect.Right - CX)
+End If
+End Function
+
+Private Function GetColWidth_NoExtendLastCol(ByVal iCol As Long) As Long
+If PropRows < 1 Or PropCols < 1 Then Exit Function
 If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
     If VBFlexGridColsInfo(iCol).Width = -1 Then
         If iCol > (PropFixedCols - 1) Or VBFlexGridDefaultFixedColWidth = -1 Then
-            GetColWidth = VBFlexGridDefaultColWidth
+            GetColWidth_NoExtendLastCol = VBFlexGridDefaultColWidth
         Else
-            GetColWidth = VBFlexGridDefaultFixedColWidth
+            GetColWidth_NoExtendLastCol = VBFlexGridDefaultFixedColWidth
         End If
     Else
-        GetColWidth = VBFlexGridColsInfo(iCol).Width
+        GetColWidth_NoExtendLastCol = VBFlexGridColsInfo(iCol).Width
     End If
-    If GetColWidth > 0 Then
-        If PropColWidthMin > 0 Then If GetColWidth < PropColWidthMin Then GetColWidth = PropColWidthMin
-        If PropColWidthMax > 0 Then If GetColWidth > PropColWidthMax Then GetColWidth = PropColWidthMax
+    If GetColWidth_NoExtendLastCol > 0 Then
+        If PropColWidthMin > 0 Then If GetColWidth_NoExtendLastCol < PropColWidthMin Then GetColWidth_NoExtendLastCol = PropColWidthMin
+        If PropColWidthMax > 0 Then If GetColWidth_NoExtendLastCol > PropColWidthMax Then GetColWidth_NoExtendLastCol = PropColWidthMax
     End If
 End If
 End Function
@@ -10040,7 +10111,13 @@ If iRowHit > -1 And iColHit > -1 Then
                     Loop
                     If iColDivider = -1 Then HTI.HitResult = FlexHitResultCell
                 Else
-                    HTI.HitResult = FlexHitResultDividerColumnRight
+                    If iColDivider <> VBFlexGridExtendLastCol Then
+                        HTI.HitResult = FlexHitResultDividerColumnRight
+                    Else
+                        ' Avoid divider column right hit test info for the extended last column only.
+                        iColDivider = -1
+                        HTI.HitResult = FlexHitResultCell
+                    End If
                 End If
             Else
                 HTI.HitResult = FlexHitResultCell
@@ -10669,7 +10746,20 @@ If ScrollChanged = True Then
     End If
 End If
 If NoRedraw = False Then
-    If RowColChanged = True Or SelChanged = True Or ScrollChanged = True Or (.Flags And RCPF_FORCEREDRAW) = RCPF_FORCEREDRAW Then Call RedrawGrid
+    If RowColChanged = True Or SelChanged = True Or ScrollChanged = True Or (.Flags And RCPF_FORCEREDRAW) = RCPF_FORCEREDRAW Then
+        Call RedrawGrid
+    ElseIf (.Flags And RCPF_WM_SIZE) = RCPF_WM_SIZE Then
+        If VBFlexGridExtendLastCol > -1 Then
+            Dim iCol As Long, CX As Long
+            For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+                CX = CX + GetColWidth(iCol)
+            Next iCol
+            For iCol = VBFlexGridLeftCol To (VBFlexGridExtendLastCol - 1)
+                CX = CX + GetColWidth(iCol)
+            Next iCol
+            If CX < VBFlexGridClientRect.Right Then Call RedrawGrid
+        End If
+    End If
 End If
 If (.Flags And RCPF_SETSCROLLBARS) = RCPF_SETSCROLLBARS Then Call SetScrollBars
 If SelChanged = True Then RaiseEvent SelChange
@@ -10786,6 +10876,22 @@ Do Until GetColWidth(i) > 0 Or Cancel = True
     If i > PropFixedCols Then i = i - 1 Else Cancel = True
 Loop
 If Cancel = False Then GetLastMovableCol = i
+End Function
+
+Private Function GetExtendLastCol() As Long
+If PropExtendLastCol = False Then
+    GetExtendLastCol = -1
+Else
+    Dim i As Long
+    i = PropCols - 1
+    If i > -1 Then
+        Do Until (VBFlexGridColsInfo(i).State And CLIS_HIDDEN) = 0 And VBFlexGridColsInfo(i).Width <> 0
+            i = i - 1
+            If i < 0 Then Exit Do
+        Loop
+    End If
+    GetExtendLastCol = i
+End If
 End Function
 
 Private Sub ProcessKeyDown(ByVal KeyCode As Integer, ByVal Shift As Integer)
@@ -13223,7 +13329,7 @@ Select Case wMsg
         Dim RCP As TROWCOLPARAMS
         With RCP
         .Mask = RCPM_TOPROW Or RCPM_LEFTCOL
-        .Flags = RCPF_CHECKTOPROW Or RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS
+        .Flags = RCPF_CHECKTOPROW Or RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS Or RCPF_WM_SIZE
         .TopRow = VBFlexGridTopRow
         .LeftCol = VBFlexGridLeftCol
         Call SetRowColParams(RCP)
