@@ -1,5 +1,8 @@
 List of revisions:
 
+08-Sep-2021
+- Proportional thumb for the ScrollBars.
+
 07-Sep-2021
 - Included the ExtendLastCol property.
 
