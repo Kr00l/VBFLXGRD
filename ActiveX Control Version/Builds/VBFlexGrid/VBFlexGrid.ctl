@@ -9672,21 +9672,16 @@ Do
     If PropScrollBars = vbHorizontal Or PropScrollBars = vbBoth Then
         SCI(0).nMin = 0
         SCI(0).nMax = 0
-        ' nPage of 0 is appropriate when the columns vary in width.
-        ' But then nMax needs be adjusted in a second step.
         SCI(0).nPage = 0
         .Right = 0
         For iCol = 0 To (PropCols - 1)
             .Right = .Right + GetColWidth(iCol)
             If .Right > ClientRect.Right And iCol > PropFixedCols Then
                 SCI(0).nMax = (PropCols - PropFixedCols) - 1
-                ' Scroll box is proportional to the scrolling region.
-                ' But only appropriate when all columns are equally in width.
-                ' SCI(0).nPage = iCol - (PropFixedCols - 1) - 1
                 Exit For
             End If
         Next iCol
-        If SCI(0).nMax > 0 And SCI(0).nPage = 0 Then
+        If SCI(0).nMax > 0 Then
             .Right = 0
             For iCol = 0 To (PropFixedCols - 1)
                 .Right = .Right + GetColWidth(iCol)
@@ -9699,28 +9694,25 @@ Do
                 End If
             Next iCol
         End If
-        If SCI(0).nMax = 0 And PropDisableNoScroll = False Then
+        If SCI(0).nMax > 0 Then
+            SCI(0).nPage = 1
+        ElseIf PropDisableNoScroll = False Then
             If (dwStyleNew And WS_HSCROLL) = WS_HSCROLL Then dwStyleNew = dwStyleNew And Not WS_HSCROLL
         End If
     End If
     If PropScrollBars = vbVertical Or PropScrollBars = vbBoth Then
         SCI(1).nMin = 0
         SCI(1).nMax = 0
-        ' nPage of 0 is appropriate when the rows vary in height.
-        ' But then nMax needs be adjusted in a second step.
         SCI(1).nPage = 0
         .Bottom = 0
         For iRow = 0 To (PropRows - 1)
             .Bottom = .Bottom + GetRowHeight(iRow)
             If .Bottom > ClientRect.Bottom And iRow > PropFixedRows Then
                 SCI(1).nMax = (PropRows - PropFixedRows) - 1
-                ' Scroll box is proportional to the scrolling region.
-                ' But only appropriate when all rows are equally in height.
-                ' SCI(1).nPage = iRow - (PropFixedRows - 1) - 1
                 Exit For
             End If
         Next iRow
-        If SCI(1).nMax > 0 And SCI(1).nPage = 0 Then
+        If SCI(1).nMax > 0 Then
             .Bottom = 0
             For iRow = 0 To (PropFixedRows - 1)
                 .Bottom = .Bottom + GetRowHeight(iRow)
@@ -9733,7 +9725,9 @@ Do
                 End If
             Next iRow
         End If
-        If SCI(1).nMax = 0 And PropDisableNoScroll = False Then
+        If SCI(1).nMax > 0 Then
+            SCI(1).nPage = 1
+        ElseIf PropDisableNoScroll = False Then
             If (dwStyleNew And WS_VSCROLL) = WS_VSCROLL Then dwStyleNew = dwStyleNew And Not WS_VSCROLL
         End If
     End If
