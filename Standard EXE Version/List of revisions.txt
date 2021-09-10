@@ -1,5 +1,8 @@
 List of revisions:
 
+10-Sep-2021
+- Minor internal improvements in the internal SetScrollBars method.
+
 08-Sep-2021
 - Proportional thumb for the ScrollBars.
 
