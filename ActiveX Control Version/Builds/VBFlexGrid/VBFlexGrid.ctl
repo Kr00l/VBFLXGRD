@@ -9660,7 +9660,7 @@ Else
     InProc = False
     Exit Sub
 End If
-Dim SCI(0 To 1) As SCROLLINFO, iRow As Long, iCol As Long
+Dim SCI(0 To 1) As SCROLLINFO, iRow As Long, iCol As Long, LastMovableRow As Long, LastMovableCol As Long
 Dim ClientRect As RECT, GridRect As RECT, Changed As Boolean
 SCI(0).cbSize = LenB(SCI(0))
 SCI(0).fMask = SIF_RANGE Or SIF_PAGE
@@ -9674,26 +9674,17 @@ Do
         SCI(0).nMax = 0
         SCI(0).nPage = 0
         .Right = 0
-        For iCol = 0 To (PropCols - 1)
+        For iCol = 0 To (PropFixedCols - 1)
             .Right = .Right + GetColWidth(iCol)
-            If .Right > ClientRect.Right And iCol > PropFixedCols Then
-                SCI(0).nMax = (PropCols - PropFixedCols) - 1
+        Next iCol
+        LastMovableCol = GetLastMovableCol()
+        For iCol = LastMovableCol To PropFixedCols Step -1
+            .Right = .Right + GetColWidth(iCol)
+            If .Right > ClientRect.Right And iCol < LastMovableCol Then
+                SCI(0).nMax = iCol - (PropFixedCols - 1)
                 Exit For
             End If
         Next iCol
-        If SCI(0).nMax > 0 Then
-            .Right = 0
-            For iCol = 0 To (PropFixedCols - 1)
-                .Right = .Right + GetColWidth(iCol)
-            Next iCol
-            For iCol = (PropCols - 1) To PropFixedCols Step -1
-                .Right = .Right + GetColWidth(iCol)
-                If .Right > ClientRect.Right And iCol < (PropCols - 1) Then
-                    SCI(0).nMax = SCI(0).nMax - ((PropCols - 1) - iCol) + 1
-                    Exit For
-                End If
-            Next iCol
-        End If
         If SCI(0).nMax > 0 Then
             SCI(0).nPage = 1
         ElseIf PropDisableNoScroll = False Then
@@ -9705,26 +9696,17 @@ Do
         SCI(1).nMax = 0
         SCI(1).nPage = 0
         .Bottom = 0
-        For iRow = 0 To (PropRows - 1)
+        For iRow = 0 To (PropFixedRows - 1)
             .Bottom = .Bottom + GetRowHeight(iRow)
-            If .Bottom > ClientRect.Bottom And iRow > PropFixedRows Then
-                SCI(1).nMax = (PropRows - PropFixedRows) - 1
+        Next iRow
+        LastMovableRow = GetLastMovableRow()
+        For iRow = LastMovableRow To PropFixedRows Step -1
+            .Bottom = .Bottom + GetRowHeight(iRow)
+            If .Bottom > ClientRect.Bottom And iRow < LastMovableRow Then
+                SCI(1).nMax = iRow - (PropFixedRows - 1)
                 Exit For
             End If
         Next iRow
-        If SCI(1).nMax > 0 Then
-            .Bottom = 0
-            For iRow = 0 To (PropFixedRows - 1)
-                .Bottom = .Bottom + GetRowHeight(iRow)
-            Next iRow
-            For iRow = (PropRows - 1) To PropFixedRows Step -1
-                .Bottom = .Bottom + GetRowHeight(iRow)
-                If .Bottom > ClientRect.Bottom And iRow < (PropRows - 1) Then
-                    SCI(1).nMax = SCI(1).nMax - ((PropRows - 1) - iRow) + 1
-                    Exit For
-                End If
-            Next iRow
-        End If
         If SCI(1).nMax > 0 Then
             SCI(1).nPage = 1
         ElseIf PropDisableNoScroll = False Then
