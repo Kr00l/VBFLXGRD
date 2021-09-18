@@ -1,5 +1,8 @@
 List of revisions:
 
+18-Sep-2021
+- Included the FlexSortCustomText enum with corresponding CompareText event.
+
 10-Sep-2021
 - Minor internal improvements in the internal SetScrollBars method.
 
