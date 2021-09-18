@@ -43,7 +43,7 @@ Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, 
 Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
 Private FlexRowSizingModeIndividual, FlexRowSizingModeAll
 Private FlexMergeCellsNever, FlexMergeCellsFree, FlexMergeCellsRestrictRows, FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll, FlexMergeCellsFixedOnly
-Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending
+Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending, FlexSortCustomText
 Private FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
 Private FlexPictureTypeColor, FlexPictureTypeMonochrome
 Private FlexEllipsisFormatNone, FlexEllipsisFormatEnd, FlexEllipsisFormatPath, FlexEllipsisFormatWord
@@ -211,6 +211,7 @@ FlexSortCurrencyAscending = 11
 FlexSortCurrencyDescending = 12
 FlexSortDateAscending = 13
 FlexSortDateDescending = 14
+FlexSortCustomText = 15
 End Enum
 Public Enum FlexVisibilityConstants
 FlexVisibilityPartialOK = 0
@@ -614,6 +615,8 @@ Public Event SelChange()
 Attribute SelChange.VB_Description = "Occurs when the selected range of cells changes."
 Public Event Compare(ByVal Row1 As Long, ByVal Row2 As Long, ByVal Col As Long, ByRef Cmp As Long)
 Attribute Compare.VB_Description = "Occurs during custom sorts to compare two rows."
+Public Event CompareText(ByVal Text1 As Long, ByVal Text2 As Long, ByVal Col As Long, ByRef Cmp As Long)
+Attribute CompareText.VB_Description = "Occurs during custom sorts to compare the text contents of two cells."
 Public Event BeforeEdit(ByRef Row As Long, ByRef Col As Long, ByVal Reason As FlexEditReasonConstants, ByRef Cancel As Boolean)
 Attribute BeforeEdit.VB_Description = "Occurs when a user attempts to edit the text of a cell."
 Public Event AfterEdit(ByVal Row As Long, ByVal Col As Long, ByVal Changed As Boolean)
@@ -3451,7 +3454,7 @@ If Not VBFlexGridFlexDataSource Is Nothing Then Err.Raise Number:=5, Description
 #End If
 
 Select Case Value
-    Case FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending
+    Case FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending, FlexSortCustomText
         VBFlexGridSort = Value
         If VBFlexGridSort = FlexSortNone Then Exit Property
         If (VBFlexGridRow < 0 Or VBFlexGridRowSel < 0) Or (VBFlexGridCol < 0 Or VBFlexGridColSel < 0) Then
@@ -13118,7 +13121,7 @@ Next i
 j = 0
 Dst = Left
 Do While i <= Right And j <= UBound(Temp)
-    Cmp = Empty
+    Cmp = 0
     Select Case Sort
         Case FlexSortGenericAscending, FlexSortGenericDescending
             If Not IsNumeric(Data(i).Cols(Col).Text) Or Not IsNumeric(Temp(j).Cols(Col).Text) Then
@@ -13168,6 +13171,8 @@ Do While i <= Right And j <= UBound(Temp)
             On Error GoTo 0
             Cmp = Sgn(Date1 - Date2)
             If Sort = FlexSortDateDescending Then Cmp = -Cmp
+        Case FlexSortCustomText
+            RaiseEvent CompareText(Data(i).Cols(Col).Text, Temp(j).Cols(Col).Text, Col, Cmp)
     End Select
     If Cmp < 0 Then
         LSet Data(Dst) = Data(i)
@@ -13201,7 +13206,7 @@ Dim i As Long, j As Long
 Do While Last > First
     i = First
     For j = First To Last - 1
-        Cmp = Empty
+        Cmp = 0
         RaiseEvent Compare(j, j + 1, Col, Cmp)
         If Cmp > 0 Then
             LSet Swap = Data(j + 1)
