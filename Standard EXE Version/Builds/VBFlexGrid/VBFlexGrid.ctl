@@ -13110,7 +13110,7 @@ End Sub
 
 Private Sub InplaceMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TCOLS, ByVal Sort As FlexSortConstants)
 Dim Temp() As TCOLS, Cmp As Long, Dst As Long
-Dim i As Long, j As Long
+Dim i As Long, j As Long, iCol As Long
 Dim Dbl1 As Double, Dbl2 As Double
 ReDim Temp(Middle - Left) As TCOLS
 j = 0
@@ -13175,16 +13175,25 @@ Do While i <= Right And j <= UBound(Temp)
             RaiseEvent CompareText(Data(i).Cols(Col).Text, Temp(j).Cols(Col).Text, Col, Cmp)
     End Select
     If Cmp < 0 Then
-        LSet Data(Dst) = Data(i)
+        LSet Data(Dst).RowInfo = Data(i).RowInfo
+        For iCol = 0 To (PropCols - 1)
+            LSet Data(Dst).Cols(iCol) = Data(i).Cols(iCol)
+        Next iCol
         i = i + 1
     Else
-        LSet Data(Dst) = Temp(j)
+        LSet Data(Dst).RowInfo = Temp(j).RowInfo
+        For iCol = 0 To (PropCols - 1)
+            LSet Data(Dst).Cols(iCol) = Temp(j).Cols(iCol)
+        Next iCol
         j = j + 1
     End If
     Dst = Dst + 1
 Loop
 Do While j <= UBound(Temp)
-    LSet Data(Dst) = Temp(j)
+    LSet Data(Dst).RowInfo = Temp(j).RowInfo
+    For iCol = 0 To (PropCols - 1)
+        LSet Data(Dst).Cols(iCol) = Temp(j).Cols(iCol)
+    Next iCol
     Dst = Dst + 1
     j = j + 1
 Loop
@@ -13201,17 +13210,22 @@ End If
 End Sub
 
 Private Sub BubbleSortIter(ByVal First As Long, ByVal Last As Long, ByVal Col As Long, ByRef Data() As TCOLS)
-Dim Swap As TCOLS, Cmp As Long
-Dim i As Long, j As Long
+Dim SwapRowInfo As TROWINFO, SwapCell As TCELL, Cmp As Long
+Dim i As Long, j As Long, iCol As Long
 Do While Last > First
     i = First
     For j = First To Last - 1
         Cmp = 0
         RaiseEvent Compare(j, j + 1, Col, Cmp)
         If Cmp > 0 Then
-            LSet Swap = Data(j + 1)
-            LSet Data(j + 1) = Data(j)
-            LSet Data(j) = Swap
+            LSet SwapRowInfo = Data(j + 1).RowInfo
+            LSet Data(j + 1).RowInfo = Data(j).RowInfo
+            LSet Data(j).RowInfo = SwapRowInfo
+            For iCol = 0 To (PropCols - 1)
+                LSet SwapCell = Data(j + 1).Cols(iCol)
+                LSet Data(j + 1).Cols(iCol) = Data(j).Cols(iCol)
+                LSet Data(j).Cols(iCol) = SwapCell
+            Next iCol
             i = j
         End If
     Next j
