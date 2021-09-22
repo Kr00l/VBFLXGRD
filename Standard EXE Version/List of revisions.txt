@@ -1,5 +1,8 @@
 List of revisions:
 
+22-Sep-2021
+- Performance improvement in the internal BubbleSortIter/InplaceMergeSort method. (UDT assignment)
+
 18-Sep-2021
 - Included the FlexSortCustomText enum with corresponding CompareText event.
 
