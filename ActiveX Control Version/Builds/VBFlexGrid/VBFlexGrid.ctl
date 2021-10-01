@@ -8324,8 +8324,10 @@ If Not .Picture Is Nothing Then
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
                 TextRect.Left = TextRect.Left + PictureWidth
+                If TextRect.Left > TextRect.Right Then TextRect.Left = TextRect.Right
             Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
                 TextRect.Right = TextRect.Right - PictureWidth
+                If TextRect.Right < TextRect.Left Then TextRect.Right = TextRect.Left
         End Select
     End If
 End If
@@ -8639,8 +8641,10 @@ If Not .Picture Is Nothing Then
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
                 TextRect.Left = TextRect.Left + PictureWidth
+                If TextRect.Left > TextRect.Right Then TextRect.Left = TextRect.Right
             Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
                 TextRect.Right = TextRect.Right - PictureWidth
+                If TextRect.Right < TextRect.Left Then TextRect.Right = TextRect.Left
         End Select
     End If
 End If
@@ -9572,6 +9576,20 @@ If hDC <> 0 Then
     Else
         Alignment = VBFlexGridCells.Rows(iRow).Cols(iCol).Alignment
     End If
+    With VBFlexGridCells.Rows(iRow).Cols(iCol)
+    If Not .Picture Is Nothing Then
+        If .Picture.Handle <> 0 Then
+            Select Case .PictureAlignment
+                Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                    TextRect.Left = TextRect.Left + CHimetricToPixel_X(.Picture.Width)
+                    If TextRect.Left > TextRect.Right Then TextRect.Left = TextRect.Right
+                Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                    TextRect.Right = TextRect.Right - CHimetricToPixel_X(.Picture.Width)
+                    If TextRect.Right < TextRect.Left Then TextRect.Right = TextRect.Left
+            End Select
+        End If
+    End If
+    End With
     Format = DT_NOPREFIX
     If VBFlexGridRTLReading = True Then Format = Format Or DT_RTLREADING
     Select Case Alignment
