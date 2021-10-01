@@ -63,6 +63,7 @@ Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEsca
 Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
+Private FlexColSortArrowNone, FlexColSortArrowDown, FlexColSortArrowUp
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -344,6 +345,11 @@ Public Enum FlexComboButtonDrawModeConstants
 FlexComboButtonDrawModeNormal = 0
 FlexComboButtonDrawModeOwnerDraw = 1
 End Enum
+Public Enum FlexColSortArrowConstants
+FlexColSortArrowNone = 0
+FlexColSortArrowDown = 1
+FlexColSortArrowUp = 2
+End Enum
 Private Type RECT
 Left As Long
 Top As Long
@@ -576,6 +582,7 @@ Key As String
 Alignment As FlexAlignmentConstants
 FixedAlignment As FlexAlignmentConstants
 Sort As FlexSortConstants
+SortArrow As FlexColSortArrowConstants
 ComboMode As FlexComboModeConstants
 ComboItems As String
 Format As String
@@ -721,6 +728,7 @@ Private Declare Function BeginPaint Lib "user32" (ByVal hWnd As Long, ByRef lpPa
 Private Declare Function EndPaint Lib "user32" (ByVal hWnd As Long, ByRef lpPaint As PAINTSTRUCT) As Long
 Private Declare Function CreateRectRgn Lib "gdi32" (ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function ExtSelectClipRgn Lib "gdi32" (ByVal hDC As Long, ByVal hRgn As Long, ByVal fnMode As Long) As Long
+Private Declare Function GetClipRgn Lib "gdi32" (ByVal hDC As Long, ByVal hRgn As Long) As Long
 Private Declare Function RedrawWindow Lib "user32" (ByVal hWnd As Long, ByVal lprcUpdate As Long, ByVal hrgnUpdate As Long, ByVal fuRedraw As Long) As Long
 Private Declare Function InvalidateRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As Any, ByVal bErase As Long) As Long
 Private Declare Function UpdateWindow Lib "user32" (ByVal hWnd As Long) As Long
@@ -748,6 +756,7 @@ Private Declare Function SetRect Lib "user32" (ByRef lpRect As RECT, ByVal X1 As
 Private Declare Function CreateSolidBrush Lib "gdi32" (ByVal crColor As Long) As Long
 Private Declare Function CreatePen Lib "gdi32" (ByVal nPenStyle As Long, ByVal nWidth As Long, ByVal crColor As Long) As Long
 Private Declare Function Polyline Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint As POINTAPI, ByVal nCount As Long) As Long
+Private Declare Function Polygon Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint As POINTAPI, ByVal nCount As Long) As Long
 Private Declare Function FillRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal hBrush As Long) As Long
 Private Declare Function DrawFocusRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT) As Long
 Private Declare Function DrawFrameControl Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
@@ -759,6 +768,7 @@ Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongW" (ByVa
 Private Declare Function GetWindowLong Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long) As Long
 Private Declare Function SetWindowPos Lib "user32" (ByVal hWnd As Long, ByVal hWndInsertAfter As Long, ByVal X As Long, ByVal Y As Long, ByVal CX As Long, ByVal CY As Long, ByVal wFlags As Long) As Long
 Private Declare Function SetTextColor Lib "gdi32" (ByVal hDC As Long, ByVal crColor As Long) As Long
+Private Declare Function GetTextColor Lib "gdi32" (ByVal hDC As Long) As Long
 Private Declare Function SetBkColor Lib "gdi32" (ByVal hDC As Long, ByVal crColor As Long) As Long
 Private Declare Function GetTextExtentPoint32 Lib "gdi32" Alias "GetTextExtentPoint32W" (ByVal hDC As Long, ByVal lpsz As Long, ByVal cbString As Long, ByRef lpSize As SIZEAPI) As Long
 Private Declare Function GetDC Lib "user32" (ByVal hWnd As Long) As Long
@@ -5684,6 +5694,31 @@ Else
 End If
 End Property
 
+Public Property Get ColSortArrow(ByVal Index As Long) As FlexColSortArrowConstants
+Attribute ColSortArrow.VB_Description = "Returns/sets the sort arrow to be drawn for the specified column."
+Attribute ColSortArrow.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColSortArrow = VBFlexGridColsInfo(Index).SortArrow
+End Property
+
+Public Property Let ColSortArrow(ByVal Index As Long, ByVal Value As FlexColSortArrowConstants)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Select Case Value
+    Case FlexColSortArrowNone, FlexColSortArrowDown, FlexColSortArrowUp
+    Case Else
+        Err.Raise 380
+End Select
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).SortArrow = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).SortArrow = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
 Public Property Get ColComboMode(ByVal Index As Long) As FlexComboModeConstants
 Attribute ColComboMode.VB_Description = "Returns/sets the combo functionality mode when editing a cell for the specified column."
 Attribute ColComboMode.VB_MemberFlags = "400"
@@ -8982,8 +9017,10 @@ If Not .Picture Is Nothing Then
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
                 TextRect.Left = TextRect.Left + PictureWidth
+                If TextRect.Left > TextRect.Right Then TextRect.Left = TextRect.Right
             Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
                 TextRect.Right = TextRect.Right - PictureWidth
+                If TextRect.Right < TextRect.Left Then TextRect.Right = TextRect.Left
         End Select
     End If
 End If
@@ -9045,21 +9082,101 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End If
     End With
 End If
+Dim Alignment As FlexAlignmentConstants
+If .Alignment = -1 Then
+    If VBFlexGridColsInfo(iCol).FixedAlignment = -1 Then
+        Alignment = VBFlexGridColsInfo(iCol).Alignment
+    Else
+        Alignment = VBFlexGridColsInfo(iCol).FixedAlignment
+    End If
+Else
+    Alignment = .Alignment
+End If
+If iRow = 0 And VBFlexGridColsInfo(iCol).SortArrow <> FlexColSortArrowNone Then
+    Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI, SortArrowAlignRight As Boolean
+    Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
+    Select Case Alignment
+        Case FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom
+            SortArrowAlignRight = True
+        Case FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom
+            SortArrowAlignRight = True
+        Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
+            SortArrowAlignRight = False
+        Case FlexAlignmentGeneral
+            If Not Text = vbNullString Then
+                If Not IsNumeric(Text) Then
+                    SortArrowAlignRight = True
+                Else
+                    SortArrowAlignRight = False
+                End If
+            Else
+                SortArrowAlignRight = True
+            End If
+    End Select
+    If (TextRect.Right - TextRect.Left) >= SortArrowDrawSize.CX Then
+        Dim SortArrowVSpace As Long
+        Select Case Alignment
+            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
+                SortArrowVSpace = (((TextRect.Bottom - TextRect.Top) - SortArrowClientSize.CY) / 2)
+            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
+                SortArrowVSpace = ((TextRect.Bottom - TextRect.Top) - SortArrowClientSize.CY)
+        End Select
+        Dim SortArrowPoints(0 To 2) As POINTAPI
+        Select Case VBFlexGridColsInfo(iCol).SortArrow
+            Case FlexColSortArrowDown
+                If SortArrowAlignRight = True Then
+                    SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowCalcSize.CX / 2)
+                    SortArrowPoints(0).Y = TextRect.Top + SortArrowCalcSize.CY + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) / 2)
+                    SortArrowPoints(1).X = (TextRect.Right - 1) - SortArrowCalcSize.CX
+                    SortArrowPoints(1).Y = SortArrowPoints(0).Y - SortArrowCalcSize.CY
+                    SortArrowPoints(2).X = (TextRect.Right - 1)
+                    SortArrowPoints(2).Y = SortArrowPoints(0).Y - SortArrowCalcSize.CY
+                Else
+                    SortArrowPoints(0).X = TextRect.Left + (SortArrowCalcSize.CX / 2)
+                    SortArrowPoints(0).Y = TextRect.Top + SortArrowCalcSize.CY + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) / 2)
+                    SortArrowPoints(1).X = TextRect.Left + SortArrowCalcSize.CX
+                    SortArrowPoints(1).Y = SortArrowPoints(0).Y - SortArrowCalcSize.CY
+                    SortArrowPoints(2).X = TextRect.Left
+                    SortArrowPoints(2).Y = SortArrowPoints(0).Y - SortArrowCalcSize.CY
+                End If
+            Case FlexColSortArrowUp
+                If SortArrowAlignRight = True Then
+                    SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowCalcSize.CX / 2)
+                    SortArrowPoints(0).Y = TextRect.Top + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) / 2)
+                    SortArrowPoints(1).X = (TextRect.Right - 1) - SortArrowCalcSize.CX
+                    SortArrowPoints(1).Y = SortArrowPoints(0).Y + SortArrowCalcSize.CY
+                    SortArrowPoints(2).X = (TextRect.Right - 1)
+                    SortArrowPoints(2).Y = SortArrowPoints(0).Y + SortArrowCalcSize.CY
+                Else
+                    SortArrowPoints(0).X = TextRect.Left + (SortArrowCalcSize.CX / 2)
+                    SortArrowPoints(0).Y = TextRect.Top + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) / 2)
+                    SortArrowPoints(1).X = TextRect.Left + SortArrowCalcSize.CX
+                    SortArrowPoints(1).Y = SortArrowPoints(0).Y + SortArrowCalcSize.CY
+                    SortArrowPoints(2).X = TextRect.Left
+                    SortArrowPoints(2).Y = SortArrowPoints(0).Y + SortArrowCalcSize.CY
+                End If
+        End Select
+        If SortArrowVSpace > 0 Then
+            SortArrowPoints(0).Y = SortArrowPoints(0).Y + SortArrowVSpace
+            SortArrowPoints(1).Y = SortArrowPoints(1).Y + SortArrowVSpace
+            SortArrowPoints(2).Y = SortArrowPoints(2).Y + SortArrowVSpace
+        End If
+        Call DrawColSortArrow(hDC, SortArrowPoints(), TextRect)
+    End If
+    If SortArrowAlignRight = True Then
+        TextRect.Right = TextRect.Right - SortArrowClientSize.CX
+        If TextRect.Right < TextRect.Left Then TextRect.Right = TextRect.Left
+    Else
+        TextRect.Left = TextRect.Left + SortArrowClientSize.CX
+        If TextRect.Left > TextRect.Right Then TextRect.Left = TextRect.Right
+    End If
+End If
 If Not Text = vbNullString Then
-    Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
+    Dim TextStyle As FlexTextStyleConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyleFixed
     Else
         TextStyle = .TextStyle
-    End If
-    If .Alignment = -1 Then
-        If VBFlexGridColsInfo(iCol).FixedAlignment = -1 Then
-            Alignment = VBFlexGridColsInfo(iCol).Alignment
-        Else
-            Alignment = VBFlexGridColsInfo(iCol).FixedAlignment
-        End If
-    Else
-        Alignment = .Alignment
     End If
     DrawFlags = DT_NOPREFIX
     If VBFlexGridRTLReading = True Then DrawFlags = DrawFlags Or DT_RTLREADING
@@ -9297,8 +9414,10 @@ If Not .Picture Is Nothing Then
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
                 TextRect.Left = TextRect.Left + PictureWidth
+                If TextRect.Left > TextRect.Right Then TextRect.Left = TextRect.Right
             Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
                 TextRect.Right = TextRect.Right - PictureWidth
+                If TextRect.Right < TextRect.Left Then TextRect.Right = TextRect.Left
         End Select
     End If
 End If
@@ -9888,6 +10007,12 @@ If hDC <> 0 Then
         Set TempFont = Nothing
     End If
     End With
+    Dim SortArrowClientSize As SIZEAPI
+    If iRow = 0 And VBFlexGridColsInfo(iCol).SortArrow <> FlexColSortArrowNone And PropFixedRows > 0 Then
+        Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI
+        Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
+        GetTextSize.CX = SortArrowClientSize.CX
+    End If
     If Not Text = vbNullString Then
         If PropSingleLine = False Then
             If InStr(Text, vbCrLf) Then Text = Replace$(Text, vbCrLf, vbCr)
@@ -9907,7 +10032,7 @@ If hDC <> 0 Then
             GetTextExtentPoint32 hDC, ByVal StrPtr(Temp), Len(Temp), Size
             With GetTextSize
             .CY = .CY + Size.CY
-            If Size.CX > .CX Then .CX = Size.CX
+            If (Size.CX + SortArrowClientSize.CX) > .CX Then .CX = Size.CX + SortArrowClientSize.CX
             End With
             Pos2 = Pos1
         Loop Until Pos1 = 0
@@ -10299,6 +10424,20 @@ If hDC <> 0 Then
     Else
         Alignment = VBFlexGridCells.Rows(iRow).Cols(iCol).Alignment
     End If
+    With VBFlexGridCells.Rows(iRow).Cols(iCol)
+    If Not .Picture Is Nothing Then
+        If .Picture.Handle <> 0 Then
+            Select Case .PictureAlignment
+                Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                    TextRect.Left = TextRect.Left + CHimetricToPixel_X(.Picture.Width)
+                    If TextRect.Left > TextRect.Right Then TextRect.Left = TextRect.Right
+                Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                    TextRect.Right = TextRect.Right - CHimetricToPixel_X(.Picture.Width)
+                    If TextRect.Right < TextRect.Left Then TextRect.Right = TextRect.Left
+            End Select
+        End If
+    End If
+    End With
     Format = DT_NOPREFIX
     If VBFlexGridRTLReading = True Then Format = Format Or DT_RTLREADING
     Select Case Alignment
@@ -10321,6 +10460,17 @@ If hDC <> 0 Then
         Format = Format Or DT_SINGLELINE
     End If
     ' Ellipsis format will be ignored.
+    If iRow = 0 And VBFlexGridColsInfo(iCol).SortArrow <> FlexColSortArrowNone And PropFixedRows > 0 Then
+        Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
+        Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
+        If (Format And DT_RIGHT) = DT_RIGHT Then
+            TextRect.Left = TextRect.Left + SortArrowClientSize.CX
+            If TextRect.Left > TextRect.Right Then TextRect.Left = TextRect.Right
+        Else
+            TextRect.Right = TextRect.Right - SortArrowClientSize.CX
+            If TextRect.Right < TextRect.Left Then TextRect.Right = TextRect.Left
+        End If
+    End If
     Dim CalcRect As RECT, Height As Long, Result As Long
     LSet CalcRect = TextRect
     Select Case Alignment
@@ -12707,6 +12857,80 @@ Select Case VBFlexGridCaptureHitResult
         .Right = X + (1 * PixelsPerDIP_X())
 End Select
 End With
+End Sub
+
+Private Sub GetColSortArrowMetrics(ByVal hDC As Long, ByRef CalcSize As SIZEAPI, ByRef DrawSize As SIZEAPI, ByRef ClientSize As SIZEAPI)
+If hDC = 0 Then Exit Sub
+Dim TM As TEXTMETRIC
+If GetTextMetrics(hDC, TM) <> 0 Then
+    CalcSize.CX = TM.TMAveCharWidth
+    If CalcSize.CX < 3 Then CalcSize.CX = 3
+    If CalcSize.CX Mod 2 Then CalcSize.CX = CalcSize.CX + 1
+    CalcSize.CY = CalcSize.CX / 2
+    DrawSize.CX = CalcSize.CX + 1
+    DrawSize.CY = CalcSize.CY + 1
+    ClientSize.CX = DrawSize.CX + VBFlexGridDrawInfo.CellTextWidthPadding
+    ClientSize.CY = TM.TMHeight
+Else
+    CalcSize.CX = 0
+    CalcSize.CY = 0
+    DrawSize.CX = 0
+    DrawSize.CY = 0
+    ClientSize.CX = 0
+    ClientSize.CY = 0
+End If
+End Sub
+
+Private Sub DrawColSortArrow(ByVal hDC As Long, ByRef P() As POINTAPI, ByRef RectRgn As RECT)
+If hDC = 0 Then Exit Sub
+Dim TextColor As Long
+TextColor = GetTextColor(hDC)
+Dim hRgn As Long, hRgnOld As Long
+hRgn = CreateRectRgn(RectRgn.Left, RectRgn.Top, RectRgn.Right, RectRgn.Bottom)
+If hRgn <> 0 Then
+    hRgnOld = CreateRectRgn(0, 0, 0, 0)
+    If hRgnOld <> 0 Then
+        If GetClipRgn(hDC, hRgnOld) = 0 Then
+            DeleteObject hRgnOld
+            hRgnOld = 0
+        End If
+    End If
+    ExtSelectClipRgn hDC, hRgn, RGN_COPY
+End If
+Dim Brush As Long, OldBrush As Long
+Brush = CreateSolidBrush(TextColor)
+If Brush <> 0 Then OldBrush = SelectObject(hDC, Brush)
+Dim hPen As Long, hPenOld As Long
+hPen = CreatePen(PS_SOLID, 1, TextColor)
+If hPen <> 0 Then hPenOld = SelectObject(hDC, hPen)
+Polygon hDC, P(0), 3
+If hPenOld <> 0 Then
+    SelectObject hDC, hPenOld
+    hPenOld = 0
+End If
+If hPen <> 0 Then
+    DeleteObject hPen
+    hPen = 0
+End If
+If OldBrush <> 0 Then
+    SelectObject hDC, OldBrush
+    OldBrush = 0
+End If
+If Brush <> 0 Then
+    DeleteObject Brush
+    Brush = 0
+End If
+If hRgnOld <> 0 Then
+    ExtSelectClipRgn hDC, hRgnOld, RGN_COPY
+    DeleteObject hRgnOld
+    hRgnOld = 0
+Else
+    ExtSelectClipRgn hDC, 0, RGN_COPY
+End If
+If hRgn <> 0 Then
+    DeleteObject hRgn
+    hRgn = 0
+End If
 End Sub
 
 Private Function GetColSeparator() As String
