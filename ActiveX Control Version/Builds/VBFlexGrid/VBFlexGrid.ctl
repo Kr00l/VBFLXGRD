@@ -8324,10 +8324,8 @@ If Not .Picture Is Nothing Then
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
                 TextRect.Left = TextRect.Left + PictureWidth
-                If TextRect.Left > TextRect.Right Then TextRect.Left = TextRect.Right
             Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
                 TextRect.Right = TextRect.Right - PictureWidth
-                If TextRect.Right < TextRect.Left Then TextRect.Right = TextRect.Left
         End Select
     End If
 End If
@@ -8389,7 +8387,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End If
     End With
 End If
-If Not Text = vbNullString Then
+If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top Then
     Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyleFixed
@@ -8641,10 +8639,8 @@ If Not .Picture Is Nothing Then
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
                 TextRect.Left = TextRect.Left + PictureWidth
-                If TextRect.Left > TextRect.Right Then TextRect.Left = TextRect.Right
             Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
                 TextRect.Right = TextRect.Right - PictureWidth
-                If TextRect.Right < TextRect.Left Then TextRect.Right = TextRect.Left
         End Select
     End If
 End If
@@ -8706,7 +8702,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End If
     End With
 End If
-If Not Text = vbNullString Then
+If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top Then
     Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyle
@@ -9266,26 +9262,34 @@ If hDC <> 0 Then
         hFontOld = SelectObject(hDC, hFontTemp)
         Set TempFont = Nothing
     End If
-    End With
     If Not Text = vbNullString Then
-        Dim CellRect As RECT, TextRect As RECT, Format As Long
-        Call GetCellRect(iRow, iCol, False, CellRect)
+        Dim TextRect As RECT, DrawFlags As Long
         With TextRect
-        .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-        .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
-        .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-        .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        .Left = (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        .Top = (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        .Right = GetColWidth(iCol) - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        .Bottom = GetRowHeight(iRow) - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
         End With
-        Format = DT_NOPREFIX
-        If VBFlexGridRTLReading = True Then Format = Format Or DT_RTLREADING
+        DrawFlags = DT_NOPREFIX
+        If VBFlexGridRTLReading = True Then DrawFlags = DrawFlags Or DT_RTLREADING
         ' Alignment format will be ignored.
+        If Not .Picture Is Nothing Then
+            If .Picture.Handle <> 0 Then
+                Select Case .PictureAlignment
+                    Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                        TextRect.Left = TextRect.Left + CHimetricToPixel_X(.Picture.Width)
+                    Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                        TextRect.Right = TextRect.Right - CHimetricToPixel_X(.Picture.Width)
+                End Select
+            End If
+        End If
         If PropWordWrap = True Then
-            Format = Format Or DT_WORDBREAK
+            DrawFlags = DrawFlags Or DT_WORDBREAK
         ElseIf PropSingleLine = True Then
-            Format = Format Or DT_SINGLELINE
+            DrawFlags = DrawFlags Or DT_SINGLELINE
         End If
         ' Ellipsis format will be ignored.
-        GetTextHeight = DrawText(hDC, StrPtr(Text), -1, TextRect, Format Or DT_CALCRECT)
+        GetTextHeight = DrawText(hDC, StrPtr(Text), -1, TextRect, DrawFlags Or DT_CALCRECT)
     Else
         Dim TM As TEXTMETRIC
         If GetTextMetrics(hDC, TM) <> 0 Then GetTextHeight = TM.TMHeight
@@ -9293,6 +9297,7 @@ If hDC <> 0 Then
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
     ReleaseDC VBFlexGridHandle, hDC
+    End With
 End If
 End Function
 
@@ -9526,9 +9531,15 @@ If (CellRect.Bottom - CellRect.Top) <= 0 Or (CellRect.Right - CellRect.Left) <= 
 Dim hDC As Long
 hDC = GetDC(VBFlexGridHandle)
 If hDC <> 0 Then
-    Dim Text As String
+    Dim Text As String, TextRect As RECT
     Call GetCellText(iRow, iCol, Text)
     If StrPtr(Text) = 0 Then Text = ""
+    With TextRect
+    .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+    .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+    .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+    .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+    End With
     Dim hFontTemp As Long, hFontOld As Long
     With VBFlexGridCells.Rows(iRow).Cols(iCol)
     If .FontName = vbNullString Then
@@ -9555,15 +9566,8 @@ If hDC <> 0 Then
         hFontOld = SelectObject(hDC, hFontTemp)
         Set TempFont = Nothing
     End If
-    End With
-    Dim TextRect As RECT, Alignment As FlexAlignmentConstants, Format As Long
-    With TextRect
-    .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-    .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
-    .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-    .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
-    End With
-    If VBFlexGridCells.Rows(iRow).Cols(iCol).Alignment = -1 Then
+    Dim Alignment As FlexAlignmentConstants, Format As Long
+    If .Alignment = -1 Then
         If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
             Alignment = VBFlexGridColsInfo(iCol).Alignment
         Else
@@ -9574,18 +9578,15 @@ If hDC <> 0 Then
             End If
         End If
     Else
-        Alignment = VBFlexGridCells.Rows(iRow).Cols(iCol).Alignment
+        Alignment = .Alignment
     End If
-    With VBFlexGridCells.Rows(iRow).Cols(iCol)
     If Not .Picture Is Nothing Then
         If .Picture.Handle <> 0 Then
             Select Case .PictureAlignment
                 Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
                     TextRect.Left = TextRect.Left + CHimetricToPixel_X(.Picture.Width)
-                    If TextRect.Left > TextRect.Right Then TextRect.Left = TextRect.Right
                 Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
                     TextRect.Right = TextRect.Right - CHimetricToPixel_X(.Picture.Width)
-                    If TextRect.Right < TextRect.Left Then TextRect.Right = TextRect.Left
             End Select
         End If
     End If
