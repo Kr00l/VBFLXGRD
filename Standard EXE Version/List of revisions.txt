@@ -1,5 +1,8 @@
 List of revisions:
 
+03-Oct-2021
+- Included the ColSortArrowColor property.
+
 01-Oct-2021
 - Included the ColSortArrow property.
 
