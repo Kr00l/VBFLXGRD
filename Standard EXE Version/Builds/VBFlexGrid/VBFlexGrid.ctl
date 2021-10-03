@@ -583,6 +583,7 @@ Alignment As FlexAlignmentConstants
 FixedAlignment As FlexAlignmentConstants
 Sort As FlexSortConstants
 SortArrow As FlexColSortArrowConstants
+SortArrowColor As Long
 ComboMode As FlexComboModeConstants
 ComboItems As String
 Format As String
@@ -1357,6 +1358,7 @@ With VBFlexGridDefaultColInfo
 .Width = -1
 .Alignment = FlexAlignmentGeneral
 .FixedAlignment = -1
+.SortArrowColor = -1
 End With
 VBFlexGridCaptureRow = -1
 VBFlexGridCaptureCol = -1
@@ -5719,6 +5721,26 @@ End If
 Call RedrawGrid
 End Property
 
+Public Property Get ColSortArrowColor(ByVal Index As Long) As Long
+Attribute ColSortArrowColor.VB_Description = "Returns/sets the color of the sort arrow for the specified column."
+Attribute ColSortArrowColor.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColSortArrowColor = VBFlexGridColsInfo(Index).SortArrowColor
+End Property
+
+Public Property Let ColSortArrowColor(ByVal Index As Long, ByVal Value As Long)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).SortArrowColor = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).SortArrowColor = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
 Public Property Get ColComboMode(ByVal Index As Long) As FlexComboModeConstants
 Attribute ColComboMode.VB_Description = "Returns/sets the combo functionality mode when editing a cell for the specified column."
 Attribute ColComboMode.VB_MemberFlags = "400"
@@ -9161,7 +9183,7 @@ If iRow = 0 And VBFlexGridColsInfo(iCol).SortArrow <> FlexColSortArrowNone Then
             SortArrowPoints(1).Y = SortArrowPoints(1).Y + SortArrowVSpace
             SortArrowPoints(2).Y = SortArrowPoints(2).Y + SortArrowVSpace
         End If
-        Call DrawColSortArrow(hDC, SortArrowPoints(), TextRect)
+        Call DrawColSortArrow(hDC, VBFlexGridColsInfo(iCol).SortArrowColor, SortArrowPoints(), TextRect)
     End If
     If SortArrowAlignRight = True Then
         TextRect.Right = TextRect.Right - SortArrowClientSize.CX
@@ -12881,10 +12903,9 @@ Else
 End If
 End Sub
 
-Private Sub DrawColSortArrow(ByVal hDC As Long, ByRef P() As POINTAPI, ByRef RectRgn As RECT)
+Private Sub DrawColSortArrow(ByVal hDC As Long, ByVal Color As Long, ByRef P() As POINTAPI, ByRef RectRgn As RECT)
 If hDC = 0 Then Exit Sub
-Dim TextColor As Long
-TextColor = GetTextColor(hDC)
+If Color = -1 Then Color = GetTextColor(hDC)
 Dim hRgn As Long, hRgnOld As Long
 hRgn = CreateRectRgn(RectRgn.Left, RectRgn.Top, RectRgn.Right, RectRgn.Bottom)
 If hRgn <> 0 Then
@@ -12898,10 +12919,10 @@ If hRgn <> 0 Then
     ExtSelectClipRgn hDC, hRgn, RGN_COPY
 End If
 Dim Brush As Long, OldBrush As Long
-Brush = CreateSolidBrush(TextColor)
+Brush = CreateSolidBrush(Color)
 If Brush <> 0 Then OldBrush = SelectObject(hDC, Brush)
 Dim hPen As Long, hPenOld As Long
-hPen = CreatePen(PS_SOLID, 1, TextColor)
+hPen = CreatePen(PS_SOLID, 1, Color)
 If hPen <> 0 Then hPenOld = SelectObject(hDC, hPen)
 Polygon hDC, P(0), 3
 If hPenOld <> 0 Then
