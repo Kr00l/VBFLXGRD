@@ -9,11 +9,18 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   7425
    ScaleWidth      =   6225
+   Begin VB.TextBox TextRowSortArrows 
+      Height          =   315
+      Left            =   1800
+      TabIndex        =   47
+      Top             =   6960
+      Width           =   2235
+   End
    Begin VB.CheckBox CheckExtendLastCol 
       Caption         =   "ExtendLastCol"
       Height          =   285
       Left            =   4200
-      TabIndex        =   55
+      TabIndex        =   57
       Top             =   4080
       Width           =   1920
    End
@@ -43,7 +50,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "WantReturn"
       Height          =   285
       Left            =   4200
-      TabIndex        =   54
+      TabIndex        =   56
       Top             =   3720
       Width           =   1920
    End
@@ -51,7 +58,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowUserEditing"
       Height          =   285
       Left            =   4200
-      TabIndex        =   49
+      TabIndex        =   51
       Top             =   1920
       Width           =   1920
    End
@@ -155,7 +162,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ShowLabelTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   53
+      TabIndex        =   55
       Top             =   3360
       Width           =   1920
    End
@@ -163,7 +170,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ShowInfoTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   52
+      TabIndex        =   54
       Top             =   3000
       Width           =   1920
    End
@@ -171,7 +178,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "DisableNoScroll"
       Height          =   285
       Left            =   4200
-      TabIndex        =   51
+      TabIndex        =   53
       Top             =   2640
       Width           =   1920
    End
@@ -179,7 +186,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ScrollTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   50
+      TabIndex        =   52
       Top             =   2280
       Width           =   1920
    End
@@ -187,7 +194,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   48
+      TabIndex        =   50
       Top             =   1560
       Width           =   1920
    End
@@ -195,7 +202,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowBigSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   47
+      TabIndex        =   49
       Top             =   1200
       Width           =   1920
    End
@@ -231,7 +238,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "MouseTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   46
+      TabIndex        =   48
       Top             =   840
       Width           =   1920
    End
@@ -275,6 +282,14 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   1800
       TabIndex        =   1
       Top             =   120
+      Width           =   1620
+   End
+   Begin VB.Label LabelRowSortArrows 
+      Caption         =   "RowSortArrows:"
+      Height          =   240
+      Left            =   120
+      TabIndex        =   46
+      Top             =   6960
       Width           =   1620
    End
    Begin VB.Label LabelFrozenRows 
@@ -684,6 +699,7 @@ End If
 .ClipSeparators = TextClipSeparators.Text
 .ClipMode = ComboClipMode.ItemData(ComboClipMode.ListIndex)
 .IMEMode = ComboIMEMode.ItemData(ComboIMEMode.ListIndex)
+.RowSortArrows = CLng(TextRowSortArrows.Text)
 .MouseTrack = CBool(CheckMouseTrack.Value = vbChecked)
 .AllowBigSelection = CBool(CheckAllowBigSelection.Value = vbChecked)
 .AllowSelection = CBool(CheckAllowSelection.Value = vbChecked)
@@ -797,6 +813,7 @@ For i = 0 To ComboIMEMode.ListCount - 1
         Exit For
     End If
 Next i
+TextRowSortArrows.Text = CStr(.RowSortArrows)
 CheckMouseTrack.Value = IIf(.MouseTrack = True, vbChecked, vbUnchecked)
 CheckAllowBigSelection.Value = IIf(.AllowBigSelection = True, vbChecked, vbUnchecked)
 CheckAllowSelection.Value = IIf(.AllowSelection = True, vbChecked, vbUnchecked)
@@ -1203,6 +1220,52 @@ End Sub
 Private Sub ComboIMEMode_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
+End Sub
+
+Private Sub TextRowSortArrows_GotFocus()
+If Not TextRowSortArrows.SelStart = 0 Then Exit Sub
+TextRowSortArrows.SelLength = Len(TextRowSortArrows.Text)
+End Sub
+
+Private Sub TextRowSortArrows_LostFocus()
+TextRowSortArrows.SelStart = 0
+End Sub
+
+Private Sub TextRowSortArrows_Change()
+If FreezeChanged = True Then Exit Sub
+If TextRowSortArrows.Text = vbNullString Then
+    TextRowSortArrows.Text = PropertyPage.SelectedControls(0).RowSortArrows
+    TextRowSortArrows.SelStart = 0
+    TextRowSortArrows.SelLength = Len(TextRowSortArrows.Text)
+End If
+PropertyPage.Changed = True
+End Sub
+
+Private Sub TextRowSortArrows_KeyPress(KeyAscii As Integer)
+If KeyAscii < 48 Or KeyAscii > 57 Then If KeyAscii <> 8 Then KeyAscii = 0
+End Sub
+
+Private Sub TextRowSortArrows_Validate(Cancel As Boolean)
+If Not IsNumeric(TextRowSortArrows.Text) Then
+    MsgBox "Invalid property value", vbCritical + vbOKOnly
+    TextRowSortArrows.Text = PropertyPage.SelectedControls(0).RowSortArrows
+    TextRowSortArrows.SetFocus
+    Cancel = True
+Else
+    Dim LngValue As Long
+    On Error Resume Next
+    LngValue = CLng(TextRowSortArrows.Text)
+    Cancel = CBool(Err.Number <> 0)
+    On Error GoTo 0
+    If LngValue < 0 Then Cancel = True
+    If Cancel = False Then
+        TextRowSortArrows.Text = LngValue
+    Else
+        MsgBox "Invalid property value", vbCritical + vbOKOnly
+        TextRowSortArrows.Text = PropertyPage.SelectedControls(0).RowSortArrows
+        TextRowSortArrows.SetFocus
+    End If
+End If
 End Sub
 
 Private Sub CheckMouseTrack_Click()
