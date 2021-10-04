@@ -1236,6 +1236,7 @@ Private PropFormatString As String
 Private PropIMEMode As FlexIMEModeConstants
 Private PropWantReturn As Boolean
 Private PropExtendLastCol As Boolean
+Private PropSortArrowColor As OLE_COLOR
 Private PropRowSortArrows As Long
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
@@ -1469,6 +1470,7 @@ PropFormatString = vbNullString
 PropIMEMode = FlexIMEModeNoControl
 PropWantReturn = False
 PropExtendLastCol = False
+PropSortArrowColor = vbGrayText
 PropRowSortArrows = 0
 Call CreateVBFlexGrid
 End Sub
@@ -1555,6 +1557,7 @@ PropFormatString = VarToStr(.ReadProperty("FormatString", vbNullString))
 PropIMEMode = .ReadProperty("IMEMode", FlexIMEModeNoControl)
 PropWantReturn = .ReadProperty("WantReturn", False)
 PropExtendLastCol = .ReadProperty("ExtendLastCol", False)
+PropSortArrowColor = .ReadProperty("SortArrowColor", vbGrayText)
 PropRowSortArrows = .ReadProperty("RowSortArrows", 0)
 End With
 Call CreateVBFlexGrid
@@ -1637,6 +1640,7 @@ With PropBag
 .WriteProperty "IMEMode", PropIMEMode, FlexIMEModeNoControl
 .WriteProperty "WantReturn", PropWantReturn, False
 .WriteProperty "ExtendLastCol", PropExtendLastCol, False
+.WriteProperty "SortArrowColor", PropSortArrowColor, vbGrayText
 .WriteProperty "RowSortArrows", PropRowSortArrows, 0
 End With
 End Sub
@@ -3816,6 +3820,17 @@ End With
 UserControl.PropertyChanged "ExtendLastCol"
 End Property
 
+Public Property Get SortArrowColor() As OLE_COLOR
+Attribute SortArrowColor.VB_Description = "Returns/sets the color used to draw the column sort arrows."
+SortArrowColor = PropSortArrowColor
+End Property
+
+Public Property Let SortArrowColor(ByVal Value As OLE_COLOR)
+PropSortArrowColor = Value
+Me.Refresh
+UserControl.PropertyChanged "SortArrowColor"
+End Property
+
 Public Property Get RowSortArrows() As Long
 Attribute RowSortArrows.VB_Description = "Returns/sets the row for the column sort arrows."
 RowSortArrows = PropRowSortArrows
@@ -5747,15 +5762,7 @@ Attribute ColSortArrowColor.VB_Description = "Returns/sets the color of the sort
 Attribute ColSortArrowColor.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 If VBFlexGridColsInfo(Index).SortArrowColor = -1 Then
-    If PropRowSortArrows >= 0 And PropRowSortArrows <= (PropRows - 1) Then
-        If VBFlexGridCells.Rows(PropRowSortArrows).Cols(Index).ForeColor = -1 Then
-            ColSortArrowColor = PropForeColorFixed
-        Else
-            ColSortArrowColor = VBFlexGridCells.Rows(PropRowSortArrows).Cols(Index).ForeColor
-        End If
-    Else
-        ColSortArrowColor = PropForeColorFixed
-    End If
+    ColSortArrowColor = PropSortArrowColor
 Else
     ColSortArrowColor = VBFlexGridColsInfo(Index).SortArrowColor
 End If
@@ -9217,11 +9224,7 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexColSortArrowNone And iRow = PropRow
         Dim SortArrowColor As Long
         If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) = ODS_FOCUS Then
             If VBFlexGridColsInfo(iCol).SortArrowColor = -1 Then
-                If .ForeColor = -1 Then
-                    SortArrowColor = WinColor(PropForeColorFixed)
-                Else
-                    SortArrowColor = WinColor(.ForeColor)
-                End If
+                SortArrowColor = WinColor(PropSortArrowColor)
             Else
                 SortArrowColor = WinColor(VBFlexGridColsInfo(iCol).SortArrowColor)
             End If
