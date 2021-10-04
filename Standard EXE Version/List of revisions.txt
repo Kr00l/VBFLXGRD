@@ -3,6 +3,7 @@ List of revisions:
 04-Oct-2021
 - Renamed enum FlexColSortArrowUp to FlexColSortArrowAscending and FlexColSortArrowDown to FlexColSortArrowDescending.
 - Included the RowSortArrows property.
+- Included the SortArrowColor property.
 
 03-Oct-2021
 - Included the ColSortArrowColor property.
