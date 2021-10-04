@@ -3821,7 +3821,7 @@ UserControl.PropertyChanged "ExtendLastCol"
 End Property
 
 Public Property Get SortArrowColor() As OLE_COLOR
-Attribute SortArrowColor.VB_Description = "Returns/sets the color of the sort arrow."
+Attribute SortArrowColor.VB_Description = "Returns/sets the sort arrow color."
 SortArrowColor = PropSortArrowColor
 End Property
 
@@ -5758,7 +5758,7 @@ Call RedrawGrid
 End Property
 
 Public Property Get ColSortArrowColor(ByVal Index As Long) As Long
-Attribute ColSortArrowColor.VB_Description = "Returns/sets the color of the sort arrow for the specified column."
+Attribute ColSortArrowColor.VB_Description = "Returns/sets the sort arrow color for the specified column."
 Attribute ColSortArrowColor.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 If VBFlexGridColsInfo(Index).SortArrowColor = -1 Then
