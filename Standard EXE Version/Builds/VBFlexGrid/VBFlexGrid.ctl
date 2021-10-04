@@ -3821,7 +3821,7 @@ UserControl.PropertyChanged "ExtendLastCol"
 End Property
 
 Public Property Get SortArrowColor() As OLE_COLOR
-Attribute SortArrowColor.VB_Description = "Returns/sets the color used to draw the column sort arrows."
+Attribute SortArrowColor.VB_Description = "Returns/sets the color of the sort arrow."
 SortArrowColor = PropSortArrowColor
 End Property
 
@@ -3832,7 +3832,7 @@ UserControl.PropertyChanged "SortArrowColor"
 End Property
 
 Public Property Get RowSortArrows() As Long
-Attribute RowSortArrows.VB_Description = "Returns/sets the row for the column sort arrows."
+Attribute RowSortArrows.VB_Description = "Returns/sets the row for the sort arrows."
 RowSortArrows = PropRowSortArrows
 End Property
 
