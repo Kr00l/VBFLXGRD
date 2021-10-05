@@ -63,7 +63,7 @@ Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEsca
 Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
-Private FlexColSortArrowNone, FlexColSortArrowAscending, FlexColSortArrowDescending
+Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -345,10 +345,10 @@ Public Enum FlexComboButtonDrawModeConstants
 FlexComboButtonDrawModeNormal = 0
 FlexComboButtonDrawModeOwnerDraw = 1
 End Enum
-Public Enum FlexColSortArrowConstants
-FlexColSortArrowNone = 0
-FlexColSortArrowAscending = 1
-FlexColSortArrowDescending = 2
+Public Enum FlexSortArrowConstants
+FlexSortArrowNone = 0
+FlexSortArrowAscending = 1
+FlexSortArrowDescending = 2
 End Enum
 Private Type RECT
 Left As Long
@@ -582,7 +582,7 @@ Key As String
 Alignment As FlexAlignmentConstants
 FixedAlignment As FlexAlignmentConstants
 Sort As FlexSortConstants
-SortArrow As FlexColSortArrowConstants
+SortArrow As FlexSortArrowConstants
 SortArrowColor As Long
 ComboMode As FlexComboModeConstants
 ComboItems As String
@@ -5732,17 +5732,17 @@ Else
 End If
 End Property
 
-Public Property Get ColSortArrow(ByVal Index As Long) As FlexColSortArrowConstants
+Public Property Get ColSortArrow(ByVal Index As Long) As FlexSortArrowConstants
 Attribute ColSortArrow.VB_Description = "Returns/sets the sort arrow to be drawn for the specified column."
 Attribute ColSortArrow.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 ColSortArrow = VBFlexGridColsInfo(Index).SortArrow
 End Property
 
-Public Property Let ColSortArrow(ByVal Index As Long, ByVal Value As FlexColSortArrowConstants)
+Public Property Let ColSortArrow(ByVal Index As Long, ByVal Value As FlexSortArrowConstants)
 If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 Select Case Value
-    Case FlexColSortArrowNone, FlexColSortArrowAscending, FlexColSortArrowDescending
+    Case FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
     Case Else
         Err.Raise 380
 End Select
@@ -9152,7 +9152,7 @@ If .Alignment = -1 Then
 Else
     Alignment = .Alignment
 End If
-If VBFlexGridColsInfo(iCol).SortArrow <> FlexColSortArrowNone And iRow = PropRowSortArrows Then
+If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows Then
     Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI, SortArrowAlignRight As Boolean
     Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
     Select Case Alignment
@@ -9183,7 +9183,7 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexColSortArrowNone And iRow = PropRow
         End Select
         Dim SortArrowPoints(0 To 2) As POINTAPI
         Select Case VBFlexGridColsInfo(iCol).SortArrow
-            Case FlexColSortArrowAscending
+            Case FlexSortArrowAscending
                 If SortArrowAlignRight = True Then
                     SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowCalcSize.CX / 2)
                     SortArrowPoints(0).Y = TextRect.Top + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) / 2)
@@ -9199,7 +9199,7 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexColSortArrowNone And iRow = PropRow
                     SortArrowPoints(2).X = TextRect.Left
                     SortArrowPoints(2).Y = SortArrowPoints(0).Y + SortArrowCalcSize.CY
                 End If
-            Case FlexColSortArrowDescending
+            Case FlexSortArrowDescending
                 If SortArrowAlignRight = True Then
                     SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowCalcSize.CX / 2)
                     SortArrowPoints(0).Y = TextRect.Top + SortArrowCalcSize.CY + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) / 2)
@@ -10074,7 +10074,7 @@ If hDC <> 0 Then
     End If
     End With
     Dim SortArrowClientSize As SIZEAPI
-    If VBFlexGridColsInfo(iCol).SortArrow <> FlexColSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
+    If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
         Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI
         Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
         GetTextSize.CX = SortArrowClientSize.CX
@@ -10170,7 +10170,7 @@ If hDC <> 0 Then
             DrawFlags = DrawFlags Or DT_SINGLELINE
         End If
         ' Ellipsis format will be ignored.
-        If VBFlexGridColsInfo(iCol).SortArrow <> FlexColSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
+        If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
             Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
             Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
             ' The alignment of the sort arrow is irrelevant.
@@ -10538,7 +10538,7 @@ If hDC <> 0 Then
         Format = Format Or DT_SINGLELINE
     End If
     ' Ellipsis format will be ignored.
-    If VBFlexGridColsInfo(iCol).SortArrow <> FlexColSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
+    If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
         Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
         Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
         If (Format And DT_RIGHT) = DT_RIGHT Then
