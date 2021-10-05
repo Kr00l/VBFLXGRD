@@ -1,5 +1,8 @@
 List of revisions:
 
+05-Oct-2021
+- Renamed FlexColSortArrowConstants into FlexSortArrowConstants.
+
 04-Oct-2021
 - Renamed enum FlexColSortArrowUp to FlexColSortArrowAscending and FlexColSortArrowDown to FlexColSortArrowDescending.
 - Included the RowSortArrows property.
