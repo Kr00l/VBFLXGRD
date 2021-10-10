@@ -61,6 +61,7 @@ Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable,
 Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
 Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton
+Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComboDropDownReasonClick, FlexComboDropDownReasonF4, FlexComboDropDownReasonKeyDown
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
@@ -335,6 +336,13 @@ FlexComboModeNone = 0
 FlexComboModeDropDown = 1
 FlexComboModeEditable = 2
 FlexComboModeButton = 3
+End Enum
+Public Enum FlexComboDropDownReasonConstants
+FlexComboDropDownReasonCode = 0
+FlexComboDropDownReasonInitialize = 1
+FlexComboDropDownReasonClick = 2
+FlexComboDropDownReasonF4 = 3
+FlexComboDropDownReasonKeyDown = 4
 End Enum
 Public Enum FlexComboButtonValueConstants
 FlexComboButtonValueUnpressed = 0
@@ -651,6 +659,8 @@ Public Event EditKeyUp(KeyCode As Integer, Shift As Integer)
 Attribute EditKeyUp.VB_Description = "Occurs when the user releases a key while an object has the focus."
 Public Event EditKeyPress(KeyChar As Integer)
 Attribute EditKeyPress.VB_Description = "Occurs when the user presses and releases an character key."
+Public Event ComboBeforeDropDown(ByVal Reason As FlexComboDropDownReasonConstants, ByRef Cancel As Boolean)
+Attribute ComboBeforeDropDown.VB_Description = "Occurs before the drop-down list is about to drop down."
 Public Event ComboDropDown()
 Attribute ComboDropDown.VB_Description = "Occurs when the drop-down list is about to drop down."
 Public Event ComboCloseUp()
@@ -4287,7 +4297,7 @@ If VBFlexGridEditHandle <> 0 Then
     If VBFlexGridComboButtonHandle <> 0 Then
         ShowWindow VBFlexGridComboButtonHandle, SW_SHOW
         If VBFlexGridComboListHandle <> 0 Then
-            If VBFlexGridComboActiveMode = FlexComboModeDropDown Then Call ComboShowDropDown(True)
+            If VBFlexGridComboActiveMode = FlexComboModeDropDown Then Call ComboShowDropDown(True, FlexComboDropDownReasonInitialize)
         End If
     End If
     
@@ -7811,7 +7821,7 @@ If VBFlexGridComboButtonHandle <> 0 Then
         Case FlexComboButtonValuePressed
             If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then EnableWindow VBFlexGridComboButtonHandle, 1
             If VBFlexGridComboListHandle <> 0 Then
-                Call ComboShowDropDown(True)
+                Call ComboShowDropDown(True, FlexComboDropDownReasonCode)
             Else
                 Call ComboButtonPerformClick
             End If
@@ -13266,38 +13276,42 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
 End If
 End Function
 
-Private Sub ComboShowDropDown(ByVal Value As Boolean)
+Private Sub ComboShowDropDown(ByVal Value As Boolean, Optional ByVal Reason As FlexComboDropDownReasonConstants)
 If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
     Dim dwLong As Long
     dwLong = GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA)
     If Value = True Then
         If Not (dwLong And ODS_SELECTED) = ODS_SELECTED And Not (dwLong And ODS_DISABLED) = ODS_DISABLED Then
-            If GetCursor() = 0 Then
-                ' The mouse cursor can be hidden when showing the drop-down list upon a change event.
-                ' Reason is that the edit control hides the cursor and a following mouse move will show it again.
-                ' However, the drop-down list will set a mouse capture and thus the cursor keeps hidden.
-                ' Solution is to refresh the cursor by sending a WM_SETCURSOR.
-                Call RefreshMousePointer(VBFlexGridEditHandle)
-            End If
-            RaiseEvent ComboDropDown
-            SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or ODS_SELECTED
-            InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
-            If IsWindowVisible(VBFlexGridComboListHandle) = 0 Then
-                Dim WndRect(0 To 1) As RECT
-                LSet WndRect(0) = VBFlexGridComboListRect
-                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect(0), 2
-                GetWindowRect VBFlexGridComboListHandle, WndRect(1)
-                Dim hMonitor As Long, MI As MONITORINFO
-                hMonitor = MonitorFromWindow(VBFlexGridEditHandle, MONITOR_DEFAULTTOPRIMARY)
-                MI.cbSize = LenB(MI)
-                GetMonitorInfo hMonitor, MI
-                If (WndRect(0).Bottom + (WndRect(1).Bottom - WndRect(1).Top)) > MI.RCMonitor.Bottom Then
-                    SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Top - (WndRect(1).Bottom - WndRect(1).Top), 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
-                Else
-                    SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
+            Dim Cancel As Boolean
+            RaiseEvent ComboBeforeDropDown(Reason, Cancel)
+            If Cancel = False Then
+                If GetCursor() = 0 Then
+                    ' The mouse cursor can be hidden when showing the drop-down list upon a change event.
+                    ' Reason is that the edit control hides the cursor and a following mouse move will show it again.
+                    ' However, the drop-down list will set a mouse capture and thus the cursor keeps hidden.
+                    ' Solution is to refresh the cursor by sending a WM_SETCURSOR.
+                    Call RefreshMousePointer(VBFlexGridEditHandle)
                 End If
+                RaiseEvent ComboDropDown
+                SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or ODS_SELECTED
+                InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
+                If IsWindowVisible(VBFlexGridComboListHandle) = 0 Then
+                    Dim WndRect(0 To 1) As RECT
+                    LSet WndRect(0) = VBFlexGridComboListRect
+                    MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect(0), 2
+                    GetWindowRect VBFlexGridComboListHandle, WndRect(1)
+                    Dim hMonitor As Long, MI As MONITORINFO
+                    hMonitor = MonitorFromWindow(VBFlexGridEditHandle, MONITOR_DEFAULTTOPRIMARY)
+                    MI.cbSize = LenB(MI)
+                    GetMonitorInfo hMonitor, MI
+                    If (WndRect(0).Bottom + (WndRect(1).Bottom - WndRect(1).Top)) > MI.RCMonitor.Bottom Then
+                        SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Top - (WndRect(1).Bottom - WndRect(1).Top), 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
+                    Else
+                        SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
+                    End If
+                End If
+                SetCapture VBFlexGridComboListHandle
             End If
-            SetCapture VBFlexGridComboListHandle
         End If
     Else
         If (dwLong And ODS_SELECTED) = ODS_SELECTED Then
@@ -14100,7 +14114,7 @@ Select Case wMsg
                 Case STN_CLICKED
                     If LoWord(wParam) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> 0 Then
                         If VBFlexGridComboListHandle <> 0 Then
-                            Call ComboShowDropDown(True)
+                            Call ComboShowDropDown(True, FlexComboDropDownReasonClick)
                         Else
                             Call ComboButtonPerformClick
                         End If
@@ -14453,7 +14467,7 @@ Select Case wMsg
                         Case vbKeyF4
                             If VBFlexGridComboButtonHandle <> 0 Then
                                 If VBFlexGridComboListHandle <> 0 Then
-                                    Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED))
+                                    Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonF4)
                                 Else
                                     Call ComboButtonPerformClick
                                 End If
@@ -14546,7 +14560,7 @@ Select Case wMsg
                 If KeyCode = vbKeyReturn Then
                     PostMessage hWnd, WM_CHAR, vbKeyReturn, ByVal 0&
                 ElseIf VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
-                    If KeyCode = vbKeyDown Or KeyCode = vbKeyUp Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED))
+                    If KeyCode = vbKeyDown Or KeyCode = vbKeyUp Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyDown)
                 End If
             Else
                 Exit Function
