@@ -1,5 +1,8 @@
 List of revisions:
 
+10-Oct-2021
+- Included the ComboBeforeDropDown event.
+
 09-Oct-2021
 - The ellipsis on a ComboButton can now drawn with COLOR_GRAYTEXT when it is disabled.
 
