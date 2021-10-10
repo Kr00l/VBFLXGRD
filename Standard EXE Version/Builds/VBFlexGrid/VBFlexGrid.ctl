@@ -61,7 +61,7 @@ Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable,
 Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
 Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton
-Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComboDropDownReasonClick, FlexComboDropDownReasonF4, FlexComboDropDownReasonKeyDown
+Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComboDropDownReasonMouse, FlexComboDropDownReasonKeyboard
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
@@ -340,9 +340,8 @@ End Enum
 Public Enum FlexComboDropDownReasonConstants
 FlexComboDropDownReasonCode = 0
 FlexComboDropDownReasonInitialize = 1
-FlexComboDropDownReasonClick = 2
-FlexComboDropDownReasonF4 = 3
-FlexComboDropDownReasonKeyDown = 4
+FlexComboDropDownReasonMouse = 2
+FlexComboDropDownReasonKeyboard = 3
 End Enum
 Public Enum FlexComboButtonValueConstants
 FlexComboButtonValueUnpressed = 0
@@ -7814,7 +7813,7 @@ If VBFlexGridComboButtonHandle <> 0 Then
         Case FlexComboButtonValueUnpressed
             If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then EnableWindow VBFlexGridComboButtonHandle, 1
             If VBFlexGridComboListHandle <> 0 Then
-                Call ComboShowDropDown(False)
+                Call ComboShowDropDown(False, FlexComboDropDownReasonCode)
             Else
                 Call ComboButtonSetState(ODS_SELECTED, False)
             End If
@@ -7827,7 +7826,7 @@ If VBFlexGridComboButtonHandle <> 0 Then
             End If
         Case FlexComboButtonValueDisabled
             If VBFlexGridComboListHandle <> 0 Then
-                Call ComboShowDropDown(False)
+                Call ComboShowDropDown(False, FlexComboDropDownReasonCode)
             Else
                 Call ComboButtonSetState(ODS_SELECTED, False)
             End If
@@ -13276,7 +13275,7 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
 End If
 End Function
 
-Private Sub ComboShowDropDown(ByVal Value As Boolean, Optional ByVal Reason As FlexComboDropDownReasonConstants)
+Private Sub ComboShowDropDown(ByVal Value As Boolean, ByVal Reason As FlexComboDropDownReasonConstants)
 If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
     Dim dwLong As Long
     dwLong = GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA)
@@ -14114,7 +14113,7 @@ Select Case wMsg
                 Case STN_CLICKED
                     If LoWord(wParam) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> 0 Then
                         If VBFlexGridComboListHandle <> 0 Then
-                            Call ComboShowDropDown(True, FlexComboDropDownReasonClick)
+                            Call ComboShowDropDown(True, FlexComboDropDownReasonMouse)
                         Else
                             Call ComboButtonPerformClick
                         End If
@@ -14462,12 +14461,12 @@ Select Case wMsg
                 If VBFlexGridEditHandle <> 0 Then
                     Select Case KeyCode
                         Case vbKeyEscape
-                            If VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then Call ComboShowDropDown(False)
+                            If VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then Call ComboShowDropDown(False, FlexComboDropDownReasonKeyboard)
                             If DestroyEdit(True, FlexEditCloseModeEscape) = True Then Exit Function
                         Case vbKeyF4
                             If VBFlexGridComboButtonHandle <> 0 Then
                                 If VBFlexGridComboListHandle <> 0 Then
-                                    Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonF4)
+                                    Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyboard)
                                 Else
                                     Call ComboButtonPerformClick
                                 End If
@@ -14477,7 +14476,7 @@ Select Case wMsg
                             If VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
                                 If ComboButtonGetState(ODS_SELECTED) = True Then
                                     Call ComboListCommitSel
-                                    Call ComboShowDropDown(False)
+                                    Call ComboShowDropDown(False, FlexComboDropDownReasonKeyboard)
                                     DestroyEdit False, FlexEditCloseModeReturn
                                     Exit Function
                                 End If
@@ -14560,7 +14559,7 @@ Select Case wMsg
                 If KeyCode = vbKeyReturn Then
                     PostMessage hWnd, WM_CHAR, vbKeyReturn, ByVal 0&
                 ElseIf VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
-                    If KeyCode = vbKeyDown Or KeyCode = vbKeyUp Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyDown)
+                    If KeyCode = vbKeyDown Or KeyCode = vbKeyUp Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyboard)
                 End If
             Else
                 Exit Function
@@ -14763,7 +14762,7 @@ Select Case wMsg
         If Not ComboListSelFromPt(Get_X_lParam(lParam), Get_Y_lParam(lParam)) = LB_ERR Then
             Call ComboListCommitSel
             If VBFlexGridComboActiveMode = FlexComboModeDropDown Then
-                Call ComboShowDropDown(False)
+                Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
                 DestroyEdit False, FlexEditCloseModeReturn
                 Exit Function
             End If
@@ -14771,7 +14770,7 @@ Select Case wMsg
         ReleaseCapture
         Exit Function ' Prevents the popup window from being focused.
     Case WM_CAPTURECHANGED
-        If SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos()) <> HTVSCROLL Then Call ComboShowDropDown(False)
+        If SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos()) <> HTVSCROLL Then Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
 End Select
 WindowProcComboList = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
 End Function
