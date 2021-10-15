@@ -11123,13 +11123,6 @@ Select Case KeyCode
     Case Else
         Exit Sub
 End Select
-If VBFlexGridRTLLayout = True Then
-    If KeyCode = vbKeyLeft Then
-        KeyCode = vbKeyRight
-    ElseIf KeyCode = vbKeyRight Then
-        KeyCode = vbKeyLeft
-    End If
-End If
 If PropAllowSelection = False Then
     If (Shift And vbShiftMask) = vbShiftMask And KeyCode <> vbKeyTab And KeyCode <> vbKeyReturn Then Exit Sub
 End If
