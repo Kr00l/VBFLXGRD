@@ -2463,6 +2463,7 @@ Else
     ' independently from this property. (by setting either WS_EX_LAYOUTRTL or WS_EX_RTLREADING)
     VBFlexGridRTLLayout = CBool(PropRightToLeft = True And PropRightToLeftLayout = True)
     VBFlexGridRTLReading = CBool(PropRightToLeft = True And PropRightToLeftLayout = False)
+    If VBFlexGridDoubleBufferDC <> 0 Then SetLayout VBFlexGridDoubleBufferDC, IIf(VBFlexGridRTLLayout, LAYOUT_RTL, 0)
 End If
 If VBFlexGridHandle <> 0 Then
     If PropRightToLeft = True Then
@@ -12706,6 +12707,7 @@ Select Case wMsg
             CopyMemory dwStyleNew, ByVal UnsignedAdd(lParam, 4), 4
             VBFlexGridRTLLayout = CBool((dwStyleNew And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL)
             VBFlexGridRTLReading = CBool((dwStyleNew And WS_EX_RTLREADING) = WS_EX_RTLREADING)
+            If VBFlexGridDoubleBufferDC <> 0 Then SetLayout VBFlexGridDoubleBufferDC, IIf(VBFlexGridRTLLayout, LAYOUT_RTL, 0)
         End If
     Case WM_MOUSEWHEEL
         If VBFlexGridWheelScrollLines > 0 Then
