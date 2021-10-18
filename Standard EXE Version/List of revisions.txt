@@ -1,6 +1,7 @@
 List of revisions:
 
 18-Oct-2021
+- Included the ColSortArrowAlignment property.
 - Bugfix for the DoubleBuffer property and when both RightToLeft/RightToLeftLayout got toggled.
   The DoubleBufferDC was not changed to either LAYOUT_RTL or 0 on WM_STYLECHANGED.
 
