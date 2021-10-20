@@ -4090,7 +4090,7 @@ If VBFlexGridEditHandle <> 0 Then
             Dim WndRect As RECT
             LSet WndRect = VBFlexGridComboListRect
             MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
-            VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), 0, dwStyle, WndRect.Left, WndRect.Top, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
+            VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), 0, dwStyle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
             If VBFlexGridComboListHandle <> 0 Then
                 SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
                 Dim Pos1 As Long, Pos2 As Long, Temp As String, i As Long
@@ -4115,7 +4115,7 @@ If VBFlexGridEditHandle <> 0 Then
                         Count = EDIT_MAXDROPDOWNITEMS
                 End Select
                 Height = SendMessage(VBFlexGridComboListHandle, LB_GETITEMHEIGHT, 0, ByVal 0&) * Count
-                MoveWindow VBFlexGridComboListHandle, WndRect.Left, WndRect.Top, WndRect.Right - WndRect.Left, Height + 2, 0
+                MoveWindow VBFlexGridComboListHandle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, Height + 2, 0
                 SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, SendMessage(VBFlexGridComboListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Text)), ByVal 0&
             End If
         End If
@@ -12062,11 +12062,12 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
             GetClientRect VBFlexGridEditHandle, EditRect
             SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
             If VBFlexGridComboListHandle <> 0 Then
-                Dim WndRect As RECT
+                Dim P As POINTAPI
                 SetRect VBFlexGridComboListRect, RC.Left, RC.Top, RC.Right, RC.Bottom
-                LSet WndRect = VBFlexGridComboListRect
-                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
-                SetWindowPos VBFlexGridComboListHandle, 0, WndRect.Left, WndRect.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                P.X = RC.Left
+                P.Y = RC.Bottom
+                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, P, 1
+                SetWindowPos VBFlexGridComboListHandle, 0, P.X, P.Y, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
             End If
         End If
         If VBFlexGridEditRectChangedFrozen = False Then VBFlexGridEditRectChanged = True
