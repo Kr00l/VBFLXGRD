@@ -1094,12 +1094,12 @@ Private VBFlexGridEditRectChangedFrozen As Boolean
 Private VBFlexGridEditTempFontHandle As Long
 Private VBFlexGridEditBackColor As OLE_COLOR, VBFlexGridEditForeColor As OLE_COLOR
 Private VBFlexGridEditBackColorBrush As Long
+Private VBFlexGridEditNoLostFocus As Boolean
 Private VBFlexGridComboMode As FlexComboModeConstants
 Private VBFlexGridComboActiveMode As FlexComboModeConstants
 Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
 Private VBFlexGridComboItems As String
 Private VBFlexGridComboListRect As RECT
-Private VBFlexGridComboButtonClick As Boolean
 Private VBFlexGridWheelScrollLines As Long
 Private VBFlexGridFocusBorder As SIZEAPI
 Private VBFlexGridFocused As Boolean
@@ -4166,7 +4166,7 @@ If CloseMode <> FlexEditCloseModeLostFocus Then
     RaiseEvent EditQueryClose(CloseMode, Cancel)
     If Cancel = True Then Exit Function
 Else
-    If VBFlexGridEditOnValidate = True Or VBFlexGridComboButtonClick = True Then Exit Function
+    If VBFlexGridEditOnValidate = True Or VBFlexGridEditNoLostFocus = True Then Exit Function
 End If
 If Discard = False And VBFlexGridEditTextChanged = True Then
     If VBFlexGridEditAlreadyValidated = False Then
@@ -12081,25 +12081,19 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
     Select Case HiWord(lParam)
         Case WM_LBUTTONDOWN
             If VBFlexGridComboButtonHandle <> 0 Then
-                If VBFlexGridComboButtonClick = False Then
-                    If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then
-                        ' If the combo button window is disabled the mouse message will go trough it and could trigger ending of the editing.
-                        ' To avoid this a check is needed and return MA_ACTIVATEANDEAT, if necessary.
-                        Dim Pos As Long, P As POINTAPI
-                        Pos = GetMessagePos()
-                        P.X = Get_X_lParam(Pos)
-                        P.Y = Get_Y_lParam(Pos)
-                        ScreenToClient VBFlexGridHandle, P
-                        If ChildWindowFromPoint(VBFlexGridHandle, P.X, P.Y) = VBFlexGridComboButtonHandle Then
-                            RetVal = MA_ACTIVATEANDEAT
-                            ValidateEditOnMouseActivateMsg = True
-                            Exit Function
-                        End If
+                If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then
+                    ' If the combo button window is disabled the mouse message will go trough it and could trigger ending of the editing.
+                    ' To avoid this a check is needed and return MA_ACTIVATEANDEAT, if necessary.
+                    Dim Pos As Long, P As POINTAPI
+                    Pos = GetMessagePos()
+                    P.X = Get_X_lParam(Pos)
+                    P.Y = Get_Y_lParam(Pos)
+                    ScreenToClient VBFlexGridHandle, P
+                    If ChildWindowFromPoint(VBFlexGridHandle, P.X, P.Y) = VBFlexGridComboButtonHandle Then
+                        RetVal = MA_ACTIVATEANDEAT
+                        ValidateEditOnMouseActivateMsg = True
+                        Exit Function
                     End If
-                Else
-                    RetVal = MA_ACTIVATEANDEAT
-                    ValidateEditOnMouseActivateMsg = True
-                    Exit Function
                 End If
             End If
             If LoWord(lParam) = HTCLIENT And VBFlexGridEditTextChanged = True Then
@@ -12176,13 +12170,14 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGrid
             SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or ODS_SELECTED
             InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
         End If
-        VBFlexGridComboButtonClick = True
+        VBFlexGridEditNoLostFocus = True
         RaiseEvent ComboButtonClick
-        VBFlexGridComboButtonClick = False
         If VBFlexGridEditHandle <> 0 Then
             If VBFlexGridComboButtonHandle <> 0 Then Call ComboButtonSetState(ODS_SELECTED, False)
             SetFocusAPI VBFlexGridEditHandle
+            VBFlexGridEditNoLostFocus = False
         Else
+            VBFlexGridEditNoLostFocus = False
             SetFocusAPI UserControl.hWnd
         End If
     End If
@@ -13533,7 +13528,12 @@ Select Case wMsg
     Case WM_MOUSEACTIVATE
         ' It is necessary to break the chain and return MA_ACTIVATE for this window.
         ' This enables the parent window - when it receives WM_MOUSEACTIVATE - to destroy this child window.
-        WindowProcComboButton = MA_ACTIVATE
+        If ComboButtonGetState(ODS_SELECTED) = False Then
+            WindowProcComboButton = MA_ACTIVATE
+        Else
+            ' This allows the popup window to close without causing a click which would show it again.
+            WindowProcComboButton = MA_ACTIVATEANDEAT
+        End If
         Exit Function
     Case WM_LBUTTONDOWN
         ' In case the edit window is still active due to failed validation then this ensures that the focus is properly set when clicked from outside.
