@@ -1,5 +1,9 @@
 List of revisions:
 
+22-Oct-2021
+- Added a new FlexComboModeCalendar enum that allows to use a drop-down calendar functionality when editing a cell.
+  The application must verify on ValidateEdit that the input is valid and also a unique format can be applied there. (see demo project)
+
 18-Oct-2021
 - Included the ColSortArrowAlignment property.
 - Bugfix for the DoubleBuffer property and when both RightToLeft/RightToLeftLayout got toggled.

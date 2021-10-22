@@ -128,7 +128,7 @@ End Type
 Private Declare Function ChooseColor Lib "comdlg32" Alias "ChooseColorW" (ByRef lpChooseColor As TCHOOSECOLOR) As Long
 Private Const COL_NORMAL As Long = 1
 Private Const COL_ONLYNUMBERS As Long = 2
-Private Const COL_DATEVALIDATION As Long = 3
+Private Const COL_CALENDARVALIDATION As Long = 3
 Private Const COL_LOCKED As Long = 4
 Private Const COL_REDBKCOLOR As Long = 5
 Private Const COL_NOTALLOWED As Long = 6
@@ -162,8 +162,9 @@ For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1
     VBFlexGrid1.TextMatrix(i, COL_ONLYNUMBERS) = i
 Next i
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1
-    VBFlexGrid1.TextMatrix(i, COL_DATEVALIDATION) = VBA.DateAdd("d", i, Int(Now()))
+    VBFlexGrid1.TextMatrix(i, COL_CALENDARVALIDATION) = VBA.DateAdd("d", i, Int(Now()))
 Next i
+VBFlexGrid1.ColComboMode(COL_CALENDARVALIDATION) = FlexComboModeCalendar
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 1 Step 2
     VBFlexGrid1.TextMatrix(i, COL_MERGEDCELLS) = Chr(64 + i)
     VBFlexGrid1.TextMatrix(i + 1, COL_MERGEDCELLS) = Chr(64 + i)
@@ -247,10 +248,13 @@ Select Case VBFlexGrid1.EditCol
         Const ES_READONLY As Long = &H800
         dwStyle = dwStyle Or ES_READONLY
     Case COL_SINGLELINE
-        Const ES_MULTILINE As Long = &H4
+        Const ES_MULTILINE As Long = &H4, ES_AUTOVSCROLL As Long = &H40, ES_AUTOHSCROLL As Long = &H80
         ' If 'SingleLine' is True then the whole flex grid is single lined. ES_MULTILINE is not predefined in that case.
         ' So it is better to check for ES_MULTILINE before removing it.
-        If (dwStyle And ES_MULTILINE) = ES_MULTILINE Then dwStyle = dwStyle And Not ES_MULTILINE
+        If (dwStyle And ES_MULTILINE) = ES_MULTILINE Then
+            dwStyle = dwStyle And Not (ES_MULTILINE Or ES_AUTOVSCROLL)
+            dwStyle = dwStyle Or ES_AUTOHSCROLL
+        End If
 End Select
 End Sub
 
@@ -284,13 +288,19 @@ Private Sub VBFlexGrid1_ValidateEdit(Cancel As Boolean)
 ' If validation fails the control will remain in edit mode.
 ' EditCloseMode property is not meaningful yet.
 Select Case VBFlexGrid1.EditCol
-    Case COL_DATEVALIDATION
+    Case COL_CALENDARVALIDATION
         Dim Text As String
-        Text = VBFlexGrid1.EditText
-        If InStr(Text, vbCrLf) Then ' Only single line entries are valid.
-            Cancel = True
-        Else
-            Cancel = Not IsDate(Text)
+        Text = Trim$(VBFlexGrid1.EditText)
+        If Not Text = vbNullString Then
+            If InStr(Text, vbCrLf) Then ' Only single line entries are valid.
+                Cancel = True
+            Else
+                Cancel = Not IsDate(Text)
+            End If
+            If Cancel = False Then
+                ' Ensure unique date format before commit. (override possible custom format of the text box)
+                VBFlexGrid1.EditText = VBFlexGrid1.ComboCalendarValue
+            End If
         End If
 End Select
 If Cancel = True Then
@@ -327,6 +337,8 @@ Select Case VBFlexGrid1.EditCol
         If ChooseColor(CHCLR) <> 0 Then
             VBFlexGrid1.Cell(FlexCellBackColor, VBFlexGrid1.EditRow, VBFlexGrid1.EditCol) = CHCLR.RGBResult
             VBFlexGrid1.CommitEdit
+        Else
+            ' .CancelEdit may be called or not as developer wishes.
         End If
 End Select
 End Sub
