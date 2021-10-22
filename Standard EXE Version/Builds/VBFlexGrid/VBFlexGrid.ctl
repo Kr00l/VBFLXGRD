@@ -61,7 +61,7 @@ Private FlexFindDirectionDown, FlexFindDirectionUp
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
 Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
-Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton
+Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton, FlexComboModeCalendar
 Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComboDropDownReasonMouse, FlexComboDropDownReasonKeyboard
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
@@ -341,6 +341,7 @@ FlexComboModeNone = 0
 FlexComboModeDropDown = 1
 FlexComboModeEditable = 2
 FlexComboModeButton = 3
+FlexComboModeCalendar = 4
 End Enum
 Public Enum FlexComboDropDownReasonConstants
 FlexComboDropDownReasonCode = 0
@@ -440,6 +441,16 @@ nPage As Long
 nPos As Long
 nTrackPos As Long
 End Type
+Private Type SYSTEMTIME
+wYear As Integer
+wMonth As Integer
+wDayOfWeek As Integer
+wDay As Integer
+wHour As Integer
+wMinute As Integer
+wSecond As Integer
+wMilliseconds As Integer
+End Type
 Private Type MONITORINFO
 cbSize As Long
 RCMonitor As RECT
@@ -487,6 +498,11 @@ szText(0 To ((80 * 2) - 1)) As Byte
 hInst As Long
 uFlags As Long
 lParam As Long
+End Type
+Private Type NMSELCHANGE
+hdr As NMHDR
+STSelStart As SYSTEMTIME
+STSelEnd As SYSTEMTIME
 End Type
 Private Const RCPM_ROW As Long = &H1, RCPM_COL As Long = &H2
 Private Const RCPM_ROWSEL As Long = &H4, RCPM_COLSEL As Long = &H8
@@ -850,6 +866,7 @@ Private Declare Function CloseThemeData Lib "uxtheme" (ByVal Theme As Long) As L
 
 Private Const ICC_STANDARD_CLASSES As Long = &H4000
 Private Const ICC_TAB_CLASSES As Long = &H8
+Private Const ICC_DATE_CLASSES As Long = &H100
 Private Const ID_EDITCHILD As Long = 100, ID_COMBOBUTTONCHILD As Long = 101
 Private Const RDW_UPDATENOW As Long = &H100, RDW_INVALIDATE As Long = &H1, RDW_ERASE As Long = &H4, RDW_ALLCHILDREN As Long = &H80, RDW_FRAME As Long = &H400
 Private Const SWP_FRAMECHANGED As Long = &H20
@@ -978,6 +995,18 @@ Private Const LB_FINDSTRINGEXACT As Long = &H1A2
 Private Const LBS_NOTIFY As Long = &H1
 Private Const LBS_SORT As Long = &H2
 Private Const LBN_SELCHANGE As Long = 1
+Private Const MCM_FIRST As Long = &H1000
+Private Const MCM_GETCURSEL As Long = (MCM_FIRST + 1)
+Private Const MCM_SETCURSEL As Long = (MCM_FIRST + 2)
+Private Const MCM_GETMINREQRECT As Long = (MCM_FIRST + 9)
+Private Const MCM_GETRANGE As Long = (MCM_FIRST + 17)
+Private Const MCM_SETRANGE As Long = (MCM_FIRST + 18)
+Private Const MCM_GETMAXTODAYWIDTH As Long = (MCM_FIRST + 21)
+Private Const MCM_SETCALENDARBORDER As Long = (MCM_FIRST + 30)
+Private Const MCN_FIRST As Long = (-750)
+Private Const MCN_SELECT As Long = (MCN_FIRST + 4)
+Private Const GDTR_MIN As Long = 1
+Private Const GDTR_MAX As Long = 2
 Private Const DFC_SCROLL As Long = &H3, DFCS_SCROLLCOMBOBOX As Long = &H5
 Private Const DFC_BUTTON As Long = &H4, DFCS_BUTTONPUSH As Long = &H10, DFCS_ADJUSTRECT As Long = &H2000
 Private Const DFCS_INACTIVE As Long = &H100
@@ -1094,7 +1123,7 @@ Private Const TTN_SHOW As Long = (TTN_FIRST - 1)
 Implements OLEGuids.IObjectSafety
 Implements OLEGuids.IOleInPlaceActiveObjectVB
 Implements OLEGuids.IOleControlVB
-Private VBFlexGridHandle As Long, VBFlexGridEditHandle As Long, VBFlexGridComboButtonHandle As Long, VBFlexGridComboListHandle As Long, VBFlexGridToolTipHandle As Long
+Private VBFlexGridHandle As Long, VBFlexGridEditHandle As Long, VBFlexGridComboButtonHandle As Long, VBFlexGridComboListHandle As Long, VBFlexGridComboCalendarHandle As Long, VBFlexGridToolTipHandle As Long
 Private VBFlexGridDoubleBufferDC As Long, VBFlexGridDoubleBufferBmp As Long, VBFlexGridDoubleBufferBmpOld As Long
 Private VBFlexGridFontHandle As Long, VBFlexGridFontFixedHandle As Long
 Private VBFlexGridClientRect As RECT
@@ -1149,12 +1178,13 @@ Private VBFlexGridEditRectChangedFrozen As Boolean
 Private VBFlexGridEditTempFontHandle As Long
 Private VBFlexGridEditBackColor As OLE_COLOR, VBFlexGridEditForeColor As OLE_COLOR
 Private VBFlexGridEditBackColorBrush As Long
+Private VBFlexGridEditNoLostFocus As Boolean
 Private VBFlexGridComboMode As FlexComboModeConstants
 Private VBFlexGridComboActiveMode As FlexComboModeConstants
 Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
 Private VBFlexGridComboItems As String
-Private VBFlexGridComboListRect As RECT
-Private VBFlexGridComboButtonClick As Boolean
+Private VBFlexGridComboBoxRect As RECT
+Private VBFlexGridComboCalendarRegistered As Boolean
 Private VBFlexGridWheelScrollLines As Long
 Private VBFlexGridFocusBorder As SIZEAPI
 Private VBFlexGridFocused As Boolean
@@ -1798,6 +1828,7 @@ Call RemoveVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 
 Call DestroyVBFlexGrid
 Call FlexWndReleaseClass
+If VBFlexGridComboCalendarRegistered = True Then Call FlexComboCalendarReleaseClass
 Call FlexReleaseShellMod
 End Sub
 
@@ -1976,6 +2007,11 @@ End Property
 Public Property Get hWndComboList() As Long
 Attribute hWndComboList.VB_Description = "Returns a handle to a control."
 hWndComboList = VBFlexGridComboListHandle
+End Property
+
+Public Property Get hWndComboCalendar() As Long
+Attribute hWndComboCalendar.VB_Description = "Returns a handle to a control."
+hWndComboCalendar = VBFlexGridComboCalendarHandle
 End Property
 
 #If ImplementDataSource = True Then
@@ -3946,7 +3982,7 @@ If PropRedraw = False Then Me.Redraw = False
 Me.FormatString = PropFormatString
 Call SetScrollBars
 If VBFlexGridDesignMode = False Then
-    Call FlexSetSubclass(UserControl.hWnd, Me, 5)
+    Call FlexSetSubclass(UserControl.hWnd, Me, 6)
     
     #If ImplementPreTranslateMsg = True Then
     
@@ -4243,43 +4279,71 @@ If VBFlexGridEditHandle <> 0 Then
         If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
         If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
         VBFlexGridComboButtonHandle = CreateWindowEx(dwExStyle, StrPtr("Static"), 0, dwStyle, EditRect.Right - 1, EditRect.Top, ComboButtonWidth, (EditRect.Bottom - EditRect.Top) - 1, VBFlexGridHandle, ID_COMBOBUTTONCHILD, App.hInstance, ByVal 0&)
-        If VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboActiveMode <> FlexComboModeButton Then
-            dwStyle = WS_POPUP Or WS_BORDER Or WS_VSCROLL Or LBS_NOTIFY Or LBS_SORT
-            dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
-            If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
-            If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
-            SetRect VBFlexGridComboListRect, CellRangeRect.Left, EditRect.Top, CellRangeRect.Right, EditRect.Bottom
+        If VBFlexGridComboButtonHandle <> 0 Then
             Dim WndRect As RECT
-            LSet WndRect = VBFlexGridComboListRect
-            MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
-            VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), 0, dwStyle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
-            If VBFlexGridComboListHandle <> 0 Then
-                SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
-                Dim Pos1 As Long, Pos2 As Long, Temp As String, i As Long
-                Do
-                    Pos1 = InStr(Pos1 + 1, ComboItems, "|")
-                    If Pos1 > 0 Then
-                        Temp = Mid$(ComboItems, Pos2 + 1, Pos1 - Pos2 - 1)
-                    Else
-                        Temp = Mid$(ComboItems, Pos2 + 1)
+            Select Case VBFlexGridComboActiveMode
+                Case FlexComboModeDropDown, FlexComboModeEditable
+                    dwStyle = WS_POPUP Or WS_BORDER Or WS_VSCROLL Or LBS_NOTIFY Or LBS_SORT
+                    dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
+                    If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
+                    If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
+                    SetRect VBFlexGridComboBoxRect, CellRangeRect.Left, EditRect.Top, CellRangeRect.Right, EditRect.Bottom
+                    LSet WndRect = VBFlexGridComboBoxRect
+                    MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
+                    VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), 0, dwStyle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
+                    If VBFlexGridComboListHandle <> 0 Then
+                        SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
+                        Dim Pos1 As Long, Pos2 As Long, Temp As String, i As Long
+                        Do
+                            Pos1 = InStr(Pos1 + 1, ComboItems, "|")
+                            If Pos1 > 0 Then
+                                Temp = Mid$(ComboItems, Pos2 + 1, Pos1 - Pos2 - 1)
+                            Else
+                                Temp = Mid$(ComboItems, Pos2 + 1)
+                            End If
+                            SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, i, ByVal StrPtr(Temp)
+                            Pos2 = Pos1
+                            i = i + 1
+                        Loop Until Pos1 = 0
+                        Const EDIT_MAXDROPDOWNITEMS As Integer = 9
+                        Dim Count As Long, Height As Long
+                        Count = SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&)
+                        Select Case Count
+                            Case 0
+                                Count = 1
+                            Case Is > EDIT_MAXDROPDOWNITEMS
+                                Count = EDIT_MAXDROPDOWNITEMS
+                        End Select
+                        Height = SendMessage(VBFlexGridComboListHandle, LB_GETITEMHEIGHT, 0, ByVal 0&) * Count
+                        MoveWindow VBFlexGridComboListHandle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, Height + 2, 0
+                        SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, SendMessage(VBFlexGridComboListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Text)), ByVal 0&
                     End If
-                    SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, i, ByVal StrPtr(Temp)
-                    Pos2 = Pos1
-                    i = i + 1
-                Loop Until Pos1 = 0
-                Const EDIT_MAXDROPDOWNITEMS As Integer = 9
-                Dim Count As Long, Height As Long
-                Count = SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&)
-                Select Case Count
-                    Case 0
-                        Count = 1
-                    Case Is > EDIT_MAXDROPDOWNITEMS
-                        Count = EDIT_MAXDROPDOWNITEMS
-                End Select
-                Height = SendMessage(VBFlexGridComboListHandle, LB_GETITEMHEIGHT, 0, ByVal 0&) * Count
-                MoveWindow VBFlexGridComboListHandle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, Height + 2, 0
-                SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, SendMessage(VBFlexGridComboListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Text)), ByVal 0&
-            End If
+                Case FlexComboModeCalendar
+                    If VBFlexGridComboCalendarRegistered = False Then
+                        Call FlexInitCC(ICC_DATE_CLASSES)
+                        Call FlexComboCalendarRegisterClass
+                        VBFlexGridComboCalendarRegistered = True
+                    End If
+                    dwStyle = WS_POPUP Or WS_BORDER
+                    dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
+                    If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
+                    If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
+                    SetRect VBFlexGridComboBoxRect, CellRangeRect.Left, EditRect.Top, CellRangeRect.Right, EditRect.Bottom
+                    VBFlexGridComboCalendarHandle = CreateWindowEx(dwExStyle, StrPtr("VBFlexGridComboCalendarClass"), 0, dwStyle, 0, 0, 0, 0, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
+                    If VBFlexGridComboCalendarHandle <> 0 Then
+                        SendMessage VBFlexGridComboCalendarHandle, WM_SETFONT, hFont, ByVal 0&
+                        SendMessage VBFlexGridComboCalendarHandle, MCM_SETCALENDARBORDER, 1, ByVal 0&
+                        Dim ST(0 To 1) As SYSTEMTIME
+                        ST(0).wYear = 1900
+                        ST(0).wMonth = 1
+                        ST(0).wDay = 1
+                        ST(1).wYear = 9999
+                        ST(1).wMonth = 12
+                        ST(1).wDay = 31
+                        SendMessage VBFlexGridComboCalendarHandle, MCM_SETRANGE, GDTR_MIN Or GDTR_MAX, ByVal VarPtr(ST(0))
+                        If IsDate(Text) Then Me.ComboCalendarValue = CDate(Text)
+                    End If
+            End Select
         End If
     End If
     If VBFlexGridEnabledVisualStyles = True Then
@@ -4287,15 +4351,28 @@ If VBFlexGridEditHandle <> 0 Then
             ActivateVisualStyles VBFlexGridEditHandle
             If VBFlexGridComboButtonHandle <> 0 Then ActivateVisualStyles VBFlexGridComboButtonHandle
             If VBFlexGridComboListHandle <> 0 Then ActivateVisualStyles VBFlexGridComboListHandle
+            If VBFlexGridComboCalendarHandle <> 0 Then ActivateVisualStyles VBFlexGridComboCalendarHandle
         Else
             RemoveVisualStyles VBFlexGridEditHandle
             If VBFlexGridComboButtonHandle <> 0 Then RemoveVisualStyles VBFlexGridComboButtonHandle
             If VBFlexGridComboListHandle <> 0 Then RemoveVisualStyles VBFlexGridComboListHandle
+            If VBFlexGridComboCalendarHandle <> 0 Then RemoveVisualStyles VBFlexGridComboCalendarHandle
         End If
+    End If
+    If VBFlexGridComboCalendarHandle <> 0 Then
+        Dim ReqRect As RECT
+        SendMessage VBFlexGridComboCalendarHandle, MCM_GETMINREQRECT, 0, ByVal VarPtr(ReqRect)
+        Dim TodayWidth As Long
+        TodayWidth = SendMessage(VBFlexGridComboCalendarHandle, MCM_GETMAXTODAYWIDTH, 0, ByVal 0&)
+        If TodayWidth > (ReqRect.Right - ReqRect.Left) Then ReqRect.Right = ReqRect.Left + TodayWidth
+        LSet WndRect = VBFlexGridComboBoxRect
+        MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
+        MoveWindow VBFlexGridComboCalendarHandle, WndRect.Left, WndRect.Bottom, (ReqRect.Right - ReqRect.Left), (ReqRect.Bottom - ReqRect.Top), 0
     End If
     Call FlexSetSubclass(VBFlexGridEditHandle, Me, 2)
     If VBFlexGridComboButtonHandle <> 0 Then Call FlexSetSubclass(VBFlexGridComboButtonHandle, Me, 3)
     If VBFlexGridComboListHandle <> 0 Then Call FlexSetSubclass(VBFlexGridComboListHandle, Me, 4)
+    If VBFlexGridComboCalendarHandle <> 0 Then Call FlexSetSubclass(VBFlexGridComboCalendarHandle, Me, 5)
     SetWindowPos VBFlexGridEditHandle, 0, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_FRAMECHANGED
     RaiseEvent EditSetupWindow(VBFlexGridEditBackColor, VBFlexGridEditForeColor)
     VBFlexGridEditBackColorBrush = CreateSolidBrush(WinColor(VBFlexGridEditBackColor))
@@ -4310,7 +4387,10 @@ If VBFlexGridEditHandle <> 0 Then
     
     #If ImplementPreTranslateMsg = True Then
     
-    If VBFlexGridUsePreTranslateMsg = True Then Call FlexPreTranslateMsgAddHook(VBFlexGridEditHandle)
+    If VBFlexGridUsePreTranslateMsg = True Then
+        Call FlexPreTranslateMsgAddHook(VBFlexGridEditHandle)
+        If VBFlexGridComboCalendarHandle <> 0 Then Call FlexPreTranslateMsgAddHook(VBFlexGridComboCalendarHandle)
+    End If
     
     #End If
     
@@ -4328,7 +4408,7 @@ If CloseMode <> FlexEditCloseModeLostFocus Then
     RaiseEvent EditQueryClose(CloseMode, Cancel)
     If Cancel = True Then Exit Function
 Else
-    If VBFlexGridEditOnValidate = True Or VBFlexGridComboButtonClick = True Then Exit Function
+    If VBFlexGridEditOnValidate = True Or VBFlexGridEditNoLostFocus = True Then Exit Function
 End If
 If Discard = False And VBFlexGridEditTextChanged = True Then
     If VBFlexGridEditAlreadyValidated = False Then
@@ -4366,7 +4446,10 @@ RaiseEvent LeaveEdit
 
 #If ImplementPreTranslateMsg = True Then
 
-If VBFlexGridUsePreTranslateMsg = True Then Call FlexPreTranslateMsgReleaseHook(VBFlexGridEditHandle)
+If VBFlexGridUsePreTranslateMsg = True Then
+    Call FlexPreTranslateMsgReleaseHook(VBFlexGridEditHandle)
+    If VBFlexGridComboCalendarHandle <> 0 Then Call FlexPreTranslateMsgReleaseHook(VBFlexGridComboCalendarHandle)
+End If
 
 #End If
 
@@ -4385,6 +4468,10 @@ If VBFlexGridComboListHandle <> 0 Then
     Call FlexRemoveSubclass(VBFlexGridComboListHandle)
     DestroyWindow VBFlexGridComboListHandle
 End If
+If VBFlexGridComboCalendarHandle <> 0 Then
+    Call FlexRemoveSubclass(VBFlexGridComboCalendarHandle)
+    DestroyWindow VBFlexGridComboCalendarHandle
+End If
 Call FlexRemoveSubclass(VBFlexGridEditHandle)
 Dim hWndTemp As Long
 ' Temporary cache is necessary as the variable needs to be cleared for internal control before the edit window is destroyed.
@@ -4396,6 +4483,7 @@ DestroyWindow hWndTemp
 hWndTemp = 0
 VBFlexGridComboButtonHandle = 0
 VBFlexGridComboListHandle = 0
+VBFlexGridComboCalendarHandle = 0
 VBFlexGridEditRectChanged = False
 If VBFlexGridEditTempFontHandle <> 0 Then
     DeleteObject VBFlexGridEditTempFontHandle
@@ -5836,7 +5924,7 @@ End Property
 Public Property Let ColComboMode(ByVal Index As Long, ByVal Value As FlexComboModeConstants)
 If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 Select Case Value
-    Case FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton
+    Case FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton, FlexComboModeCalendar
     Case Else
         Err.Raise 380
 End Select
@@ -7812,7 +7900,7 @@ End Property
 
 Public Property Let ComboMode(ByVal Value As FlexComboModeConstants)
 Select Case Value
-    Case FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton
+    Case FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton, FlexComboModeCalendar
         VBFlexGridComboMode = Value
     Case Else
         Err.Raise 380
@@ -7845,20 +7933,20 @@ If VBFlexGridComboButtonHandle <> 0 Then
     Select Case Value
         Case FlexComboButtonValueUnpressed
             If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then EnableWindow VBFlexGridComboButtonHandle, 1
-            If VBFlexGridComboListHandle <> 0 Then
+            If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
                 Call ComboShowDropDown(False, FlexComboDropDownReasonCode)
             Else
                 Call ComboButtonSetState(ODS_SELECTED, False)
             End If
         Case FlexComboButtonValuePressed
             If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then EnableWindow VBFlexGridComboButtonHandle, 1
-            If VBFlexGridComboListHandle <> 0 Then
+            If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
                 Call ComboShowDropDown(True, FlexComboDropDownReasonCode)
             Else
                 Call ComboButtonPerformClick
             End If
         Case FlexComboButtonValueDisabled
-            If VBFlexGridComboListHandle <> 0 Then
+            If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
                 Call ComboShowDropDown(False, FlexComboDropDownReasonCode)
             Else
                 Call ComboButtonSetState(ODS_SELECTED, False)
@@ -7927,6 +8015,101 @@ If VBFlexGridComboListHandle <> 0 Then
     Else
         SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, -1, ByVal 0&
     End If
+End If
+End Property
+
+Public Property Get ComboCalendarMinDate() As Date
+Attribute ComboCalendarMinDate.VB_Description = "Returns/sets the earliest date that can be displayed or accepted by the drop-down calendar."
+Attribute ComboCalendarMinDate.VB_MemberFlags = "400"
+If VBFlexGridComboCalendarHandle <> 0 Then
+    Dim ST(0 To 1) As SYSTEMTIME
+    If (SendMessage(VBFlexGridComboCalendarHandle, MCM_GETRANGE, 0, ByVal VarPtr(ST(0))) And GDTR_MIN) = GDTR_MIN Then
+        ComboCalendarMinDate = DateSerial(ST(0).wYear, ST(0).wMonth, ST(0).wDay)
+    Else
+        ComboCalendarMinDate = DateSerial(1900, 1, 1)
+    End If
+End If
+End Property
+
+Public Property Let ComboCalendarMinDate(ByVal Value As Date)
+Dim MaxDate As Date
+MaxDate = Me.ComboCalendarMaxDate
+Select Case Value
+    Case DateSerial(1900, 1, 1) To DateSerial(9999, 12, 31)
+        If Int(Value) > MaxDate Then Err.Raise 35775, Description:="A value was specified for the MinDate property that is higher than the current value of MaxDate"
+    Case Else
+        Err.Raise 380
+End Select
+If VBFlexGridComboCalendarHandle <> 0 Then
+    Dim ST(0 To 1) As SYSTEMTIME
+    ST(0).wYear = VBA.Year(Value)
+    ST(0).wMonth = VBA.Month(Value)
+    ST(0).wDay = VBA.Day(Value)
+    ST(1).wYear = VBA.Year(MaxDate)
+    ST(1).wMonth = VBA.Month(MaxDate)
+    ST(1).wDay = VBA.Day(MaxDate)
+    SendMessage VBFlexGridComboCalendarHandle, MCM_SETRANGE, GDTR_MIN Or GDTR_MAX, ByVal VarPtr(ST(0))
+End If
+End Property
+
+Public Property Get ComboCalendarMaxDate() As Date
+Attribute ComboCalendarMaxDate.VB_Description = "Returns/sets the latest date that can be displayed or accepted by the drop-down calendar."
+Attribute ComboCalendarMaxDate.VB_MemberFlags = "400"
+If VBFlexGridComboCalendarHandle <> 0 Then
+    Dim ST(0 To 1) As SYSTEMTIME
+    If (SendMessage(VBFlexGridComboCalendarHandle, MCM_GETRANGE, 0, ByVal VarPtr(ST(0))) And GDTR_MAX) = GDTR_MAX Then
+        ComboCalendarMaxDate = DateSerial(ST(1).wYear, ST(1).wMonth, ST(1).wDay)
+    Else
+        ComboCalendarMaxDate = DateSerial(9999, 12, 31)
+    End If
+End If
+End Property
+
+Public Property Let ComboCalendarMaxDate(ByVal Value As Date)
+Dim MinDate As Date
+MinDate = Me.ComboCalendarMinDate
+Select Case Value
+    Case DateSerial(1900, 1, 1) To DateSerial(9999, 12, 31)
+        If Int(Value) < MinDate Then Err.Raise 35774, Description:="A value was specified for the MaxDate property that is lower than the current value of MinDate"
+    Case Else
+        Err.Raise 380
+End Select
+If VBFlexGridComboCalendarHandle <> 0 Then
+    Dim ST(0 To 1) As SYSTEMTIME
+    ST(0).wYear = VBA.Year(MinDate)
+    ST(0).wMonth = VBA.Month(MinDate)
+    ST(0).wDay = VBA.Day(MinDate)
+    ST(1).wYear = VBA.Year(Value)
+    ST(1).wMonth = VBA.Month(Value)
+    ST(1).wDay = VBA.Day(Value)
+    SendMessage VBFlexGridComboCalendarHandle, MCM_SETRANGE, GDTR_MIN Or GDTR_MAX, ByVal VarPtr(ST(0))
+End If
+End Property
+
+Public Property Get ComboCalendarValue() As Date
+Attribute ComboCalendarValue.VB_Description = "Returns/sets the current date of the drop-down calendar."
+Attribute ComboCalendarValue.VB_MemberFlags = "400"
+If VBFlexGridComboCalendarHandle <> 0 Then
+    Dim ST As SYSTEMTIME
+    SendMessage VBFlexGridComboCalendarHandle, MCM_GETCURSEL, 0, ByVal VarPtr(ST)
+    ComboCalendarValue = DateSerial(ST.wYear, ST.wMonth, ST.wDay)
+End If
+End Property
+
+Public Property Let ComboCalendarValue(ByVal Value As Date)
+If VBFlexGridComboCalendarHandle <> 0 Then
+    Dim ST As SYSTEMTIME
+    With ST
+    .wYear = VBA.Year(Value)
+    .wMonth = VBA.Month(Value)
+    .wDay = VBA.Day(Value)
+    .wDayOfWeek = VBA.Weekday(Value)
+    .wHour = 0
+    .wMinute = 0
+    .wSecond = 0
+    .wMilliseconds = 0
+    End With
+    SendMessage VBFlexGridComboCalendarHandle, MCM_SETCURSEL, 0, ByVal VarPtr(ST)
 End If
 End Property
 
@@ -13227,12 +13410,13 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
             GetClientRect VBFlexGridEditHandle, EditRect
             SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
             If VBFlexGridComboListHandle <> 0 Then
-                Dim P As POINTAPI
-                SetRect VBFlexGridComboListRect, RC.Left, RC.Top, RC.Right, RC.Bottom
-                P.X = RC.Left
-                P.Y = RC.Bottom
-                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, P, 1
-                SetWindowPos VBFlexGridComboListHandle, 0, P.X, P.Y, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                LSet VBFlexGridComboBoxRect = RC
+                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, RC, 2
+                SetWindowPos VBFlexGridComboListHandle, 0, RC.Left, RC.Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+            ElseIf VBFlexGridComboCalendarHandle <> 0 Then
+                LSet VBFlexGridComboBoxRect = RC
+                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, RC, 2
+                SetWindowPos VBFlexGridComboCalendarHandle, 0, RC.Left, RC.Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
             End If
         End If
         If VBFlexGridEditRectChangedFrozen = False Then VBFlexGridEditRectChanged = True
@@ -13246,25 +13430,19 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
     Select Case HiWord(lParam)
         Case WM_LBUTTONDOWN
             If VBFlexGridComboButtonHandle <> 0 Then
-                If VBFlexGridComboButtonClick = False Then
-                    If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then
-                        ' If the combo button window is disabled the mouse message will go trough it and could trigger ending of the editing.
-                        ' To avoid this a check is needed and return MA_ACTIVATEANDEAT, if necessary.
-                        Dim Pos As Long, P As POINTAPI
-                        Pos = GetMessagePos()
-                        P.X = Get_X_lParam(Pos)
-                        P.Y = Get_Y_lParam(Pos)
-                        ScreenToClient VBFlexGridHandle, P
-                        If ChildWindowFromPoint(VBFlexGridHandle, P.X, P.Y) = VBFlexGridComboButtonHandle Then
-                            RetVal = MA_ACTIVATEANDEAT
-                            ValidateEditOnMouseActivateMsg = True
-                            Exit Function
-                        End If
+                If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then
+                    ' If the combo button window is disabled the mouse message will go trough it and could trigger ending of the editing.
+                    ' To avoid this a check is needed and return MA_ACTIVATEANDEAT, if necessary.
+                    Dim Pos As Long, P As POINTAPI
+                    Pos = GetMessagePos()
+                    P.X = Get_X_lParam(Pos)
+                    P.Y = Get_Y_lParam(Pos)
+                    ScreenToClient VBFlexGridHandle, P
+                    If ChildWindowFromPoint(VBFlexGridHandle, P.X, P.Y) = VBFlexGridComboButtonHandle Then
+                        RetVal = MA_ACTIVATEANDEAT
+                        ValidateEditOnMouseActivateMsg = True
+                        Exit Function
                     End If
-                Else
-                    RetVal = MA_ACTIVATEANDEAT
-                    ValidateEditOnMouseActivateMsg = True
-                    Exit Function
                 End If
             End If
             If LoWord(lParam) = HTCLIENT And VBFlexGridEditTextChanged = True Then
@@ -13288,7 +13466,7 @@ End If
 End Function
 
 Private Sub ComboShowDropDown(ByVal Value As Boolean, ByVal Reason As FlexComboDropDownReasonConstants)
-If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
+If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And (VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0) Then
     Dim dwLong As Long
     dwLong = GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA)
     If Value = True Then
@@ -13306,30 +13484,54 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGrid
                 RaiseEvent ComboDropDown
                 SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or ODS_SELECTED
                 InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
-                If IsWindowVisible(VBFlexGridComboListHandle) = 0 Then
-                    Dim WndRect(0 To 1) As RECT
-                    LSet WndRect(0) = VBFlexGridComboListRect
-                    MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect(0), 2
-                    GetWindowRect VBFlexGridComboListHandle, WndRect(1)
-                    Dim hMonitor As Long, MI As MONITORINFO
-                    hMonitor = MonitorFromWindow(VBFlexGridEditHandle, MONITOR_DEFAULTTOPRIMARY)
-                    MI.cbSize = LenB(MI)
-                    GetMonitorInfo hMonitor, MI
-                    If (WndRect(0).Bottom + (WndRect(1).Bottom - WndRect(1).Top)) > MI.RCMonitor.Bottom Then
-                        SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Top - (WndRect(1).Bottom - WndRect(1).Top), 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
-                    Else
-                        SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
+                Dim WndRect(0 To 1) As RECT
+                Dim hMonitor As Long, MI As MONITORINFO
+                If VBFlexGridComboListHandle <> 0 Then
+                    If IsWindowVisible(VBFlexGridComboListHandle) = 0 Then
+                        LSet WndRect(0) = VBFlexGridComboBoxRect
+                        MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect(0), 2
+                        GetWindowRect VBFlexGridComboListHandle, WndRect(1)
+                        hMonitor = MonitorFromWindow(VBFlexGridEditHandle, MONITOR_DEFAULTTOPRIMARY)
+                        MI.cbSize = LenB(MI)
+                        GetMonitorInfo hMonitor, MI
+                        If (WndRect(0).Bottom + (WndRect(1).Bottom - WndRect(1).Top)) > MI.RCMonitor.Bottom Then
+                            SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Top - (WndRect(1).Bottom - WndRect(1).Top), 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
+                        Else
+                            SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_SHOWWINDOW
+                        End If
                     End If
+                    SetCapture VBFlexGridComboListHandle
+                ElseIf VBFlexGridComboCalendarHandle <> 0 Then
+                    VBFlexGridEditNoLostFocus = True
+                    If IsWindowVisible(VBFlexGridComboCalendarHandle) = 0 Then
+                        LSet WndRect(0) = VBFlexGridComboBoxRect
+                        MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect(0), 2
+                        GetWindowRect VBFlexGridComboCalendarHandle, WndRect(1)
+                        hMonitor = MonitorFromWindow(VBFlexGridEditHandle, MONITOR_DEFAULTTOPRIMARY)
+                        MI.cbSize = LenB(MI)
+                        GetMonitorInfo hMonitor, MI
+                        If (WndRect(0).Bottom + (WndRect(1).Bottom - WndRect(1).Top)) > MI.RCMonitor.Bottom Then
+                            SetWindowPos VBFlexGridComboCalendarHandle, 0, WndRect(0).Left, WndRect(0).Top - (WndRect(1).Bottom - WndRect(1).Top), 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_SHOWWINDOW
+                        Else
+                            SetWindowPos VBFlexGridComboCalendarHandle, 0, WndRect(0).Left, WndRect(0).Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_SHOWWINDOW
+                        End If
+                    End If
+                    ' SetCapture is not applicable as the calendar control needs to have the focus.
                 End If
-                SetCapture VBFlexGridComboListHandle
             End If
         End If
     Else
         If (dwLong And ODS_SELECTED) = ODS_SELECTED Then
             SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong And Not ODS_SELECTED
             InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
-            If GetCapture() = VBFlexGridComboListHandle Then ReleaseCapture
-            If IsWindowVisible(VBFlexGridComboListHandle) <> 0 Then ShowWindow VBFlexGridComboListHandle, SW_HIDE
+            If VBFlexGridComboListHandle <> 0 Then
+                If GetCapture() = VBFlexGridComboListHandle Then ReleaseCapture
+                If IsWindowVisible(VBFlexGridComboListHandle) <> 0 Then ShowWindow VBFlexGridComboListHandle, SW_HIDE
+            ElseIf VBFlexGridComboCalendarHandle <> 0 Then
+                SetFocusAPI VBFlexGridEditHandle
+                If IsWindowVisible(VBFlexGridComboCalendarHandle) <> 0 Then ShowWindow VBFlexGridComboCalendarHandle, SW_HIDE
+                VBFlexGridEditNoLostFocus = False
+            End If
             RaiseEvent ComboCloseUp
         End If
     End If
@@ -13345,13 +13547,14 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGrid
             SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or ODS_SELECTED
             InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
         End If
-        VBFlexGridComboButtonClick = True
+        VBFlexGridEditNoLostFocus = True
         RaiseEvent ComboButtonClick
-        VBFlexGridComboButtonClick = False
         If VBFlexGridEditHandle <> 0 Then
             If VBFlexGridComboButtonHandle <> 0 Then Call ComboButtonSetState(ODS_SELECTED, False)
             SetFocusAPI VBFlexGridEditHandle
+            VBFlexGridEditNoLostFocus = False
         Else
+            VBFlexGridEditNoLostFocus = False
             SetFocusAPI UserControl.hWnd
         End If
     End If
@@ -13431,6 +13634,20 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
         Me.EditText = Text
         SendMessage VBFlexGridEditHandle, EM_SETSEL, 0, ByVal -1&
     End If
+End If
+End Sub
+
+Private Sub ComboCalendarCommitSel()
+If VBFlexGridEditHandle <> 0 And VBFlexGridComboCalendarHandle <> 0 Then
+    Me.EditText = Me.ComboCalendarValue
+    SendMessage VBFlexGridEditHandle, EM_SETSEL, 0, ByVal -1&
+End If
+End Sub
+
+Private Sub ComboCalendarCommitST(ByRef ST As SYSTEMTIME)
+If VBFlexGridEditHandle <> 0 And VBFlexGridComboCalendarHandle <> 0 Then
+    Me.EditText = DateSerial(ST.wYear, ST.wMonth, ST.wDay)
+    SendMessage VBFlexGridEditHandle, EM_SETSEL, 0, ByVal -1&
 End If
 End Sub
 
@@ -13593,6 +13810,8 @@ Select Case dwRefData
     Case 4
         FSubclass_Message = WindowProcComboList(hWnd, wMsg, wParam, lParam)
     Case 5
+        FSubclass_Message = WindowProcComboCalendar(hWnd, wMsg, wParam, lParam)
+    Case 6
         FSubclass_Message = WindowProcUserControl(hWnd, wMsg, wParam, lParam)
 End Select
 End Function
@@ -14103,6 +14322,14 @@ Select Case wMsg
                             End If
                     End Select
             End Select
+        ElseIf NM.hWndFrom = VBFlexGridComboCalendarHandle And VBFlexGridComboCalendarHandle <> 0 Then
+            Select Case NM.Code
+                Case MCN_SELECT
+                    Dim NMSC As NMSELCHANGE
+                    CopyMemory NMSC, ByVal lParam, LenB(NMSC)
+                    Call ComboCalendarCommitST(NMSC.STSelStart)
+                    Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
+            End Select
         End If
     Case WM_COMMAND
         If lParam <> 0 Then
@@ -14118,6 +14345,15 @@ Select Case wMsg
                                     Call ComboListCommitSel
                                 End If
                             End If
+                            If VBFlexGridComboCalendarHandle <> 0 Then
+                                Dim DateText As String
+                                DateText = Me.EditText
+                                If IsDate(DateText) Then
+                                    Me.ComboCalendarValue = CDate(DateText)
+                                Else
+                                    Me.ComboCalendarValue = VBA.Date()
+                                End If
+                            End If
                             VBFlexGridEditTextChanged = True
                             VBFlexGridEditAlreadyValidated = False
                             RaiseEvent EditChange
@@ -14125,7 +14361,7 @@ Select Case wMsg
                     End If
                 Case STN_CLICKED
                     If LoWord(wParam) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> 0 Then
-                        If VBFlexGridComboListHandle <> 0 Then
+                        If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
                             Call ComboShowDropDown(True, FlexComboDropDownReasonMouse)
                         Else
                             Call ComboButtonPerformClick
@@ -14181,14 +14417,14 @@ Select Case wMsg
                 
                 Dim Theme As Long
                 If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then
-                    If VBFlexGridComboListHandle <> 0 Then
+                    If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
                         Theme = OpenThemeData(VBFlexGridHandle, StrPtr("ComboBox"))
                     Else
                         Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
                     End If
                 End If
                 If Theme <> 0 Then
-                    If VBFlexGridComboListHandle <> 0 Then
+                    If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
                         Dim ComboBoxPart As Long, ComboBoxState As Long
                         ComboBoxPart = CP_DROPDOWNBUTTON
                         If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
@@ -14236,7 +14472,7 @@ Select Case wMsg
                     CloseThemeData Theme
                 Else
                     Dim CtlType As Long, Flags As Long
-                    If VBFlexGridComboListHandle <> 0 Then
+                    If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
                         CtlType = DFC_SCROLL
                         Flags = DFCS_SCROLLCOMBOBOX
                     Else
@@ -14265,7 +14501,7 @@ Select Case wMsg
                 #Else
                 
                 Dim CtlType As Long, Flags As Long
-                If VBFlexGridComboListHandle <> 0 Then
+                If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
                     CtlType = DFC_SCROLL
                     Flags = DFCS_SCROLLCOMBOBOX
                 Else
@@ -14478,7 +14714,7 @@ Select Case wMsg
                             If DestroyEdit(True, FlexEditCloseModeEscape) = True Then Exit Function
                         Case vbKeyF4
                             If VBFlexGridComboButtonHandle <> 0 Then
-                                If VBFlexGridComboListHandle <> 0 Then
+                                If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
                                     Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyboard)
                                 Else
                                     Call ComboButtonPerformClick
@@ -14571,7 +14807,7 @@ Select Case wMsg
             If VBFlexGridEditHandle <> 0 Then
                 If KeyCode = vbKeyReturn Then
                     PostMessage hWnd, WM_CHAR, vbKeyReturn, ByVal 0&
-                ElseIf VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
+                ElseIf VBFlexGridComboButtonHandle <> 0 And (VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0) Then
                     If KeyCode = vbKeyDown Or KeyCode = vbKeyUp Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyboard)
                 End If
             Else
@@ -14718,7 +14954,12 @@ Select Case wMsg
     Case WM_MOUSEACTIVATE
         ' It is necessary to break the chain and return MA_ACTIVATE for this window.
         ' This enables the parent window - when it receives WM_MOUSEACTIVATE - to destroy this child window.
-        WindowProcComboButton = MA_ACTIVATE
+        If ComboButtonGetState(ODS_SELECTED) = False Then
+            WindowProcComboButton = MA_ACTIVATE
+        Else
+            ' This allows the popup window to close without causing a click which would show it again.
+            WindowProcComboButton = MA_ACTIVATEANDEAT
+        End If
         Exit Function
     Case WM_LBUTTONDOWN
         ' In case the edit window is still active due to failed validation then this ensures that the focus is properly set when clicked from outside.
@@ -14786,6 +15027,74 @@ Select Case wMsg
         If SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos()) <> HTVSCROLL Then Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
 End Select
 WindowProcComboList = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
+End Function
+
+Private Function WindowProcComboCalendar(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Select Case wMsg
+    Case WM_SETFOCUS
+        
+        #If ImplementPreTranslateMsg = True Then
+        
+        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me)
+        
+        #Else
+        
+        Call ActivateIPAO(Me)
+        
+        #End If
+        
+    Case WM_KILLFOCUS
+        
+        #If ImplementPreTranslateMsg = True Then
+        
+        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO
+        
+        #Else
+        
+        Call DeActivateIPAO
+        
+        #End If
+        
+    Case WM_KEYDOWN, WM_SYSKEYDOWN
+        Dim KeyCode As Integer
+        KeyCode = wParam And &HFF&
+        If wMsg = WM_KEYDOWN Then
+            Select Case KeyCode
+                Case vbKeyEscape
+                    Call ComboShowDropDown(False, FlexComboDropDownReasonKeyboard)
+                    If DestroyEdit(True, FlexEditCloseModeEscape) = True Then Exit Function
+                Case vbKeyF4
+                    Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyboard)
+                Case vbKeyReturn
+                    Call ComboCalendarCommitSel
+                    Call ComboShowDropDown(False, FlexComboDropDownReasonKeyboard)
+                    DestroyEdit False, FlexEditCloseModeReturn
+                    Exit Function
+                Case vbKeyTab
+                    If PropTabBehavior <> FlexTabControls Then
+                        Select Case GetShiftStateFromMsg()
+                            Case 0
+                                If DestroyEdit(False, FlexEditCloseModeTab) = True Then PostMessage VBFlexGridHandle, wMsg, wParam, ByVal 0&: Exit Function
+                            Case vbShiftMask
+                                If DestroyEdit(False, FlexEditCloseModeShiftTab) = True Then PostMessage VBFlexGridHandle, wMsg, wParam, ByVal 0&: Exit Function
+                        End Select
+                    End If
+            End Select
+        ElseIf wMsg = WM_SYSKEYDOWN Then
+            If KeyCode = vbKeyDown Or KeyCode = vbKeyUp Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyboard)
+        End If
+    
+    #If ImplementPreTranslateMsg = True Then
+    
+    Case UM_PRETRANSLATEMSG
+        WindowProcComboCalendar = PreTranslateMsg(lParam)
+        Exit Function
+    
+    #End If
+    
+End Select
+WindowProcComboCalendar = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
+If wMsg = WM_KILLFOCUS Then Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
 End Function
 
 Private Function WindowProcUserControl(ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long

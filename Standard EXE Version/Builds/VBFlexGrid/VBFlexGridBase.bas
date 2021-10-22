@@ -33,6 +33,7 @@ End Type
 Public Declare Function FlexPtrToShadowObj Lib "msvbvm60.dll" Alias "__vbaObjSetAddref" (ByRef Destination As Any, ByVal lpObject As Long) As Long
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare Function InitCommonControlsEx Lib "comctl32" (ByRef ICCEX As TINITCOMMONCONTROLSEX) As Long
+Private Declare Function GetClassInfoEx Lib "user32" Alias "GetClassInfoExW" (ByVal hInstance As Long, ByVal lpClassName As Long, ByRef lpWndClassEx As WNDCLASSEX) As Long
 Private Declare Function RegisterClassEx Lib "user32" Alias "RegisterClassExW" (ByRef lpWndClassEx As WNDCLASSEX) As Integer
 Private Declare Function UnregisterClass Lib "user32" Alias "UnregisterClassW" (ByVal lpClassName As Long, ByVal hInstance As Long) As Long
 Private Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
@@ -59,11 +60,13 @@ Private Const WM_DESTROY As Long = &H2
 Private Const WM_NCDESTROY As Long = &H82
 Private Const WM_UAHDESTROYWINDOW As Long = &H90
 Private Const CS_DBLCLKS As Long = &H8
+Private Const CS_DROPSHADOW As Long = &H20000
 Private Const IDC_ARROW As Long = 32512
 Private ShellModHandle As Long, ShellModCount As Long
 Private FlexSubclassProcPtr As Long
 Private FlexSubclassW2K As Integer
 Private FlexClassAtom As Integer, FlexRefCount As Long
+Private FlexComboCalendarClassAtom As Integer, FlexComboCalendarRefCount As Long
 Private FlexSplitterBrush As Long
 
 #If ImplementPreTranslateMsg = True Then
@@ -236,6 +239,30 @@ If FlexRefCount = 0 And FlexClassAtom <> 0 Then
         DeleteObject FlexSplitterBrush
         FlexSplitterBrush = 0
     End If
+End If
+End Sub
+
+Public Sub FlexComboCalendarRegisterClass()
+If (FlexComboCalendarClassAtom Or FlexComboCalendarRefCount) = 0 Then
+    Dim WCEX As WNDCLASSEX, ClassName As String
+    GetClassInfoEx App.hInstance, StrPtr("SysMonthCal32"), WCEX
+    ClassName = "VBFlexGridComboCalendarClass"
+    With WCEX
+    .cbSize = LenB(WCEX)
+    If Not (.dwStyle And CS_DROPSHADOW) = CS_DROPSHADOW Then .dwStyle = .dwStyle Or CS_DROPSHADOW
+    .hInstance = App.hInstance
+    .lpszClassName = StrPtr(ClassName)
+    End With
+    FlexComboCalendarClassAtom = RegisterClassEx(WCEX)
+End If
+FlexComboCalendarRefCount = FlexComboCalendarRefCount + 1
+End Sub
+
+Public Sub FlexComboCalendarReleaseClass()
+FlexComboCalendarRefCount = FlexComboCalendarRefCount - 1
+If FlexComboCalendarRefCount = 0 And FlexComboCalendarClassAtom <> 0 Then
+    UnregisterClass MakeDWord(FlexComboCalendarClassAtom, 0), App.hInstance
+    FlexComboCalendarClassAtom = 0
 End If
 End Sub
 
