@@ -14377,7 +14377,7 @@ Select Case wMsg
         End If
     Case WM_NOTIFYFORMAT
         Const NF_QUERY As Long = 3
-        If wParam = VBFlexGridToolTipHandle And VBFlexGridToolTipHandle <> 0 And lParam = NF_QUERY Then
+        If lParam = NF_QUERY Then
             Const NFR_ANSI As Long = 1
             Const NFR_UNICODE As Long = 2
             WindowProcControl = NFR_UNICODE
