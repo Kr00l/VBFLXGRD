@@ -247,7 +247,7 @@ Select Case VBFlexGrid1.EditCol
     Case COL_LOCKED
         Const ES_READONLY As Long = &H800
         dwStyle = dwStyle Or ES_READONLY
-    Case COL_SINGLELINE
+    Case COL_SINGLELINE, COL_CALENDARVALIDATION
         Const ES_MULTILINE As Long = &H4, ES_AUTOVSCROLL As Long = &H40, ES_AUTOHSCROLL As Long = &H80
         ' If 'SingleLine' is True then the whole flex grid is single lined. ES_MULTILINE is not predefined in that case.
         ' So it is better to check for ES_MULTILINE before removing it.
