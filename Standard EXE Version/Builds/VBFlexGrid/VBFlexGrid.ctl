@@ -877,6 +877,7 @@ Private Const SWP_NOSIZE As Long = &H1
 Private Const SWP_NOZORDER As Long = &H4
 Private Const SWP_NOACTIVATE As Long = &H10
 Private Const SWP_SHOWWINDOW As Long = &H40
+Private Const SWP_NOCOPYBITS As Long = &H100
 Private Const HWND_DESKTOP As Long = &H0
 Private Const COLOR_WINDOW As Long = 5
 Private Const COLOR_WINDOWTEXT As Long = 8
@@ -13409,7 +13410,7 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
         If VBFlexGridComboButtonHandle <> 0 Then
             Dim EditRect As RECT
             GetClientRect VBFlexGridEditHandle, EditRect
-            SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
+            SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
             If VBFlexGridComboListHandle <> 0 Then
                 LSet VBFlexGridComboBoxRect = RC
                 MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, RC, 2
