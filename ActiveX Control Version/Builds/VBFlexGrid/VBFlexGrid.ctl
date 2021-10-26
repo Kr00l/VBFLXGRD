@@ -804,6 +804,7 @@ Private Const SWP_NOSIZE As Long = &H1
 Private Const SWP_NOZORDER As Long = &H4
 Private Const SWP_NOACTIVATE As Long = &H10
 Private Const SWP_SHOWWINDOW As Long = &H40
+Private Const SWP_NOCOPYBITS As Long = &H100
 Private Const HWND_DESKTOP As Long = &H0
 Private Const COLOR_WINDOW As Long = 5
 Private Const COLOR_WINDOWTEXT As Long = 8
@@ -1039,7 +1040,8 @@ Implements OLEGuids.IObjectSafety
 Implements OLEGuids.IOleInPlaceActiveObjectVB
 Implements OLEGuids.IOleControlVB
 Implements OLEGuids.IPerPropertyBrowsingVB
-Private VBFlexGridHandle As Long, VBFlexGridEditHandle As Long, VBFlexGridComboButtonHandle As Long, VBFlexGridComboListHandle As Long, VBFlexGridToolTipHandle As Long
+Private VBFlexGridHandle As Long, VBFlexGridToolTipHandle As Long
+Private VBFlexGridEditHandle As Long, VBFlexGridComboButtonHandle As Long, VBFlexGridComboListHandle As Long
 Private VBFlexGridDoubleBufferDC As Long, VBFlexGridDoubleBufferBmp As Long, VBFlexGridDoubleBufferBmpOld As Long
 Private VBFlexGridFontHandle As Long, VBFlexGridFontFixedHandle As Long
 Private VBFlexGridClientRect As RECT
@@ -12060,11 +12062,22 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
         If VBFlexGridComboButtonHandle <> 0 Then
             Dim EditRect As RECT
             GetClientRect VBFlexGridEditHandle, EditRect
-            SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
+            SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
+            Dim WndRect(0 To 1) As RECT
+            Dim hMonitor As Long, MI As MONITORINFO
             If VBFlexGridComboListHandle <> 0 Then
                 LSet VBFlexGridComboBoxRect = RC
-                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, RC, 2
-                SetWindowPos VBFlexGridComboListHandle, 0, RC.Left, RC.Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                LSet WndRect(0) = VBFlexGridComboBoxRect
+                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect(0), 2
+                GetWindowRect VBFlexGridComboListHandle, WndRect(1)
+                hMonitor = MonitorFromWindow(VBFlexGridEditHandle, MONITOR_DEFAULTTOPRIMARY)
+                MI.cbSize = LenB(MI)
+                GetMonitorInfo hMonitor, MI
+                If (WndRect(0).Bottom + (WndRect(1).Bottom - WndRect(1).Top)) > MI.RCMonitor.Bottom Then
+                    SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Top - (WndRect(1).Bottom - WndRect(1).Top), 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                Else
+                    SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                End If
             End If
         End If
         If VBFlexGridEditRectChangedFrozen = False Then VBFlexGridEditRectChanged = True
