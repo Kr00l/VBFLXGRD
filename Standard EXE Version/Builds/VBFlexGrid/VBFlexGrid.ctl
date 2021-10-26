@@ -9259,38 +9259,39 @@ Else
 End If
 If Not .Picture Is Nothing Then
     If .Picture.Handle <> 0 Then
-        Dim PictureWidth As Long, PictureHeight As Long
+        Dim PictureRect As RECT, PictureWidth As Long, PictureHeight As Long
         Dim PictureLeft As Long, PictureTop As Long, PictureOffsetX As Long, PictureOffsetY As Long
+        LSet PictureRect = CellRect
         If .PictureAlignment <> FlexPictureAlignmentStretch Then
             PictureWidth = CHimetricToPixel_X(.Picture.Width)
             PictureHeight = CHimetricToPixel_Y(.Picture.Height)
         Else
-            PictureWidth = (CellRect.Right - CellRect.Left)
-            PictureHeight = (CellRect.Bottom - CellRect.Top)
+            PictureWidth = (PictureRect.Right - PictureRect.Left)
+            PictureHeight = (PictureRect.Bottom - PictureRect.Top)
         End If
-        PictureLeft = CellRect.Left
-        PictureTop = CellRect.Top
+        PictureLeft = PictureRect.Left
+        PictureTop = PictureRect.Top
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftCenterNoOverlap
-                PictureOffsetY = (((CellRect.Bottom - CellRect.Top) - PictureHeight) / 2)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
             Case FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftBottomNoOverlap
-                PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
+                PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
             Case FlexPictureAlignmentCenterTop
-                PictureOffsetX = (((CellRect.Right - CellRect.Left) - PictureWidth) / 2)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
             Case FlexPictureAlignmentCenterCenter
-                PictureOffsetX = (((CellRect.Right - CellRect.Left) - PictureWidth) / 2)
-                PictureOffsetY = (((CellRect.Bottom - CellRect.Top) - PictureHeight) / 2)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
             Case FlexPictureAlignmentCenterBottom
-                PictureOffsetX = (((CellRect.Right - CellRect.Left) - PictureWidth) / 2)
-                PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
+                PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
             Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightTopNoOverlap
-                PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
+                PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
             Case FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightCenterNoOverlap
-                PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
-                PictureOffsetY = (((CellRect.Bottom - CellRect.Top) - PictureHeight) / 2)
+                PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
             Case FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightBottomNoOverlap
-                PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
-                PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
+                PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
+                PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
         End Select
         If PictureOffsetX > 0 Then PictureLeft = PictureLeft + PictureOffsetX
         If PictureOffsetY > 0 Then PictureTop = PictureTop + PictureOffsetY
@@ -9301,10 +9302,10 @@ If Not .Picture Is Nothing Then
                 Do
                     Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
                     PictureTop = PictureTop + PictureHeight
-                Loop While PictureTop < CellRect.Bottom
+                Loop While PictureTop < PictureRect.Bottom
                 PictureLeft = PictureLeft + PictureWidth
-                PictureTop = CellRect.Top
-            Loop While PictureLeft < CellRect.Right
+                PictureTop = PictureRect.Top
+            Loop While PictureLeft < PictureRect.Right
         End If
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
@@ -9644,38 +9645,39 @@ Else
 End If
 If Not .Picture Is Nothing Then
     If .Picture.Handle <> 0 Then
-        Dim PictureWidth As Long, PictureHeight As Long
+        Dim PictureRect As RECT, PictureWidth As Long, PictureHeight As Long
         Dim PictureLeft As Long, PictureTop As Long, PictureOffsetX As Long, PictureOffsetY As Long
+        LSet PictureRect = CellRect
         If .PictureAlignment <> FlexPictureAlignmentStretch Then
             PictureWidth = CHimetricToPixel_X(.Picture.Width)
             PictureHeight = CHimetricToPixel_Y(.Picture.Height)
         Else
-            PictureWidth = (CellRect.Right - CellRect.Left)
-            PictureHeight = (CellRect.Bottom - CellRect.Top)
+            PictureWidth = (PictureRect.Right - PictureRect.Left)
+            PictureHeight = (PictureRect.Bottom - PictureRect.Top)
         End If
-        PictureLeft = CellRect.Left
-        PictureTop = CellRect.Top
+        PictureLeft = PictureRect.Left
+        PictureTop = PictureRect.Top
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftCenterNoOverlap
-                PictureOffsetY = (((CellRect.Bottom - CellRect.Top) - PictureHeight) / 2)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
             Case FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftBottomNoOverlap
-                PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
+                PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
             Case FlexPictureAlignmentCenterTop
-                PictureOffsetX = (((CellRect.Right - CellRect.Left) - PictureWidth) / 2)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
             Case FlexPictureAlignmentCenterCenter
-                PictureOffsetX = (((CellRect.Right - CellRect.Left) - PictureWidth) / 2)
-                PictureOffsetY = (((CellRect.Bottom - CellRect.Top) - PictureHeight) / 2)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
             Case FlexPictureAlignmentCenterBottom
-                PictureOffsetX = (((CellRect.Right - CellRect.Left) - PictureWidth) / 2)
-                PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
+                PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
             Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightTopNoOverlap
-                PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
+                PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
             Case FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightCenterNoOverlap
-                PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
-                PictureOffsetY = (((CellRect.Bottom - CellRect.Top) - PictureHeight) / 2)
+                PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
             Case FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightBottomNoOverlap
-                PictureOffsetX = ((CellRect.Right - CellRect.Left) - PictureWidth)
-                PictureOffsetY = ((CellRect.Bottom - CellRect.Top) - PictureHeight)
+                PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
+                PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
         End Select
         If PictureOffsetX > 0 Then PictureLeft = PictureLeft + PictureOffsetX
         If PictureOffsetY > 0 Then PictureTop = PictureTop + PictureOffsetY
@@ -9686,10 +9688,10 @@ If Not .Picture Is Nothing Then
                 Do
                     Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
                     PictureTop = PictureTop + PictureHeight
-                Loop While PictureTop < CellRect.Bottom
+                Loop While PictureTop < PictureRect.Bottom
                 PictureLeft = PictureLeft + PictureWidth
-                PictureTop = CellRect.Top
-            Loop While PictureLeft < CellRect.Right
+                PictureTop = PictureRect.Top
+            Loop While PictureLeft < PictureRect.Right
         End If
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
@@ -13411,14 +13413,34 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
             Dim EditRect As RECT
             GetClientRect VBFlexGridEditHandle, EditRect
             SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
+            Dim WndRect(0 To 1) As RECT
+            Dim hMonitor As Long, MI As MONITORINFO
             If VBFlexGridComboListHandle <> 0 Then
                 LSet VBFlexGridComboBoxRect = RC
-                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, RC, 2
-                SetWindowPos VBFlexGridComboListHandle, 0, RC.Left, RC.Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                LSet WndRect(0) = VBFlexGridComboBoxRect
+                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect(0), 2
+                GetWindowRect VBFlexGridComboListHandle, WndRect(1)
+                hMonitor = MonitorFromWindow(VBFlexGridEditHandle, MONITOR_DEFAULTTOPRIMARY)
+                MI.cbSize = LenB(MI)
+                GetMonitorInfo hMonitor, MI
+                If (WndRect(0).Bottom + (WndRect(1).Bottom - WndRect(1).Top)) > MI.RCMonitor.Bottom Then
+                    SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Top - (WndRect(1).Bottom - WndRect(1).Top), 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                Else
+                    SetWindowPos VBFlexGridComboListHandle, 0, WndRect(0).Left, WndRect(0).Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                End If
             ElseIf VBFlexGridComboCalendarHandle <> 0 Then
                 LSet VBFlexGridComboBoxRect = RC
-                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, RC, 2
-                SetWindowPos VBFlexGridComboCalendarHandle, 0, RC.Left, RC.Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                LSet WndRect(0) = VBFlexGridComboBoxRect
+                MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect(0), 2
+                GetWindowRect VBFlexGridComboCalendarHandle, WndRect(1)
+                hMonitor = MonitorFromWindow(VBFlexGridEditHandle, MONITOR_DEFAULTTOPRIMARY)
+                MI.cbSize = LenB(MI)
+                GetMonitorInfo hMonitor, MI
+                If (WndRect(0).Bottom + (WndRect(1).Bottom - WndRect(1).Top)) > MI.RCMonitor.Bottom Then
+                    SetWindowPos VBFlexGridComboCalendarHandle, 0, WndRect(0).Left, WndRect(0).Top - (WndRect(1).Bottom - WndRect(1).Top), 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                Else
+                    SetWindowPos VBFlexGridComboCalendarHandle, 0, WndRect(0).Left, WndRect(0).Bottom, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                End If
             End If
         End If
         If VBFlexGridEditRectChangedFrozen = False Then VBFlexGridEditRectChanged = True
