@@ -39,7 +39,7 @@ Private FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus
 Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy
 Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
-Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
+Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultComboCue
 Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral
 Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
 Private FlexRowSizingModeIndividual, FlexRowSizingModeAll
@@ -59,8 +59,9 @@ Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollabl
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
 Private FlexFindDirectionDown, FlexFindDirectionUp
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
-Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace
+Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace, FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
+Private FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton
 Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton, FlexComboModeCalendar
 Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComboDropDownReasonMouse, FlexComboDropDownReasonKeyboard
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
@@ -158,6 +159,7 @@ FlexHitResultDividerRowTop = 2
 FlexHitResultDividerRowBottom = 3
 FlexHitResultDividerColumnLeft = 4
 FlexHitResultDividerColumnRight = 5
+FlexHitResultComboCue = 6
 End Enum
 Public Enum FlexAlignmentConstants
 FlexAlignmentLeftTop = 0
@@ -326,6 +328,9 @@ FlexEditReasonSpace = 2
 FlexEditReasonKeyPress = 3
 FlexEditReasonDblClick = 4
 FlexEditReasonBackSpace = 5
+FlexEditReasonComboCueClick = 10
+FlexEditReasonComboCueDblClick = 11
+FlexEditReasonComboCueF4 = 12
 End Enum
 Public Enum FlexEditCloseModeConstants
 FlexEditCloseModeCode = 0
@@ -335,6 +340,11 @@ FlexEditCloseModeReturn = 3
 FlexEditCloseModeTab = 4
 FlexEditCloseModeShiftTab = 5
 FlexEditCloseModeNavigationKey = 6
+End Enum
+Public Enum FlexComboCueConstants
+FlexComboCueNone = 0
+FlexComboCueDropDown = 1
+FlexComboCueButton = 2
 End Enum
 Public Enum FlexComboModeConstants
 FlexComboModeNone = 0
@@ -893,6 +903,7 @@ Private Const MK_SHIFT As Long = &H4
 Private Const MK_CONTROL As Long = &H8
 Private Const TME_LEAVE As Long = &H2
 Private Const TME_NONCLIENT As Long = &H10
+Private Const ODA_DRAWENTIRE As Long = &H1
 Private Const ODS_SELECTED As Long = &H1
 Private Const ODS_DISABLED As Long = &H4
 Private Const ODS_FOCUS As Long = &H10
@@ -1181,8 +1192,8 @@ Private VBFlexGridEditTempFontHandle As Long
 Private VBFlexGridEditBackColor As OLE_COLOR, VBFlexGridEditForeColor As OLE_COLOR
 Private VBFlexGridEditBackColorBrush As Long
 Private VBFlexGridEditNoLostFocus As Boolean
-Private VBFlexGridComboMode As FlexComboModeConstants
-Private VBFlexGridComboActiveMode As FlexComboModeConstants
+Private VBFlexGridComboCue As FlexComboCueConstants
+Private VBFlexGridComboMode As FlexComboModeConstants, VBFlexGridComboActiveMode As FlexComboModeConstants
 Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
 Private VBFlexGridComboItems As String
 Private VBFlexGridComboBoxRect As RECT
@@ -1434,6 +1445,7 @@ VBFlexGridEditRow = -1
 VBFlexGridEditCol = -1
 VBFlexGridEditReason = -1
 VBFlexGridEditCloseMode = -1
+VBFlexGridComboCue = FlexComboCueNone
 VBFlexGridComboMode = FlexComboModeNone
 VBFlexGridComboActiveMode = FlexComboModeNone
 VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal
@@ -4382,9 +4394,18 @@ If VBFlexGridEditHandle <> 0 Then
     SetFocusAPI VBFlexGridEditHandle
     If VBFlexGridComboButtonHandle <> 0 Then
         ShowWindow VBFlexGridComboButtonHandle, SW_SHOW
-        If VBFlexGridComboListHandle <> 0 Then
-            If VBFlexGridComboActiveMode = FlexComboModeDropDown Then Call ComboShowDropDown(True, FlexComboDropDownReasonInitialize)
-        End If
+        Select Case Reason
+            Case FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4
+                If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
+                    Call ComboShowDropDown(True, FlexComboDropDownReasonInitialize)
+                Else
+                    Call ComboButtonPerformClick
+                End If
+            Case Else
+                If VBFlexGridComboListHandle <> 0 Then
+                    If VBFlexGridComboActiveMode = FlexComboModeDropDown Then Call ComboShowDropDown(True, FlexComboDropDownReasonInitialize)
+                End If
+        End Select
     End If
     
     #If ImplementPreTranslateMsg = True Then
@@ -7894,6 +7915,22 @@ Public Property Let EditSelText(ByVal Value As String)
 If VBFlexGridEditHandle <> 0 Then SendMessage VBFlexGridEditHandle, EM_REPLACESEL, 1, ByVal StrPtr(Value)
 End Property
 
+Public Property Get ComboCue() As FlexComboCueConstants
+Attribute ComboCue.VB_Description = "Returns/sets the combo cue to visually indicate a combo functionality."
+Attribute ComboCue.VB_MemberFlags = "400"
+ComboCue = VBFlexGridComboCue
+End Property
+
+Public Property Let ComboCue(ByVal Value As FlexComboCueConstants)
+Select Case Value
+    Case FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton
+        VBFlexGridComboCue = Value
+    Case Else
+        Err.Raise 380
+End Select
+Call RedrawGrid
+End Property
+
 Public Property Get ComboMode() As FlexComboModeConstants
 Attribute ComboMode.VB_Description = "Returns/sets the combo functionality mode when editing a cell."
 Attribute ComboMode.VB_MemberFlags = "400"
@@ -9219,12 +9256,24 @@ If PropFocusRect <> FlexFocusRectNone Then
     If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
+Dim ComboCueWidth As Long
+If PropAllowUserEditing = True Then
+    If VBFlexGridComboCue <> FlexComboCueNone Then
+        If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then
+            If VBFlexGridEditHandle = 0 And VBFlexGridComboButtonHandle = 0 Then
+                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
+            End If
+        End If
+    End If
+End If
 Dim Text As String, TextRect As RECT
 Call GetCellText(iRow, iCol, Text)
 With TextRect
 .Left = CellRect.Left + VBFlexGridDrawInfo.CellTextWidthPadding
 .Top = CellRect.Top + VBFlexGridDrawInfo.CellTextHeightPadding
 .Right = CellRect.Right - VBFlexGridDrawInfo.CellTextWidthPadding
+If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
 .Bottom = CellRect.Bottom - VBFlexGridDrawInfo.CellTextHeightPadding
 End With
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
@@ -9262,6 +9311,7 @@ If Not .Picture Is Nothing Then
         Dim PictureRect As RECT, PictureWidth As Long, PictureHeight As Long
         Dim PictureLeft As Long, PictureTop As Long, PictureOffsetX As Long, PictureOffsetY As Long
         LSet PictureRect = CellRect
+        If ComboCueWidth > 0 Then PictureRect.Right = PictureRect.Right - ComboCueWidth
         If .PictureAlignment <> FlexPictureAlignmentStretch Then
             PictureWidth = CHimetricToPixel_X(.Picture.Width)
             PictureHeight = CHimetricToPixel_Y(.Picture.Height)
@@ -9361,6 +9411,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     .Bottom = CellRect.Bottom - 1
     If (.Right - VBFlexGridFocusBorder.CX) <= .Left Then .Right = CellRect.Right + 1
     If (.Bottom - VBFlexGridFocusBorder.CY) <= .Top Then .Bottom = CellRect.Bottom + 1
+    If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
     DrawFocusRect hDC, FocusRect
     If PropFocusRect = FlexFocusRectHeavy Then
         If (.Right - VBFlexGridFocusBorder.CX) > (.Left + VBFlexGridFocusBorder.CX) And (.Bottom - VBFlexGridFocusBorder.CY) > (.Top + VBFlexGridFocusBorder.CY) Then
@@ -9547,6 +9598,22 @@ SetTextColor hDC, OldTextColor
 If hFontOld <> 0 Then SelectObject hDC, hFontOld
 If hFontTemp <> 0 Then DeleteObject hFontTemp
 End With
+If ComboCueWidth > 0 Then
+    Dim DIS As DRAWITEMSTRUCT
+    DIS.CtlType = 0
+    DIS.CtlID = 0
+    DIS.ItemID = 0
+    DIS.ItemAction = ODA_DRAWENTIRE
+    DIS.ItemState = 0
+    DIS.hWndItem = VBFlexGridHandle
+    DIS.hDC = hDC
+    DIS.RCItem.Left = CellRect.Right - ComboCueWidth - 1
+    DIS.RCItem.Top = CellRect.Top
+    DIS.RCItem.Right = CellRect.Right - 1
+    DIS.RCItem.Bottom = CellRect.Bottom - 1
+    DIS.ItemData = 0
+    Call ComboButtonDraw(DIS)
+End If
 End Sub
 
 Private Sub DrawCell(ByRef hDC As Long, ByRef CellRect As RECT, ByVal iRow As Long, ByVal iCol As Long)
@@ -9595,12 +9662,24 @@ If PropFocusRect <> FlexFocusRectNone Then
     If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
+Dim ComboCueWidth As Long
+If PropAllowUserEditing = True Then
+    If VBFlexGridComboCue <> FlexComboCueNone Then
+        If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then
+            If VBFlexGridEditHandle = 0 And VBFlexGridComboButtonHandle = 0 Then
+                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
+            End If
+        End If
+    End If
+End If
 Dim Text As String, TextRect As RECT
 Call GetCellText(iRow, iCol, Text)
 With TextRect
 .Left = CellRect.Left + VBFlexGridDrawInfo.CellTextWidthPadding
 .Top = CellRect.Top + VBFlexGridDrawInfo.CellTextHeightPadding
 .Right = CellRect.Right - VBFlexGridDrawInfo.CellTextWidthPadding
+If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
 .Bottom = CellRect.Bottom - VBFlexGridDrawInfo.CellTextHeightPadding
 End With
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
@@ -9648,6 +9727,7 @@ If Not .Picture Is Nothing Then
         Dim PictureRect As RECT, PictureWidth As Long, PictureHeight As Long
         Dim PictureLeft As Long, PictureTop As Long, PictureOffsetX As Long, PictureOffsetY As Long
         LSet PictureRect = CellRect
+        If ComboCueWidth > 0 Then PictureRect.Right = PictureRect.Right - ComboCueWidth
         If .PictureAlignment <> FlexPictureAlignmentStretch Then
             PictureWidth = CHimetricToPixel_X(.Picture.Width)
             PictureHeight = CHimetricToPixel_Y(.Picture.Height)
@@ -9747,6 +9827,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     .Bottom = CellRect.Bottom - 1
     If (.Right - VBFlexGridFocusBorder.CX) <= .Left Then .Right = CellRect.Right + 1
     If (.Bottom - VBFlexGridFocusBorder.CY) <= .Top Then .Bottom = CellRect.Bottom + 1
+    If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
     DrawFocusRect hDC, FocusRect
     If PropFocusRect = FlexFocusRectHeavy Then
         If (.Right - VBFlexGridFocusBorder.CX) > (.Left + VBFlexGridFocusBorder.CX) And (.Bottom - VBFlexGridFocusBorder.CY) > (.Top + VBFlexGridFocusBorder.CY) Then
@@ -9859,6 +9940,22 @@ SetTextColor hDC, OldTextColor
 If hFontOld <> 0 Then SelectObject hDC, hFontOld
 If hFontTemp <> 0 Then DeleteObject hFontTemp
 End With
+If ComboCueWidth > 0 Then
+    Dim DIS As DRAWITEMSTRUCT
+    DIS.CtlType = 0
+    DIS.CtlID = 0
+    DIS.ItemID = 0
+    DIS.ItemAction = ODA_DRAWENTIRE
+    DIS.ItemState = 0
+    DIS.hWndItem = VBFlexGridHandle
+    DIS.hDC = hDC
+    DIS.RCItem.Left = CellRect.Right - ComboCueWidth - 1
+    DIS.RCItem.Top = CellRect.Top
+    DIS.RCItem.Right = CellRect.Right - 1
+    DIS.RCItem.Bottom = CellRect.Bottom - 1
+    DIS.ItemData = 0
+    Call ComboButtonDraw(DIS)
+End If
 End Sub
 
 Private Sub GetSelRangeStruct(ByRef SelRange As TCELLRANGE)
@@ -10581,6 +10678,18 @@ If iRowHit > -1 And iColHit > -1 Then
             End If
         ElseIf iColHit < (PropFixedCols + PropFrozenCols) Then
             HTI.HitResult = FlexHitResultCell
+        End If
+    End If
+    If HTI.HitResult = FlexHitResultCell Then
+        If PropAllowUserEditing = True Then
+            If VBFlexGridComboCue <> FlexComboCueNone Then
+                If (iRowHit = VBFlexGridRow And iColHit = VBFlexGridCol) Then
+                    If VBFlexGridEditHandle = 0 And VBFlexGridComboButtonHandle = 0 Then
+                        SetRect TempRect, .Right - GetSystemMetrics(SM_CXVSCROLL) - 1, .Top, .Right - 1, .Bottom - 1
+                        If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then HTI.HitResult = FlexHitResultComboCue
+                    End If
+                End If
+            End If
         End If
     End If
 Else
@@ -12679,56 +12788,52 @@ VBFlexGridCaptureHitResult = HTI.HitResult
 VBFlexGridMouseMoveRow = HTI.HitRow
 VBFlexGridMouseMoveCol = HTI.HitCol
 VBFlexGridMouseMoveChanged = False
-If HTI.HitResult = FlexHitResultNoWhere Then
-    Exit Function
-ElseIf HTI.HitResult <> FlexHitResultCell Then
-    Select Case VBFlexGridCaptureHitResult
-        Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
-            VBFlexGridCaptureDividerDrag = True
-        Case Else
-            Exit Function
-    End Select
-    Dim iRow As Long, iCol As Long, Cancel As Boolean
-    iRow = VBFlexGridCaptureDividerRow
-    iCol = VBFlexGridCaptureDividerCol
-    RaiseEvent BeforeUserResize(iRow, iCol, Cancel)
-    If Cancel = False Then
-        Dim ClipRect As RECT, i As Long, P As POINTAPI
-        LSet ClipRect = VBFlexGridClientRect
-        With ClipRect
-        If iRow > -1 Then
-            For i = 0 To iRow - 1
-                If i >= VBFlexGridTopRow Or i < (PropFixedRows + PropFrozenRows) Then
-                    .Top = .Top + GetRowHeight(i)
-                End If
-            Next i
-            P.Y = .Top + GetRowHeight(iRow)
-            .Top = .Top + (HTI.PT.Y - P.Y) + 1
-            .Bottom = .Bottom + (HTI.PT.Y - P.Y) - 1
+Select Case HTI.HitResult
+    Case FlexHitResultNoWhere, FlexHitResultComboCue
+        Exit Function
+    Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
+        VBFlexGridCaptureDividerDrag = True
+        Dim iRow As Long, iCol As Long, Cancel As Boolean
+        iRow = VBFlexGridCaptureDividerRow
+        iCol = VBFlexGridCaptureDividerCol
+        RaiseEvent BeforeUserResize(iRow, iCol, Cancel)
+        If Cancel = False Then
+            Dim ClipRect As RECT, i As Long, P As POINTAPI
+            LSet ClipRect = VBFlexGridClientRect
+            With ClipRect
+            If iRow > -1 Then
+                For i = 0 To iRow - 1
+                    If i >= VBFlexGridTopRow Or i < (PropFixedRows + PropFrozenRows) Then
+                        .Top = .Top + GetRowHeight(i)
+                    End If
+                Next i
+                P.Y = .Top + GetRowHeight(iRow)
+                .Top = .Top + (HTI.PT.Y - P.Y) + 1
+                .Bottom = .Bottom + (HTI.PT.Y - P.Y) - 1
+            End If
+            If iCol > -1 Then
+                For i = 0 To iCol - 1
+                    If i >= VBFlexGridLeftCol Or i < (PropFixedCols + PropFrozenCols) Then
+                        .Left = .Left + GetColWidth(i)
+                    End If
+                Next i
+                P.X = .Left + GetColWidth(iCol)
+                .Left = .Left + (HTI.PT.X - P.X) + 1
+                .Right = .Right + (HTI.PT.X - P.X) - 1
+            End If
+            End With
+            MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, ClipRect, 2
+            ClipCursor ClipRect
+            VBFlexGridDividerDragOffset.X = HTI.PT.X - P.X
+            VBFlexGridDividerDragOffset.Y = HTI.PT.Y - P.Y
+            Call SetDividerDragSplitterRect(P.X, P.Y)
+            Call DrawDividerDragSplitter
+            ProcessLButtonDown = True
+        Else
+            ReleaseCapture
         End If
-        If iCol > -1 Then
-            For i = 0 To iCol - 1
-                If i >= VBFlexGridLeftCol Or i < (PropFixedCols + PropFrozenCols) Then
-                    .Left = .Left + GetColWidth(i)
-                End If
-            Next i
-            P.X = .Left + GetColWidth(iCol)
-            .Left = .Left + (HTI.PT.X - P.X) + 1
-            .Right = .Right + (HTI.PT.X - P.X) - 1
-        End If
-        End With
-        MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, ClipRect, 2
-        ClipCursor ClipRect
-        VBFlexGridDividerDragOffset.X = HTI.PT.X - P.X
-        VBFlexGridDividerDragOffset.Y = HTI.PT.Y - P.Y
-        Call SetDividerDragSplitterRect(P.X, P.Y)
-        Call DrawDividerDragSplitter
-        ProcessLButtonDown = True
-    Else
-        ReleaseCapture
-    End If
-    Exit Function
-End If
+        Exit Function
+End Select
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_ROW Or RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL
@@ -12981,7 +13086,12 @@ If VBFlexGridCaptureDividerDrag = True Then
     Call DrawDividerDragSplitter
     Exit Sub
 End If
-If VBFlexGridCaptureRow = -1 Or VBFlexGridCaptureCol = -1 Or VBFlexGridCaptureHitResult = FlexHitResultNoWhere Then Exit Sub
+Select Case VBFlexGridCaptureHitResult
+    Case FlexHitResultNoWhere, FlexHitResultComboCue
+        Exit Sub
+    Case Else
+        If VBFlexGridCaptureRow = -1 Or VBFlexGridCaptureCol = -1 Then Exit Sub
+End Select
 If (Button And vbLeftButton) = 0 Then Exit Sub
 If VBFlexGridCaptureRow <= (PropFixedRows - 1) And VBFlexGridCaptureCol <= (PropFixedCols - 1) Then Exit Sub
 Dim HTI As THITTESTINFO
@@ -13563,7 +13673,7 @@ End If
 End Sub
 
 Private Sub ComboButtonPerformClick()
-If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle = 0 Then
+If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle = 0 And VBFlexGridComboCalendarHandle = 0 Then
     Dim dwLong As Long
     dwLong = GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA)
     If Not (dwLong And ODS_DISABLED) = ODS_DISABLED Then
@@ -13582,6 +13692,162 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGrid
             SetFocusAPI UserControl.hWnd
         End If
     End If
+End If
+End Sub
+
+Private Sub ComboButtonDraw(ByRef DIS As DRAWITEMSTRUCT)
+If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
+    Dim OldTextColor As Long
+    
+    #If ImplementThemedComboButton = True Then
+    
+    Dim Theme As Long, ThemeDropDown As Boolean
+    If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then
+        If DIS.CtlType = ODT_STATIC Then
+            If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
+                Theme = OpenThemeData(VBFlexGridHandle, StrPtr("ComboBox"))
+                ThemeDropDown = True
+            Else
+                Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
+            End If
+        Else
+            If VBFlexGridComboCue = FlexComboCueDropDown Then
+                Theme = OpenThemeData(VBFlexGridHandle, StrPtr("ComboBox"))
+                ThemeDropDown = True
+            Else
+                Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
+            End If
+        End If
+    End If
+    If Theme <> 0 Then
+        If ThemeDropDown = True Then
+            Dim ComboBoxPart As Long, ComboBoxState As Long
+            ComboBoxPart = CP_DROPDOWNBUTTON
+            If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
+                If Not (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
+                    If Not (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then
+                        ComboBoxState = CBXS_NORMAL
+                    Else
+                        ComboBoxState = CBXS_HOT
+                    End If
+                Else
+                    ComboBoxState = CBXS_PRESSED
+                End If
+            Else
+                ComboBoxState = CBXS_DISABLED
+            End If
+            If IsThemeBackgroundPartiallyTransparent(Theme, ComboBoxPart, ComboBoxState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
+            DrawThemeBackground Theme, DIS.hDC, ComboBoxPart, ComboBoxState, DIS.RCItem, DIS.RCItem
+        Else
+            Dim ButtonPart As Long, ButtonState As Long
+            ButtonPart = BP_PUSHBUTTON
+            If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
+                If Not (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
+                    If Not (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then
+                        ButtonState = PBS_NORMAL
+                    Else
+                        ButtonState = PBS_HOT
+                    End If
+                Else
+                    ButtonState = PBS_PRESSED
+                End If
+            Else
+                ButtonState = PBS_DISABLED
+            End If
+            If IsThemeBackgroundPartiallyTransparent(Theme, ButtonPart, ButtonState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
+            DrawThemeBackground Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
+            GetThemeBackgroundContentRect Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
+            If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
+                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+            Else
+                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+            End If
+            Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+            SetTextColor DIS.hDC, OldTextColor
+        End If
+        CloseThemeData Theme
+    Else
+        Dim CtlType As Long, Flags As Long
+        If DIS.CtlType = ODT_STATIC Then
+            If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
+                CtlType = DFC_SCROLL
+                Flags = DFCS_SCROLLCOMBOBOX
+            Else
+                CtlType = DFC_BUTTON
+                Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
+            End If
+        Else
+            If VBFlexGridComboCue = FlexComboCueDropDown Then
+                CtlType = DFC_SCROLL
+                Flags = DFCS_SCROLLCOMBOBOX
+            Else
+                CtlType = DFC_BUTTON
+                Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
+            End If
+        End If
+        If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
+        If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
+        If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
+        DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
+        If CtlType = DFC_BUTTON Then
+            If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
+                If Not (Flags And DFCS_HOT) = DFCS_HOT Then
+                    OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+                Else
+                    OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
+                End If
+            Else
+                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+            End If
+            Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+            SetTextColor DIS.hDC, OldTextColor
+        End If
+    End If
+    
+    #Else
+    
+    Dim CtlType As Long, Flags As Long
+    If DIS.CtlType = ODT_STATIC Then
+        If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
+            CtlType = DFC_SCROLL
+            Flags = DFCS_SCROLLCOMBOBOX
+        Else
+            CtlType = DFC_BUTTON
+            Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
+        End If
+    Else
+        If VBFlexGridComboCue = FlexComboCueDropDown Then
+            CtlType = DFC_SCROLL
+            Flags = DFCS_SCROLLCOMBOBOX
+        Else
+            CtlType = DFC_BUTTON
+            Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
+        End If
+    End If
+    If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
+    If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
+    If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
+    DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
+    If CtlType = DFC_BUTTON Then
+        If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
+            If Not (Flags And DFCS_HOT) = DFCS_HOT Then
+                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+            Else
+                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
+            End If
+        Else
+            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+        End If
+        Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+        SetTextColor DIS.hDC, OldTextColor
+    End If
+    
+    #End If
+    
+Else
+    With DIS
+    RaiseEvent ComboButtonOwnerDraw(.ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
+    End With
 End If
 End Sub
 
@@ -14163,6 +14429,10 @@ Select Case wMsg
                             If CreateEdit(FlexEditReasonSpace) = True Then Exit Function
                         Case vbKeyBack
                             If CreateEdit(FlexEditReasonBackSpace) = True Then Exit Function
+                        Case vbKeyF4
+                            If VBFlexGridComboCue <> FlexComboCueNone Then
+                                If CreateEdit(FlexEditReasonComboCueF4) = True Then Exit Function
+                            End If
                     End Select
                 End If
             ElseIf wMsg = WM_KEYUP Then
@@ -14250,6 +14520,18 @@ Select Case wMsg
             Else
                 VBFlexGridCellClickRow = -1
                 VBFlexGridCellClickCol = -1
+                If wMsg = WM_LBUTTONDOWN Then
+                    If .HitResult = FlexHitResultComboCue Then
+                        Select Case PropSelectionMode
+                            Case FlexSelectionModeByRow
+                                CreateEdit FlexEditReasonComboCueClick, .HitRow
+                            Case FlexSelectionModeByColumn
+                                CreateEdit FlexEditReasonComboCueClick, , .HitCol
+                            Case Else
+                                CreateEdit FlexEditReasonComboCueClick, .HitRow, .HitCol
+                        End Select
+                    End If
+                End If
             End If
             End With
         End If
@@ -14426,6 +14708,7 @@ Select Case wMsg
         Dim DIS As DRAWITEMSTRUCT
         CopyMemory DIS, ByVal lParam, LenB(DIS)
         If DIS.CtlType = ODT_STATIC And DIS.CtlID = ID_COMBOBUTTONCHILD And DIS.hWndItem = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> 0 Then
+            DIS.ItemState = GetWindowLong(DIS.hWndItem, GWL_USERDATA)
             Dim Brush As Long
             If VBFlexGridEditBackColorBrush <> 0 Then
                 Brush = VBFlexGridEditBackColorBrush
@@ -14433,130 +14716,7 @@ Select Case wMsg
                 Brush = GetSysColorBrush(COLOR_WINDOW)
             End If
             FillRect DIS.hDC, DIS.RCItem, Brush
-            DIS.ItemState = GetWindowLong(DIS.hWndItem, GWL_USERDATA)
-            If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
-                Dim OldTextColor As Long
-                
-                #If ImplementThemedComboButton = True Then
-                
-                Dim Theme As Long
-                If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then
-                    If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
-                        Theme = OpenThemeData(VBFlexGridHandle, StrPtr("ComboBox"))
-                    Else
-                        Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
-                    End If
-                End If
-                If Theme <> 0 Then
-                    If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
-                        Dim ComboBoxPart As Long, ComboBoxState As Long
-                        ComboBoxPart = CP_DROPDOWNBUTTON
-                        If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
-                            If Not (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
-                                If Not (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then
-                                    ComboBoxState = CBXS_NORMAL
-                                Else
-                                    ComboBoxState = CBXS_HOT
-                                End If
-                            Else
-                                ComboBoxState = CBXS_PRESSED
-                            End If
-                        Else
-                            ComboBoxState = CBXS_DISABLED
-                        End If
-                        If IsThemeBackgroundPartiallyTransparent(Theme, ComboBoxPart, ComboBoxState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
-                        DrawThemeBackground Theme, DIS.hDC, ComboBoxPart, ComboBoxState, DIS.RCItem, DIS.RCItem
-                    Else
-                        Dim ButtonPart As Long, ButtonState As Long
-                        ButtonPart = BP_PUSHBUTTON
-                        If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
-                            If Not (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
-                                If Not (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then
-                                    ButtonState = PBS_NORMAL
-                                Else
-                                    ButtonState = PBS_HOT
-                                End If
-                            Else
-                                ButtonState = PBS_PRESSED
-                            End If
-                        Else
-                            ButtonState = PBS_DISABLED
-                        End If
-                        If IsThemeBackgroundPartiallyTransparent(Theme, ButtonPart, ButtonState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
-                        DrawThemeBackground Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
-                        GetThemeBackgroundContentRect Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
-                        If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
-                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
-                        Else
-                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
-                        End If
-                        Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-                        SetTextColor DIS.hDC, OldTextColor
-                    End If
-                    CloseThemeData Theme
-                Else
-                    Dim CtlType As Long, Flags As Long
-                    If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
-                        CtlType = DFC_SCROLL
-                        Flags = DFCS_SCROLLCOMBOBOX
-                    Else
-                        CtlType = DFC_BUTTON
-                        Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
-                    End If
-                    If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
-                    If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
-                    If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
-                    DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
-                    If CtlType = DFC_BUTTON Then
-                        If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
-                            If Not (Flags And DFCS_HOT) = DFCS_HOT Then
-                                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
-                            Else
-                                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
-                            End If
-                        Else
-                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
-                        End If
-                        Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-                        SetTextColor DIS.hDC, OldTextColor
-                    End If
-                End If
-                
-                #Else
-                
-                Dim CtlType As Long, Flags As Long
-                If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
-                    CtlType = DFC_SCROLL
-                    Flags = DFCS_SCROLLCOMBOBOX
-                Else
-                    CtlType = DFC_BUTTON
-                    Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
-                End If
-                If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
-                If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
-                If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
-                DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
-                If CtlType = DFC_BUTTON Then
-                    If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
-                        If Not (Flags And DFCS_HOT) = DFCS_HOT Then
-                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
-                        Else
-                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
-                        End If
-                    Else
-                        OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
-                    End If
-                    Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-                    SetTextColor DIS.hDC, OldTextColor
-                End If
-                
-                #End If
-                
-            Else
-                With DIS
-                RaiseEvent ComboButtonOwnerDraw(.ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
-                End With
-            End If
+            Call ComboButtonDraw(DIS)
             WindowProcControl = 1
             Exit Function
         End If
@@ -14600,15 +14760,26 @@ Select Case wMsg
         End If
         RaiseEvent DblClick
         If PropAllowUserEditing = True Then
-            If wMsg = WM_LBUTTONDBLCLK And .HitResult = FlexHitResultCell Then
-                If .HitRow > (PropFixedRows - 1) And .HitCol > (PropFixedCols - 1) Then
+            If wMsg = WM_LBUTTONDBLCLK Then
+                If .HitResult = FlexHitResultCell Then
+                    If .HitRow > (PropFixedRows - 1) And .HitCol > (PropFixedCols - 1) Then
+                        Select Case PropSelectionMode
+                            Case FlexSelectionModeByRow
+                                CreateEdit FlexEditReasonDblClick, .HitRow
+                            Case FlexSelectionModeByColumn
+                                CreateEdit FlexEditReasonDblClick, , .HitCol
+                            Case Else
+                                CreateEdit FlexEditReasonDblClick, .HitRow, .HitCol
+                        End Select
+                    End If
+                ElseIf .HitResult = FlexHitResultComboCue Then
                     Select Case PropSelectionMode
                         Case FlexSelectionModeByRow
-                            CreateEdit FlexEditReasonDblClick, .HitRow
+                            CreateEdit FlexEditReasonComboCueDblClick, .HitRow
                         Case FlexSelectionModeByColumn
-                            CreateEdit FlexEditReasonDblClick, , .HitCol
+                            CreateEdit FlexEditReasonComboCueDblClick, , .HitCol
                         Case Else
-                            CreateEdit FlexEditReasonDblClick, .HitRow, .HitCol
+                            CreateEdit FlexEditReasonComboCueDblClick, .HitRow, .HitCol
                     End Select
                 End If
             End If
