@@ -8,6 +8,14 @@ Begin VB.Form UserEditingForm
    ScaleHeight     =   6900
    ScaleWidth      =   13830
    StartUpPosition =   3  'Windows Default
+   Begin VB.CommandButton Command2 
+      Caption         =   "Command2"
+      Height          =   495
+      Left            =   9480
+      TabIndex        =   11
+      Top             =   6240
+      Width           =   1455
+   End
    Begin VB.Frame Frame2 
       Caption         =   "Edit on return key (by code)"
       Height          =   1335
@@ -202,6 +210,22 @@ ElseIf Col = -1 Then
 End If
 End Sub
 
+Private Sub VBFlexGrid1_RowColChange()
+' The combo cue can only be displayed on the current cell.
+If VBFlexGrid1.Row >= VBFlexGrid1.FixedRows Then
+    Select Case VBFlexGrid1.Col
+        Case COL_CALENDARVALIDATION, COL_COMBODROPDOWN, COL_COMBOEDITABLE
+            VBFlexGrid1.ComboCue = FlexComboCueDropDown
+        Case COL_COMBOBUTTON
+            VBFlexGrid1.ComboCue = FlexComboCueButton
+        Case Else
+            VBFlexGrid1.ComboCue = FlexComboCueNone
+    End Select
+Else
+    VBFlexGrid1.ComboCue = FlexComboCueNone
+End If
+End Sub
+
 Private Sub VBFlexGrid1_BeforeEdit(Row As Long, Col As Long, ByVal Reason As FlexEditReasonConstants, Cancel As Boolean)
 ' This event is for evaluation if the cell can be edited.
 ' Nothing has been initialized yet. So EditRow/EditCol can't be used. Instead they are passed in the parameters.
@@ -338,7 +362,7 @@ Select Case VBFlexGrid1.EditCol
             VBFlexGrid1.Cell(FlexCellBackColor, VBFlexGrid1.EditRow, VBFlexGrid1.EditCol) = CHCLR.RGBResult
             VBFlexGrid1.CommitEdit
         Else
-            ' .CancelEdit may be called or not as developer wishes.
+            VBFlexGrid1.CancelEdit
         End If
 End Select
 End Sub

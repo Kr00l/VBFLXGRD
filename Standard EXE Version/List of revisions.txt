@@ -1,5 +1,10 @@
 List of revisions:
 
+28-Oct-2021
+- Included the ComboCue property. (FlexComboCueConstants - which is 0 - None, 1 - DropDown or 2 - Button)
+- New edit reason enum FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick and FlexEditReasonComboCueF4.
+- New hit result enum FlexHitResultComboCue.
+
 22-Oct-2021
 - Added a new FlexComboModeCalendar enum that allows to use a drop-down calendar functionality when editing a cell.
   The application must verify on ValidateEdit that the input is valid and also a unique format can be applied there. (see demo project)
