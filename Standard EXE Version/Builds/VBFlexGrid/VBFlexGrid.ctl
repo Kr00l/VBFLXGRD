@@ -794,6 +794,7 @@ Private Declare Function GetMessagePos Lib "user32" () As Long
 Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As RECT) As Long
 Private Declare Function GetWindowRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As RECT) As Long
 Private Declare Function MapWindowPoints Lib "user32" (ByVal hWndFrom As Long, ByVal hWndTo As Long, ByRef lppt As Any, ByVal cPoints As Long) As Long
+Private Declare Function SetViewportOrgEx Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByRef lpPoint As POINTAPI) As Long
 Private Declare Function SetRect Lib "user32" (ByRef lpRect As RECT, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function CreateSolidBrush Lib "gdi32" (ByVal crColor As Long) As Long
 Private Declare Function CreatePen Lib "gdi32" (ByVal nPenStyle As Long, ByVal nWidth As Long, ByVal crColor As Long) As Long
@@ -9379,7 +9380,7 @@ If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) 
 Else
     OldTextColor = SetTextColor(hDC, WinColor(PropForeColorSel))
 End If
-Dim hPenOld As Long, P As POINTAPI
+Dim hPenOld As Long
 Select Case PropGridLinesFixed
     Case FlexGridLineFlat, FlexGridLineDashes, FlexGridLineDots
         hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
@@ -9599,7 +9600,7 @@ If hFontOld <> 0 Then SelectObject hDC, hFontOld
 If hFontTemp <> 0 Then DeleteObject hFontTemp
 End With
 If ComboCueWidth > 0 Then
-    Dim DIS As DRAWITEMSTRUCT
+    Dim DIS As DRAWITEMSTRUCT, P As POINTAPI
     DIS.CtlType = 0
     DIS.CtlID = 0
     DIS.ItemID = 0
@@ -9607,12 +9608,14 @@ If ComboCueWidth > 0 Then
     DIS.ItemState = 0
     DIS.hWndItem = VBFlexGridHandle
     DIS.hDC = hDC
-    DIS.RCItem.Left = CellRect.Right - ComboCueWidth - 1
-    DIS.RCItem.Top = CellRect.Top
-    DIS.RCItem.Right = CellRect.Right - 1
-    DIS.RCItem.Bottom = CellRect.Bottom - 1
+    DIS.RCItem.Left = 0
+    DIS.RCItem.Top = 0
+    DIS.RCItem.Right = ComboCueWidth
+    DIS.RCItem.Bottom = (CellRect.Bottom - CellRect.Top) - 1
     DIS.ItemData = 0
+    SetViewportOrgEx DIS.hDC, CellRect.Right - ComboCueWidth - 1, CellRect.Top, P
     Call ComboButtonDraw(DIS)
+    SetViewportOrgEx DIS.hDC, P.X, P.Y, P
 End If
 End Sub
 
@@ -9795,7 +9798,7 @@ If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) 
 Else
     OldTextColor = SetTextColor(hDC, WinColor(PropForeColorSel))
 End If
-Dim hPenOld As Long, P As POINTAPI
+Dim hPenOld As Long
 Select Case PropGridLines
     Case FlexGridLineFlat, FlexGridLineDashes, FlexGridLineDots
         hPenOld = SelectObject(hDC, VBFlexGridGridLinePen)
@@ -9941,7 +9944,7 @@ If hFontOld <> 0 Then SelectObject hDC, hFontOld
 If hFontTemp <> 0 Then DeleteObject hFontTemp
 End With
 If ComboCueWidth > 0 Then
-    Dim DIS As DRAWITEMSTRUCT
+    Dim DIS As DRAWITEMSTRUCT, P As POINTAPI
     DIS.CtlType = 0
     DIS.CtlID = 0
     DIS.ItemID = 0
@@ -9949,12 +9952,14 @@ If ComboCueWidth > 0 Then
     DIS.ItemState = 0
     DIS.hWndItem = VBFlexGridHandle
     DIS.hDC = hDC
-    DIS.RCItem.Left = CellRect.Right - ComboCueWidth - 1
-    DIS.RCItem.Top = CellRect.Top
-    DIS.RCItem.Right = CellRect.Right - 1
-    DIS.RCItem.Bottom = CellRect.Bottom - 1
+    DIS.RCItem.Left = 0
+    DIS.RCItem.Top = 0
+    DIS.RCItem.Right = ComboCueWidth
+    DIS.RCItem.Bottom = (CellRect.Bottom - CellRect.Top) - 1
     DIS.ItemData = 0
+    SetViewportOrgEx DIS.hDC, CellRect.Right - ComboCueWidth - 1, CellRect.Top, P
     Call ComboButtonDraw(DIS)
+    SetViewportOrgEx DIS.hDC, P.X, P.Y, P
 End If
 End Sub
 
