@@ -1,5 +1,8 @@
 List of revisions:
 
+29-Oct-2021
+- DC viewport for the ComboCue draw now set as 0, 0. (affects the ComboButtonOwnerDraw event)
+
 28-Oct-2021
 - Included the ComboCue property. (FlexComboCueConstants - which is 0 - None, 1 - DropDown or 2 - Button)
 - New edit reason enum FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick and FlexEditReasonComboCueF4.
