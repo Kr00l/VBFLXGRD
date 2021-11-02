@@ -1,6 +1,8 @@
 List of revisions:
 
 02-Nov-2021
+- Included the CellComboCue property. (plus corresponding enum FlexCellComboCue)
+  This let's you define a fixed combo cue for an individual cell or a range of cells.
 - Included the ComboCueRow/ComboCueCol property which sets the row and column where the combo cue is displayed.
   Default internal value is -1 as an alias for the current focused cell. (.Row/.Col)
 

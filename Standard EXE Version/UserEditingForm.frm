@@ -8,14 +8,6 @@ Begin VB.Form UserEditingForm
    ScaleHeight     =   6900
    ScaleWidth      =   13830
    StartUpPosition =   3  'Windows Default
-   Begin VB.CommandButton Command2 
-      Caption         =   "Command2"
-      Height          =   495
-      Left            =   9480
-      TabIndex        =   11
-      Top             =   6240
-      Width           =   1455
-   End
    Begin VB.Frame Frame2 
       Caption         =   "Edit on return key (by code)"
       Height          =   1335
