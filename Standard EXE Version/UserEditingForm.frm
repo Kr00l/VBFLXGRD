@@ -228,7 +228,7 @@ Private Sub VBFlexGrid1_BeforeEdit(Row As Long, Col As Long, ByVal Reason As Fle
 If Row < VBFlexGrid1.FixedRows Or Col < VBFlexGrid1.FixedCols Then
     ' Fixed cells can't be edited by the end-user. (only by code)
     ' However, here it can be ensured that this is not possible at all.
-    'Cancel = True
+    ' Cancel = True
 End If
 If Col = COL_NOTALLOWED Then
     ' The last col we want to be in a special range which is not allowed to be edited.
