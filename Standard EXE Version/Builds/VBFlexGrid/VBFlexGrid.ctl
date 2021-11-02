@@ -1194,6 +1194,7 @@ Private VBFlexGridEditBackColor As OLE_COLOR, VBFlexGridEditForeColor As OLE_COL
 Private VBFlexGridEditBackColorBrush As Long
 Private VBFlexGridEditNoLostFocus As Boolean
 Private VBFlexGridComboCue As FlexComboCueConstants
+Private VBFlexGridComboCueRow As Long, VBFlexGridComboCueCol As Long
 Private VBFlexGridComboMode As FlexComboModeConstants, VBFlexGridComboActiveMode As FlexComboModeConstants
 Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
 Private VBFlexGridComboItems As String
@@ -1447,6 +1448,8 @@ VBFlexGridEditCol = -1
 VBFlexGridEditReason = -1
 VBFlexGridEditCloseMode = -1
 VBFlexGridComboCue = FlexComboCueNone
+VBFlexGridComboCueRow = -1
+VBFlexGridComboCueCol = -1
 VBFlexGridComboMode = FlexComboModeNone
 VBFlexGridComboActiveMode = FlexComboModeNone
 VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal
@@ -2870,6 +2873,7 @@ ElseIf Value <> PropRows And PropCols > 0 Then
 Else
     PropRows = Value
 End If
+If VBFlexGridComboCueRow > (PropRows - 1) Then VBFlexGridComboCueRow = (PropRows - 1)
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
@@ -2973,6 +2977,7 @@ ElseIf Value <> PropCols And PropRows > 0 Then
 Else
     PropCols = Value
 End If
+If VBFlexGridComboCueCol > (PropCols - 1) Then VBFlexGridComboCueCol = (PropCols - 1)
 VBFlexGridExtendLastCol = GetExtendLastCol()
 Dim RCP As TROWCOLPARAMS
 With RCP
@@ -7932,6 +7937,30 @@ End Select
 Call RedrawGrid
 End Property
 
+Public Property Get ComboCueRow() As Long
+Attribute ComboCueRow.VB_Description = "Returns/sets the row where the combo cue is displayed."
+Attribute ComboCueRow.VB_MemberFlags = "400"
+ComboCueRow = GetComboCueRow()
+End Property
+
+Public Property Let ComboCueRow(ByVal Value As Long)
+If Value <> -1 And (Value < 0 Or Value > (PropRows - 1)) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+VBFlexGridComboCueRow = Value
+Call RedrawGrid
+End Property
+
+Public Property Get ComboCueCol() As Long
+Attribute ComboCueCol.VB_Description = "Returns/sets the column where the combo cue is displayed."
+Attribute ComboCueCol.VB_MemberFlags = "400"
+ComboCueCol = GetComboCueCol()
+End Property
+
+Public Property Let ComboCueCol(ByVal Value As Long)
+If Value <> -1 And (Value < 0 Or Value > (PropRows - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+VBFlexGridComboCueCol = Value
+Call RedrawGrid
+End Property
+
 Public Property Get ComboMode() As FlexComboModeConstants
 Attribute ComboMode.VB_Description = "Returns/sets the combo functionality mode when editing a cell."
 Attribute ComboMode.VB_MemberFlags = "400"
@@ -8168,6 +8197,8 @@ If PropRows < 1 Or PropCols < 1 Then
     VBFlexGridColSel = -1
     VBFlexGridTopRow = -1
     VBFlexGridLeftCol = -1
+    VBFlexGridComboCueRow = -1
+    VBFlexGridComboCueCol = -1
     VBFlexGridExtendLastCol = -1
     Exit Sub
 End If
@@ -8207,6 +8238,8 @@ Else
 End If
 VBFlexGridTopRow = PropFixedRows + PropFrozenRows
 VBFlexGridLeftCol = PropFixedCols + PropFrozenCols
+VBFlexGridComboCueRow = -1
+VBFlexGridComboCueCol = -1
 VBFlexGridExtendLastCol = GetExtendLastCol()
 End Sub
 
@@ -8221,6 +8254,8 @@ VBFlexGridRowSel = -1
 VBFlexGridColSel = -1
 VBFlexGridTopRow = -1
 VBFlexGridLeftCol = -1
+VBFlexGridComboCueRow = -1
+VBFlexGridComboCueCol = -1
 VBFlexGridExtendLastCol = -1
 End Sub
 
@@ -9260,7 +9295,7 @@ If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 Dim ComboCueWidth As Long
 If PropAllowUserEditing = True Then
     If VBFlexGridComboCue <> FlexComboCueNone Then
-        If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then
+        If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
             If VBFlexGridEditHandle = 0 And VBFlexGridComboButtonHandle = 0 Then
                 ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
                 If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
@@ -9668,7 +9703,7 @@ If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 Dim ComboCueWidth As Long
 If PropAllowUserEditing = True Then
     If VBFlexGridComboCue <> FlexComboCueNone Then
-        If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then
+        If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
             If VBFlexGridEditHandle = 0 And VBFlexGridComboButtonHandle = 0 Then
                 ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
                 If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
@@ -10688,7 +10723,7 @@ If iRowHit > -1 And iColHit > -1 Then
     If HTI.HitResult = FlexHitResultCell Then
         If PropAllowUserEditing = True Then
             If VBFlexGridComboCue <> FlexComboCueNone Then
-                If (iRowHit = VBFlexGridRow And iColHit = VBFlexGridCol) Then
+                If (iRowHit = GetComboCueRow() And iColHit = GetComboCueCol()) Then
                     If VBFlexGridEditHandle = 0 And VBFlexGridComboButtonHandle = 0 Then
                         SetRect TempRect, .Right - GetSystemMetrics(SM_CXVSCROLL) - 1, .Top, .Right - 1, .Bottom - 1
                         If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then HTI.HitResult = FlexHitResultComboCue
@@ -11428,6 +11463,14 @@ Else
     End If
     GetExtendLastCol = i
 End If
+End Function
+
+Private Function GetComboCueRow() As Long
+If VBFlexGridComboCueRow = -1 Then GetComboCueRow = VBFlexGridRow Else GetComboCueRow = VBFlexGridComboCueRow
+End Function
+
+Private Function GetComboCueCol() As Long
+If VBFlexGridComboCueCol = -1 Then GetComboCueCol = VBFlexGridCol Else GetComboCueCol = VBFlexGridComboCueCol
 End Function
 
 Private Sub ProcessKeyDown(ByVal KeyCode As Integer, ByVal Shift As Integer)
@@ -14436,7 +14479,11 @@ Select Case wMsg
                             If CreateEdit(FlexEditReasonBackSpace) = True Then Exit Function
                         Case vbKeyF4
                             If VBFlexGridComboCue <> FlexComboCueNone Then
-                                If CreateEdit(FlexEditReasonComboCueF4) = True Then Exit Function
+                                If (VBFlexGridRow = GetComboCueRow() And VBFlexGridCol = GetComboCueCol()) Then
+                                    If VBFlexGridEditHandle = 0 And VBFlexGridComboButtonHandle = 0 Then
+                                        If CreateEdit(FlexEditReasonComboCueF4) = True Then Exit Function
+                                    End If
+                                End If
                             End If
                     End Select
                 End If
