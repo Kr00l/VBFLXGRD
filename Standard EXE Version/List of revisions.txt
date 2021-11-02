@@ -1,5 +1,9 @@
 List of revisions:
 
+02-Nov-2021
+- Included the ComboCueRow/ComboCueCol property which sets the row and column where the combo cue is displayed.
+  Default internal value is -1 as an alias for the current focused cell. (.Row/.Col)
+
 29-Oct-2021
 - DC viewport for the ComboCue draw now set as 0, 0. (affects the ComboButtonOwnerDraw event)
 
