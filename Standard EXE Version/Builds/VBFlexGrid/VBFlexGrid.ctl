@@ -39,7 +39,7 @@ Private FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus
 Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy
 Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
-Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultComboCue
+Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled
 Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral
 Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
 Private FlexRowSizingModeIndividual, FlexRowSizingModeAll
@@ -61,7 +61,7 @@ Private FlexFindDirectionDown, FlexFindDirectionUp
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
 Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace, FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
-Private FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton
+Private FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
 Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton, FlexComboModeCalendar
 Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComboDropDownReasonMouse, FlexComboDropDownReasonKeyboard
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
@@ -160,6 +160,7 @@ FlexHitResultDividerRowBottom = 3
 FlexHitResultDividerColumnLeft = 4
 FlexHitResultDividerColumnRight = 5
 FlexHitResultComboCue = 6
+FlexHitResultComboCueDisabled = 7
 End Enum
 Public Enum FlexAlignmentConstants
 FlexAlignmentLeftTop = 0
@@ -346,6 +347,8 @@ Public Enum FlexComboCueConstants
 FlexComboCueNone = 0
 FlexComboCueDropDown = 1
 FlexComboCueButton = 2
+FlexComboCueDisabledDropDown = 3
+FlexComboCueDisabledButton = 4
 End Enum
 Public Enum FlexComboModeConstants
 FlexComboModeNone = 0
@@ -6755,7 +6758,7 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Select Case Value
-    Case FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton
+    Case FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
     Case Else
         Err.Raise 380
 End Select
@@ -7973,7 +7976,7 @@ End Property
 
 Public Property Let ComboCue(ByVal Value As FlexComboCueConstants)
 Select Case Value
-    Case FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton
+    Case FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
         VBFlexGridComboCue = Value
     Case Else
         Err.Raise 380
@@ -9337,19 +9340,35 @@ If PropFocusRect <> FlexFocusRectNone Then
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
-Dim ComboCueWidth As Long, ComboCueCtlType As Long
+Dim ComboCueWidth As Long, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
     If .ComboCue <> FlexComboCueNone Then
         ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
         If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
-        If .ComboCue = FlexComboCueDropDown Then ComboCueCtlType = ODT_COMBOBOX Else ComboCueCtlType = ODT_BUTTON
+        Select Case .ComboCue
+            Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
+                ComboCueCtlType = ODT_COMBOBOX
+            Case FlexComboCueButton, FlexComboCueDisabledButton
+                ComboCueCtlType = ODT_BUTTON
+        End Select
+        Select Case .ComboCue
+            Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+                ComboCueItemState = ODS_DISABLED
+        End Select
     ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
         If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
-            If VBFlexGridEditHandle = 0 And VBFlexGridComboButtonHandle = 0 Then
-                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
-                If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
-                If VBFlexGridComboCue = FlexComboCueDropDown Then ComboCueCtlType = ODT_COMBOBOX Else ComboCueCtlType = ODT_BUTTON
-            End If
+            ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+            If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
+            Select Case VBFlexGridComboCue
+                Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
+                    ComboCueCtlType = ODT_COMBOBOX
+                Case FlexComboCueButton, FlexComboCueDisabledButton
+                    ComboCueCtlType = ODT_BUTTON
+            End Select
+            Select Case VBFlexGridComboCue
+                Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+                    ComboCueItemState = ODS_DISABLED
+            End Select
         End If
     End If
 End If
@@ -9689,7 +9708,7 @@ If ComboCueWidth > 0 Then
     DIS.CtlID = 0
     DIS.ItemID = 0
     DIS.ItemAction = ODA_DRAWENTIRE
-    DIS.ItemState = 0
+    DIS.ItemState = ComboCueItemState
     DIS.hWndItem = VBFlexGridHandle
     DIS.hDC = hDC
     DIS.RCItem.Left = 0
@@ -9750,19 +9769,35 @@ If PropFocusRect <> FlexFocusRectNone Then
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
-Dim ComboCueWidth As Long, ComboCueCtlType As Long
+Dim ComboCueWidth As Long, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
     If .ComboCue <> FlexComboCueNone Then
         ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
         If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
-        If .ComboCue = FlexComboCueDropDown Then ComboCueCtlType = ODT_COMBOBOX Else ComboCueCtlType = ODT_BUTTON
+        Select Case .ComboCue
+            Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
+                ComboCueCtlType = ODT_COMBOBOX
+            Case FlexComboCueButton, FlexComboCueDisabledButton
+                ComboCueCtlType = ODT_BUTTON
+        End Select
+        Select Case .ComboCue
+            Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+                ComboCueItemState = ODS_DISABLED
+        End Select
     ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
         If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
-            If VBFlexGridEditHandle = 0 And VBFlexGridComboButtonHandle = 0 Then
-                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
-                If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
-                If VBFlexGridComboCue = FlexComboCueDropDown Then ComboCueCtlType = ODT_COMBOBOX Else ComboCueCtlType = ODT_BUTTON
-            End If
+            ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+            If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
+            Select Case VBFlexGridComboCue
+                Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
+                    ComboCueCtlType = ODT_COMBOBOX
+                Case FlexComboCueButton, FlexComboCueDisabledButton
+                    ComboCueCtlType = ODT_BUTTON
+            End Select
+            Select Case VBFlexGridComboCue
+                Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+                    ComboCueItemState = ODS_DISABLED
+            End Select
         End If
     End If
 End If
@@ -10038,7 +10073,7 @@ If ComboCueWidth > 0 Then
     DIS.CtlID = 0
     DIS.ItemID = 0
     DIS.ItemAction = ODA_DRAWENTIRE
-    DIS.ItemState = 0
+    DIS.ItemState = ComboCueItemState
     DIS.hWndItem = VBFlexGridHandle
     DIS.hDC = hDC
     DIS.RCItem.Left = 0
@@ -10778,12 +10813,24 @@ If iRowHit > -1 And iColHit > -1 Then
         If PropAllowUserEditing = True Then
             If VBFlexGridCells.Rows(iRowHit).Cols(iColHit).ComboCue <> FlexComboCueNone Then
                 SetRect TempRect, .Right - GetSystemMetrics(SM_CXVSCROLL) - 1, .Top, .Right - 1, .Bottom - 1
-                If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then HTI.HitResult = FlexHitResultComboCue
+                If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
+                    Select Case VBFlexGridCells.Rows(iRowHit).Cols(iColHit).ComboCue
+                        Case FlexComboCueDropDown, FlexComboCueButton
+                            HTI.HitResult = FlexHitResultComboCue
+                        Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+                            HTI.HitResult = FlexHitResultComboCueDisabled
+                    End Select
+                End If
             ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
                 If (iRowHit = GetComboCueRow() And iColHit = GetComboCueCol()) Then
-                    If VBFlexGridEditHandle = 0 And VBFlexGridComboButtonHandle = 0 Then
-                        SetRect TempRect, .Right - GetSystemMetrics(SM_CXVSCROLL) - 1, .Top, .Right - 1, .Bottom - 1
-                        If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then HTI.HitResult = FlexHitResultComboCue
+                    SetRect TempRect, .Right - GetSystemMetrics(SM_CXVSCROLL) - 1, .Top, .Right - 1, .Bottom - 1
+                    If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
+                        Select Case VBFlexGridComboCue
+                            Case FlexComboCueDropDown, FlexComboCueButton
+                                HTI.HitResult = FlexHitResultComboCue
+                            Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+                                HTI.HitResult = FlexHitResultComboCueDisabled
+                        End Select
                     End If
                 End If
             End If
@@ -12894,7 +12941,7 @@ VBFlexGridMouseMoveRow = HTI.HitRow
 VBFlexGridMouseMoveCol = HTI.HitCol
 VBFlexGridMouseMoveChanged = False
 Select Case HTI.HitResult
-    Case FlexHitResultNoWhere, FlexHitResultComboCue
+    Case FlexHitResultNoWhere, FlexHitResultComboCue, FlexHitResultComboCueDisabled
         Exit Function
     Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
         VBFlexGridCaptureDividerDrag = True
@@ -13192,7 +13239,7 @@ If VBFlexGridCaptureDividerDrag = True Then
     Exit Sub
 End If
 Select Case VBFlexGridCaptureHitResult
-    Case FlexHitResultNoWhere, FlexHitResultComboCue
+    Case FlexHitResultNoWhere, FlexHitResultComboCue, FlexHitResultComboCueDisabled
         Exit Sub
     Case Else
         If VBFlexGridCaptureRow = -1 Or VBFlexGridCaptureCol = -1 Then Exit Sub
@@ -14537,13 +14584,17 @@ Select Case wMsg
                         Case vbKeyF4
                             If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                                 If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).ComboCue <> FlexComboCueNone Then
-                                    If CreateEdit(FlexEditReasonComboCueF4) = True Then Exit Function
-                                ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
-                                    If (VBFlexGridRow = GetComboCueRow() And VBFlexGridCol = GetComboCueCol()) Then
-                                        If VBFlexGridEditHandle = 0 And VBFlexGridComboButtonHandle = 0 Then
+                                    Select Case VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).ComboCue
+                                        Case FlexComboCueDropDown, FlexComboCueButton
                                             If CreateEdit(FlexEditReasonComboCueF4) = True Then Exit Function
-                                        End If
-                                    End If
+                                    End Select
+                                ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
+                                    Select Case VBFlexGridComboCue
+                                        Case FlexComboCueDropDown, FlexComboCueButton
+                                            If (VBFlexGridRow = GetComboCueRow() And VBFlexGridCol = GetComboCueCol()) Then
+                                                If CreateEdit(FlexEditReasonComboCueF4) = True Then Exit Function
+                                            End If
+                                    End Select
                                 End If
                             End If
                     End Select
