@@ -1,5 +1,9 @@
 List of revisions:
 
+03-Nov-2021
+- Minor performance improvement for the internal GetHitTestInfo function.
+- Combo button now reacts to STN_DBLCLK.
+
 02-Nov-2021
 - Added combo cue enum FlexComboCueDisabledDropDown and FlexComboCueDisabledButton.
 - Added hit result enum FlexHitResultComboCueDisabled.
