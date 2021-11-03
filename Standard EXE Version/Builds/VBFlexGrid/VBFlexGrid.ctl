@@ -10640,17 +10640,15 @@ HTI.HitResult = FlexHitResultNoWhere
 HTI.MouseRow = 0
 HTI.MouseCol = 0
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Or (HTI.PT.X < 0 And HTI.PT.Y < 0) Then Exit Sub
-Dim iRow As Long, iCol As Long, iRowTo As Long, iColTo As Long
-Dim iRowHit As Long, iColHit As Long, iRowDivider As Long, iColDivider As Long
+Dim iRow As Long, iCol As Long, iRowHit As Long, iColHit As Long, iRowDivider As Long, iColDivider As Long
 Dim CellRect As RECT, TempRect As RECT
 iRowHit = -1
 iColHit = -1
 iRowDivider = -1
 iColDivider = -1
 With CellRect
-If HTI.PT.Y >= 0 Then iRowTo = (PropRows - 1) Else iRowTo = 0
-For iRow = 0 To iRowTo
-    If iRow >= VBFlexGridTopRow Or iRow < (PropFixedRows + PropFrozenRows) Then
+If HTI.PT.Y >= 0 Then
+    For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
         .Top = .Bottom
         .Bottom = .Top + GetRowHeight(iRow)
         If HTI.PT.Y >= .Top Then
@@ -10660,13 +10658,23 @@ For iRow = 0 To iRowTo
                 Exit For
             End If
         End If
-    Else
-        iRow = VBFlexGridTopRow - 1
+    Next iRow
+    If iRowHit = -1 Then
+        For iRow = VBFlexGridTopRow To (PropRows - 1)
+            .Top = .Bottom
+            .Bottom = .Top + GetRowHeight(iRow)
+            If HTI.PT.Y >= .Top Then
+                HTI.MouseRow = iRow
+                If HTI.PT.Y < .Bottom Then
+                    iRowHit = iRow
+                    Exit For
+                End If
+            End If
+        Next iRow
     End If
-Next iRow
-If HTI.PT.X >= 0 Then iColTo = (PropCols - 1) Else iColTo = 0
-For iCol = 0 To iColTo
-    If iCol >= VBFlexGridLeftCol Or iCol < (PropFixedCols + PropFrozenCols) Then
+End If
+If HTI.PT.X >= 0 Then
+    For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
         .Left = .Right
         .Right = .Left + GetColWidth(iCol)
         If HTI.PT.X >= .Left Then
@@ -10676,10 +10684,21 @@ For iCol = 0 To iColTo
                 Exit For
             End If
         End If
-    Else
-        iCol = VBFlexGridLeftCol - 1
+    Next iCol
+    If iColHit = -1 Then
+        For iCol = VBFlexGridLeftCol To (PropCols - 1)
+            .Left = .Right
+            .Right = .Left + GetColWidth(iCol)
+            If HTI.PT.X >= .Left Then
+                HTI.MouseCol = iCol
+                If HTI.PT.X < .Right Then
+                    iColHit = iCol
+                    Exit For
+                End If
+            End If
+        Next iCol
     End If
-Next iCol
+End If
 If iRowHit > -1 And iColHit > -1 Then
     If iRowHit >= VBFlexGridTopRow Then
         If iColHit >= VBFlexGridLeftCol Then
@@ -14829,7 +14848,7 @@ Select Case wMsg
                             RaiseEvent EditChange
                         End If
                     End If
-                Case STN_CLICKED
+                Case STN_CLICKED, STN_DBLCLK
                     If LoWord(wParam) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> 0 Then
                         If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
                             Call ComboShowDropDown(True, FlexComboDropDownReasonMouse)
