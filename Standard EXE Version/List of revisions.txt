@@ -1,5 +1,9 @@
 List of revisions:
 
+06-Nov-2021
+- Included the AllowUserFreezing property and the AfterUserFreeze event.
+- Included a new AfterUserResizeEnd event. Unlike AfterUserResize which is before commit (ByRef NewSize As Long) this event is after the commit.
+
 03-Nov-2021
 - Minor performance improvement for the internal GetHitTestInfo function.
 - Combo button now reacts to STN_DBLCLK.
