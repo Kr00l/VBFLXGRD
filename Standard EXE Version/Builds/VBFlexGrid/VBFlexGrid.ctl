@@ -60,7 +60,7 @@ Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollabl
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
 Private FlexFindDirectionDown, FlexFindDirectionUp
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
-Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace, FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4
+Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace, FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4, FlexEditReasonComboCueAltUpDown
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
 Private FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
 Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton, FlexComboModeCalendar
@@ -344,6 +344,7 @@ FlexEditReasonBackSpace = 5
 FlexEditReasonComboCueClick = 10
 FlexEditReasonComboCueDblClick = 11
 FlexEditReasonComboCueF4 = 12
+FlexEditReasonComboCueAltUpDown = 13
 End Enum
 Public Enum FlexEditCloseModeConstants
 FlexEditCloseModeCode = 0
@@ -2907,7 +2908,7 @@ If .Row > (PropRows - 1) Then
     .Row = (PropRows - 1)
 End If
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn, FlexSelectionModeByRow
+    Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         If VBFlexGridRowSel > (PropRows - 1) Then
             .Mask = .Mask Or RCPM_ROWSEL
             .RowSel = (PropRows - 1)
@@ -3012,7 +3013,7 @@ If .Col > (PropCols - 1) Then
     .Col = (PropCols - 1)
 End If
 Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn, FlexSelectionModeByColumn
+    Case FlexSelectionModeFree, FlexSelectionModeByColumn, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         If VBFlexGridColSel > (PropCols - 1) Then
             .Mask = .Mask Or RCPM_COLSEL
             .ColSel = (PropCols - 1)
@@ -4440,7 +4441,7 @@ If VBFlexGridEditHandle <> 0 Then
     If VBFlexGridComboButtonHandle <> 0 Then
         ShowWindow VBFlexGridComboButtonHandle, SW_SHOW
         Select Case Reason
-            Case FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4
+            Case FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4, FlexEditReasonComboCueAltUpDown
                 If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
                     Call ComboShowDropDown(True, FlexComboDropDownReasonInitialize)
                 Else
@@ -4740,7 +4741,7 @@ Else
         .Row = (PropRows - 1)
     End If
     Select Case PropSelectionMode
-        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn, FlexSelectionModeByRow
+        Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
             If VBFlexGridRowSel > (PropRows - 1) Then
                 .Mask = .Mask Or RCPM_ROWSEL
                 .RowSel = (PropRows - 1)
@@ -15010,6 +15011,25 @@ Select Case wMsg
             If wMsg = WM_KEYDOWN Then Call ProcessKeyDown(KeyCode, GetShiftStateFromMsg())
         ElseIf wMsg = WM_SYSKEYDOWN Then
             RaiseEvent KeyDown(KeyCode, GetShiftStateFromMsg())
+            If PropAllowUserEditing = True Then
+                If KeyCode = vbKeyUp Or KeyCode = vbKeyDown Then
+                    If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                        If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).ComboCue <> FlexComboCueNone Then
+                            Select Case VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).ComboCue
+                                Case FlexComboCueDropDown
+                                    If CreateEdit(FlexEditReasonComboCueAltUpDown) = True Then Exit Function
+                            End Select
+                        ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
+                            Select Case VBFlexGridComboCue
+                                Case FlexComboCueDropDown
+                                    If (VBFlexGridRow = GetComboCueRow() And VBFlexGridCol = GetComboCueCol()) Then
+                                        If CreateEdit(FlexEditReasonComboCueAltUpDown) = True Then Exit Function
+                                    End If
+                            End Select
+                        End If
+                    End If
+                End If
+            End If
         ElseIf wMsg = WM_SYSKEYUP Then
             RaiseEvent KeyUp(KeyCode, GetShiftStateFromMsg())
         End If
@@ -15569,7 +15589,7 @@ Select Case wMsg
                 If KeyCode = vbKeyReturn Then
                     PostMessage hWnd, WM_CHAR, vbKeyReturn, ByVal 0&
                 ElseIf VBFlexGridComboButtonHandle <> 0 And (VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0) Then
-                    If KeyCode = vbKeyDown Or KeyCode = vbKeyUp Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyboard)
+                    If KeyCode = vbKeyUp Or KeyCode = vbKeyDown Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyboard)
                 End If
             Else
                 Exit Function
@@ -15842,7 +15862,7 @@ Select Case wMsg
                     End If
             End Select
         ElseIf wMsg = WM_SYSKEYDOWN Then
-            If KeyCode = vbKeyDown Or KeyCode = vbKeyUp Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyboard)
+            If KeyCode = vbKeyUp Or KeyCode = vbKeyDown Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED), FlexComboDropDownReasonKeyboard)
         End If
     
     #If ImplementPreTranslateMsg = True Then
