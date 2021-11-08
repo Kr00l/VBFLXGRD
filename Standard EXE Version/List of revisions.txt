@@ -1,5 +1,8 @@
 List of revisions:
 
+08-Nov-2021
+- Added edit reason enum FlexEditReasonComboCueAltUpDown.
+
 06-Nov-2021
 - Included the AllowUserFreezing property and the AfterUserFreeze event.
 - Included a new AfterUserResizeEnd event. Unlike AfterUserResize which is before commit (ByRef NewSize As Long) this event is after the commit.
