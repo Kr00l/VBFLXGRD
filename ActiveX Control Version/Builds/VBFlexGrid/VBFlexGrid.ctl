@@ -1079,6 +1079,7 @@ Private VBFlexGridMouseMoveRow As Long, VBFlexGridMouseMoveCol As Long
 Private VBFlexGridMouseMoveChanged As Boolean
 Private VBFlexGridDividerDragSplitterRect As RECT
 Private VBFlexGridDividerDragOffset As POINTAPI
+Private VBFlexGridDividerDragDirty As Boolean
 Private VBFlexGridHitRow As Long, VBFlexGridHitCol As Long
 Private VBFlexGridHitRowDivider As Long, VBFlexGridHitColDivider As Long
 Private VBFlexGridHitResult As FlexHitResultConstants
@@ -1268,6 +1269,10 @@ If wMsg = WM_KEYDOWN Or wMsg = WM_KEYUP Then
             End If
         Case vbKeyReturn, vbKeyEscape
             If VBFlexGridEditHandle = 0 Then
+                If VBFlexGridCaptureDividerDrag = True And KeyCode = vbKeyEscape Then
+                    ReleaseCapture
+                    Handled = True
+                End If
                 If IsInputKey = True Then
                     SendMessage hWnd, wMsg, wParam, ByVal lParam
                     Handled = True
@@ -1393,6 +1398,7 @@ VBFlexGridToolTipCol = -1
 VBFlexGridMouseMoveRow = -1
 VBFlexGridMouseMoveCol = -1
 VBFlexGridMouseMoveChanged = False
+VBFlexGridDividerDragDirty = False
 VBFlexGridHitRow = -1
 VBFlexGridHitCol = -1
 VBFlexGridHitRowDivider = -1
@@ -11483,6 +11489,7 @@ ElseIf HTI.HitResult <> FlexHitResultCell Then
         ClipCursor ClipRect
         VBFlexGridDividerDragOffset.X = HTI.PT.X - P.X
         VBFlexGridDividerDragOffset.Y = HTI.PT.Y - P.Y
+        VBFlexGridDividerDragDirty = True
         Call SetDividerDragSplitterRect(P.X, P.Y)
         Call DrawDividerDragSplitter
         ProcessLButtonDown = True
@@ -11690,6 +11697,7 @@ If VBFlexGridCaptureDividerDrag = True Then
     SetRect VBFlexGridDividerDragSplitterRect, 0, 0, 0, 0
     VBFlexGridDividerDragOffset.X = 0
     VBFlexGridDividerDragOffset.Y = 0
+    VBFlexGridDividerDragDirty = False
     With RCP
     .Mask = RCPM_TOPROW Or RCPM_LEFTCOL
     .Flags = RCPF_CHECKTOPROW Or RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
@@ -12859,6 +12867,14 @@ Select Case wMsg
         VBFlexGridMouseMoveRow = -1
         VBFlexGridMouseMoveCol = -1
         VBFlexGridMouseMoveChanged = False
+        If VBFlexGridDividerDragDirty = True Then
+            ClipCursor ByVal 0&
+            SetRect VBFlexGridDividerDragSplitterRect, 0, 0, 0, 0
+            VBFlexGridDividerDragOffset.X = 0
+            VBFlexGridDividerDragOffset.Y = 0
+            VBFlexGridDividerDragDirty = False
+            Call RedrawGrid
+        End If
     Case WM_NOTIFY
         Dim NM As NMHDR
         CopyMemory NM, ByVal lParam, LenB(NM)
@@ -13406,7 +13422,7 @@ Select Case wMsg
                 If KeyCode = vbKeyReturn Then
                     PostMessage hWnd, WM_CHAR, vbKeyReturn, ByVal 0&
                 ElseIf VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
-                    If KeyCode = vbKeyDown Or KeyCode = vbKeyUp Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED))
+                    If KeyCode = vbKeyUp Or KeyCode = vbKeyDown Then Call ComboShowDropDown(Not ComboButtonGetState(ODS_SELECTED))
                 End If
             Else
                 Exit Function
