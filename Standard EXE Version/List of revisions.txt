@@ -1,6 +1,8 @@
 List of revisions:
 
 10-Nov-2021
+- Included the AllowScrollLock property.
+  When the scroll lock key is toggled on it allows the user to use the arrow keys to scroll. (like in Excel)
 - SB_PAGE* scrolling fixed! (regression since 08-Sep-2021)
 - Starting edit mode will now cancel any ongoing divider drag operation.
 

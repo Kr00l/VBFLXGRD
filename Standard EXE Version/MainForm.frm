@@ -273,11 +273,12 @@ Begin VB.Form MainForm
       _ExtentY        =   9975
       Rows            =   150
       Cols            =   20
-      AllowUserResizing=   3
       AllowUserFreezing=   3
+      AllowUserResizing=   3
       RowHeightMax    =   333
       ShowInfoTips    =   -1  'True
       ShowLabelTips   =   -1  'True
+      AllowScrollLock =   -1  'True
    End
    Begin VB.Label Label3 
       Height          =   315
