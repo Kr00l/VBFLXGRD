@@ -1324,6 +1324,7 @@ Private PropWantReturn As Boolean
 Private PropExtendLastCol As Boolean
 Private PropSortArrowColor As OLE_COLOR
 Private PropRowSortArrows As Long
+Private PropAllowScrollLock As Boolean
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -1568,6 +1569,7 @@ PropWantReturn = False
 PropExtendLastCol = False
 PropSortArrowColor = vbGrayText
 PropRowSortArrows = 0
+PropAllowScrollLock = False
 Call CreateVBFlexGrid
 End Sub
 
@@ -1656,6 +1658,7 @@ PropWantReturn = .ReadProperty("WantReturn", False)
 PropExtendLastCol = .ReadProperty("ExtendLastCol", False)
 PropSortArrowColor = .ReadProperty("SortArrowColor", vbGrayText)
 PropRowSortArrows = .ReadProperty("RowSortArrows", 0)
+PropAllowScrollLock = .ReadProperty("AllowScrollLock", False)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -1740,6 +1743,7 @@ With PropBag
 .WriteProperty "ExtendLastCol", PropExtendLastCol, False
 .WriteProperty "SortArrowColor", PropSortArrowColor, vbGrayText
 .WriteProperty "RowSortArrows", PropRowSortArrows, 0
+.WriteProperty "AllowScrollLock", PropAllowScrollLock, False
 End With
 End Sub
 
@@ -3969,6 +3973,16 @@ If Value < 0 Then
 End If
 PropRowSortArrows = Value
 Call RedrawGrid
+End Property
+
+Public Property Get AllowScrollLock() As Boolean
+Attribute AllowScrollLock.VB_Description = "Returns/sets whether the control lets you use the arrow keys to scroll its contents when the scroll lock key is toggled on."
+AllowScrollLock = PropAllowScrollLock
+End Property
+
+Public Property Let AllowScrollLock(ByVal Value As Boolean)
+PropAllowScrollLock = Value
+UserControl.PropertyChanged "AllowScrollLock"
 End Property
 
 Private Sub CreateVBFlexGrid()
@@ -11792,8 +11806,11 @@ End Function
 Private Sub ProcessKeyDown(ByVal KeyCode As Integer, ByVal Shift As Integer)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 If VBFlexGridEditHandle <> 0 Then Exit Sub
+Dim ScrollLock As Boolean
 Select Case KeyCode
-    Case vbKeyUp, vbKeyDown, vbKeyLeft, vbKeyRight, vbKeyPageUp, vbKeyPageDown, vbKeyHome, vbKeyEnd
+    Case vbKeyUp, vbKeyDown, vbKeyLeft, vbKeyRight
+        If PropAllowScrollLock = True Then ScrollLock = KeyToggled(vbKeyScrollLock)
+    Case vbKeyPageUp, vbKeyPageDown, vbKeyHome, vbKeyEnd
     Case vbKeyTab
         If PropTabBehavior = FlexTabControls Then Exit Sub
     Case vbKeyReturn
@@ -11828,33 +11845,47 @@ Select Case PropSelectionMode
         Select Case KeyCode
             Case vbKeyUp
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MovePreviousRow(.Row)
-                    .RowSel = .Row
-                    .ColSel = .Col
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
-                    End If
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    If ScrollLock = False Then
+                        Call MovePreviousRow(.Row)
+                        .RowSel = .Row
+                        .ColSel = .Col
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        End If
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        End If
+                    Else
+                        Call MovePreviousRow(.TopRow)
+                        If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MovePreviousRow(.RowSel)
-                    If .TopRow > .RowSel Then
-                        If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel
+                    If ScrollLock = False Then
+                        Call MovePreviousRow(.RowSel)
+                        If .TopRow > .RowSel Then
+                            If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel
+                        End If
+                    Else
+                        ' Void
                     End If
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    Call MoveFirstRow(.Row)
-                    .RowSel = .Row
-                    .ColSel = .Col
-                    If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    If ScrollLock = False Then
+                        Call MoveFirstRow(.Row)
+                        .RowSel = .Row
+                        .ColSel = .Col
+                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        End If
+                    Else
+                        .TopRow = .TopRow - GetRowsPerPageRev(.TopRow)
+                        If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
                     End If
                 Else
                     Call MoveFirstRow(.RowSel)
@@ -11862,35 +11893,49 @@ Select Case PropSelectionMode
                 End If
             Case vbKeyDown
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MoveNextRow(.Row)
-                    .RowSel = .Row
-                    .ColSel = .Col
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
-                    End If
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    If ScrollLock = False Then
+                        Call MoveNextRow(.Row)
+                        .RowSel = .Row
+                        .ColSel = .Col
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        End If
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        End If
+                    Else
+                        If .TopRow < (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1 Then Call MoveNextRow(.TopRow)
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MoveNextRow(.RowSel)
-                    If .TopRow > .RowSel Then
-                        If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel
-                    ElseIf .RowSel > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .RowSel - GetRowsPerPageRev(.RowSel) + 1
+                    If ScrollLock = False Then
+                        Call MoveNextRow(.RowSel)
+                        If .TopRow > .RowSel Then
+                            If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel
+                        ElseIf .RowSel > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .RowSel - GetRowsPerPageRev(.RowSel) + 1
+                        End If
+                    Else
+                        ' Void
                     End If
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    Call MoveLastRow(.Row)
-                    .RowSel = .Row
-                    .ColSel = .Col
-                    .TopRow = (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    If ScrollLock = False Then
+                        Call MoveLastRow(.Row)
+                        .RowSel = .Row
+                        .ColSel = .Col
+                        .TopRow = (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        End If
+                    Else
+                        .TopRow = .TopRow + GetRowsPerPage(.TopRow)
+                        RowsPerPage = GetRowsPerPageRev(PropRows - 1)
+                        If .TopRow > (PropRows - 1) - RowsPerPage + 1 Then .TopRow = (PropRows - 1) - RowsPerPage + 1
                     End If
                 Else
                     Call MoveLastRow(.RowSel)
@@ -11898,102 +11943,130 @@ Select Case PropSelectionMode
                 End If
             Case vbKeyLeft
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    If PropWrapCellBehavior <> FlexWrapNone Then
-                        If .Col > GetFirstMovableCol() Then
-                            Call MovePreviousCol(.Col)
-                        Else
-                            If .Row > GetFirstMovableRow() Then
-                                Call MoveLastCol(.Col)
-                                Call MovePreviousRow(.Row)
+                    If ScrollLock = False Then
+                        If PropWrapCellBehavior <> FlexWrapNone Then
+                            If .Col > GetFirstMovableCol() Then
+                                Call MovePreviousCol(.Col)
                             Else
-                                If PropWrapCellBehavior = FlexWrapGrid Then
+                                If .Row > GetFirstMovableRow() Then
                                     Call MoveLastCol(.Col)
-                                    Call MoveLastRow(.Row)
+                                    Call MovePreviousRow(.Row)
+                                Else
+                                    If PropWrapCellBehavior = FlexWrapGrid Then
+                                        Call MoveLastCol(.Col)
+                                        Call MoveLastRow(.Row)
+                                    End If
                                 End If
                             End If
+                        Else
+                            Call MovePreviousCol(.Col)
+                        End If
+                        .RowSel = .Row
+                        .ColSel = .Col
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        End If
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
                         End If
                     Else
-                        Call MovePreviousCol(.Col)
-                    End If
-                    .RowSel = .Row
-                    .ColSel = .Col
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
-                    End If
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        Call MovePreviousCol(.LeftCol)
+                        If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MovePreviousCol(.ColSel)
-                    If .LeftCol > .ColSel Then
-                        If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
+                    If ScrollLock = False Then
+                        Call MovePreviousCol(.ColSel)
+                        If .LeftCol > .ColSel Then
+                            If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
+                        End If
+                    Else
+                        ' Void
                     End If
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    Call MoveFirstCol(.Col)
-                    .RowSel = .Row
-                    .ColSel = .Col
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                    If ScrollLock = False Then
+                        Call MoveFirstCol(.Col)
+                        .RowSel = .Row
+                        .ColSel = .Col
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        End If
+                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                    Else
+                        .LeftCol = .LeftCol - GetColsPerPageRev(.LeftCol)
+                        If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
                     End If
-                    If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
                 Else
                     Call MoveFirstCol(.ColSel)
                     If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
                 End If
             Case vbKeyRight
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    If PropWrapCellBehavior <> FlexWrapNone Then
-                        If .Col < GetLastMovableCol() Then
-                            Call MoveNextCol(.Col)
-                        Else
-                            If .Row < GetLastMovableRow() Then
-                                Call MoveFirstCol(.Col)
-                                Call MoveNextRow(.Row)
+                    If ScrollLock = False Then
+                        If PropWrapCellBehavior <> FlexWrapNone Then
+                            If .Col < GetLastMovableCol() Then
+                                Call MoveNextCol(.Col)
                             Else
-                                If PropWrapCellBehavior = FlexWrapGrid Then
+                                If .Row < GetLastMovableRow() Then
                                     Call MoveFirstCol(.Col)
-                                    Call MoveFirstRow(.Row)
+                                    Call MoveNextRow(.Row)
+                                Else
+                                    If PropWrapCellBehavior = FlexWrapGrid Then
+                                        Call MoveFirstCol(.Col)
+                                        Call MoveFirstRow(.Row)
+                                    End If
                                 End If
                             End If
+                        Else
+                            Call MoveNextCol(.Col)
+                        End If
+                        .RowSel = .Row
+                        .ColSel = .Col
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        End If
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
                         End If
                     Else
-                        Call MoveNextCol(.Col)
-                    End If
-                    .RowSel = .Row
-                    .ColSel = .Col
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
-                    End If
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        If .LeftCol < (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1 Then Call MoveNextCol(.LeftCol)
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MoveNextCol(.ColSel)
-                    If .LeftCol > .ColSel Then
-                        If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
-                    ElseIf .ColSel > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .ColSel - GetColsPerPageRev(.ColSel) + 1
+                    If ScrollLock = False Then
+                        Call MoveNextCol(.ColSel)
+                        If .LeftCol > .ColSel Then
+                            If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
+                        ElseIf .ColSel > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .ColSel - GetColsPerPageRev(.ColSel) + 1
+                        End If
+                    Else
+                        ' Void
                     End If
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    Call MoveLastCol(.Col)
-                    .RowSel = .Row
-                    .ColSel = .Col
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                    If ScrollLock = False Then
+                        Call MoveLastCol(.Col)
+                        .RowSel = .Row
+                        .ColSel = .Col
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        End If
+                        .LeftCol = (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1
+                    Else
+                        .LeftCol = .LeftCol + GetColsPerPage(.LeftCol)
+                        ColsPerPage = GetColsPerPageRev(PropCols - 1)
+                        If .LeftCol > (PropCols - 1) - ColsPerPage + 1 Then .LeftCol = (PropCols - 1) - ColsPerPage + 1
                     End If
-                    .LeftCol = (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1
                 Else
                     Call MoveLastCol(.ColSel)
                     .LeftCol = (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1
@@ -12383,119 +12456,175 @@ Select Case PropSelectionMode
         Select Case KeyCode
             Case vbKeyUp
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    If PropWrapCellBehavior = FlexWrapGrid Then
-                        If .Row > GetFirstMovableRow() Then
-                            Call MovePreviousRow(.Row)
+                    If ScrollLock = False Then
+                        If PropWrapCellBehavior = FlexWrapGrid Then
+                            If .Row > GetFirstMovableRow() Then
+                                Call MovePreviousRow(.Row)
+                            Else
+                                Call MoveLastRow(.Row)
+                            End If
                         Else
-                            Call MoveLastRow(.Row)
+                            Call MovePreviousRow(.Row)
+                        End If
+                        .RowSel = .Row
+                        .ColSel = (PropCols - 1)
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
                         End If
                     Else
-                        Call MovePreviousRow(.Row)
-                    End If
-                    .RowSel = .Row
-                    .ColSel = (PropCols - 1)
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        Call MovePreviousRow(.TopRow)
+                        If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MovePreviousRow(.RowSel)
-                    If .TopRow > .RowSel Then
-                        If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel
+                    If ScrollLock = False Then
+                        Call MovePreviousRow(.RowSel)
+                        If .TopRow > .RowSel Then
+                            If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel
+                        End If
+                    Else
+                        ' Void
                     End If
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    Call MoveFirstRow(.Row)
-                    .RowSel = .Row
-                    .ColSel = (PropCols - 1)
-                    If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                    If ScrollLock = False Then
+                        Call MoveFirstRow(.Row)
+                        .RowSel = .Row
+                        .ColSel = (PropCols - 1)
+                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                    Else
+                        .TopRow = .TopRow - GetRowsPerPageRev(.TopRow)
+                        If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
+                    End If
                 Else
                     Call MoveFirstRow(.RowSel)
                     If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel
                 End If
             Case vbKeyDown
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    If PropWrapCellBehavior = FlexWrapGrid Then
-                        If .Row < GetLastMovableRow() Then
-                            Call MoveNextRow(.Row)
+                    If ScrollLock = False Then
+                        If PropWrapCellBehavior = FlexWrapGrid Then
+                            If .Row < GetLastMovableRow() Then
+                                Call MoveNextRow(.Row)
+                            Else
+                                Call MoveFirstRow(.Row)
+                            End If
                         Else
-                            Call MoveFirstRow(.Row)
+                            Call MoveNextRow(.Row)
+                        End If
+                        .RowSel = .Row
+                        .ColSel = (PropCols - 1)
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
                         End If
                     Else
-                        Call MoveNextRow(.Row)
-                    End If
-                    .RowSel = .Row
-                    .ColSel = (PropCols - 1)
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        If .TopRow < (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1 Then Call MoveNextRow(.TopRow)
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MoveNextRow(.RowSel)
-                    If .TopRow > .RowSel Then
-                        If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel
-                    ElseIf .RowSel > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .RowSel - GetRowsPerPageRev(.RowSel) + 1
+                    If ScrollLock = False Then
+                        Call MoveNextRow(.RowSel)
+                        If .TopRow > .RowSel Then
+                            If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel
+                        ElseIf .RowSel > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .RowSel - GetRowsPerPageRev(.RowSel) + 1
+                        End If
+                    Else
+                        ' Void
                     End If
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    Call MoveLastRow(.Row)
-                    .RowSel = .Row
-                    .ColSel = (PropCols - 1)
-                    .TopRow = (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1
+                    If ScrollLock = False Then
+                        Call MoveLastRow(.Row)
+                        .RowSel = .Row
+                        .ColSel = (PropCols - 1)
+                        .TopRow = (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1
+                    Else
+                        .TopRow = .TopRow + GetRowsPerPage(.TopRow)
+                        RowsPerPage = GetRowsPerPageRev(PropRows - 1)
+                        If .TopRow > (PropRows - 1) - RowsPerPage + 1 Then .TopRow = (PropRows - 1) - RowsPerPage + 1
+                    End If
                 Else
                     Call MoveLastRow(.RowSel)
                     .TopRow = (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1
                 End If
             Case vbKeyLeft
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    .RowSel = .Row
-                    .ColSel = (PropCols - 1)
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                    If ScrollLock = False Then
+                        .RowSel = .Row
+                        .ColSel = (PropCols - 1)
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        End If
+                        Call MovePreviousCol(.LeftCol)
+                        If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
+                    Else
+                        Call MovePreviousCol(.LeftCol)
+                        If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
                     End If
-                    Call MovePreviousCol(.LeftCol)
-                    If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MovePreviousCol(.LeftCol)
-                    If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
-                ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    .RowSel = .Row
-                    .ColSel = (PropCols - 1)
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                    If ScrollLock = False Then
+                        Call MovePreviousCol(.LeftCol)
+                        If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
+                    Else
+                        ' Void
                     End If
-                    Call MoveFirstCol(.LeftCol)
-                    If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
+                ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
+                    If ScrollLock = False Then
+                        .RowSel = .Row
+                        .ColSel = (PropCols - 1)
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        End If
+                        Call MoveFirstCol(.LeftCol)
+                        If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
+                    Else
+                        .LeftCol = .LeftCol - GetColsPerPageRev(.LeftCol)
+                        If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
+                    End If
                 Else
                     Call MoveFirstCol(.LeftCol)
                     If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
                 End If
             Case vbKeyRight
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    .RowSel = .Row
-                    .ColSel = (PropCols - 1)
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                    If ScrollLock = False Then
+                        .RowSel = .Row
+                        .ColSel = (PropCols - 1)
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        End If
+                        If .LeftCol < (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1 Then Call MoveNextCol(.LeftCol)
+                    Else
+                        If .LeftCol < (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1 Then Call MoveNextCol(.LeftCol)
                     End If
-                    If .LeftCol < (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1 Then Call MoveNextCol(.LeftCol)
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    If .LeftCol < (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1 Then Call MoveNextCol(.LeftCol)
-                ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    .RowSel = .Row
-                    .ColSel = (PropCols - 1)
-                    If .TopRow > .Row Then
-                        If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
-                    ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                        .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                    If ScrollLock = False Then
+                        If .LeftCol < (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1 Then Call MoveNextCol(.LeftCol)
+                    Else
+                        ' Void
                     End If
-                    .LeftCol = (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1
+                ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
+                    If ScrollLock = False Then
+                        .RowSel = .Row
+                        .ColSel = (PropCols - 1)
+                        If .TopRow > .Row Then
+                            If .Row >= (PropFixedRows + PropFrozenRows) Then .TopRow = .Row
+                        ElseIf .Row > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                            .TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                        End If
+                        .LeftCol = (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1
+                    Else
+                        .LeftCol = .LeftCol + GetColsPerPage(.LeftCol)
+                        ColsPerPage = GetColsPerPageRev(PropCols - 1)
+                        If .LeftCol > (PropCols - 1) - ColsPerPage + 1 Then .LeftCol = (PropCols - 1) - ColsPerPage + 1
+                    End If
                 Else
                     .LeftCol = (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1
                 End If
@@ -12774,27 +12903,41 @@ Select Case PropSelectionMode
         Select Case KeyCode
             Case vbKeyUp
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    .RowSel = (PropRows - 1)
-                    .ColSel = .Col
-                    Call MovePreviousRow(.TopRow)
-                    If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    If ScrollLock = False Then
+                        .RowSel = (PropRows - 1)
+                        .ColSel = .Col
+                        Call MovePreviousRow(.TopRow)
+                        If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        End If
+                    Else
+                        Call MovePreviousRow(.TopRow)
+                        If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MovePreviousRow(.TopRow)
-                    If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
+                    If ScrollLock = False Then
+                        Call MovePreviousRow(.TopRow)
+                        If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
+                    Else
+                        ' Void
+                    End If
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    .RowSel = (PropRows - 1)
-                    .ColSel = .Col
-                    Call MoveFirstRow(.TopRow)
-                    If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    If ScrollLock = False Then
+                        .RowSel = (PropRows - 1)
+                        .ColSel = .Col
+                        Call MoveFirstRow(.TopRow)
+                        If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        End If
+                    Else
+                        .TopRow = .TopRow - GetRowsPerPageRev(.TopRow)
+                        If .TopRow < (PropFixedRows + PropFrozenRows) Then .TopRow = (PropFixedRows + PropFrozenRows)
                     End If
                 Else
                     Call MoveFirstRow(.TopRow)
@@ -12802,90 +12945,132 @@ Select Case PropSelectionMode
                 End If
             Case vbKeyDown
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    .RowSel = (PropRows - 1)
-                    .ColSel = .Col
-                    If .TopRow < (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1 Then Call MoveNextRow(.TopRow)
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    If ScrollLock = False Then
+                        .RowSel = (PropRows - 1)
+                        .ColSel = .Col
+                        If .TopRow < (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1 Then Call MoveNextRow(.TopRow)
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        End If
+                    Else
+                        If .TopRow < (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1 Then Call MoveNextRow(.TopRow)
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    If .TopRow < (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1 Then Call MoveNextRow(.TopRow)
+                    If ScrollLock = False Then
+                        If .TopRow < (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1 Then Call MoveNextRow(.TopRow)
+                    Else
+                        ' Void
+                    End If
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    .RowSel = (PropRows - 1)
-                    .ColSel = .Col
-                    .TopRow = (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                    If ScrollLock = False Then
+                        .RowSel = (PropRows - 1)
+                        .ColSel = .Col
+                        .TopRow = (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        End If
+                    Else
+                        .TopRow = .TopRow + GetRowsPerPage(.TopRow)
+                        RowsPerPage = GetRowsPerPageRev(PropRows - 1)
+                        If .TopRow > (PropRows - 1) - RowsPerPage + 1 Then .TopRow = (PropRows - 1) - RowsPerPage + 1
                     End If
                 Else
                     .TopRow = (PropRows - 1) - GetRowsPerPageRev(PropRows - 1) + 1
                 End If
             Case vbKeyLeft
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    If PropWrapCellBehavior = FlexWrapGrid Then
-                        If .Col > GetFirstMovableCol() Then
-                            Call MovePreviousCol(.Col)
+                    If ScrollLock = False Then
+                        If PropWrapCellBehavior = FlexWrapGrid Then
+                            If .Col > GetFirstMovableCol() Then
+                                Call MovePreviousCol(.Col)
+                            Else
+                                Call MoveLastCol(.Col)
+                            End If
                         Else
-                            Call MoveLastCol(.Col)
+                            Call MovePreviousCol(.Col)
+                        End If
+                        .RowSel = (PropRows - 1)
+                        .ColSel = .Col
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
                         End If
                     Else
-                        Call MovePreviousCol(.Col)
-                    End If
-                    .RowSel = (PropRows - 1)
-                    .ColSel = .Col
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        Call MovePreviousCol(.LeftCol)
+                        If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MovePreviousCol(.ColSel)
-                    If .LeftCol > .ColSel Then
-                        If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
+                    If ScrollLock = False Then
+                        Call MovePreviousCol(.ColSel)
+                        If .LeftCol > .ColSel Then
+                            If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
+                        End If
+                    Else
+                        ' Void
                     End If
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    Call MoveFirstCol(.Col)
-                    .RowSel = (PropRows - 1)
-                    .ColSel = .Col
-                    If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                    If ScrollLock = False Then
+                        Call MoveFirstCol(.Col)
+                        .RowSel = (PropRows - 1)
+                        .ColSel = .Col
+                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                    Else
+                        .LeftCol = .LeftCol - GetColsPerPageRev(.LeftCol)
+                        If .LeftCol < (PropFixedCols + PropFrozenCols) Then .LeftCol = (PropFixedCols + PropFrozenCols)
+                    End If
                 Else
                     Call MoveFirstCol(.ColSel)
                     If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
                 End If
             Case vbKeyRight
                 If (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) = 0 Then
-                    If PropWrapCellBehavior = FlexWrapGrid Then
-                        If .Col < GetLastMovableCol() Then
-                            Call MoveNextCol(.Col)
+                    If ScrollLock = False Then
+                        If PropWrapCellBehavior = FlexWrapGrid Then
+                            If .Col < GetLastMovableCol() Then
+                                Call MoveNextCol(.Col)
+                            Else
+                                Call MoveFirstCol(.Col)
+                            End If
                         Else
-                            Call MoveFirstCol(.Col)
+                            Call MoveNextCol(.Col)
+                        End If
+                        .RowSel = (PropRows - 1)
+                        .ColSel = .Col
+                        If .LeftCol > .Col Then
+                            If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
+                        ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
                         End If
                     Else
-                        Call MoveNextCol(.Col)
-                    End If
-                    .RowSel = (PropRows - 1)
-                    .ColSel = .Col
-                    If .LeftCol > .Col Then
-                        If .Col >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .Col
-                    ElseIf .Col > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                        If .LeftCol < (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1 Then Call MoveNextCol(.LeftCol)
                     End If
                 ElseIf (Shift And vbShiftMask) <> 0 And (Shift And vbCtrlMask) = 0 Then
-                    Call MoveNextCol(.ColSel)
-                    If .LeftCol > .ColSel Then
-                        If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
-                    ElseIf .ColSel > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                        .LeftCol = .ColSel - GetColsPerPageRev(.ColSel) + 1
+                    If ScrollLock = False Then
+                        Call MoveNextCol(.ColSel)
+                        If .LeftCol > .ColSel Then
+                            If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
+                        ElseIf .ColSel > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                            .LeftCol = .ColSel - GetColsPerPageRev(.ColSel) + 1
+                        End If
+                    Else
+                        ' Void
                     End If
                 ElseIf (Shift And vbShiftMask) = 0 And (Shift And vbCtrlMask) <> 0 Then
-                    Call MoveLastCol(.Col)
-                    .RowSel = (PropRows - 1)
-                    .ColSel = .Col
-                    .LeftCol = (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1
+                    If ScrollLock = False Then
+                        Call MoveLastCol(.Col)
+                        .RowSel = (PropRows - 1)
+                        .ColSel = .Col
+                        .LeftCol = (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1
+                    Else
+                        .LeftCol = .LeftCol + GetColsPerPage(.LeftCol)
+                        ColsPerPage = GetColsPerPageRev(PropCols - 1)
+                        If .LeftCol > (PropCols - 1) - ColsPerPage + 1 Then .LeftCol = (PropCols - 1) - ColsPerPage + 1
+                    End If
                 Else
                     Call MoveLastCol(.ColSel)
                     .LeftCol = (PropCols - 1) - GetColsPerPageRev(PropCols - 1) + 1
