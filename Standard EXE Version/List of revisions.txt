@@ -1,5 +1,9 @@
 List of revisions:
 
+10-Nov-2021
+- SB_PAGE* scrolling fixed! (regression since 08-Sep-2021)
+- Starting edit mode will now cancel any ongoing divider drag operation.
+
 09-Nov-2021
 - Escape key now cancels any ongoing divider drag operation.
 
