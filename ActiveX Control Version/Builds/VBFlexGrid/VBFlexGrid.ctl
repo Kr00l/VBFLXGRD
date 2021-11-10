@@ -3947,6 +3947,7 @@ Else
     VBFlexGridEditCloseMode = -1
     VBFlexGridComboActiveMode = FlexComboModeNone
 End If
+If VBFlexGridCaptureDividerDrag = True Then ReleaseCapture
 If VBFlexGridFocused = False Then SetFocusAPI UserControl.hWnd
 Dim IsFixedCell As Boolean, Text As String
 IsFixedCell = CBool(VBFlexGridEditRow < PropFixedRows Or VBFlexGridEditCol < PropFixedCols)
@@ -12550,24 +12551,16 @@ Select Case wMsg
                         End If
                     End If
                 Case SB_PAGELEFT, SB_PAGEUP
-                    If SCI.nPage = 0 Then
-                        If wBar = SB_HORZ Then
-                            SCI.nPos = SCI.nPos - GetColsPerPageRev(VBFlexGridLeftCol)
-                        ElseIf wBar = SB_VERT Then
-                            SCI.nPos = SCI.nPos - GetRowsPerPageRev(VBFlexGridTopRow)
-                        End If
-                    Else
-                        SCI.nPos = SCI.nPos - SCI.nPage
+                    If wBar = SB_HORZ Then
+                        SCI.nPos = SCI.nPos - GetColsPerPageRev(VBFlexGridLeftCol)
+                    ElseIf wBar = SB_VERT Then
+                        SCI.nPos = SCI.nPos - GetRowsPerPageRev(VBFlexGridTopRow)
                     End If
                 Case SB_PAGERIGHT, SB_PAGEDOWN
-                    If SCI.nPage = 0 Then
-                        If wBar = SB_HORZ Then
-                            SCI.nPos = SCI.nPos + GetColsPerPage(VBFlexGridLeftCol)
-                        ElseIf wBar = SB_VERT Then
-                            SCI.nPos = SCI.nPos + GetRowsPerPage(VBFlexGridTopRow)
-                        End If
-                    Else
-                        SCI.nPos = SCI.nPos + SCI.nPage
+                    If wBar = SB_HORZ Then
+                        SCI.nPos = SCI.nPos + GetColsPerPage(VBFlexGridLeftCol)
+                    ElseIf wBar = SB_VERT Then
+                        SCI.nPos = SCI.nPos + GetRowsPerPage(VBFlexGridTopRow)
                     End If
                 Case SB_THUMBPOSITION
                     SCI.nPos = SCI.nTrackPos
