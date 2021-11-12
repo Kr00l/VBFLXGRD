@@ -11514,6 +11514,7 @@ Select Case PropSelectionMode
                 .RowSel = .Row
             Else
                 .RowSel = HTI.HitRow
+                If PropAllowSelection = False Then .Row = .RowSel
             End If
         Else
             If PropAllowBigSelection = True Then
@@ -11536,6 +11537,7 @@ Select Case PropSelectionMode
                 .ColSel = .Col
             Else
                 .ColSel = HTI.HitCol
+                If PropAllowSelection = False Then .Col = .ColSel
             End If
         Else
             If PropAllowBigSelection = True Then
@@ -11559,6 +11561,7 @@ Select Case PropSelectionMode
                 .RowSel = .Row
             Else
                 .RowSel = HTI.HitRow
+                If PropAllowSelection = False Then .Row = .RowSel
             End If
             .ColSel = (PropCols - 1)
         Else
@@ -11592,6 +11595,7 @@ Select Case PropSelectionMode
                 .ColSel = .Col
             Else
                 .ColSel = HTI.HitCol
+                If PropAllowSelection = False Then .Col = .ColSel
             End If
             .RowSel = (PropRows - 1)
         Else
