@@ -537,10 +537,11 @@ Private Const RCPF_CHECKTOPROW As Long = &H10, RCPF_CHECKLEFTCOL As Long = &H20
 Private Const RCPF_FORCETOPROWMASK As Long = &H40, RCPF_FORCELEFTCOLMASK As Long = &H80
 Private Const RCPF_SETSCROLLBARS As Long = &H100
 Private Const RCPF_FORCEREDRAW As Long = &H200
-Private Const RCPF_WM_SIZE As Long = &H400
+Private Const RCPF_SHIFT As Long = &H400, RCPF_CTRL As Long = &H800
 Private Type TROWCOLPARAMS
 Mask As Long
 Flags As Long
+Message As Long
 Row As Long
 Col As Long
 RowSel As Long
@@ -620,6 +621,7 @@ Private Const RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH As Long = 4
 Private Const ROWINFO_HEIGHT_SPACING_DIP As Long = 3
 Private Const RWIS_HIDDEN As Long = &H1
 Private Const RWIS_MERGE As Long = &H2
+Private Const RWIS_SELECTED As Long = &H4
 Private Type TROWINFO
 Height As Long
 Data As Long
@@ -1235,6 +1237,7 @@ Private VBFlexGridAlignable As Boolean
 Private VBFlexGridEnabledVisualStyles As Boolean
 Private VBFlexGridSort As FlexSortConstants
 Private VBFlexGridExtendLastCol As Long
+Private VBFlexGridInvertSelection As Boolean
 
 #If ImplementFlexDataSource = True Then
 
@@ -1282,6 +1285,7 @@ Private PropFixedRows As Long, PropFixedCols As Long
 Private PropFrozenRows As Long, PropFrozenCols As Long
 Private PropRows As Long, PropCols As Long
 Private PropAllowBigSelection As Boolean
+Private PropAllowMultiSelection As Boolean
 Private PropAllowSelection As Boolean
 Private PropAllowUserEditing As Boolean
 Private PropAllowUserFreezing As FlexAllowUserFreezingConstants
@@ -1527,6 +1531,7 @@ PropFrozenCols = 0
 PropRows = 2
 PropCols = 2
 PropAllowBigSelection = True
+PropAllowMultiSelection = False
 PropAllowSelection = True
 PropAllowUserEditing = False
 PropAllowUserFreezing = FlexAllowUserFreezingNone
@@ -1616,6 +1621,7 @@ PropFrozenCols = .ReadProperty("FrozenCols", 0)
 PropRows = .ReadProperty("Rows", 2)
 PropCols = .ReadProperty("Cols", 2)
 PropAllowBigSelection = .ReadProperty("AllowBigSelection", True)
+PropAllowMultiSelection = .ReadProperty("AllowMultiSelection", False)
 PropAllowSelection = .ReadProperty("AllowSelection", True)
 PropAllowUserEditing = .ReadProperty("AllowUserEditing", False)
 PropAllowUserFreezing = .ReadProperty("AllowUserFreezing", FlexAllowUserFreezingNone)
@@ -1701,6 +1707,7 @@ With PropBag
 .WriteProperty "Rows", PropRows, 2
 .WriteProperty "Cols", PropCols, 2
 .WriteProperty "AllowBigSelection", PropAllowBigSelection, True
+.WriteProperty "AllowMultiSelection", PropAllowMultiSelection, False
 .WriteProperty "AllowSelection", PropAllowSelection, True
 .WriteProperty "AllowUserEditing", PropAllowUserEditing, False
 .WriteProperty "AllowUserFreezing", PropAllowUserFreezing, FlexAllowUserFreezingNone
@@ -3067,6 +3074,33 @@ PropAllowBigSelection = Value
 UserControl.PropertyChanged "AllowBigSelection"
 End Property
 
+Public Property Get AllowMultiSelection() As Boolean
+Attribute AllowMultiSelection.VB_Description = "Returns/sets a value indicating if the flex grid enables selection of multiple (non-contiguous) ranges of cells."
+AllowMultiSelection = PropAllowMultiSelection
+End Property
+
+Public Property Let AllowMultiSelection(ByVal Value As Boolean)
+If Value = True Then
+    Select Case PropSelectionMode
+        Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
+        Case Else
+            If VBFlexGridDesignMode = True Then
+                MsgBox "AllowMultiSelection must be False when SelectionMode is not 1 - ByRow nor 3 - FreeByRow", vbCritical + vbOKOnly
+                Exit Property
+            Else
+                Err.Raise Number:=383, Description:="AllowMultiSelection must be False when SelectionMode is not 1 - ByRow nor 3 - FreeByRow"
+            End If
+    End Select
+End If
+PropAllowMultiSelection = Value
+If PropAllowMultiSelection = False Then
+    VBFlexGridInvertSelection = False
+    Call ClearSelectedRows
+    Call RedrawGrid
+End If
+UserControl.PropertyChanged "AllowMultiSelection"
+End Property
+
 Public Property Get AllowSelection() As Boolean
 Attribute AllowSelection.VB_Description = "Returns/sets a value indicating if the flex grid enables selection of cells."
 AllowSelection = PropAllowSelection
@@ -3077,22 +3111,17 @@ PropAllowSelection = Value
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_ROWSEL Or RCPM_COLSEL
-If PropAllowSelection = True Then
-    Select Case PropSelectionMode
-        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-            .RowSel = VBFlexGridRow
-            .ColSel = VBFlexGridCol
-        Case FlexSelectionModeByRow
-            .RowSel = VBFlexGridRow
-            .ColSel = (PropCols - 1)
-        Case FlexSelectionModeByColumn
-            .RowSel = (PropRows - 1)
-            .ColSel = VBFlexGridCol
-    End Select
-Else
-    .RowSel = VBFlexGridRow
-    .ColSel = VBFlexGridCol
-End If
+Select Case PropSelectionMode
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+        .RowSel = VBFlexGridRow
+        .ColSel = VBFlexGridCol
+    Case FlexSelectionModeByRow
+        .RowSel = VBFlexGridRow
+        .ColSel = (PropCols - 1)
+    Case FlexSelectionModeByColumn
+        .RowSel = (PropRows - 1)
+        .ColSel = VBFlexGridCol
+End Select
 Call SetRowColParams(RCP)
 End With
 UserControl.PropertyChanged "AllowSelection"
@@ -3184,6 +3213,14 @@ End Select
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_ROW Or RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL
+Select Case PropSelectionMode
+    Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
+    Case Else
+        PropAllowMultiSelection = False
+        VBFlexGridInvertSelection = False
+        Call ClearSelectedRows
+        .Flags = RCPF_FORCEREDRAW
+End Select
 .Row = PropFixedRows
 .Col = PropFixedCols
 Select Case PropSelectionMode
@@ -5399,6 +5436,68 @@ With RCP
 .TopRow = VBFlexGridTopRow
 Call SetRowColParams(RCP)
 End With
+End Property
+
+Public Property Get RowSelected(ByVal Index As Long) As Boolean
+Attribute RowSelected.VB_Description = "Returns/sets a value indicating if the specified row is selected for multiple (non-contiguous) selections."
+Attribute RowSelected.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+RowSelected = CBool((VBFlexGridCells.Rows(Index).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED)
+End Property
+
+Public Property Let RowSelected(ByVal Index As Long, ByVal Value As Boolean)
+If Index <> -1 And (Index < 0 Or Index > (PropRows - 1)) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+If Index > -1 Then
+    With VBFlexGridCells.Rows(Index).RowInfo
+    If Value = True Then
+        If (.State And RWIS_SELECTED) = 0 Then .State = .State Or RWIS_SELECTED
+    Else
+        If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
+    End If
+    End With
+Else
+    Dim i As Long
+    If Value = True Then
+        For i = 0 To (PropRows - 1)
+            With VBFlexGridCells.Rows(i).RowInfo
+            If (.State And RWIS_SELECTED) = 0 Then .State = .State Or RWIS_SELECTED
+            End With
+        Next i
+    Else
+        For i = 0 To (PropRows - 1)
+            With VBFlexGridCells.Rows(i).RowInfo
+            If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
+            End With
+        Next i
+    End If
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get SelectedRow(ByVal Index As Long) As Long
+Attribute SelectedRow.VB_Description = "Returns the position of a selected row for multiple (non-contiguous) selections."
+Attribute SelectedRow.VB_MemberFlags = "400"
+SelectedRow = -1
+Dim i As Long, Count As Long
+For i = 0 To (PropRows - 1)
+    If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
+        If Count = Index Then
+            SelectedRow = i
+            Exit For
+        End If
+        Count = Count + 1
+    End If
+Next i
+End Property
+
+Public Property Get SelectedRows() As Long
+Attribute SelectedRows.VB_Description = "Returns the number of selected rows for multiple (non-contiguous) selections."
+Attribute SelectedRows.VB_MemberFlags = "400"
+Dim i As Long, Count As Long
+For i = 0 To (PropRows - 1)
+    If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then Count = Count + 1
+Next i
+SelectedRows = Count
 End Property
 
 Public Property Get RowID(ByVal Index As Long) As Long
@@ -8323,21 +8422,22 @@ Next i
 LSet VBFlexGridDefaultCols = VBFlexGridCells.Rows(0)
 VBFlexGridRow = PropFixedRows
 VBFlexGridCol = PropFixedCols
-If PropAllowSelection = True Then
+Select Case PropSelectionMode
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+        VBFlexGridRowSel = VBFlexGridRow
+        VBFlexGridColSel = VBFlexGridCol
+    Case FlexSelectionModeByRow
+        VBFlexGridRowSel = VBFlexGridRow
+        VBFlexGridColSel = (PropCols - 1)
+    Case FlexSelectionModeByColumn
+        VBFlexGridRowSel = (PropRows - 1)
+        VBFlexGridColSel = VBFlexGridCol
+End Select
+If PropAllowMultiSelection = True Then
     Select Case PropSelectionMode
-        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-            VBFlexGridRowSel = VBFlexGridRow
-            VBFlexGridColSel = VBFlexGridCol
-        Case FlexSelectionModeByRow
-            VBFlexGridRowSel = VBFlexGridRow
-            VBFlexGridColSel = (PropCols - 1)
-        Case FlexSelectionModeByColumn
-            VBFlexGridRowSel = (PropRows - 1)
-            VBFlexGridColSel = VBFlexGridCol
+        Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
+            Call AddSelectedRow
     End Select
-Else
-    VBFlexGridRowSel = VBFlexGridRow
-    VBFlexGridColSel = VBFlexGridCol
 End If
 VBFlexGridTopRow = PropFixedRows + PropFrozenRows
 VBFlexGridLeftCol = PropFixedCols + PropFrozenCols
@@ -9361,35 +9461,63 @@ If PropMergeCells <> FlexMergeCellsNever Then
     End If
 End If
 With VBFlexGridDrawInfo.SelRange
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn
+If PropAllowMultiSelection = False Then
+    Select Case PropHighLight
+        Case FlexHighLightAlways
+            If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+        Case FlexHighLightWithFocus
+            If VBFlexGridFocused = True Then
+                If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+            End If
+    End Select
+    If iCol > (PropFixedCols - 1) Then
         Select Case PropHighLight
             Case FlexHighLightAlways
-                If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
+                    If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+                End If
             Case FlexHighLightWithFocus
                 If VBFlexGridFocused = True Then
-                    If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
+                        If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+                    End If
                 End If
         End Select
-    Case FlexSelectionModeFreeByRow
+    End If
+Else
+    If iCol > (PropFixedCols - 1) Then
         Select Case PropHighLight
             Case FlexHighLightAlways
-                If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
             Case FlexHighLightWithFocus
                 If VBFlexGridFocused = True Then
-                    If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
                 End If
         End Select
-    Case FlexSelectionModeFreeByColumn
+    End If
+    If VBFlexGridCaptureRow > -1 And VBFlexGridCaptureCol > -1 Then
         Select Case PropHighLight
             Case FlexHighLightAlways
-                If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+                If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then
+                    If VBFlexGridInvertSelection = False Then
+                        If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+                    Else
+                        If (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState And Not ODS_SELECTED
+                    End If
+                End If
             Case FlexHighLightWithFocus
                 If VBFlexGridFocused = True Then
-                    If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+                    If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then
+                        If VBFlexGridInvertSelection = False Then
+                            If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+                        Else
+                            If (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState And Not ODS_SELECTED
+                        End If
+                    End If
                 End If
         End Select
-End Select
+    End If
+End If
 End With
 If PropFocusRect <> FlexFocusRectNone Then
     If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
@@ -9790,35 +9918,125 @@ If PropMergeCells <> FlexMergeCellsNever Then
     End If
 End If
 With VBFlexGridDrawInfo.SelRange
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn
-        Select Case PropHighLight
-            Case FlexHighLightAlways
-                If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
-            Case FlexHighLightWithFocus
-                If VBFlexGridFocused = True Then
+If PropAllowMultiSelection = False Then
+    Select Case PropSelectionMode
+        Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn
+            Select Case PropHighLight
+                Case FlexHighLightAlways
                     If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
-                End If
-        End Select
-    Case FlexSelectionModeFreeByRow
-        Select Case PropHighLight
-            Case FlexHighLightAlways
-                If (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
-            Case FlexHighLightWithFocus
-                If VBFlexGridFocused = True Then
+                Case FlexHighLightWithFocus
+                    If VBFlexGridFocused = True Then
+                        If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+                    End If
+            End Select
+        Case FlexSelectionModeFreeByRow
+            Select Case PropHighLight
+                Case FlexHighLightAlways
                     If (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
-                End If
-        End Select
-    Case FlexSelectionModeFreeByColumn
-        Select Case PropHighLight
-            Case FlexHighLightAlways
-                If (iCol >= .LeftCol And iCol <= .RightCol) Then ItemState = ItemState Or ODS_SELECTED
-            Case FlexHighLightWithFocus
-                If VBFlexGridFocused = True Then
+                Case FlexHighLightWithFocus
+                    If VBFlexGridFocused = True Then
+                        If (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
+                    End If
+            End Select
+        Case FlexSelectionModeFreeByColumn
+            Select Case PropHighLight
+                Case FlexHighLightAlways
                     If (iCol >= .LeftCol And iCol <= .RightCol) Then ItemState = ItemState Or ODS_SELECTED
+                Case FlexHighLightWithFocus
+                    If VBFlexGridFocused = True Then
+                        If (iCol >= .LeftCol And iCol <= .RightCol) Then ItemState = ItemState Or ODS_SELECTED
+                    End If
+            End Select
+    End Select
+    Select Case PropHighLight
+        Case FlexHighLightAlways
+            If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
+                If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+            End If
+        Case FlexHighLightWithFocus
+            If VBFlexGridFocused = True Then
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
+                    If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
                 End If
+            End If
+    End Select
+Else
+    Select Case PropHighLight
+        Case FlexHighLightAlways
+            If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+        Case FlexHighLightWithFocus
+            If VBFlexGridFocused = True Then
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+            End If
+    End Select
+    If VBFlexGridCaptureRow > -1 And VBFlexGridCaptureCol > -1 Then
+        Select Case PropSelectionMode
+            Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn
+                Select Case PropHighLight
+                    Case FlexHighLightAlways
+                        If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then
+                            If VBFlexGridInvertSelection = False Then
+                                If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+                            Else
+                                If (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState And Not ODS_SELECTED
+                            End If
+                        End If
+                    Case FlexHighLightWithFocus
+                        If VBFlexGridFocused = True Then
+                            If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then
+                                If VBFlexGridInvertSelection = False Then
+                                    If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+                                Else
+                                    If (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState And Not ODS_SELECTED
+                                End If
+                            End If
+                        End If
+                End Select
+            Case FlexSelectionModeFreeByRow
+                Select Case PropHighLight
+                    Case FlexHighLightAlways
+                        If (iRow >= .TopRow And iRow <= .BottomRow) Then
+                            If VBFlexGridInvertSelection = False Then
+                                If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+                            Else
+                                If (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState And Not ODS_SELECTED
+                            End If
+                        End If
+                    Case FlexHighLightWithFocus
+                        If VBFlexGridFocused = True Then
+                            If (iRow >= .TopRow And iRow <= .BottomRow) Then
+                                If VBFlexGridInvertSelection = False Then
+                                    If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+                                Else
+                                    If (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState And Not ODS_SELECTED
+                                End If
+                            End If
+                        End If
+                End Select
+            Case FlexSelectionModeFreeByColumn
+                Select Case PropHighLight
+                    Case FlexHighLightAlways
+                        If (iCol >= .LeftCol And iCol <= .RightCol) Then
+                            If VBFlexGridInvertSelection = False Then
+                                If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+                            Else
+                                If (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState And Not ODS_SELECTED
+                            End If
+                        End If
+                    Case FlexHighLightWithFocus
+                        If VBFlexGridFocused = True Then
+                            If (iCol >= .LeftCol And iCol <= .RightCol) Then
+                                If VBFlexGridInvertSelection = False Then
+                                    If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+                                Else
+                                    If (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState And Not ODS_SELECTED
+                                End If
+                            End If
+                        End If
+                End Select
         End Select
-End Select
+    End If
+End If
 End With
 If PropFocusRect <> FlexFocusRectNone Then
     If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
@@ -11535,7 +11753,7 @@ End Sub
 
 Private Sub SetRowColParams(ByRef RCP As TROWCOLPARAMS)
 Dim RowColChanged As Boolean, SelChanged As Boolean, ScrollChanged As Boolean
-Dim NoRedraw As Boolean, Cancel As Boolean
+Dim NoRedraw As Boolean, NeedRedraw As Boolean, Cancel As Boolean
 With RCP
 Select Case PropScrollBars
     Case vbSBNone
@@ -11575,10 +11793,14 @@ If RowColChanged = False Then
         If PropAllowSelection = True Then
             If VBFlexGridRowSel <> .RowSel Then SelChanged = True
         Else
-            If (.Mask And RCPM_ROW) = RCPM_ROW Then
-                If VBFlexGridRowSel <> .Row Then SelChanged = True
+            If PropSelectionMode <> FlexSelectionModeByColumn Then
+                If (.Mask And RCPM_ROW) = RCPM_ROW Then
+                    If VBFlexGridRowSel <> .Row Then SelChanged = True
+                Else
+                    If VBFlexGridRowSel <> VBFlexGridRow Then SelChanged = True
+                End If
             Else
-                If VBFlexGridRowSel <> VBFlexGridRow Then SelChanged = True
+                If VBFlexGridRowSel <> .RowSel Then SelChanged = True
             End If
         End If
     End If
@@ -11586,10 +11808,14 @@ If RowColChanged = False Then
         If PropAllowSelection = True Then
             If VBFlexGridColSel <> .ColSel Then SelChanged = True
         Else
-            If (.Mask And RCPM_COL) = RCPM_COL Then
-                If VBFlexGridColSel <> .Col Then SelChanged = True
+            If PropSelectionMode <> FlexSelectionModeByRow Then
+                If (.Mask And RCPM_COL) = RCPM_COL Then
+                    If VBFlexGridColSel <> .Col Then SelChanged = True
+                Else
+                    If VBFlexGridColSel <> VBFlexGridCol Then SelChanged = True
+                End If
             Else
-                If VBFlexGridColSel <> VBFlexGridCol Then SelChanged = True
+                If VBFlexGridColSel <> .ColSel Then SelChanged = True
             End If
         End If
     End If
@@ -11602,8 +11828,17 @@ If SelChanged = True Then
         NewRowSel = IIf((.Mask And RCPM_ROWSEL) = RCPM_ROWSEL, .RowSel, VBFlexGridRowSel)
         NewColSel = IIf((.Mask And RCPM_COLSEL) = RCPM_COLSEL, .ColSel, VBFlexGridColSel)
     Else
-        NewRowSel = IIf((.Mask And RCPM_ROW) = RCPM_ROW, .Row, VBFlexGridRow)
-        NewColSel = IIf((.Mask And RCPM_COL) = RCPM_COL, .Col, VBFlexGridCol)
+        Select Case PropSelectionMode
+            Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+                NewRowSel = IIf((.Mask And RCPM_ROW) = RCPM_ROW, .Row, VBFlexGridRow)
+                NewColSel = IIf((.Mask And RCPM_COL) = RCPM_COL, .Col, VBFlexGridCol)
+            Case FlexSelectionModeByRow
+                NewRowSel = IIf((.Mask And RCPM_ROW) = RCPM_ROW, .Row, VBFlexGridRow)
+                NewColSel = IIf((.Mask And RCPM_COLSEL) = RCPM_COLSEL, .ColSel, VBFlexGridColSel)
+            Case FlexSelectionModeByColumn
+                NewRowSel = IIf((.Mask And RCPM_ROWSEL) = RCPM_ROWSEL, .RowSel, VBFlexGridRowSel)
+                NewColSel = IIf((.Mask And RCPM_COL) = RCPM_COL, .Col, VBFlexGridCol)
+        End Select
     End If
     RaiseEvent BeforeSelChange(NewRowSel, NewColSel, Cancel)
     If Cancel = True Then SelChanged = False
@@ -11629,9 +11864,54 @@ If SelChanged = True Then
         If (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then VBFlexGridRowSel = .RowSel
         If (.Mask And RCPM_COLSEL) = RCPM_COLSEL Then VBFlexGridColSel = .ColSel
     Else
-        If (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then VBFlexGridRowSel = IIf((.Mask And RCPM_ROW) = RCPM_ROW, .Row, VBFlexGridRow)
-        If (.Mask And RCPM_COLSEL) = RCPM_COLSEL Then VBFlexGridColSel = IIf((.Mask And RCPM_COL) = RCPM_COL, .Col, VBFlexGridCol)
+        Select Case PropSelectionMode
+            Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+                If (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then VBFlexGridRowSel = IIf((.Mask And RCPM_ROW) = RCPM_ROW, .Row, VBFlexGridRow)
+                If (.Mask And RCPM_COLSEL) = RCPM_COLSEL Then VBFlexGridColSel = IIf((.Mask And RCPM_COL) = RCPM_COL, .Col, VBFlexGridCol)
+            Case FlexSelectionModeByRow
+                If (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then VBFlexGridRowSel = IIf((.Mask And RCPM_ROW) = RCPM_ROW, .Row, VBFlexGridRow)
+                If (.Mask And RCPM_COLSEL) = RCPM_COLSEL Then VBFlexGridColSel = .ColSel
+            Case FlexSelectionModeByColumn
+                If (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then VBFlexGridRowSel = .RowSel
+                If (.Mask And RCPM_COLSEL) = RCPM_COLSEL Then VBFlexGridColSel = IIf((.Mask And RCPM_COL) = RCPM_COL, .Col, VBFlexGridCol)
+        End Select
     End If
+End If
+If PropAllowMultiSelection = True And .Message <> WM_MOUSEMOVE Then
+    Select Case PropSelectionMode
+        Case FlexSelectionModeFree
+            ' Not supported.
+        Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
+            If (.Mask And RCPM_ROW) = RCPM_ROW Or (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then
+                VBFlexGridInvertSelection = False
+                If PropAllowSelection = True Then
+                    If (.Flags And RCPF_SHIFT) = RCPF_SHIFT And (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                        Call AddSelectedRows
+                    ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                        VBFlexGridInvertSelection = Not ToggleSelectedRow()
+                    Else
+                        Call ClearSelectedRows
+                        If .Message <> WM_LBUTTONDOWN Then
+                            Call AddSelectedRows
+                        Else
+                            Call AddSelectedRow
+                        End If
+                    End If
+                Else
+                    If (.Flags And RCPF_SHIFT) = RCPF_SHIFT And (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                        ' Void
+                    ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                        VBFlexGridInvertSelection = GetSelectedRow()
+                    Else
+                        Call ClearSelectedRows
+                        If .Message <> WM_LBUTTONDOWN Then Call AddSelectedRow
+                    End If
+                End If
+            End If
+        Case FlexSelectionModeByColumn, FlexSelectionModeFreeByColumn
+            ' Not supported.
+    End Select
+    NeedRedraw = True
 End If
 If ScrollChanged = True Then
     If (.Mask And RCPM_TOPROW) = RCPM_TOPROW And (.Mask And RCPM_LEFTCOL) = RCPM_LEFTCOL Then
@@ -11647,9 +11927,9 @@ If ScrollChanged = True Then
     End If
 End If
 If NoRedraw = False Then
-    If RowColChanged = True Or SelChanged = True Or ScrollChanged = True Or (.Flags And RCPF_FORCEREDRAW) = RCPF_FORCEREDRAW Then
+    If RowColChanged = True Or SelChanged = True Or ScrollChanged = True Or NeedRedraw = True Or (.Flags And RCPF_FORCEREDRAW) = RCPF_FORCEREDRAW Then
         Call RedrawGrid
-    ElseIf (.Flags And RCPF_WM_SIZE) = RCPF_WM_SIZE Then
+    ElseIf .Message = WM_SIZE Then
         If VBFlexGridExtendLastCol > -1 Then
             Dim iCol As Long, CX As Long
             For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
@@ -11795,6 +12075,83 @@ Else
 End If
 End Function
 
+Private Sub ClearSelectedRows()
+Dim i As Long
+For i = 0 To (PropRows - 1)
+    With VBFlexGridCells.Rows(i).RowInfo
+    If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
+    End With
+Next i
+End Sub
+
+Private Sub AddSelectedRows()
+Dim SelRange As TCELLRANGE
+Call GetSelRangeStruct(SelRange)
+If SelRange.TopRow > -1 And SelRange.BottomRow > -1 Then
+    Dim i As Long
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i).RowInfo
+        If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED
+        End With
+    Next i
+End If
+End Sub
+
+Private Sub RemoveSelectedRows()
+Dim SelRange As TCELLRANGE
+Call GetSelRangeStruct(SelRange)
+If SelRange.TopRow > -1 And SelRange.BottomRow > -1 Then
+    Dim i As Long
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i).RowInfo
+        If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
+        End With
+    Next i
+End If
+End Sub
+
+Private Sub AddSelectedRow()
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
+If VBFlexGridRow > -1 Then
+    With VBFlexGridCells.Rows(VBFlexGridRow).RowInfo
+    If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED
+    End With
+End If
+End Sub
+
+Private Sub RemoveSelectedRow()
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
+If VBFlexGridRow > -1 Then
+    With VBFlexGridCells.Rows(VBFlexGridRow).RowInfo
+    If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
+    End With
+End If
+End Sub
+
+Private Function ToggleSelectedRow() As Boolean
+If PropRows < 1 Or PropCols < 1 Then Exit Function
+If VBFlexGridRow > -1 Then
+    With VBFlexGridCells.Rows(VBFlexGridRow).RowInfo
+    If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then
+        .State = .State Or RWIS_SELECTED
+        ToggleSelectedRow = True
+    Else
+        .State = .State And Not RWIS_SELECTED
+        ToggleSelectedRow = False
+    End If
+    End With
+End If
+End Function
+
+Private Function GetSelectedRow() As Boolean
+If PropRows < 1 Or PropCols < 1 Then Exit Function
+If VBFlexGridRow > -1 Then
+    With VBFlexGridCells.Rows(VBFlexGridRow).RowInfo
+    GetSelectedRow = CBool((.State And RWIS_SELECTED) = RWIS_SELECTED)
+    End With
+End If
+End Function
+
 Private Function GetComboCueRow() As Long
 If VBFlexGridComboCueRow = -1 Then GetComboCueRow = VBFlexGridRow Else GetComboCueRow = VBFlexGridComboCueRow
 End Function
@@ -11824,6 +12181,11 @@ End If
 Dim RCP As TROWCOLPARAMS, RowsPerPage As Long, ColsPerPage As Long
 With RCP
 .Mask = RCPM_ROW Or RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL Or RCPM_TOPROW Or RCPM_LEFTCOL
+If (Shift And vbShiftMask) <> 0 Then
+    .Flags = .Flags Or RCPF_SHIFT
+    If (Shift And vbCtrlMask) <> 0 Then .Flags = .Flags Or RCPF_CTRL
+End If
+.Message = WM_KEYDOWN
 .Row = VBFlexGridRow
 .Col = VBFlexGridCol
 Select Case KeyCode
@@ -13414,6 +13776,11 @@ End Select
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_ROW Or RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL
+If (Shift And vbCtrlMask) <> 0 Then
+    .Flags = .Flags Or RCPF_CTRL
+    If (Shift And vbShiftMask) <> 0 Then .Flags = .Flags Or RCPF_SHIFT
+End If
+.Message = WM_LBUTTONDOWN
 .Row = VBFlexGridRow
 .Col = VBFlexGridCol
 .RowSel = VBFlexGridRowSel
@@ -13571,7 +13938,7 @@ Call SetRowColParams(RCP)
 End With
 End Function
 
-Private Sub ProcessLButtonUp(ByVal X As Long, ByVal Y As Long)
+Private Sub ProcessLButtonUp(ByVal Shift As Integer, ByVal X As Long, ByVal Y As Long)
 Dim RCP As TROWCOLPARAMS
 If VBFlexGridCaptureDividerDrag = True Then
     Dim iRow As Long, iCol As Long, i As Long
@@ -13759,6 +14126,39 @@ If VBFlexGridCaptureDividerDrag = True Then
     End Select
     Exit Sub
 End If
+If PropAllowMultiSelection = True Then
+    Select Case PropSelectionMode
+        Case FlexSelectionModeFree
+            ' Not supported.
+        Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
+            If PropAllowSelection = True Then
+                If VBFlexGridInvertSelection = False Then
+                    Call AddSelectedRows
+                Else
+                    Call RemoveSelectedRows
+                End If
+                ' Redraw not needed as already drawn with the mouse move.
+            Else
+                If (Shift And vbCtrlMask) <> 0 Then
+                    If (Shift And vbShiftMask) <> 0 Then
+                        Call AddSelectedRow
+                    Else
+                        If VBFlexGridInvertSelection = False Then
+                            Call AddSelectedRow
+                        Else
+                            Call RemoveSelectedRow
+                        End If
+                    End If
+                Else
+                    Call ClearSelectedRows
+                    Call AddSelectedRow
+                End If
+                Call RedrawGrid
+            End If
+        Case FlexSelectionModeByColumn, FlexSelectionModeFreeByColumn
+            ' Not supported.
+    End Select
+End If
 If VBFlexGridMouseMoveChanged = False Then
     With RCP
     .Mask = RCPM_TOPROW Or RCPM_LEFTCOL
@@ -13862,6 +14262,7 @@ End If
 Dim RCP As TROWCOLPARAMS, RowsPerPage As Long, ColsPerPage As Long
 With RCP
 .Mask = RCPM_ROWSEL Or RCPM_COLSEL Or RCPM_TOPROW Or RCPM_LEFTCOL
+.Message = WM_MOUSEMOVE
 If PropAllowSelection = False Then
     .Mask = .Mask Or RCPM_ROW Or RCPM_COL
     .Row = VBFlexGridRow
@@ -14913,7 +15314,8 @@ Select Case wMsg
         Dim RCP As TROWCOLPARAMS
         With RCP
         .Mask = RCPM_TOPROW Or RCPM_LEFTCOL
-        .Flags = RCPF_CHECKTOPROW Or RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS Or RCPF_WM_SIZE
+        .Flags = RCPF_CHECKTOPROW Or RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS
+        .Message = WM_SIZE
         .TopRow = VBFlexGridTopRow
         .LeftCol = VBFlexGridLeftCol
         Call SetRowColParams(RCP)
@@ -15315,7 +15717,7 @@ Select Case wMsg
     Case WM_MOUSEMOVE
         Call ProcessMouseMove(GetMouseStateFromParam(wParam), Get_X_lParam(lParam), Get_Y_lParam(lParam))
     Case WM_LBUTTONUP
-        Call ProcessLButtonUp(Get_X_lParam(lParam), Get_Y_lParam(lParam))
+        Call ProcessLButtonUp(GetShiftStateFromParam(wParam), Get_X_lParam(lParam), Get_Y_lParam(lParam))
         ReleaseCapture
     Case WM_CAPTURECHANGED
         VBFlexGridCaptureRow = -1
