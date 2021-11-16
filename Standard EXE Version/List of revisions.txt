@@ -1,5 +1,15 @@
 List of revisions:
 
+16-Nov-2021
+- Included the AllowMultiSelection property.
+  This property can only be set to True for SelectionMode 1 - ByRow or 3 - FreeByRow.
+- Included the RowSelected/SelectedRow/SelectedRows run-time property.
+  These are automatically set when AllowMultiSelection is set to True.
+  However, they can be set by code even when AllowMultiSelection is set to False.
+- Improved AllowSelection property (when set to False) to not restrict..
+  - ColSel for SelectionMode 1 - ByRow
+  - RowSel for SelectionMode 2 - ByColumn
+
 10-Nov-2021
 - Included the AllowScrollLock property.
   When the scroll lock key is toggled on it allows the user to use the arrow keys to scroll. (like in Excel)
