@@ -37,7 +37,7 @@ Private FlexAllowUserResizingNone, FlexAllowUserResizingColumns, FlexAllowUserRe
 Private FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
 Private FlexFillStyleSingle, FlexFillStyleRepeat
 Private FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus
-Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy
+Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy, FlexFocusRectFlat
 Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
 Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled
@@ -143,6 +143,7 @@ Public Enum FlexFocusRectConstants
 FlexFocusRectNone = 0
 FlexFocusRectLight = 1
 FlexFocusRectHeavy = 2
+FlexFocusRectFlat = 3
 End Enum
 Public Enum FlexGridLineConstants
 FlexGridLineNone = 0
@@ -823,6 +824,7 @@ Private Declare Function CreateSolidBrush Lib "gdi32" (ByVal crColor As Long) As
 Private Declare Function CreatePen Lib "gdi32" (ByVal nPenStyle As Long, ByVal nWidth As Long, ByVal crColor As Long) As Long
 Private Declare Function Polyline Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint As POINTAPI, ByVal nCount As Long) As Long
 Private Declare Function Polygon Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint As POINTAPI, ByVal nCount As Long) As Long
+Private Declare Function Rectangle Lib "gdi32" (ByVal hDC As Long, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function FillRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal hBrush As Long) As Long
 Private Declare Function DrawFocusRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT) As Long
 Private Declare Function DrawFrameControl Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
@@ -1173,6 +1175,7 @@ Private VBFlexGridBackColorSelBrush As Long
 Private VBFlexGridGridLinePen As Long, VBFlexGridPenStyle As Long
 Private VBFlexGridGridLineFixedPen As Long, VBFlexGridFixedPenStyle As Long
 Private VBFlexGridGridLineWhitePen As Long, VBFlexGridGridLineBlackPen As Long
+Private VBFlexGridFocusRectPen As Long
 Private VBFlexGridIndirectCellRef As TINDIRECTCELLREF
 Private VBFlexGridCells As TROWS, VBFlexGridCellsInit As Boolean
 Private VBFlexGridColsInfo() As TCOLINFO
@@ -2364,6 +2367,8 @@ PropBackColorSel = Value
 If VBFlexGridHandle <> 0 Then
     If VBFlexGridBackColorSelBrush <> 0 Then DeleteObject VBFlexGridBackColorSelBrush
     VBFlexGridBackColorSelBrush = CreateSolidBrush(WinColor(PropBackColorSel))
+    If VBFlexGridFocusRectPen <> 0 Then DeleteObject VBFlexGridFocusRectPen
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_SOLID, PropGridLineWidth, WinColor(PropBackColorSel))
 End If
 Me.Refresh
 UserControl.PropertyChanged "BackColorSel"
@@ -3314,11 +3319,15 @@ End Property
 
 Public Property Let FocusRect(ByVal Value As FlexFocusRectConstants)
 Select Case Value
-    Case FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy
+    Case FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy, FlexFocusRectFlat
         PropFocusRect = Value
     Case Else
         Err.Raise 380
 End Select
+If VBFlexGridHandle <> 0 Then
+    If VBFlexGridFocusRectPen <> 0 Then DeleteObject VBFlexGridFocusRectPen
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_SOLID, PropGridLineWidth, WinColor(PropBackColorSel))
+End If
 Call RedrawGrid
 UserControl.PropertyChanged "FocusRect"
 End Property
@@ -3479,6 +3488,8 @@ If VBFlexGridHandle <> 0 Then
     VBFlexGridGridLinePen = CreatePen(VBFlexGridPenStyle, PropGridLineWidth, WinColor(PropGridColor))
     If VBFlexGridGridLineFixedPen <> 0 Then DeleteObject VBFlexGridGridLineFixedPen
     VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
+    If VBFlexGridFocusRectPen <> 0 Then DeleteObject VBFlexGridFocusRectPen
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_SOLID, PropGridLineWidth, WinColor(PropBackColorSel))
 End If
 Call RedrawGrid
 UserControl.PropertyChanged "GridLineWidth"
@@ -4090,6 +4101,7 @@ If VBFlexGridHandle <> 0 Then
     VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
     VBFlexGridGridLineWhitePen = CreatePen(PS_SOLID, 0, vbWhite)
     VBFlexGridGridLineBlackPen = CreatePen(PS_SOLID, 0, vbBlack)
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_SOLID, PropGridLineWidth, WinColor(PropBackColorSel))
 End If
 Set Me.Font = PropFont
 Set Me.FontFixed = PropFontFixed
@@ -4220,6 +4232,10 @@ End If
 If VBFlexGridGridLineBlackPen <> 0 Then
     DeleteObject VBFlexGridGridLineBlackPen
     VBFlexGridGridLineBlackPen = 0
+End If
+If VBFlexGridFocusRectPen <> 0 Then
+    DeleteObject VBFlexGridFocusRectPen
+    VBFlexGridFocusRectPen = 0
 End If
 End Sub
 
@@ -9697,19 +9713,32 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     .Top = CellRect.Top
     .Right = CellRect.Right - 1
     .Bottom = CellRect.Bottom - 1
-    If (.Right - VBFlexGridFocusBorder.CX) <= .Left Then .Right = CellRect.Right + 1
-    If (.Bottom - VBFlexGridFocusBorder.CY) <= .Top Then .Bottom = CellRect.Bottom + 1
-    If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
-    DrawFocusRect hDC, FocusRect
-    If PropFocusRect = FlexFocusRectHeavy Then
-        If (.Right - VBFlexGridFocusBorder.CX) > (.Left + VBFlexGridFocusBorder.CX) And (.Bottom - VBFlexGridFocusBorder.CY) > (.Top + VBFlexGridFocusBorder.CY) Then
-            .Left = .Left + VBFlexGridFocusBorder.CX
-            .Right = .Right - VBFlexGridFocusBorder.CX
-            .Top = .Top + VBFlexGridFocusBorder.CY
-            .Bottom = .Bottom - VBFlexGridFocusBorder.CY
+    Select Case PropFocusRect
+        Case FlexFocusRectLight, FlexFocusRectHeavy
+            If (.Right - VBFlexGridFocusBorder.CX) <= .Left Then .Right = CellRect.Right + 1
+            If (.Bottom - VBFlexGridFocusBorder.CY) <= .Top Then .Bottom = CellRect.Bottom + 1
+            If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
             DrawFocusRect hDC, FocusRect
-        End If
-    End If
+            If PropFocusRect = FlexFocusRectHeavy Then
+                If (.Right - VBFlexGridFocusBorder.CX) > (.Left + VBFlexGridFocusBorder.CX) And (.Bottom - VBFlexGridFocusBorder.CY) > (.Top + VBFlexGridFocusBorder.CY) Then
+                    .Left = .Left + VBFlexGridFocusBorder.CX
+                    .Right = .Right - VBFlexGridFocusBorder.CX
+                    .Top = .Top + VBFlexGridFocusBorder.CY
+                    .Bottom = .Bottom - VBFlexGridFocusBorder.CY
+                    DrawFocusRect hDC, FocusRect
+                End If
+            End If
+        Case FlexFocusRectFlat
+            If (.Right - PropGridLineWidth) <= .Left Then .Right = CellRect.Right + 1
+            If (.Bottom - PropGridLineWidth) <= .Top Then .Bottom = CellRect.Bottom + 1
+            If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
+            hPenOld = SelectObject(hDC, VBFlexGridFocusRectPen)
+            Rectangle hDC, .Left, .Top, .Right, .Bottom
+            If hPenOld <> 0 Then
+                SelectObject hDC, hPenOld
+                hPenOld = 0
+            End If
+    End Select
     End With
 End If
 Dim Alignment As FlexAlignmentConstants
@@ -10226,19 +10255,32 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     .Top = CellRect.Top
     .Right = CellRect.Right - 1
     .Bottom = CellRect.Bottom - 1
-    If (.Right - VBFlexGridFocusBorder.CX) <= .Left Then .Right = CellRect.Right + 1
-    If (.Bottom - VBFlexGridFocusBorder.CY) <= .Top Then .Bottom = CellRect.Bottom + 1
-    If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
-    DrawFocusRect hDC, FocusRect
-    If PropFocusRect = FlexFocusRectHeavy Then
-        If (.Right - VBFlexGridFocusBorder.CX) > (.Left + VBFlexGridFocusBorder.CX) And (.Bottom - VBFlexGridFocusBorder.CY) > (.Top + VBFlexGridFocusBorder.CY) Then
-            .Left = .Left + VBFlexGridFocusBorder.CX
-            .Right = .Right - VBFlexGridFocusBorder.CX
-            .Top = .Top + VBFlexGridFocusBorder.CY
-            .Bottom = .Bottom - VBFlexGridFocusBorder.CY
+    Select Case PropFocusRect
+        Case FlexFocusRectLight, FlexFocusRectHeavy
+            If (.Right - VBFlexGridFocusBorder.CX) <= .Left Then .Right = CellRect.Right + 1
+            If (.Bottom - VBFlexGridFocusBorder.CY) <= .Top Then .Bottom = CellRect.Bottom + 1
+            If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
             DrawFocusRect hDC, FocusRect
-        End If
-    End If
+            If PropFocusRect = FlexFocusRectHeavy Then
+                If (.Right - VBFlexGridFocusBorder.CX) > (.Left + VBFlexGridFocusBorder.CX) And (.Bottom - VBFlexGridFocusBorder.CY) > (.Top + VBFlexGridFocusBorder.CY) Then
+                    .Left = .Left + VBFlexGridFocusBorder.CX
+                    .Right = .Right - VBFlexGridFocusBorder.CX
+                    .Top = .Top + VBFlexGridFocusBorder.CY
+                    .Bottom = .Bottom - VBFlexGridFocusBorder.CY
+                    DrawFocusRect hDC, FocusRect
+                End If
+            End If
+        Case FlexFocusRectFlat
+            If (.Right - PropGridLineWidth) <= .Left Then .Right = CellRect.Right + 1
+            If (.Bottom - PropGridLineWidth) <= .Top Then .Bottom = CellRect.Bottom + 1
+            If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
+            hPenOld = SelectObject(hDC, VBFlexGridFocusRectPen)
+            Rectangle hDC, .Left, .Top, .Right, .Bottom
+            If hPenOld <> 0 Then
+                SelectObject hDC, hPenOld
+                hPenOld = 0
+            End If
+    End Select
     End With
 End If
 If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top Then
