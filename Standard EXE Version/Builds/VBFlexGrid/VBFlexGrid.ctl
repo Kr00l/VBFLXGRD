@@ -9731,6 +9731,8 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
         Case FlexFocusRectFlat
             If (.Right - PropGridLineWidth) <= .Left Then .Right = CellRect.Right + 1
             If (.Bottom - PropGridLineWidth) <= .Top Then .Bottom = CellRect.Bottom + 1
+            .Left = .Left + (PropGridLineWidth - 1)
+            .Top = .Top + (PropGridLineWidth - 1)
             If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
             hPenOld = SelectObject(hDC, VBFlexGridFocusRectPen)
             Rectangle hDC, .Left, .Top, .Right, .Bottom
@@ -10273,6 +10275,8 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
         Case FlexFocusRectFlat
             If (.Right - PropGridLineWidth) <= .Left Then .Right = CellRect.Right + 1
             If (.Bottom - PropGridLineWidth) <= .Top Then .Bottom = CellRect.Bottom + 1
+            .Left = .Left + (PropGridLineWidth - 1)
+            .Top = .Top + (PropGridLineWidth - 1)
             If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
             hPenOld = SelectObject(hDC, VBFlexGridFocusRectPen)
             Rectangle hDC, .Left, .Top, .Right, .Bottom
