@@ -1,5 +1,9 @@
 List of revisions:
 
+19-Nov-2021
+- The pen style for FlexFocusRectFlat is now PS_INSIDEFRAME instead of PS_SOLID.
+  PS_INSIDEFRAME is same as PS_SOLID but it keeps inside a given rectangle regardless of the pen width.
+
 18-Nov-2021
 - Included enum FlexFocusRectFlat for the FocusRect property.
   It draws a solid rectangle (BackColorSel) instead of using the DrawFocusRect API.
