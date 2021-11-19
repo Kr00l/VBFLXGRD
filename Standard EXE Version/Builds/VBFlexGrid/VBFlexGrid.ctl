@@ -11179,33 +11179,33 @@ If iRowHit > -1 And iColHit > -1 Then
         End If
     End If
     If HTI.HitResult = FlexHitResultCell And PropAllowUserFreezing <> FlexAllowUserFreezingNone Then
-        Dim iRowFrozenFrom As Long, iRowFrozenTo As Long, iColFrozenFrom As Long, iColFrozenTo As Long
-        iRowFrozenFrom = (PropFixedRows + PropFrozenRows) - 1
-        If iRowFrozenFrom < PropFixedCols Then iRowFrozenFrom = PropFixedCols
-        iRowFrozenTo = VBFlexGridTopRow
-        If (VBFlexGridCells.Rows(iRowFrozenTo).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN Then
-            If iRowFrozenTo < (PropRows - 1) Then
-                iRowFrozenTo = iRowFrozenTo + 1
-                Do While (VBFlexGridCells.Rows(iRowFrozenTo).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
-                    If iRowFrozenTo < (PropRows - 1) Then iRowFrozenTo = iRowFrozenTo + 1 Else Exit Do
+        Dim iRowFrozen As Long, iRowFrozenTop As Long, iColFrozen As Long, iColFrozenLeft As Long
+        iRowFrozen = GetFrozenRow()
+        If iRowFrozen < PropFixedRows Then iRowFrozen = PropFixedRows
+        iRowFrozenTop = VBFlexGridTopRow
+        If GetRowHeight(iRowFrozenTop) = 0 Then
+            If iRowFrozenTop < (PropRows - 1) Then
+                iRowFrozenTop = iRowFrozenTop + 1
+                Do While GetRowHeight(iRowFrozenTop) = 0
+                    If iRowFrozenTop < (PropRows - 1) Then iRowFrozenTop = iRowFrozenTop + 1 Else Exit Do
                 Loop
             End If
         End If
-        iColFrozenFrom = (PropFixedCols + PropFrozenCols) - 1
-        If iColFrozenFrom < PropFixedCols Then iColFrozenFrom = PropFixedCols
-        iColFrozenTo = VBFlexGridLeftCol
-        If (VBFlexGridColsInfo(iColFrozenTo).State And CLIS_HIDDEN) = CLIS_HIDDEN Then
-            If iColFrozenTo < (PropCols - 1) Then
-                iColFrozenTo = iColFrozenTo + 1
-                Do While (VBFlexGridColsInfo(iColFrozenTo).State And CLIS_HIDDEN) = CLIS_HIDDEN
-                    If iColFrozenTo < (PropRows - 1) Then iColFrozenTo = iColFrozenTo + 1 Else Exit Do
+        iColFrozen = GetFrozenCol()
+        If iColFrozen < PropFixedCols Then iColFrozen = PropFixedCols
+        iColFrozenLeft = VBFlexGridLeftCol
+        If GetColWidth(iColFrozenLeft) = 0 Then
+            If iColFrozenLeft < (PropCols - 1) Then
+                iColFrozenLeft = iColFrozenLeft + 1
+                Do While GetColWidth(iColFrozenLeft) = 0
+                    If iColFrozenLeft < (PropCols - 1) Then iColFrozenLeft = iColFrozenLeft + 1 Else Exit Do
                 Loop
             End If
         End If
-        If (iRowHit = iRowFrozenFrom Or iRowHit = iRowFrozenTo) And iColHit >= PropFixedCols Then
-            If (iColHit = iColFrozenFrom Or iColHit = iColFrozenTo) And iRowHit >= PropFixedRows Then
+        If (iRowHit = iRowFrozen Or iRowHit = iRowFrozenTop) And iColHit >= PropFixedCols Then
+            If (iColHit = iColFrozen Or iColHit = iColFrozenLeft) And iRowHit >= PropFixedRows Then
                 If PropAllowUserFreezing = FlexAllowUserFreezingColumns Or PropAllowUserFreezing = FlexAllowUserFreezingBoth Then
-                    If iColHit = iColFrozenTo Then
+                    If iColHit = iColFrozenLeft Then
                         SetRect TempRect, .Left, .Top, .Right, .Bottom
                         Call AdjustRectColDividerSpacing(TempRect, iColHit)
                         TempRect.Right = .Right
@@ -11234,7 +11234,7 @@ If iRowHit > -1 And iColHit > -1 Then
                 End If
                 If HTI.HitResult = FlexHitResultCell Then
                     If PropAllowUserFreezing = FlexAllowUserFreezingRows Or PropAllowUserFreezing = FlexAllowUserFreezingBoth Then
-                        If iRowHit = iRowFrozenTo Then
+                        If iRowHit = iRowFrozenTop Then
                             SetRect TempRect, .Left, .Top, .Right, .Bottom
                             Call AdjustRectRowDividerSpacing(TempRect, iRowHit)
                             TempRect.Bottom = .Bottom
@@ -11264,7 +11264,7 @@ If iRowHit > -1 And iColHit > -1 Then
                 End If
             Else
                 If PropAllowUserFreezing = FlexAllowUserFreezingRows Or PropAllowUserFreezing = FlexAllowUserFreezingBoth Then
-                    If iRowHit = iRowFrozenTo Then
+                    If iRowHit = iRowFrozenTop Then
                         SetRect TempRect, .Left, .Top, .Right, .Bottom
                         Call AdjustRectRowDividerSpacing(TempRect, iRowHit)
                         TempRect.Bottom = .Bottom
@@ -11292,9 +11292,9 @@ If iRowHit > -1 And iColHit > -1 Then
                     End If
                 End If
             End If
-        ElseIf (iColHit = iColFrozenFrom Or iColHit = iColFrozenTo) And iRowHit >= PropFixedRows Then
+        ElseIf (iColHit = iColFrozen Or iColHit = iColFrozenLeft) And iRowHit >= PropFixedRows Then
             If PropAllowUserFreezing = FlexAllowUserFreezingColumns Or PropAllowUserFreezing = FlexAllowUserFreezingBoth Then
-                If iColHit = iColFrozenTo Then
+                If iColHit = iColFrozenLeft Then
                     SetRect TempRect, .Left, .Top, .Right, .Bottom
                     Call AdjustRectColDividerSpacing(TempRect, iColHit)
                     TempRect.Right = .Right
@@ -12072,7 +12072,7 @@ i = PropFixedRows
 Do Until GetRowHeight(i) > 0 Or Cancel = True
     If i < (PropRows - 1) Then i = i + 1 Else Cancel = True
 Loop
-If Cancel = False Then GetFirstMovableRow = i
+If Cancel = False Then GetFirstMovableRow = i Else GetFirstMovableRow = -1
 End Function
 
 Private Function GetLastMovableRow() As Long
@@ -12081,7 +12081,7 @@ i = PropRows - 1
 Do Until GetRowHeight(i) > 0 Or Cancel = True
     If i > PropFixedRows Then i = i - 1 Else Cancel = True
 Loop
-If Cancel = False Then GetLastMovableRow = i
+If Cancel = False Then GetLastMovableRow = i Else GetLastMovableRow = -1
 End Function
 
 Private Function GetFirstMovableCol() As Long
@@ -12090,7 +12090,7 @@ i = PropFixedCols
 Do Until GetColWidth(i) > 0 Or Cancel = True
     If i < (PropCols - 1) Then i = i + 1 Else Cancel = True
 Loop
-If Cancel = False Then GetFirstMovableCol = i
+If Cancel = False Then GetFirstMovableCol = i Else GetFirstMovableCol = -1
 End Function
 
 Private Function GetLastMovableCol() As Long
@@ -12099,7 +12099,33 @@ i = PropCols - 1
 Do Until GetColWidth(i) > 0 Or Cancel = True
     If i > PropFixedCols Then i = i - 1 Else Cancel = True
 Loop
-If Cancel = False Then GetLastMovableCol = i
+If Cancel = False Then GetLastMovableCol = i Else GetLastMovableCol = -1
+End Function
+
+Private Function GetFrozenRow() As Long
+If PropFrozenRows = 0 Then
+    GetFrozenRow = -1
+Else
+    Dim i As Long, Cancel As Boolean
+    i = (PropFixedRows + PropFrozenRows) - 1
+    Do Until GetRowHeight(i) > 0 Or Cancel = True
+        If i > PropFixedRows Then i = i - 1 Else Cancel = True
+    Loop
+    If Cancel = False Then GetFrozenRow = i Else GetFrozenRow = -1
+End If
+End Function
+
+Private Function GetFrozenCol() As Long
+If PropFrozenCols = 0 Then
+    GetFrozenCol = -1
+Else
+    Dim i As Long, Cancel As Boolean
+    i = (PropFixedCols + PropFrozenCols) - 1
+    Do Until GetColWidth(i) > 0 Or Cancel = True
+        If i > PropFixedCols Then i = i - 1 Else Cancel = True
+    Loop
+    If Cancel = False Then GetFrozenCol = i Else GetFrozenCol = -1
+End If
 End Function
 
 Private Function GetExtendLastCol() As Long
