@@ -938,6 +938,7 @@ Private Const ODS_NOFOCUSRECT As Long = &H200
 Private Const PS_SOLID As Long = 0
 Private Const PS_DASH As Long = 1
 Private Const PS_DOT As Long = 2
+Private Const PS_INSIDEFRAME As Long = 6
 Private Const SB_HORZ As Long = 0
 Private Const SB_VERT As Long = 1
 Private Const SB_LINELEFT As Long = 0
@@ -2368,7 +2369,7 @@ If VBFlexGridHandle <> 0 Then
     If VBFlexGridBackColorSelBrush <> 0 Then DeleteObject VBFlexGridBackColorSelBrush
     VBFlexGridBackColorSelBrush = CreateSolidBrush(WinColor(PropBackColorSel))
     If VBFlexGridFocusRectPen <> 0 Then DeleteObject VBFlexGridFocusRectPen
-    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_SOLID, PropGridLineWidth, WinColor(PropBackColorSel))
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropGridLineWidth, WinColor(PropBackColorSel))
 End If
 Me.Refresh
 UserControl.PropertyChanged "BackColorSel"
@@ -3326,7 +3327,7 @@ Select Case Value
 End Select
 If VBFlexGridHandle <> 0 Then
     If VBFlexGridFocusRectPen <> 0 Then DeleteObject VBFlexGridFocusRectPen
-    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_SOLID, PropGridLineWidth, WinColor(PropBackColorSel))
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropGridLineWidth, WinColor(PropBackColorSel))
 End If
 Call RedrawGrid
 UserControl.PropertyChanged "FocusRect"
@@ -3489,7 +3490,7 @@ If VBFlexGridHandle <> 0 Then
     If VBFlexGridGridLineFixedPen <> 0 Then DeleteObject VBFlexGridGridLineFixedPen
     VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
     If VBFlexGridFocusRectPen <> 0 Then DeleteObject VBFlexGridFocusRectPen
-    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_SOLID, PropGridLineWidth, WinColor(PropBackColorSel))
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropGridLineWidth, WinColor(PropBackColorSel))
 End If
 Call RedrawGrid
 UserControl.PropertyChanged "GridLineWidth"
@@ -4101,7 +4102,7 @@ If VBFlexGridHandle <> 0 Then
     VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
     VBFlexGridGridLineWhitePen = CreatePen(PS_SOLID, 0, vbWhite)
     VBFlexGridGridLineBlackPen = CreatePen(PS_SOLID, 0, vbBlack)
-    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_SOLID, PropGridLineWidth, WinColor(PropBackColorSel))
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropGridLineWidth, WinColor(PropBackColorSel))
 End If
 Set Me.Font = PropFont
 Set Me.FontFixed = PropFontFixed
@@ -9731,8 +9732,6 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
         Case FlexFocusRectFlat
             If (.Right - PropGridLineWidth) <= .Left Then .Right = CellRect.Right + 1
             If (.Bottom - PropGridLineWidth) <= .Top Then .Bottom = CellRect.Bottom + 1
-            .Left = .Left + (PropGridLineWidth - 1)
-            .Top = .Top + (PropGridLineWidth - 1)
             If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
             hPenOld = SelectObject(hDC, VBFlexGridFocusRectPen)
             Rectangle hDC, .Left, .Top, .Right, .Bottom
@@ -10275,8 +10274,6 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
         Case FlexFocusRectFlat
             If (.Right - PropGridLineWidth) <= .Left Then .Right = CellRect.Right + 1
             If (.Bottom - PropGridLineWidth) <= .Top Then .Bottom = CellRect.Bottom + 1
-            .Left = .Left + (PropGridLineWidth - 1)
-            .Top = .Top + (PropGridLineWidth - 1)
             If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
             hPenOld = SelectObject(hDC, VBFlexGridFocusRectPen)
             Rectangle hDC, .Left, .Top, .Right, .Bottom
