@@ -1,5 +1,8 @@
 List of revisions:
 
+20-Nov-2021
+- User now able to freeze even when fixed rows/cols are 0 and frozen rows/cols are 0.
+
 19-Nov-2021
 - The pen style for FlexFocusRectFlat is now PS_INSIDEFRAME instead of PS_SOLID.
   PS_INSIDEFRAME is same as PS_SOLID but it keeps inside a given rectangle regardless of the pen width.
