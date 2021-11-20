@@ -12103,28 +12103,28 @@ If Cancel = False Then GetLastMovableCol = i Else GetLastMovableCol = -1
 End Function
 
 Private Function GetFrozenRow() As Long
-If PropFrozenRows = 0 Then
-    GetFrozenRow = -1
-Else
+If PropFrozenRows > 0 Then
     Dim i As Long, Cancel As Boolean
     i = (PropFixedRows + PropFrozenRows) - 1
     Do Until GetRowHeight(i) > 0 Or Cancel = True
         If i > PropFixedRows Then i = i - 1 Else Cancel = True
     Loop
-    If Cancel = False Then GetFrozenRow = i Else GetFrozenRow = -1
+    If Cancel = False Then GetFrozenRow = i Else GetFrozenRow = PropFixedRows - 1
+Else
+    GetFrozenRow = -1
 End If
 End Function
 
 Private Function GetFrozenCol() As Long
-If PropFrozenCols = 0 Then
-    GetFrozenCol = -1
-Else
+If PropFrozenCols > 0 Then
     Dim i As Long, Cancel As Boolean
     i = (PropFixedCols + PropFrozenCols) - 1
     Do Until GetColWidth(i) > 0 Or Cancel = True
         If i > PropFixedCols Then i = i - 1 Else Cancel = True
     Loop
-    If Cancel = False Then GetFrozenCol = i Else GetFrozenCol = -1
+    If Cancel = False Then GetFrozenCol = i Else GetFrozenCol = PropFixedCols - 1
+Else
+    GetFrozenCol = -1
 End If
 End Function
 
