@@ -9433,22 +9433,21 @@ Else
     VBFlexGridMergeDrawInfo.Row.Width = 0
 End If
 End With
-SetBkMode hDC, OldBkMode
 With GridRect
 Dim hPenOld As Long
 hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
+If PropFrozenRows > 0 Then
+    VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+    VBFlexGridDrawInfo.GridLinePoints(0).Y = (FixedCY + FrozenCY) - 1
+    VBFlexGridDrawInfo.GridLinePoints(1).X = .Right
+    VBFlexGridDrawInfo.GridLinePoints(1).Y = (FixedCY + FrozenCY) - 1
+    Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+End If
 If PropFrozenCols > 0 Then
     VBFlexGridDrawInfo.GridLinePoints(0).X = (FixedCX + FrozenCX) - 1
     VBFlexGridDrawInfo.GridLinePoints(0).Y = .Top
     VBFlexGridDrawInfo.GridLinePoints(1).X = (FixedCX + FrozenCX) - 1
-    VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
-    Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
-End If
-If PropFrozenRows > 0 Then
-    VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
-    VBFlexGridDrawInfo.GridLinePoints(0).Y = (FixedCY + FrozenCY) - 1
-    VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
-    VBFlexGridDrawInfo.GridLinePoints(1).Y = (FixedCY + FrozenCY) - 1
+    VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom
     Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
 End If
 VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
@@ -9464,6 +9463,7 @@ If hPenOld <> 0 Then
 End If
 If hRgn <> -1 Then hRgn = CreateRectRgn(.Left, .Top, .Right, .Bottom)
 End With
+SetBkMode hDC, OldBkMode
 End Sub
 
 Private Sub DrawFixedCell(ByRef hDC As Long, ByRef CellRect As RECT, ByVal iRow As Long, ByVal iCol As Long)
@@ -11181,7 +11181,10 @@ If iRowHit > -1 And iColHit > -1 Then
     If HTI.HitResult = FlexHitResultCell And PropAllowUserFreezing <> FlexAllowUserFreezingNone Then
         Dim iRowFrozen As Long, iRowFrozenAdjacent As Long, iColFrozen As Long, iColFrozenAdjacent As Long
         iRowFrozen = GetFrozenRow()
-        If iRowFrozen < PropFixedRows Then iRowFrozen = -1
+        If iRowFrozen < PropFixedRows Then
+            ' Avoid divider row bottom hit test info.
+            iRowFrozen = -1
+        End If
         iRowFrozenAdjacent = VBFlexGridTopRow
         If GetRowHeight(iRowFrozenAdjacent) = 0 Then
             If iRowFrozenAdjacent < (PropRows - 1) Then
@@ -11192,7 +11195,10 @@ If iRowHit > -1 And iColHit > -1 Then
             End If
         End If
         iColFrozen = GetFrozenCol()
-        If iColFrozen < PropFixedCols Then iColFrozen = -1
+        If iColFrozen < PropFixedCols Then
+            ' Avoid divider column right hit test info.
+            iColFrozen = -1
+        End If
         iColFrozenAdjacent = VBFlexGridLeftCol
         If GetColWidth(iColFrozenAdjacent) = 0 Then
             If iColFrozenAdjacent < (PropCols - 1) Then

@@ -15,7 +15,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Height          =   285
       Left            =   3120
       TabIndex        =   27
-      Top             =   3120
+      Top             =   3075
       Width           =   1650
    End
    Begin VB.TextBox TextFormatString 
