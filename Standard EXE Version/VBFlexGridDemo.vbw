@@ -9,4 +9,4 @@ VBFlexGridBase = 101, 174, 1266, 847, C
 VBFlexGrid = 31, 56, 1307, 932, C, 50, 50, 1259, 723, C
 IVBFlexDataSource = 0, 0, 0, 0, C
 PPVBFlexGridGeneral = 161, 175, 1326, 848, C, 88, 60, 1253, 733, C
-PPVBFlexGridStyle = 0, 0, 0, 0, C, 329, 207, 1494, 880, C
+PPVBFlexGridStyle = 0, 0, 0, 0, C, 156, 176, 1321, 849, C
