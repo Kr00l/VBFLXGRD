@@ -1,5 +1,11 @@
 List of revisions:
 
+23-Nov-2021
+- Included the GridLineWidthFixed property.
+  Like in the MSHFlexGrid it has an default value of -1, which means that it exposes the GridLineWidth property in that case.
+- Included the FocusRectWidth property.
+  This has only an effect for FlexFocusRectFlat.
+
 20-Nov-2021
 - User now able to freeze even when fixed rows/cols are 0 and frozen rows/cols are 0.
 
