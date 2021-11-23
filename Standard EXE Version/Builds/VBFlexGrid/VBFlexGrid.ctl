@@ -1173,10 +1173,10 @@ Private VBFlexGridBackColorAltBrush As Long
 Private VBFlexGridBackColorBkgBrush As Long
 Private VBFlexGridBackColorFixedBrush As Long
 Private VBFlexGridBackColorSelBrush As Long
+Private VBFlexGridFocusRectPen As Long
 Private VBFlexGridGridLinePen As Long, VBFlexGridPenStyle As Long
 Private VBFlexGridGridLineFixedPen As Long, VBFlexGridFixedPenStyle As Long
 Private VBFlexGridGridLineWhitePen As Long, VBFlexGridGridLineBlackPen As Long
-Private VBFlexGridFocusRectPen As Long
 Private VBFlexGridIndirectCellRef As TINDIRECTCELLREF
 Private VBFlexGridCells As TROWS, VBFlexGridCellsInit As Boolean
 Private VBFlexGridColsInfo() As TCOLINFO
@@ -1303,6 +1303,7 @@ Private PropScrollTrack As Boolean
 Private PropDisableNoScroll As Boolean
 Private PropHighLight As FlexHighLightConstants
 Private PropFocusRect As FlexFocusRectConstants
+Private PropFocusRectWidth As Integer
 Private PropRowHeightMin As Long
 Private PropRowHeightMax As Long
 Private PropColWidthMin As Long
@@ -1310,6 +1311,7 @@ Private PropColWidthMax As Long
 Private PropGridLines As FlexGridLineConstants
 Private PropGridLinesFixed As FlexGridLineConstants
 Private PropGridLineWidth As Integer
+Private PropGridLineWidthFixed As Integer
 Private PropTextStyle As FlexTextStyleConstants
 Private PropTextStyleFixed As FlexTextStyleConstants
 Private PropPictureType As FlexPictureTypeConstants
@@ -1549,6 +1551,7 @@ PropScrollTrack = False
 PropDisableNoScroll = False
 PropHighLight = FlexHighLightAlways
 PropFocusRect = FlexFocusRectLight
+PropFocusRectWidth = 1
 PropRowHeightMin = 0
 PropRowHeightMax = 0
 PropColWidthMin = 0
@@ -1556,6 +1559,7 @@ PropColWidthMax = 0
 PropGridLines = FlexGridLineFlat
 PropGridLinesFixed = FlexGridLineInset
 PropGridLineWidth = 1
+PropGridLineWidthFixed = -1
 PropTextStyle = FlexTextStyleFlat
 PropTextStyleFixed = FlexTextStyleFlat
 PropPictureType = FlexPictureTypeColor
@@ -1639,6 +1643,7 @@ PropScrollTrack = .ReadProperty("ScrollTrack", False)
 PropDisableNoScroll = .ReadProperty("DisableNoScroll", False)
 PropHighLight = .ReadProperty("HighLight", FlexHighLightAlways)
 PropFocusRect = .ReadProperty("FocusRect", FlexFocusRectLight)
+PropFocusRectWidth = .ReadProperty("FocusRectWidth", 1)
 PropRowHeightMin = (.ReadProperty("RowHeightMin", 0) * PixelsPerDIP_Y())
 PropRowHeightMax = (.ReadProperty("RowHeightMax", 0) * PixelsPerDIP_Y())
 PropColWidthMin = (.ReadProperty("ColWidthMin", 0) * PixelsPerDIP_X())
@@ -1646,6 +1651,7 @@ PropColWidthMax = (.ReadProperty("ColWidthMax", 0) * PixelsPerDIP_X())
 PropGridLines = .ReadProperty("GridLines", FlexGridLineFlat)
 PropGridLinesFixed = .ReadProperty("GridLinesFixed", FlexGridLineInset)
 PropGridLineWidth = .ReadProperty("GridLineWidth", 1)
+PropGridLineWidthFixed = .ReadProperty("GridLineWidthFixed", -1)
 PropTextStyle = .ReadProperty("TextStyle", FlexTextStyleFlat)
 PropTextStyleFixed = .ReadProperty("TextStyleFixed", FlexTextStyleFlat)
 PropPictureType = .ReadProperty("PictureType", FlexPictureTypeColor)
@@ -1725,6 +1731,7 @@ With PropBag
 .WriteProperty "DisableNoScroll", PropDisableNoScroll, False
 .WriteProperty "HighLight", PropHighLight, FlexHighLightAlways
 .WriteProperty "FocusRect", PropFocusRect, FlexFocusRectLight
+.WriteProperty "FocusRectWidth", PropFocusRectWidth, 1
 .WriteProperty "RowHeightMin", (PropRowHeightMin / PixelsPerDIP_Y()), 0
 .WriteProperty "RowHeightMax", (PropRowHeightMax / PixelsPerDIP_Y()), 0
 .WriteProperty "ColWidthMin", (PropColWidthMin / PixelsPerDIP_X()), 0
@@ -1732,6 +1739,7 @@ With PropBag
 .WriteProperty "GridLines", PropGridLines, FlexGridLineFlat
 .WriteProperty "GridLinesFixed", PropGridLinesFixed, FlexGridLineInset
 .WriteProperty "GridLineWidth", PropGridLineWidth, 1
+.WriteProperty "GridLineWidthFixed", PropGridLineWidthFixed, -1
 .WriteProperty "TextStyle", PropTextStyle, FlexTextStyleFlat
 .WriteProperty "TextStyleFixed", PropTextStyleFixed, FlexTextStyleFlat
 .WriteProperty "PictureType", PropPictureType, FlexPictureTypeColor
@@ -2369,7 +2377,7 @@ If VBFlexGridHandle <> 0 Then
     If VBFlexGridBackColorSelBrush <> 0 Then DeleteObject VBFlexGridBackColorSelBrush
     VBFlexGridBackColorSelBrush = CreateSolidBrush(WinColor(PropBackColorSel))
     If VBFlexGridFocusRectPen <> 0 Then DeleteObject VBFlexGridFocusRectPen
-    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropGridLineWidth, WinColor(PropBackColorSel))
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropFocusRectWidth, WinColor(PropBackColorSel))
 End If
 Me.Refresh
 UserControl.PropertyChanged "BackColorSel"
@@ -2433,7 +2441,11 @@ Public Property Let GridColorFixed(ByVal Value As OLE_COLOR)
 PropGridColorFixed = Value
 If VBFlexGridHandle <> 0 Then
     If VBFlexGridGridLineFixedPen <> 0 Then DeleteObject VBFlexGridGridLineFixedPen
-    VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
+    If PropGridLineWidthFixed = -1 Then
+        VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
+    Else
+        VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFixed))
+    End If
 End If
 Me.Refresh
 UserControl.PropertyChanged "GridColorFixed"
@@ -3327,10 +3339,33 @@ Select Case Value
 End Select
 If VBFlexGridHandle <> 0 Then
     If VBFlexGridFocusRectPen <> 0 Then DeleteObject VBFlexGridFocusRectPen
-    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropGridLineWidth, WinColor(PropBackColorSel))
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropFocusRectWidth, WinColor(PropBackColorSel))
 End If
 Call RedrawGrid
 UserControl.PropertyChanged "FocusRect"
+End Property
+
+Public Property Get FocusRectWidth() As Integer
+Attribute FocusRectWidth.VB_Description = "Returns/sets the width in pixels of the focus rectangle."
+FocusRectWidth = PropFocusRectWidth
+End Property
+
+Public Property Let FocusRectWidth(ByVal Value As Integer)
+If Value < 1 Then
+    If VBFlexGridDesignMode = True Then
+        MsgBox "Invalid property value", vbCritical + vbOKOnly
+        Exit Property
+    Else
+        Err.Raise 380
+    End If
+End If
+PropFocusRectWidth = Value
+If VBFlexGridHandle <> 0 Then
+    If VBFlexGridFocusRectPen <> 0 Then DeleteObject VBFlexGridFocusRectPen
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropFocusRectWidth, WinColor(PropBackColorSel))
+End If
+Call RedrawGrid
+UserControl.PropertyChanged "FocusRectWidth"
 End Property
 
 Public Property Get RowHeightMin() As Long
@@ -3463,7 +3498,11 @@ Select Case Value
 End Select
 If VBFlexGridHandle <> 0 Then
     If VBFlexGridGridLineFixedPen <> 0 Then DeleteObject VBFlexGridGridLineFixedPen
-    VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
+    If PropGridLineWidthFixed = -1 Then
+        VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
+    Else
+        VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFixed))
+    End If
 End If
 Call RedrawGrid
 UserControl.PropertyChanged "GridLinesFixed"
@@ -3487,13 +3526,40 @@ PropGridLineWidth = Value
 If VBFlexGridHandle <> 0 Then
     If VBFlexGridGridLinePen <> 0 Then DeleteObject VBFlexGridGridLinePen
     VBFlexGridGridLinePen = CreatePen(VBFlexGridPenStyle, PropGridLineWidth, WinColor(PropGridColor))
-    If VBFlexGridGridLineFixedPen <> 0 Then DeleteObject VBFlexGridGridLineFixedPen
-    VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
-    If VBFlexGridFocusRectPen <> 0 Then DeleteObject VBFlexGridFocusRectPen
-    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropGridLineWidth, WinColor(PropBackColorSel))
+    If PropGridLineWidthFixed = -1 Then
+        If VBFlexGridGridLineFixedPen <> 0 Then DeleteObject VBFlexGridGridLineFixedPen
+        VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
+    End If
 End If
 Call RedrawGrid
 UserControl.PropertyChanged "GridLineWidth"
+End Property
+
+Public Property Get GridLineWidthFixed() As Integer
+Attribute GridLineWidthFixed.VB_Description = "Returns/sets the width in pixels of the gridlines."
+If PropGridLineWidthFixed = -1 Then GridLineWidthFixed = PropGridLineWidth Else GridLineWidthFixed = PropGridLineWidthFixed
+End Property
+
+Public Property Let GridLineWidthFixed(ByVal Value As Integer)
+If Value < 1 And Not Value = -1 Then
+    If VBFlexGridDesignMode = True Then
+        MsgBox "Invalid property value", vbCritical + vbOKOnly
+        Exit Property
+    Else
+        Err.Raise 380
+    End If
+End If
+PropGridLineWidthFixed = Value
+If VBFlexGridHandle <> 0 Then
+    If VBFlexGridGridLineFixedPen <> 0 Then DeleteObject VBFlexGridGridLineFixedPen
+    If PropGridLineWidthFixed = -1 Then
+        VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
+    Else
+        VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFixed))
+    End If
+End If
+Call RedrawGrid
+UserControl.PropertyChanged "GridLineWidthFixed"
 End Property
 
 Public Property Get TextStyle() As FlexTextStyleConstants
@@ -4082,6 +4148,7 @@ If VBFlexGridHandle <> 0 Then
     VBFlexGridBackColorBkgBrush = CreateSolidBrush(WinColor(PropBackColorBkg))
     VBFlexGridBackColorFixedBrush = CreateSolidBrush(WinColor(PropBackColorFixed))
     VBFlexGridBackColorSelBrush = CreateSolidBrush(WinColor(PropBackColorSel))
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropFocusRectWidth, WinColor(PropBackColorSel))
     Select Case PropGridLines
         Case FlexGridLineDashes
             VBFlexGridPenStyle = PS_DASH
@@ -4099,10 +4166,13 @@ If VBFlexGridHandle <> 0 Then
         Case Else
             VBFlexGridFixedPenStyle = PS_SOLID
     End Select
-    VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
+    If PropGridLineWidthFixed = -1 Then
+        VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
+    Else
+        VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFixed))
+    End If
     VBFlexGridGridLineWhitePen = CreatePen(PS_SOLID, 0, vbWhite)
     VBFlexGridGridLineBlackPen = CreatePen(PS_SOLID, 0, vbBlack)
-    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropGridLineWidth, WinColor(PropBackColorSel))
 End If
 Set Me.Font = PropFont
 Set Me.FontFixed = PropFontFixed
@@ -4218,6 +4288,10 @@ If VBFlexGridBackColorSelBrush <> 0 Then
     DeleteObject VBFlexGridBackColorSelBrush
     VBFlexGridBackColorSelBrush = 0
 End If
+If VBFlexGridFocusRectPen <> 0 Then
+    DeleteObject VBFlexGridFocusRectPen
+    VBFlexGridFocusRectPen = 0
+End If
 If VBFlexGridGridLinePen <> 0 Then
     DeleteObject VBFlexGridGridLinePen
     VBFlexGridGridLinePen = 0
@@ -4233,10 +4307,6 @@ End If
 If VBFlexGridGridLineBlackPen <> 0 Then
     DeleteObject VBFlexGridGridLineBlackPen
     VBFlexGridGridLineBlackPen = 0
-End If
-If VBFlexGridFocusRectPen <> 0 Then
-    DeleteObject VBFlexGridFocusRectPen
-    VBFlexGridFocusRectPen = 0
 End If
 End Sub
 
@@ -11180,34 +11250,18 @@ If iRowHit > -1 And iColHit > -1 Then
     End If
     If HTI.HitResult = FlexHitResultCell And PropAllowUserFreezing <> FlexAllowUserFreezingNone Then
         Dim iRowFrozen As Long, iRowFrozenAdjacent As Long, iColFrozen As Long, iColFrozenAdjacent As Long
-        iRowFrozen = GetFrozenRow()
+        iRowFrozen = GetFrozenRow(False)
         If iRowFrozen < PropFixedRows Then
             ' Avoid divider row bottom hit test info.
             iRowFrozen = -1
         End If
-        iRowFrozenAdjacent = VBFlexGridTopRow
-        If GetRowHeight(iRowFrozenAdjacent) = 0 Then
-            If iRowFrozenAdjacent < (PropRows - 1) Then
-                iRowFrozenAdjacent = iRowFrozenAdjacent + 1
-                Do While GetRowHeight(iRowFrozenAdjacent) = 0
-                    If iRowFrozenAdjacent < (PropRows - 1) Then iRowFrozenAdjacent = iRowFrozenAdjacent + 1 Else Exit Do
-                Loop
-            End If
-        End If
-        iColFrozen = GetFrozenCol()
+        iRowFrozenAdjacent = GetFrozenRow(True)
+        iColFrozen = GetFrozenCol(False)
         If iColFrozen < PropFixedCols Then
             ' Avoid divider column right hit test info.
             iColFrozen = -1
         End If
-        iColFrozenAdjacent = VBFlexGridLeftCol
-        If GetColWidth(iColFrozenAdjacent) = 0 Then
-            If iColFrozenAdjacent < (PropCols - 1) Then
-                iColFrozenAdjacent = iColFrozenAdjacent + 1
-                Do While GetColWidth(iColFrozenAdjacent) = 0
-                    If iColFrozenAdjacent < (PropCols - 1) Then iColFrozenAdjacent = iColFrozenAdjacent + 1 Else Exit Do
-                Loop
-            End If
-        End If
+        iColFrozenAdjacent = GetFrozenCol(True)
         If (iRowHit = iRowFrozen Or iRowHit = iRowFrozenAdjacent) And iColHit >= PropFixedCols Then
             If (iColHit = iColFrozen Or iColHit = iColFrozenAdjacent) And iRowHit >= PropFixedRows Then
                 If PropAllowUserFreezing = FlexAllowUserFreezingColumns Or PropAllowUserFreezing = FlexAllowUserFreezingBoth Then
@@ -12144,29 +12198,47 @@ Loop
 If Cancel = False Then GetLastMovableCol = i Else GetLastMovableCol = -1
 End Function
 
-Private Function GetFrozenRow() As Long
-If PropFrozenRows > 0 Then
-    Dim i As Long, Cancel As Boolean
-    i = (PropFixedRows + PropFrozenRows) - 1
-    Do Until GetRowHeight(i) > 0 Or Cancel = True
-        If i > PropFixedRows Then i = i - 1 Else Cancel = True
-    Loop
-    If Cancel = False Then GetFrozenRow = i Else GetFrozenRow = PropFixedRows - 1
+Private Function GetFrozenRow(ByVal Adjacent As Boolean) As Long
+If Adjacent = False Then
+    If PropFrozenRows > 0 Then
+        Dim i As Long, Cancel As Boolean
+        i = (PropFixedRows + PropFrozenRows) - 1
+        Do Until GetRowHeight(i) > 0 Or Cancel = True
+            If i > PropFixedRows Then i = i - 1 Else Cancel = True
+        Loop
+        If Cancel = False Then GetFrozenRow = i Else GetFrozenRow = PropFixedRows - 1
+    Else
+        GetFrozenRow = -1
+    End If
 Else
-    GetFrozenRow = -1
+    Dim iRow As Long
+    iRow = VBFlexGridTopRow
+    If iRow < (PropRows - 1) Then
+        If GetRowHeight(iRow) = 0 Then Call MoveNextRow(iRow)
+    End If
+    GetFrozenRow = iRow
 End If
 End Function
 
-Private Function GetFrozenCol() As Long
-If PropFrozenCols > 0 Then
-    Dim i As Long, Cancel As Boolean
-    i = (PropFixedCols + PropFrozenCols) - 1
-    Do Until GetColWidth(i) > 0 Or Cancel = True
-        If i > PropFixedCols Then i = i - 1 Else Cancel = True
-    Loop
-    If Cancel = False Then GetFrozenCol = i Else GetFrozenCol = PropFixedCols - 1
+Private Function GetFrozenCol(ByVal Adjacent As Boolean) As Long
+If Adjacent = False Then
+    If PropFrozenCols > 0 Then
+        Dim i As Long, Cancel As Boolean
+        i = (PropFixedCols + PropFrozenCols) - 1
+        Do Until GetColWidth(i) > 0 Or Cancel = True
+            If i > PropFixedCols Then i = i - 1 Else Cancel = True
+        Loop
+        If Cancel = False Then GetFrozenCol = i Else GetFrozenCol = PropFixedCols - 1
+    Else
+        GetFrozenCol = -1
+    End If
 Else
-    GetFrozenCol = -1
+    Dim iCol As Long
+    iCol = VBFlexGridLeftCol
+    If iCol < (PropCols - 1) Then
+        If GetColWidth(iCol) = 0 Then Call MoveNextCol(iCol)
+    End If
+    GetFrozenCol = iCol
 End If
 End Function
 
