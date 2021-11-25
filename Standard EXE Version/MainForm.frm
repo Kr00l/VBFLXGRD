@@ -275,7 +275,6 @@ Begin VB.Form MainForm
       Cols            =   20
       AllowUserFreezing=   3
       AllowUserResizing=   3
-      RowHeightMax    =   333
       ShowInfoTips    =   -1  'True
       ShowLabelTips   =   -1  'True
       AllowScrollLock =   -1  'True
