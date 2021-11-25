@@ -9,6 +9,14 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   8100
    ScaleWidth      =   6225
+   Begin VB.CheckBox CheckSheetBorder 
+      Caption         =   "SheetBorder"
+      Height          =   285
+      Left            =   4200
+      TabIndex        =   62
+      Top             =   5160
+      Width           =   1920
+   End
    Begin VB.CheckBox CheckAllowMultiSelection 
       Caption         =   "AllowMultiSelection"
       Height          =   285
@@ -767,6 +775,7 @@ End If
 .WantReturn = CBool(CheckWantReturn.Value = vbChecked)
 .ExtendLastCol = CBool(CheckExtendLastCol.Value = vbChecked)
 .AllowScrollLock = CBool(CheckAllowScrollLock.Value = vbChecked)
+.SheetBorder = CBool(CheckSheetBorder.Value = vbChecked)
 End With
 Call PropertyPage_SelectionChanged
 End Sub
@@ -889,6 +898,7 @@ CheckShowLabelTips.Value = IIf(.ShowLabelTips = True, vbChecked, vbUnchecked)
 CheckWantReturn.Value = IIf(.WantReturn = True, vbChecked, vbUnchecked)
 CheckExtendLastCol.Value = IIf(.ExtendLastCol = True, vbChecked, vbUnchecked)
 CheckAllowScrollLock.Value = IIf(.AllowScrollLock = True, vbChecked, vbUnchecked)
+CheckSheetBorder.Value = IIf(.SheetBorder = True, vbChecked, vbUnchecked)
 End With
 FreezeChanged = False
 End Sub
@@ -1394,6 +1404,11 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckAllowScrollLock_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckSheetBorder_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub

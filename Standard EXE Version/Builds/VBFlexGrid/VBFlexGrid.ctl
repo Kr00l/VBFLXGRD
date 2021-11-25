@@ -1279,6 +1279,7 @@ Private PropForeColorFixed As OLE_COLOR
 Private PropForeColorSel As OLE_COLOR
 Private PropGridColor As OLE_COLOR
 Private PropGridColorFixed As OLE_COLOR
+Private PropSortArrowColor As OLE_COLOR
 Private PropMousePointer As Integer, PropMouseIcon As IPictureDisp
 Private PropMouseTrack As Boolean
 Private PropRightToLeft As Boolean
@@ -1332,9 +1333,9 @@ Private PropFormatString As String
 Private PropIMEMode As FlexIMEModeConstants
 Private PropWantReturn As Boolean
 Private PropExtendLastCol As Boolean
-Private PropSortArrowColor As OLE_COLOR
 Private PropRowSortArrows As Long
 Private PropAllowScrollLock As Boolean
+Private PropSheetBorder As Boolean
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -1523,6 +1524,7 @@ PropForeColorFixed = vbButtonText
 PropForeColorSel = vbHighlightText
 PropGridColor = &HC0C0C0
 PropGridColorFixed = vbBlack
+PropSortArrowColor = vbGrayText
 PropMousePointer = 0: Set PropMouseIcon = Nothing
 PropMouseTrack = False
 PropRightToLeft = Ambient.RightToLeft
@@ -1580,9 +1582,9 @@ PropFormatString = vbNullString
 PropIMEMode = FlexIMEModeNoControl
 PropWantReturn = False
 PropExtendLastCol = False
-PropSortArrowColor = vbGrayText
 PropRowSortArrows = 0
 PropAllowScrollLock = False
+PropSheetBorder = True
 Call CreateVBFlexGrid
 End Sub
 
@@ -1612,6 +1614,7 @@ PropForeColorFixed = .ReadProperty("ForeColorFixed", vbButtonText)
 PropForeColorSel = .ReadProperty("ForeColorSel", vbHighlightText)
 PropGridColor = .ReadProperty("GridColor", &HC0C0C0)
 PropGridColorFixed = .ReadProperty("GridColorFixed", vbBlack)
+PropSortArrowColor = .ReadProperty("SortArrowColor", vbGrayText)
 Me.Enabled = .ReadProperty("Enabled", True)
 Me.OLEDropMode = .ReadProperty("OLEDropMode", vbOLEDropNone)
 PropMousePointer = .ReadProperty("MousePointer", 0)
@@ -1672,9 +1675,9 @@ PropFormatString = VarToStr(.ReadProperty("FormatString", vbNullString))
 PropIMEMode = .ReadProperty("IMEMode", FlexIMEModeNoControl)
 PropWantReturn = .ReadProperty("WantReturn", False)
 PropExtendLastCol = .ReadProperty("ExtendLastCol", False)
-PropSortArrowColor = .ReadProperty("SortArrowColor", vbGrayText)
 PropRowSortArrows = .ReadProperty("RowSortArrows", 0)
 PropAllowScrollLock = .ReadProperty("AllowScrollLock", False)
+PropSheetBorder = .ReadProperty("SheetBorder", True)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -1701,6 +1704,7 @@ With PropBag
 .WriteProperty "ForeColorSel", PropForeColorSel, vbHighlightText
 .WriteProperty "GridColor", PropGridColor, &HC0C0C0
 .WriteProperty "GridColorFixed", PropGridColorFixed, vbBlack
+.WriteProperty "SortArrowColor", PropSortArrowColor, vbGrayText
 .WriteProperty "Enabled", Me.Enabled, True
 .WriteProperty "OLEDropMode", Me.OLEDropMode, vbOLEDropNone
 .WriteProperty "MousePointer", PropMousePointer, 0
@@ -1760,9 +1764,9 @@ With PropBag
 .WriteProperty "IMEMode", PropIMEMode, FlexIMEModeNoControl
 .WriteProperty "WantReturn", PropWantReturn, False
 .WriteProperty "ExtendLastCol", PropExtendLastCol, False
-.WriteProperty "SortArrowColor", PropSortArrowColor, vbGrayText
 .WriteProperty "RowSortArrows", PropRowSortArrows, 0
 .WriteProperty "AllowScrollLock", PropAllowScrollLock, False
+.WriteProperty "SheetBorder", PropSheetBorder, True
 End With
 End Sub
 
@@ -2449,6 +2453,17 @@ If VBFlexGridHandle <> 0 Then
 End If
 Me.Refresh
 UserControl.PropertyChanged "GridColorFixed"
+End Property
+
+Public Property Get SortArrowColor() As OLE_COLOR
+Attribute SortArrowColor.VB_Description = "Returns/sets the sort arrow color."
+SortArrowColor = PropSortArrowColor
+End Property
+
+Public Property Let SortArrowColor(ByVal Value As OLE_COLOR)
+PropSortArrowColor = Value
+Me.Refresh
+UserControl.PropertyChanged "SortArrowColor"
 End Property
 
 Public Property Get Enabled() As Boolean
@@ -4061,17 +4076,6 @@ End With
 UserControl.PropertyChanged "ExtendLastCol"
 End Property
 
-Public Property Get SortArrowColor() As OLE_COLOR
-Attribute SortArrowColor.VB_Description = "Returns/sets the sort arrow color."
-SortArrowColor = PropSortArrowColor
-End Property
-
-Public Property Let SortArrowColor(ByVal Value As OLE_COLOR)
-PropSortArrowColor = Value
-Me.Refresh
-UserControl.PropertyChanged "SortArrowColor"
-End Property
-
 Public Property Get RowSortArrows() As Long
 Attribute RowSortArrows.VB_Description = "Returns/sets the row for the sort arrows."
 RowSortArrows = PropRowSortArrows
@@ -4098,6 +4102,17 @@ End Property
 Public Property Let AllowScrollLock(ByVal Value As Boolean)
 PropAllowScrollLock = Value
 UserControl.PropertyChanged "AllowScrollLock"
+End Property
+
+Public Property Get SheetBorder() As Boolean
+Attribute SheetBorder.VB_Description = "Returns/sets whether the flex grid control should draw a border around the sheet."
+SheetBorder = PropSheetBorder
+End Property
+
+Public Property Let SheetBorder(ByVal Value As Boolean)
+PropSheetBorder = Value
+Call RedrawGrid
+UserControl.PropertyChanged "SheetBorder"
 End Property
 
 Private Sub CreateVBFlexGrid()
@@ -9505,8 +9520,18 @@ End If
 End With
 With GridRect
 Dim hPenOld As Long
-hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
+If PropSheetBorder = True Then
+    hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
+    VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+    VBFlexGridDrawInfo.GridLinePoints(0).Y = .Bottom - 1
+    VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
+    VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
+    VBFlexGridDrawInfo.GridLinePoints(2).X = .Right - 1
+    VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
+    Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 3
+End If
 If PropFrozenRows > 0 Then
+    If hPenOld = 0 Then hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
     VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
     VBFlexGridDrawInfo.GridLinePoints(0).Y = (FixedCY + FrozenCY) - 1
     VBFlexGridDrawInfo.GridLinePoints(1).X = .Right
@@ -9514,19 +9539,13 @@ If PropFrozenRows > 0 Then
     Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
 End If
 If PropFrozenCols > 0 Then
+    If hPenOld = 0 Then hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
     VBFlexGridDrawInfo.GridLinePoints(0).X = (FixedCX + FrozenCX) - 1
     VBFlexGridDrawInfo.GridLinePoints(0).Y = .Top
     VBFlexGridDrawInfo.GridLinePoints(1).X = (FixedCX + FrozenCX) - 1
     VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom
     Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
 End If
-VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
-VBFlexGridDrawInfo.GridLinePoints(0).Y = .Bottom - 1
-VBFlexGridDrawInfo.GridLinePoints(1).X = .Right - 1
-VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom - 1
-VBFlexGridDrawInfo.GridLinePoints(2).X = .Right - 1
-VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
-Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 3
 If hPenOld <> 0 Then
     SelectObject hDC, hPenOld
     hPenOld = 0
