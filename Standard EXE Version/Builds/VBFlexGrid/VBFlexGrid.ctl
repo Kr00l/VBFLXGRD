@@ -1176,6 +1176,7 @@ Private VBFlexGridBackColorSelBrush As Long
 Private VBFlexGridFocusRectPen As Long
 Private VBFlexGridGridLinePen As Long, VBFlexGridPenStyle As Long
 Private VBFlexGridGridLineFixedPen As Long, VBFlexGridFixedPenStyle As Long
+Private VBFlexGridGridLineFrozenPen As Long, VBFlexGridFrozenPenStyle As Long
 Private VBFlexGridGridLineWhitePen As Long, VBFlexGridGridLineBlackPen As Long
 Private VBFlexGridIndirectCellRef As TINDIRECTCELLREF
 Private VBFlexGridCells As TROWS, VBFlexGridCellsInit As Boolean
@@ -1279,6 +1280,7 @@ Private PropForeColorFixed As OLE_COLOR
 Private PropForeColorSel As OLE_COLOR
 Private PropGridColor As OLE_COLOR
 Private PropGridColorFixed As OLE_COLOR
+Private PropGridColorFrozen As OLE_COLOR
 Private PropSortArrowColor As OLE_COLOR
 Private PropMousePointer As Integer, PropMouseIcon As IPictureDisp
 Private PropMouseTrack As Boolean
@@ -1311,8 +1313,10 @@ Private PropColWidthMin As Long
 Private PropColWidthMax As Long
 Private PropGridLines As FlexGridLineConstants
 Private PropGridLinesFixed As FlexGridLineConstants
+Private PropGridLinesFrozen As FlexGridLineConstants
 Private PropGridLineWidth As Integer
 Private PropGridLineWidthFixed As Integer
+Private PropGridLineWidthFrozen As Integer
 Private PropTextStyle As FlexTextStyleConstants
 Private PropTextStyleFixed As FlexTextStyleConstants
 Private PropPictureType As FlexPictureTypeConstants
@@ -1524,6 +1528,7 @@ PropForeColorFixed = vbButtonText
 PropForeColorSel = vbHighlightText
 PropGridColor = &HC0C0C0
 PropGridColorFixed = vbBlack
+PropGridColorFrozen = vbBlack
 PropSortArrowColor = vbGrayText
 PropMousePointer = 0: Set PropMouseIcon = Nothing
 PropMouseTrack = False
@@ -1560,8 +1565,10 @@ PropColWidthMin = 0
 PropColWidthMax = 0
 PropGridLines = FlexGridLineFlat
 PropGridLinesFixed = FlexGridLineInset
+PropGridLinesFrozen = FlexGridLineFlat
 PropGridLineWidth = 1
 PropGridLineWidthFixed = -1
+PropGridLineWidthFrozen = -1
 PropTextStyle = FlexTextStyleFlat
 PropTextStyleFixed = FlexTextStyleFlat
 PropPictureType = FlexPictureTypeColor
@@ -1614,6 +1621,7 @@ PropForeColorFixed = .ReadProperty("ForeColorFixed", vbButtonText)
 PropForeColorSel = .ReadProperty("ForeColorSel", vbHighlightText)
 PropGridColor = .ReadProperty("GridColor", &HC0C0C0)
 PropGridColorFixed = .ReadProperty("GridColorFixed", vbBlack)
+PropGridColorFrozen = .ReadProperty("GridColorFrozen", vbBlack)
 PropSortArrowColor = .ReadProperty("SortArrowColor", vbGrayText)
 Me.Enabled = .ReadProperty("Enabled", True)
 Me.OLEDropMode = .ReadProperty("OLEDropMode", vbOLEDropNone)
@@ -1653,8 +1661,10 @@ PropColWidthMin = (.ReadProperty("ColWidthMin", 0) * PixelsPerDIP_X())
 PropColWidthMax = (.ReadProperty("ColWidthMax", 0) * PixelsPerDIP_X())
 PropGridLines = .ReadProperty("GridLines", FlexGridLineFlat)
 PropGridLinesFixed = .ReadProperty("GridLinesFixed", FlexGridLineInset)
+PropGridLinesFrozen = .ReadProperty("GridLinesFrozen", FlexGridLineFlat)
 PropGridLineWidth = .ReadProperty("GridLineWidth", 1)
 PropGridLineWidthFixed = .ReadProperty("GridLineWidthFixed", -1)
+PropGridLineWidthFrozen = .ReadProperty("GridLineWidthFrozen", -1)
 PropTextStyle = .ReadProperty("TextStyle", FlexTextStyleFlat)
 PropTextStyleFixed = .ReadProperty("TextStyleFixed", FlexTextStyleFlat)
 PropPictureType = .ReadProperty("PictureType", FlexPictureTypeColor)
@@ -1704,6 +1714,7 @@ With PropBag
 .WriteProperty "ForeColorSel", PropForeColorSel, vbHighlightText
 .WriteProperty "GridColor", PropGridColor, &HC0C0C0
 .WriteProperty "GridColorFixed", PropGridColorFixed, vbBlack
+.WriteProperty "GridColorFrozen", PropGridColorFrozen, vbBlack
 .WriteProperty "SortArrowColor", PropSortArrowColor, vbGrayText
 .WriteProperty "Enabled", Me.Enabled, True
 .WriteProperty "OLEDropMode", Me.OLEDropMode, vbOLEDropNone
@@ -1742,8 +1753,10 @@ With PropBag
 .WriteProperty "ColWidthMax", (PropColWidthMax / PixelsPerDIP_X()), 0
 .WriteProperty "GridLines", PropGridLines, FlexGridLineFlat
 .WriteProperty "GridLinesFixed", PropGridLinesFixed, FlexGridLineInset
+.WriteProperty "GridLinesFrozen", PropGridLinesFrozen, FlexGridLineFlat
 .WriteProperty "GridLineWidth", PropGridLineWidth, 1
 .WriteProperty "GridLineWidthFixed", PropGridLineWidthFixed, -1
+.WriteProperty "GridLineWidthFrozen", PropGridLineWidthFrozen, -1
 .WriteProperty "TextStyle", PropTextStyle, FlexTextStyleFlat
 .WriteProperty "TextStyleFixed", PropTextStyleFixed, FlexTextStyleFlat
 .WriteProperty "PictureType", PropPictureType, FlexPictureTypeColor
@@ -2453,6 +2466,29 @@ If VBFlexGridHandle <> 0 Then
 End If
 Me.Refresh
 UserControl.PropertyChanged "GridColorFixed"
+End Property
+
+Public Property Get GridColorFrozen() As OLE_COLOR
+Attribute GridColorFrozen.VB_Description = "Returns/sets the color used to draw the lines between flex grid cells."
+GridColorFrozen = PropGridColorFrozen
+End Property
+
+Public Property Let GridColorFrozen(ByVal Value As OLE_COLOR)
+PropGridColorFrozen = Value
+If VBFlexGridHandle <> 0 Then
+    If VBFlexGridGridLineFrozenPen <> 0 Then DeleteObject VBFlexGridGridLineFrozenPen
+    If PropGridLineWidthFrozen = -1 Then
+        If PropGridLineWidthFixed = -1 Then
+            VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidth, WinColor(PropGridColorFrozen))
+        Else
+            VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFrozen))
+        End If
+    Else
+        VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidthFrozen, WinColor(PropGridColorFrozen))
+    End If
+End If
+Me.Refresh
+UserControl.PropertyChanged "GridColorFrozen"
 End Property
 
 Public Property Get SortArrowColor() As OLE_COLOR
@@ -3523,6 +3559,42 @@ Call RedrawGrid
 UserControl.PropertyChanged "GridLinesFixed"
 End Property
 
+Public Property Get GridLinesFrozen() As FlexGridLineConstants
+Attribute GridLinesFrozen.VB_Description = "Returns/sets the type of lines that should be drawn between cells."
+GridLinesFrozen = PropGridLinesFrozen
+End Property
+
+Public Property Let GridLinesFrozen(ByVal Value As FlexGridLineConstants)
+Select Case Value
+    Case FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
+        PropGridLinesFrozen = Value
+        Select Case Value
+            Case FlexGridLineDashes
+                VBFlexGridFrozenPenStyle = PS_DASH
+            Case FlexGridLineDots
+                VBFlexGridFrozenPenStyle = PS_DOT
+            Case Else
+                VBFlexGridFrozenPenStyle = PS_SOLID
+        End Select
+    Case Else
+        Err.Raise 380
+End Select
+If VBFlexGridHandle <> 0 Then
+    If VBFlexGridGridLineFrozenPen <> 0 Then DeleteObject VBFlexGridGridLineFrozenPen
+    If PropGridLineWidthFrozen = -1 Then
+        If PropGridLineWidthFixed = -1 Then
+            VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidth, WinColor(PropGridColorFrozen))
+        Else
+            VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFrozen))
+        End If
+    Else
+        VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidthFrozen, WinColor(PropGridColorFrozen))
+    End If
+End If
+Call RedrawGrid
+UserControl.PropertyChanged "GridLinesFrozen"
+End Property
+
 Public Property Get GridLineWidth() As Integer
 Attribute GridLineWidth.VB_Description = "Returns/sets the width in pixels of the gridlines."
 GridLineWidth = PropGridLineWidth
@@ -3544,6 +3616,10 @@ If VBFlexGridHandle <> 0 Then
     If PropGridLineWidthFixed = -1 Then
         If VBFlexGridGridLineFixedPen <> 0 Then DeleteObject VBFlexGridGridLineFixedPen
         VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidth, WinColor(PropGridColorFixed))
+    End If
+    If PropGridLineWidthFrozen = -1 And PropGridLineWidthFixed = -1 Then
+        If VBFlexGridGridLineFrozenPen <> 0 Then DeleteObject VBFlexGridGridLineFrozenPen
+        VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidth, WinColor(PropGridColorFrozen))
     End If
 End If
 Call RedrawGrid
@@ -3572,9 +3648,52 @@ If VBFlexGridHandle <> 0 Then
     Else
         VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFixed))
     End If
+    If PropGridLineWidthFrozen = -1 Then
+        If VBFlexGridGridLineFrozenPen <> 0 Then DeleteObject VBFlexGridGridLineFrozenPen
+        If PropGridLineWidthFixed = -1 Then
+            VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidth, WinColor(PropGridColorFrozen))
+        Else
+            VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFrozen))
+        End If
+    End If
 End If
 Call RedrawGrid
 UserControl.PropertyChanged "GridLineWidthFixed"
+End Property
+
+Public Property Get GridLineWidthFrozen() As Integer
+Attribute GridLineWidthFrozen.VB_Description = "Returns/sets the width in pixels of the gridlines."
+If PropGridLineWidthFrozen = -1 Then
+    If PropGridLineWidthFixed = -1 Then GridLineWidthFrozen = PropGridLineWidth Else GridLineWidthFrozen = PropGridLineWidthFixed
+Else
+    GridLineWidthFrozen = PropGridLineWidthFrozen
+End If
+End Property
+
+Public Property Let GridLineWidthFrozen(ByVal Value As Integer)
+If Value < 1 And Not Value = -1 Then
+    If VBFlexGridDesignMode = True Then
+        MsgBox "Invalid property value", vbCritical + vbOKOnly
+        Exit Property
+    Else
+        Err.Raise 380
+    End If
+End If
+PropGridLineWidthFrozen = Value
+If VBFlexGridHandle <> 0 Then
+    If VBFlexGridGridLineFrozenPen <> 0 Then DeleteObject VBFlexGridGridLineFrozenPen
+    If PropGridLineWidthFrozen = -1 Then
+        If PropGridLineWidthFixed = -1 Then
+            VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidth, WinColor(PropGridColorFrozen))
+        Else
+            VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFrozen))
+        End If
+    Else
+        VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidthFrozen, WinColor(PropGridColorFrozen))
+    End If
+End If
+Call RedrawGrid
+UserControl.PropertyChanged "GridLineWidthFrozen"
 End Property
 
 Public Property Get TextStyle() As FlexTextStyleConstants
@@ -4186,6 +4305,23 @@ If VBFlexGridHandle <> 0 Then
     Else
         VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFixed))
     End If
+    Select Case PropGridLinesFrozen
+        Case FlexGridLineDashes
+            VBFlexGridFrozenPenStyle = PS_DASH
+        Case FlexGridLineDots
+            VBFlexGridFrozenPenStyle = PS_DOT
+        Case Else
+            VBFlexGridFrozenPenStyle = PS_SOLID
+    End Select
+    If PropGridLineWidthFrozen = -1 Then
+        If PropGridLineWidthFixed = -1 Then
+            VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidth, WinColor(PropGridColorFrozen))
+        Else
+            VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFrozen))
+        End If
+    Else
+        VBFlexGridGridLineFrozenPen = CreatePen(VBFlexGridFrozenPenStyle, PropGridLineWidthFrozen, WinColor(PropGridColorFrozen))
+    End If
     VBFlexGridGridLineWhitePen = CreatePen(PS_SOLID, 0, vbWhite)
     VBFlexGridGridLineBlackPen = CreatePen(PS_SOLID, 0, vbBlack)
 End If
@@ -4314,6 +4450,10 @@ End If
 If VBFlexGridGridLineFixedPen <> 0 Then
     DeleteObject VBFlexGridGridLineFixedPen
     VBFlexGridGridLineFixedPen = 0
+End If
+If VBFlexGridGridLineFrozenPen <> 0 Then
+    DeleteObject VBFlexGridGridLineFrozenPen
+    VBFlexGridGridLineFrozenPen = 0
 End If
 If VBFlexGridGridLineWhitePen <> 0 Then
     DeleteObject VBFlexGridGridLineWhitePen
@@ -9530,21 +9670,74 @@ If PropSheetBorder = True Then
     VBFlexGridDrawInfo.GridLinePoints(2).Y = .Top - 1
     Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 3
 End If
-If PropFrozenRows > 0 Then
-    If hPenOld = 0 Then hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
-    VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
-    VBFlexGridDrawInfo.GridLinePoints(0).Y = (FixedCY + FrozenCY) - 1
-    VBFlexGridDrawInfo.GridLinePoints(1).X = .Right
-    VBFlexGridDrawInfo.GridLinePoints(1).Y = (FixedCY + FrozenCY) - 1
-    Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+If hPenOld <> 0 Then
+    SelectObject hDC, hPenOld
+    hPenOld = 0
 End If
-If PropFrozenCols > 0 Then
-    If hPenOld = 0 Then hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
-    VBFlexGridDrawInfo.GridLinePoints(0).X = (FixedCX + FrozenCX) - 1
-    VBFlexGridDrawInfo.GridLinePoints(0).Y = .Top
-    VBFlexGridDrawInfo.GridLinePoints(1).X = (FixedCX + FrozenCX) - 1
-    VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom
-    Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+If PropFrozenRows > 0 Or PropFrozenCols > 0 Then
+    Select Case PropGridLinesFrozen
+        Case FlexGridLineFlat, FlexGridLineDashes, FlexGridLineDots
+            hPenOld = SelectObject(hDC, VBFlexGridGridLineFrozenPen)
+            If PropFrozenRows > 0 Then
+                VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = (FixedCY + FrozenCY) - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).X = .Right
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = (FixedCY + FrozenCY) - 1
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+            End If
+            If PropFrozenCols > 0 Then
+                VBFlexGridDrawInfo.GridLinePoints(0).X = (FixedCX + FrozenCX) - 1
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(1).X = (FixedCX + FrozenCX) - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+            End If
+        Case FlexGridLineInset, FlexGridLineRaised
+            If PropFrozenRows > 0 Then
+                If PropGridLinesFrozen = FlexGridLineInset Then
+                    hPenOld = SelectObject(hDC, VBFlexGridGridLineBlackPen)
+                ElseIf PropGridLinesFrozen = FlexGridLineRaised Then
+                    hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
+                End If
+                VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = (FixedCY + FrozenCY) - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).X = .Right
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = (FixedCY + FrozenCY) - 1
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+                If PropGridLinesFrozen = FlexGridLineInset Then
+                    SelectObject hDC, VBFlexGridGridLineWhitePen
+                ElseIf PropGridLinesFrozen = FlexGridLineRaised Then
+                    SelectObject hDC, VBFlexGridGridLineBlackPen
+                End If
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = VBFlexGridDrawInfo.GridLinePoints(0).Y + 1
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = VBFlexGridDrawInfo.GridLinePoints(1).Y + 1
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+            End If
+            If hPenOld <> 0 Then
+                SelectObject hDC, hPenOld
+                hPenOld = 0
+            End If
+            If PropFrozenCols > 0 Then
+                If PropGridLinesFrozen = FlexGridLineInset Then
+                    hPenOld = SelectObject(hDC, VBFlexGridGridLineBlackPen)
+                ElseIf PropGridLinesFrozen = FlexGridLineRaised Then
+                    hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
+                End If
+                VBFlexGridDrawInfo.GridLinePoints(0).X = (FixedCX + FrozenCX) - 1
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(1).X = (FixedCX + FrozenCX) - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+                If PropGridLinesFrozen = FlexGridLineInset Then
+                    SelectObject hDC, VBFlexGridGridLineWhitePen
+                ElseIf PropGridLinesFrozen = FlexGridLineRaised Then
+                    SelectObject hDC, VBFlexGridGridLineBlackPen
+                End If
+                VBFlexGridDrawInfo.GridLinePoints(0).X = VBFlexGridDrawInfo.GridLinePoints(0).X + 1
+                VBFlexGridDrawInfo.GridLinePoints(1).X = VBFlexGridDrawInfo.GridLinePoints(1).X + 1
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+            End If
+    End Select
 End If
 If hPenOld <> 0 Then
     SelectObject hDC, hPenOld
