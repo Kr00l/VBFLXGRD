@@ -1,5 +1,9 @@
 List of revisions:
 
+26-Nov-2021
+- Included the GridColorFrozen/GridLinesFrozen/GridLineWidthFrozen property.
+  The GridLineWidthFrozen has an default value of -1, which means it exposes GridLineWidthFixed or GridLineWidth.
+
 25-Nov-2021
 - Included the SheetBorder property.
   The default value is True which draws a border around the sheet. (Like MSFlexGrid)
