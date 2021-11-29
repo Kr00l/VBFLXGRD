@@ -1,5 +1,9 @@
 List of revisions:
 
+29-Nov-2021
+- User resizing of rows/columns not restricted to client rect bottom/right anymore.
+  This makes it easier to enlarge the last row/column beyond the client rect.
+
 26-Nov-2021
 - Included the GridColorFrozen/GridLinesFrozen/GridLineWidthFrozen property.
   The GridLineWidthFrozen has an default value of -1, which means it exposes GridLineWidthFixed or GridLineWidth.
