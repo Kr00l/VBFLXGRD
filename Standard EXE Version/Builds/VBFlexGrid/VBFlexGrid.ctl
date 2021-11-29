@@ -961,6 +961,10 @@ Private Const SM_CXBORDER As Long = 5
 Private Const SM_CYBORDER As Long = 6
 Private Const SM_CXEDGE As Long = 45
 Private Const SM_CYEDGE As Long = 46
+Private Const SM_XVIRTUALSCREEN As Long = 76
+Private Const SM_YVIRTUALSCREEN As Long = 77
+Private Const SM_CXVIRTUALSCREEN As Long = 78
+Private Const SM_CYVIRTUALSCREEN As Long = 79
 Private Const SIF_RANGE As Long = &H1
 Private Const SIF_PAGE As Long = &H2
 Private Const SIF_POS As Long = &H4
@@ -2397,13 +2401,7 @@ If VBFlexGridHandle <> 0 Then
         DeleteObject VBFlexGridFocusRectPen
         VBFlexGridFocusRectPen = 0
     End If
-    If PropFocusRect = FlexFocusRectFlat Then
-        If PropFocusRectWidth = -1 Then
-            VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, VBFlexGridFocusBorder.CX, WinColor(PropBackColorSel))
-        Else
-            VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropFocusRectWidth, WinColor(PropBackColorSel))
-        End If
-    End If
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, GetFocusRectWidth(), WinColor(PropBackColorSel))
 End If
 Me.Refresh
 UserControl.PropertyChanged "BackColorSel"
@@ -3402,13 +3400,7 @@ If VBFlexGridHandle <> 0 Then
         DeleteObject VBFlexGridFocusRectPen
         VBFlexGridFocusRectPen = 0
     End If
-    If PropFocusRect = FlexFocusRectFlat Then
-        If PropFocusRectWidth = -1 Then
-            VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, VBFlexGridFocusBorder.CX, WinColor(PropBackColorSel))
-        Else
-            VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropFocusRectWidth, WinColor(PropBackColorSel))
-        End If
-    End If
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, GetFocusRectWidth(), WinColor(PropBackColorSel))
 End If
 Call RedrawGrid
 UserControl.PropertyChanged "FocusRect"
@@ -3416,7 +3408,7 @@ End Property
 
 Public Property Get FocusRectWidth() As Integer
 Attribute FocusRectWidth.VB_Description = "Returns/sets the width in pixels of the focus rectangle."
-If PropFocusRectWidth = -1 Then FocusRectWidth = VBFlexGridFocusBorder.CX Else FocusRectWidth = PropFocusRectWidth
+FocusRectWidth = GetFocusRectWidth()
 End Property
 
 Public Property Let FocusRectWidth(ByVal Value As Integer)
@@ -3434,13 +3426,7 @@ If VBFlexGridHandle <> 0 Then
         DeleteObject VBFlexGridFocusRectPen
         VBFlexGridFocusRectPen = 0
     End If
-    If PropFocusRect = FlexFocusRectFlat Then
-        If PropFocusRectWidth = -1 Then
-            VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, VBFlexGridFocusBorder.CX, WinColor(PropBackColorSel))
-        Else
-            VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropFocusRectWidth, WinColor(PropBackColorSel))
-        End If
-    End If
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, GetFocusRectWidth(), WinColor(PropBackColorSel))
 End If
 Call RedrawGrid
 UserControl.PropertyChanged "FocusRectWidth"
@@ -4309,13 +4295,7 @@ If VBFlexGridHandle <> 0 Then
     VBFlexGridBackColorBkgBrush = CreateSolidBrush(WinColor(PropBackColorBkg))
     VBFlexGridBackColorFixedBrush = CreateSolidBrush(WinColor(PropBackColorFixed))
     VBFlexGridBackColorSelBrush = CreateSolidBrush(WinColor(PropBackColorSel))
-    If PropFocusRect = FlexFocusRectFlat Then
-        If PropFocusRectWidth = -1 Then
-            VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, VBFlexGridFocusBorder.CX, WinColor(PropBackColorSel))
-        Else
-            VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropFocusRectWidth, WinColor(PropBackColorSel))
-        End If
-    End If
+    If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, GetFocusRectWidth(), WinColor(PropBackColorSel))
     Select Case PropGridLines
         Case FlexGridLineDashes
             VBFlexGridPenStyle = PS_DASH
@@ -10045,10 +10025,8 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
                 End If
             End If
         Case FlexFocusRectFlat
-            Dim FocusRectWidth As Integer
-            If PropFocusRectWidth = -1 Then FocusRectWidth = VBFlexGridFocusBorder.CX Else FocusRectWidth = PropFocusRectWidth
-            If (.Right - FocusRectWidth) <= .Left Then .Right = CellRect.Right + 1
-            If (.Bottom - FocusRectWidth) <= .Top Then .Bottom = CellRect.Bottom + 1
+            If (.Right - GetFocusRectWidth()) <= .Left Then .Right = CellRect.Right + 1
+            If (.Bottom - GetFocusRectWidth()) <= .Top Then .Bottom = CellRect.Bottom + 1
             If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
             hPenOld = SelectObject(hDC, VBFlexGridFocusRectPen)
             Rectangle hDC, .Left, .Top, .Right, .Bottom
@@ -10589,10 +10567,8 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
                 End If
             End If
         Case FlexFocusRectFlat
-            Dim FocusRectWidth As Integer
-            If PropFocusRectWidth = -1 Then FocusRectWidth = VBFlexGridFocusBorder.CX Else FocusRectWidth = PropFocusRectWidth
-            If (.Right - FocusRectWidth) <= .Left Then .Right = CellRect.Right + 1
-            If (.Bottom - FocusRectWidth) <= .Top Then .Bottom = CellRect.Bottom + 1
+            If (.Right - GetFocusRectWidth()) <= .Left Then .Right = CellRect.Right + 1
+            If (.Bottom - GetFocusRectWidth()) <= .Top Then .Bottom = CellRect.Bottom + 1
             If ComboCueWidth > 0 Then .Right = .Right - ComboCueWidth
             hPenOld = SelectObject(hDC, VBFlexGridFocusRectPen)
             Rectangle hDC, .Left, .Top, .Right, .Bottom
@@ -10992,6 +10968,10 @@ For i = CellRange.LeftCol + 1 To CellRange.RightCol
 Next i
 End With
 End Sub
+
+Private Function GetFocusRectWidth() As Integer
+If PropFocusRectWidth = -1 Then GetFocusRectWidth = VBFlexGridFocusBorder.CX Else GetFocusRectWidth = PropFocusRectWidth
+End Function
 
 Private Sub GetCellText(ByVal iRow As Long, ByVal iCol As Long, ByRef TextOut As String)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
@@ -14193,6 +14173,14 @@ Select Case HTI.HitResult
                     End With
             End Select
             MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, ClipRect, 2
+            Select Case VBFlexGridCaptureHitResult
+                Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
+                    If iRow > -1 Then ClipRect.Bottom = GetSystemMetrics(SM_YVIRTUALSCREEN) + GetSystemMetrics(SM_CYVIRTUALSCREEN)
+                    If iCol > -1 Then ClipRect.Right = GetSystemMetrics(SM_XVIRTUALSCREEN) + GetSystemMetrics(SM_CXVIRTUALSCREEN)
+                Case FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
+                    If iRow > -1 Then ClipRect.Top = GetSystemMetrics(SM_YVIRTUALSCREEN)
+                    If iCol > -1 Then ClipRect.Left = GetSystemMetrics(SM_XVIRTUALSCREEN)
+            End Select
             ClipCursor ClipRect
             VBFlexGridDividerDragOffset.X = HTI.PT.X - P.X
             VBFlexGridDividerDragOffset.Y = HTI.PT.Y - P.Y
@@ -14392,8 +14380,6 @@ If VBFlexGridCaptureDividerDrag = True Then
                 Next i
                 If (Y - VBFlexGridDividerDragOffset.Y) < (.CY + 1) Then
                     NewSize = UserControl.ScaleY(1, vbPixels, vbTwips)
-                ElseIf (Y - VBFlexGridDividerDragOffset.Y) >= (VBFlexGridClientRect.Bottom - 1) Then
-                    NewSize = UserControl.ScaleY(((VBFlexGridClientRect.Bottom - 1) - .CY), vbPixels, vbTwips)
                 Else
                     NewSize = UserControl.ScaleY(((Y - VBFlexGridDividerDragOffset.Y) - .CY), vbPixels, vbTwips)
                 End If
@@ -14417,8 +14403,6 @@ If VBFlexGridCaptureDividerDrag = True Then
                 Next i
                 If (X - VBFlexGridDividerDragOffset.X) < (.CX + 1) Then
                     NewSize = UserControl.ScaleX(1, vbPixels, vbTwips)
-                ElseIf (X - VBFlexGridDividerDragOffset.X) >= (VBFlexGridClientRect.Right - 1) Then
-                    NewSize = UserControl.ScaleX(((VBFlexGridClientRect.Right - 1) - .CX), vbPixels, vbTwips)
                 Else
                     NewSize = UserControl.ScaleX(((X - VBFlexGridDividerDragOffset.X) - .CX), vbPixels, vbTwips)
                 End If
@@ -15968,13 +15952,7 @@ Select Case wMsg
             DeleteObject VBFlexGridFocusRectPen
             VBFlexGridFocusRectPen = 0
         End If
-        If PropFocusRect = FlexFocusRectFlat Then
-            If PropFocusRectWidth = -1 Then
-                VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, VBFlexGridFocusBorder.CX, WinColor(PropBackColorSel))
-            Else
-                VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, PropFocusRectWidth, WinColor(PropBackColorSel))
-            End If
-        End If
+        If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, GetFocusRectWidth(), WinColor(PropBackColorSel))
     Case WM_STYLECHANGED
         If wParam = GWL_EXSTYLE Then
             Dim dwStyleNew As Long
