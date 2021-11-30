@@ -1,5 +1,8 @@
 List of revisions:
 
+30-Nov-2021
+- Merged rows/cols now drawn correctly in the freezing pane. (bugfixes in the internal DrawGrid routine)
+
 29-Nov-2021
 - User resizing of rows/columns not restricted to client rect bottom/right anymore.
   This makes it easier to enlarge the last row/column beyond the client rect.
