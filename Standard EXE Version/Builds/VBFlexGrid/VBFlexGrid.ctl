@@ -561,6 +561,10 @@ TopRow As Long
 RightCol As Long
 BottomRow As Long
 End Type
+Private Type TGRIDLINEOFFSETS
+LeftTop As SIZEAPI
+RightBottom As SIZEAPI
+End Type
 Private Const DIVIDER_SPACING_DIP As Long = 2
 Private Type THITTESTINFO
 PT As POINTAPI
@@ -584,6 +588,7 @@ SelRange As TCELLRANGE
 CellTextWidthPadding As Long
 CellTextHeightPadding As Long
 GridLinePoints(0 To 5) As POINTAPI
+GridLineOffsets As TGRIDLINEOFFSETS
 End Type
 Private Type TMERGEDRAWCOLINFO
 RowOffset As Long
@@ -1214,6 +1219,7 @@ Private VBFlexGridHitResult As FlexHitResultConstants
 Private VBFlexGridCellClickRow As Long, VBFlexGridCellClickCol As Long
 Private VBFlexGridEditRow As Long, VBFlexGridEditCol As Long
 Private VBFlexGridEditMergedRange As TCELLRANGE
+Private VBFlexGridEditGridLineOffsets As TGRIDLINEOFFSETS
 Private VBFlexGridEditReason As FlexEditReasonConstants
 Private VBFlexGridEditCloseMode As FlexEditCloseModeConstants
 Private VBFlexGridEditChangeFrozen As Boolean
@@ -4558,11 +4564,17 @@ If (dwExStyle And WS_EX_CLIENTEDGE) = WS_EX_CLIENTEDGE Then dwExStyle = dwExStyl
 If (dwExStyle And WS_EX_WINDOWEDGE) = WS_EX_WINDOWEDGE Then dwExStyle = dwExStyle And Not WS_EX_WINDOWEDGE
 Dim CellRangeRect As RECT, EditRect As RECT, ComboItems As String, ComboButtonWidth As Long
 Call GetMergedRangeStruct(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditMergedRange)
+Call GetGridLineOffsets(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditGridLineOffsets)
 Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
 Call GetCellRangeRect(VBFlexGridEditMergedRange, False, CellRangeRect)
-LSet EditRect = CellRangeRect
-If EditRect.Bottom > VBFlexGridClientRect.Bottom Then EditRect.Bottom = VBFlexGridClientRect.Bottom
-If EditRect.Right > VBFlexGridClientRect.Right Then EditRect.Right = VBFlexGridClientRect.Right
+With EditRect
+.Left = CellRangeRect.Left + VBFlexGridEditGridLineOffsets.LeftTop.CX
+.Top = CellRangeRect.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY
+.Right = CellRangeRect.Right - VBFlexGridEditGridLineOffsets.RightBottom.CX
+.Bottom = CellRangeRect.Bottom - VBFlexGridEditGridLineOffsets.RightBottom.CY
+'If .Bottom > VBFlexGridClientRect.Bottom Then .Bottom = VBFlexGridClientRect.Bottom
+'If .Right > VBFlexGridClientRect.Right Then .Right = VBFlexGridClientRect.Right
+End With
 If VBFlexGridComboMode <> FlexComboModeNone Then
     VBFlexGridComboActiveMode = VBFlexGridComboMode
     ComboItems = VBFlexGridComboItems
@@ -4573,8 +4585,8 @@ End If
 If VBFlexGridComboActiveMode <> FlexComboModeNone Then
     ComboButtonWidth = GetSystemMetrics(SM_CXVSCROLL)
     EditRect.Right = EditRect.Right - ComboButtonWidth
-    If (EditRect.Right - 1) < EditRect.Left Then EditRect.Right = (EditRect.Left + 1)
-    If (((CellRangeRect.Right - CellRangeRect.Left) - 1) - ComboButtonWidth) < 0 Then ComboButtonWidth = ((CellRangeRect.Right - CellRangeRect.Left) - 1)
+    If EditRect.Right < EditRect.Left Then EditRect.Right = EditRect.Left
+    If (((CellRangeRect.Right - CellRangeRect.Left) - (VBFlexGridEditGridLineOffsets.LeftTop.CX + VBFlexGridEditGridLineOffsets.RightBottom.CX)) - ComboButtonWidth) < 0 Then ComboButtonWidth = ((CellRangeRect.Right - CellRangeRect.Left) - (VBFlexGridEditGridLineOffsets.LeftTop.CX + VBFlexGridEditGridLineOffsets.RightBottom.CX))
     Select Case VBFlexGridComboActiveMode
         Case FlexComboModeDropDown
             If Not (dwStyle And ES_READONLY) = ES_READONLY Then dwStyle = dwStyle Or ES_READONLY
@@ -4582,7 +4594,7 @@ If VBFlexGridComboActiveMode <> FlexComboModeNone Then
             If (dwStyle And ES_READONLY) = ES_READONLY Then dwStyle = dwStyle And Not ES_READONLY
     End Select
 End If
-VBFlexGridEditHandle = CreateWindowEx(dwExStyle, StrPtr("Edit"), 0, dwStyle, EditRect.Left, EditRect.Top, (EditRect.Right - EditRect.Left) - 1, (EditRect.Bottom - EditRect.Top) - 1, VBFlexGridHandle, ID_EDITCHILD, App.hInstance, ByVal 0&)
+VBFlexGridEditHandle = CreateWindowEx(dwExStyle, StrPtr("Edit"), 0, dwStyle, EditRect.Left, EditRect.Top, (EditRect.Right - EditRect.Left), (EditRect.Bottom - EditRect.Top), VBFlexGridHandle, ID_EDITCHILD, App.hInstance, ByVal 0&)
 If VBFlexGridEditHandle <> 0 Then
     With VBFlexGridCells.Rows(VBFlexGridEditRow).Cols(VBFlexGridEditCol)
     Dim hFont As Long
@@ -4631,9 +4643,9 @@ If VBFlexGridEditHandle <> 0 Then
     End With
     SendMessage VBFlexGridEditHandle, WM_SETFONT, hFont, ByVal 0&
     If VBFlexGridRTLLayout = False Then
-        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X(), (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()) - 1)
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord((CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()) - VBFlexGridEditGridLineOffsets.LeftTop.CX, (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()) - VBFlexGridEditGridLineOffsets.RightBottom.CX)
     Else
-        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X() - 1, (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()))
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord((CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()) - VBFlexGridEditGridLineOffsets.RightBottom.CX, (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()) - VBFlexGridEditGridLineOffsets.LeftTop.CX)
     End If
     SendMessage VBFlexGridEditHandle, WM_SETTEXT, 0, ByVal StrPtr(Text)
     VBFlexGridEditTextChanged = False
@@ -4651,7 +4663,7 @@ If VBFlexGridEditHandle <> 0 Then
         dwExStyle = 0
         If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
         If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
-        VBFlexGridComboButtonHandle = CreateWindowEx(dwExStyle, StrPtr("Static"), 0, dwStyle, EditRect.Right - 1, EditRect.Top, ComboButtonWidth, (EditRect.Bottom - EditRect.Top) - 1, VBFlexGridHandle, ID_COMBOBUTTONCHILD, App.hInstance, ByVal 0&)
+        VBFlexGridComboButtonHandle = CreateWindowEx(dwExStyle, StrPtr("Static"), 0, dwStyle, EditRect.Right, EditRect.Top, ComboButtonWidth, (EditRect.Bottom - EditRect.Top), VBFlexGridHandle, ID_COMBOBUTTONCHILD, App.hInstance, ByVal 0&)
         If VBFlexGridComboButtonHandle <> 0 Then
             Dim WndRect As RECT
             Select Case VBFlexGridComboActiveMode
@@ -4660,7 +4672,7 @@ If VBFlexGridEditHandle <> 0 Then
                     dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
                     If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
                     If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
-                    SetRect VBFlexGridComboBoxRect, CellRangeRect.Left, EditRect.Top, CellRangeRect.Right, EditRect.Bottom
+                    SetRect VBFlexGridComboBoxRect, CellRangeRect.Left, CellRangeRect.Top, CellRangeRect.Right, CellRangeRect.Bottom
                     LSet WndRect = VBFlexGridComboBoxRect
                     MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
                     VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), 0, dwStyle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
@@ -4701,7 +4713,7 @@ If VBFlexGridEditHandle <> 0 Then
                     dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
                     If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
                     If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
-                    SetRect VBFlexGridComboBoxRect, CellRangeRect.Left, EditRect.Top, CellRangeRect.Right, EditRect.Bottom
+                    SetRect VBFlexGridComboBoxRect, CellRangeRect.Left, CellRangeRect.Top, CellRangeRect.Right, CellRangeRect.Bottom
                     VBFlexGridComboCalendarHandle = CreateWindowEx(dwExStyle, StrPtr("VBFlexGridComboCalendarClass"), 0, dwStyle, 0, 0, 0, 0, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
                     If VBFlexGridComboCalendarHandle <> 0 Then
                         SendMessage VBFlexGridComboCalendarHandle, WM_SETFONT, hFont, ByVal 0&
@@ -10131,12 +10143,13 @@ If PropFocusRect <> FlexFocusRectNone Then
     If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
+Call GetGridLineOffsets(iRow, iCol, VBFlexGridDrawInfo.GridLineOffsets)
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
 Dim ComboCueWidth As Long, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
     If .ComboCue <> FlexComboCueNone Then
         ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
-        If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
+        If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
         Select Case .ComboCue
             Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
                 ComboCueCtlType = ODT_COMBOBOX
@@ -10150,7 +10163,7 @@ If PropAllowUserEditing = True Then
     ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
         If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
             ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
-            If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
+            If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
             Select Case VBFlexGridComboCue
                 Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
                     ComboCueCtlType = ODT_COMBOBOX
@@ -10301,10 +10314,10 @@ End If
 If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT) = ODS_NOFOCUSRECT Then
     Dim FocusRect As RECT
     With FocusRect
-    .Left = CellRect.Left
-    .Top = CellRect.Top
-    .Right = CellRect.Right - 1
-    .Bottom = CellRect.Bottom - 1
+    .Left = CellRect.Left + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX
+    .Top = CellRect.Top + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CY
+    .Right = CellRect.Right - VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX
+    .Bottom = CellRect.Bottom - VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CY
     Select Case PropFocusRect
         Case FlexFocusRectLight, FlexFocusRectHeavy
             If (.Right - VBFlexGridFocusBorder.CX) <= .Left Then .Right = CellRect.Right + 1
@@ -10519,9 +10532,9 @@ If ComboCueWidth > 0 Then
     DIS.RCItem.Left = 0
     DIS.RCItem.Top = 0
     DIS.RCItem.Right = ComboCueWidth
-    DIS.RCItem.Bottom = (CellRect.Bottom - CellRect.Top) - 1
+    DIS.RCItem.Bottom = (CellRect.Bottom - CellRect.Top) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CY + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CY)
     DIS.ItemData = 0
-    SetViewportOrgEx DIS.hDC, CellRect.Right - ComboCueWidth - 1, CellRect.Top, P
+    SetViewportOrgEx DIS.hDC, CellRect.Right - ComboCueWidth - VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX, CellRect.Top + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CY, P
     Call ComboButtonDraw(DIS)
     SetViewportOrgEx DIS.hDC, P.X, P.Y, P
 End If
@@ -10663,12 +10676,13 @@ If PropFocusRect <> FlexFocusRectNone Then
     If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
+Call GetGridLineOffsets(iRow, iCol, VBFlexGridDrawInfo.GridLineOffsets)
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
 Dim ComboCueWidth As Long, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
     If .ComboCue <> FlexComboCueNone Then
         ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
-        If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
+        If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
         Select Case .ComboCue
             Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
                 ComboCueCtlType = ODT_COMBOBOX
@@ -10682,7 +10696,7 @@ If PropAllowUserEditing = True Then
     ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
         If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
             ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
-            If (((CellRect.Right - CellRect.Left) - 1) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - 1)
+            If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
             Select Case VBFlexGridComboCue
                 Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
                     ComboCueCtlType = ODT_COMBOBOX
@@ -10843,10 +10857,10 @@ End If
 If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT) = ODS_NOFOCUSRECT Then
     Dim FocusRect As RECT
     With FocusRect
-    .Left = CellRect.Left
-    .Top = CellRect.Top
-    .Right = CellRect.Right - 1
-    .Bottom = CellRect.Bottom - 1
+    .Left = CellRect.Left + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX
+    .Top = CellRect.Top + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CY
+    .Right = CellRect.Right - VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX
+    .Bottom = CellRect.Bottom - VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CY
     Select Case PropFocusRect
         Case FlexFocusRectLight, FlexFocusRectHeavy
             If (.Right - VBFlexGridFocusBorder.CX) <= .Left Then .Right = CellRect.Right + 1
@@ -10987,9 +11001,9 @@ If ComboCueWidth > 0 Then
     DIS.RCItem.Left = 0
     DIS.RCItem.Top = 0
     DIS.RCItem.Right = ComboCueWidth
-    DIS.RCItem.Bottom = (CellRect.Bottom - CellRect.Top) - 1
+    DIS.RCItem.Bottom = (CellRect.Bottom - CellRect.Top) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CY + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CY)
     DIS.ItemData = 0
-    SetViewportOrgEx DIS.hDC, CellRect.Right - ComboCueWidth - 1, CellRect.Top, P
+    SetViewportOrgEx DIS.hDC, CellRect.Right - ComboCueWidth - VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX, CellRect.Top + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CY, P
     Call ComboButtonDraw(DIS)
     SetViewportOrgEx DIS.hDC, P.X, P.Y, P
 End If
@@ -11543,6 +11557,15 @@ If hDC <> 0 Then
 End If
 End Function
 
+Private Sub GetGridLineOffsets(ByVal iRow As Long, ByVal iCol As Long, ByRef GridLineOffsets As TGRIDLINEOFFSETS)
+' The grid line offsets in MS(H)FlexGrid are hard-coded for all scenarios as per below values.
+' However, in future these could be fixed by an opt-in property to get the correct values.
+GridLineOffsets.LeftTop.CX = 0
+GridLineOffsets.LeftTop.CY = 0
+GridLineOffsets.RightBottom.CX = 1
+GridLineOffsets.RightBottom.CY = 1
+End Sub
+
 Private Sub GetHitTestInfo(ByRef HTI As THITTESTINFO)
 HTI.HitRow = -1
 HTI.HitCol = -1
@@ -11613,8 +11636,12 @@ If HTI.PT.X >= 0 Then
 End If
 If PropAllowUserEditing = True Then
     If iRowHit > -1 And iColHit > -1 Then
+        Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long
         If VBFlexGridCells.Rows(iRowHit).Cols(iColHit).ComboCue <> FlexComboCueNone Then
-            SetRect TempRect, .Right - GetSystemMetrics(SM_CXVSCROLL) - 1, .Top, .Right - 1, .Bottom - 1
+            Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
+            ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+            If (((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
+            SetRect TempRect, .Right - ComboCueWidth - GridLineOffsets.RightBottom.CX, .Top + GridLineOffsets.LeftTop.CY, .Right - GridLineOffsets.RightBottom.CX, .Bottom - GridLineOffsets.RightBottom.CY
             If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
                 Select Case VBFlexGridCells.Rows(iRowHit).Cols(iColHit).ComboCue
                     Case FlexComboCueDropDown, FlexComboCueButton
@@ -11628,7 +11655,10 @@ If PropAllowUserEditing = True Then
             End If
         ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
             If (iRowHit = GetComboCueRow() And iColHit = GetComboCueCol()) Then
-                SetRect TempRect, .Right - GetSystemMetrics(SM_CXVSCROLL) - 1, .Top, .Right - 1, .Bottom - 1
+                Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
+                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                If (((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
+                SetRect TempRect, .Right - ComboCueWidth - GridLineOffsets.RightBottom.CX, .Top + GridLineOffsets.LeftTop.CY, .Right - GridLineOffsets.RightBottom.CX, .Bottom - GridLineOffsets.RightBottom.CY
                 If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
                     Select Case VBFlexGridComboCue
                         Case FlexComboCueDropDown, FlexComboCueButton
@@ -15387,11 +15417,11 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
                 RC.Left = RC.Left - GetColWidth(i)
             Next i
         End If
-        SetWindowPos VBFlexGridEditHandle, 0, RC.Left, RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
+        SetWindowPos VBFlexGridEditHandle, 0, RC.Left + VBFlexGridEditGridLineOffsets.LeftTop.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
         If VBFlexGridComboButtonHandle <> 0 Then
             Dim EditRect As RECT
             GetClientRect VBFlexGridEditHandle, EditRect
-            SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left), RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
+            SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left) + VBFlexGridEditGridLineOffsets.LeftTop.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
             Dim WndRect(0 To 1) As RECT
             Dim hMonitor As Long, MI As MONITORINFO
             If VBFlexGridComboListHandle <> 0 Then
@@ -16992,8 +17022,8 @@ Select Case wMsg
                 ' The NCCALCSIZE_PARAMS struct is not necessary because only the first rectangle is adjusted.
                 ' If wParam is 1 or not, the treatment is the same.
                 CopyMemory RC, ByVal lParam, LenB(RC)
-                RC.Top = RC.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
-                RC.Bottom = RC.Bottom - ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - 1)
+                RC.Top = RC.Top + ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - VBFlexGridEditGridLineOffsets.LeftTop.CY)
+                RC.Bottom = RC.Bottom - ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - VBFlexGridEditGridLineOffsets.RightBottom.CY)
                 CopyMemory ByVal lParam, RC, LenB(RC)
                 WindowProcEdit = 0
                 Exit Function
@@ -17026,10 +17056,10 @@ Select Case wMsg
                     RC.Left = 0
                     RC.Right = (WndRect.Right - WndRect.Left)
                     RC.Top = 0
-                    RC.Bottom = RC.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+                    RC.Bottom = RC.Top + ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - VBFlexGridEditGridLineOffsets.LeftTop.CY)
                     FillRect hDC, RC, Brush
                     RC.Bottom = (WndRect.Bottom - WndRect.Top)
-                    RC.Top = RC.Bottom - ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - 1)
+                    RC.Top = RC.Bottom - ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - VBFlexGridEditGridLineOffsets.RightBottom.CY)
                     FillRect hDC, RC, Brush
                     ReleaseDC hWnd, hDC
                 End If
