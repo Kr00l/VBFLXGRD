@@ -1,5 +1,8 @@
 List of revisions:
 
+01-Dec-2021
+- Some minor internal improvements.
+
 30-Nov-2021
 - Merged rows/cols now drawn correctly in the freezing pane. (bugfixes in the internal DrawGrid routine)
 
