@@ -1327,6 +1327,7 @@ Private PropGridLinesFrozen As FlexGridLineConstants
 Private PropGridLineWidth As Integer
 Private PropGridLineWidthFixed As Integer
 Private PropGridLineWidthFrozen As Integer
+Private PropFixGridLineOffsets As Boolean
 Private PropTextStyle As FlexTextStyleConstants
 Private PropTextStyleFixed As FlexTextStyleConstants
 Private PropPictureType As FlexPictureTypeConstants
@@ -1579,6 +1580,7 @@ PropGridLinesFrozen = FlexGridLineFlat
 PropGridLineWidth = 1
 PropGridLineWidthFixed = -1
 PropGridLineWidthFrozen = -1
+PropFixGridLineOffsets = False
 PropTextStyle = FlexTextStyleFlat
 PropTextStyleFixed = FlexTextStyleFlat
 PropPictureType = FlexPictureTypeColor
@@ -1675,6 +1677,7 @@ PropGridLinesFrozen = .ReadProperty("GridLinesFrozen", FlexGridLineFlat)
 PropGridLineWidth = .ReadProperty("GridLineWidth", 1)
 PropGridLineWidthFixed = .ReadProperty("GridLineWidthFixed", -1)
 PropGridLineWidthFrozen = .ReadProperty("GridLineWidthFrozen", -1)
+PropFixGridLineOffsets = .ReadProperty("FixGridLineOffsets", PropFixGridLineOffsets)
 PropTextStyle = .ReadProperty("TextStyle", FlexTextStyleFlat)
 PropTextStyleFixed = .ReadProperty("TextStyleFixed", FlexTextStyleFlat)
 PropPictureType = .ReadProperty("PictureType", FlexPictureTypeColor)
@@ -1767,6 +1770,7 @@ With PropBag
 .WriteProperty "GridLineWidth", PropGridLineWidth, 1
 .WriteProperty "GridLineWidthFixed", PropGridLineWidthFixed, -1
 .WriteProperty "GridLineWidthFrozen", PropGridLineWidthFrozen, -1
+.WriteProperty "FixGridLineOffsets", PropFixGridLineOffsets, False
 .WriteProperty "TextStyle", PropTextStyle, FlexTextStyleFlat
 .WriteProperty "TextStyleFixed", PropTextStyleFixed, FlexTextStyleFlat
 .WriteProperty "PictureType", PropPictureType, FlexPictureTypeColor
@@ -3713,6 +3717,17 @@ If VBFlexGridHandle <> 0 Then
 End If
 Call RedrawGrid
 UserControl.PropertyChanged "GridLineWidthFrozen"
+End Property
+
+Public Property Get FixGridLineOffsets() As Boolean
+Attribute FixGridLineOffsets.VB_Description = "Returns/sets whether to fix the grid line offsets. If set to false it ensures visual compatibility with the MS flex grid control."
+FixGridLineOffsets = PropFixGridLineOffsets
+End Property
+
+Public Property Let FixGridLineOffsets(ByVal Value As Boolean)
+PropFixGridLineOffsets = Value
+Call RedrawGrid
+UserControl.PropertyChanged "FixGridLineOffsets"
 End Property
 
 Public Property Get TextStyle() As FlexTextStyleConstants
@@ -11558,12 +11573,107 @@ End If
 End Function
 
 Private Sub GetGridLineOffsets(ByVal iRow As Long, ByVal iCol As Long, ByRef GridLineOffsets As TGRIDLINEOFFSETS)
-' The grid line offsets in MS(H)FlexGrid are hard-coded for all scenarios as per below values.
-' However, in future these could be fixed by an opt-in property to get the correct values.
-GridLineOffsets.LeftTop.CX = 0
-GridLineOffsets.LeftTop.CY = 0
-GridLineOffsets.RightBottom.CX = 1
-GridLineOffsets.RightBottom.CY = 1
+' The grid line offsets in the MS flex grid control are hard-coded for all scenarios as per below values.
+With GridLineOffsets
+.LeftTop.CX = 0
+.LeftTop.CY = 0
+.RightBottom.CX = 1
+.RightBottom.CY = 1
+If PropFixGridLineOffsets = True Then
+    Select Case IIf(CBool(iRow >= PropFixedRows And iCol >= PropFixedCols), PropGridLines, PropGridLinesFixed)
+        Case FlexGridLineNone
+            .LeftTop.CX = 0
+            .LeftTop.CY = 0
+            .RightBottom.CX = 0
+            .RightBottom.CY = 0
+        Case FlexGridLineFlat, FlexGridLineDashes, FlexGridLineDots
+            .LeftTop.CX = 0
+            .LeftTop.CY = 0
+            .RightBottom.CX = 1
+            .RightBottom.CY = 1
+        Case FlexGridLineInset
+            .LeftTop.CX = 0
+            .LeftTop.CY = 0
+            .RightBottom.CX = 1
+            .RightBottom.CY = 1
+        Case FlexGridLineRaised
+            .LeftTop.CX = 1
+            .LeftTop.CY = 1
+            .RightBottom.CX = 0
+            .RightBottom.CY = 0
+    End Select
+    If PropSheetBorder = True Or PropFrozenRows > 0 Or PropFrozenCols > 0 Then
+        Dim MergedRange As TCELLRANGE
+        Call GetMergedRangeStruct(iRow, iCol, MergedRange)
+        If PropSheetBorder = True Then
+            Select Case GetSheetBorderRow()
+                Case MergedRange.TopRow To MergedRange.BottomRow
+                    If .RightBottom.CY < 1 Then .RightBottom.CY = 1
+            End Select
+            Select Case GetSheetBorderCol()
+                Case MergedRange.LeftCol To MergedRange.RightCol
+                    If .RightBottom.CX < 1 Then .RightBottom.CX = 1
+            End Select
+        End If
+        If PropFrozenRows > 0 Then
+            Select Case GetFrozenRow(False)
+                Case MergedRange.TopRow To MergedRange.BottomRow
+                    Select Case PropGridLinesFrozen
+                        Case FlexGridLineNone
+                            ' Void
+                        Case FlexGridLineFlat, FlexGridLineDashes, FlexGridLineDots
+                            If .RightBottom.CY < 1 Then .RightBottom.CY = 1
+                        Case FlexGridLineInset
+                            If .RightBottom.CY < 1 Then .RightBottom.CY = 1
+                        Case FlexGridLineRaised
+                            ' Void
+                    End Select
+            End Select
+            Select Case GetFrozenRow(True)
+                Case MergedRange.TopRow To MergedRange.BottomRow
+                    Select Case PropGridLinesFrozen
+                        Case FlexGridLineNone
+                            ' Void
+                        Case FlexGridLineFlat, FlexGridLineDashes, FlexGridLineDots
+                            ' Void
+                        Case FlexGridLineInset
+                            ' Void
+                        Case FlexGridLineRaised
+                            If .LeftTop.CY < 1 Then .LeftTop.CY = 1
+                    End Select
+            End Select
+        End If
+        If PropFrozenCols > 0 Then
+            Select Case GetFrozenCol(False)
+                Case MergedRange.LeftCol To MergedRange.RightCol
+                    Select Case PropGridLinesFrozen
+                        Case FlexGridLineNone
+                            ' Void
+                        Case FlexGridLineFlat, FlexGridLineDashes, FlexGridLineDots
+                            If .RightBottom.CX < 1 Then .RightBottom.CX = 1
+                        Case FlexGridLineInset
+                            If .RightBottom.CX < 1 Then .RightBottom.CX = 1
+                        Case FlexGridLineRaised
+                            ' Void
+                    End Select
+            End Select
+            Select Case GetFrozenCol(True)
+                Case MergedRange.LeftCol To MergedRange.RightCol
+                    Select Case PropGridLinesFrozen
+                        Case FlexGridLineNone
+                            ' Void
+                        Case FlexGridLineFlat, FlexGridLineDashes, FlexGridLineDots
+                            ' Void
+                        Case FlexGridLineInset
+                            ' Void
+                        Case FlexGridLineRaised
+                            If .LeftTop.CX < 1 Then .LeftTop.CX = 1
+                    End Select
+            End Select
+        End If
+    End If
+End If
+End With
 End Sub
 
 Private Sub GetHitTestInfo(ByRef HTI As THITTESTINFO)
@@ -12751,6 +12861,24 @@ Do Until GetColWidth(i) > 0 Or Cancel = True
     If i > PropFixedCols Then i = i - 1 Else Cancel = True
 Loop
 If Cancel = False Then GetLastMovableCol = i Else GetLastMovableCol = -1
+End Function
+
+Private Function GetSheetBorderRow() As Long
+Dim i As Long, Cancel As Boolean
+i = PropRows - 1
+Do Until GetRowHeight(i) > 0 Or Cancel = True
+    If i > PropFixedRows Then i = i - 1 Else Cancel = True
+Loop
+If Cancel = False Then GetSheetBorderRow = i Else GetSheetBorderRow = PropFixedRows - 1
+End Function
+
+Private Function GetSheetBorderCol() As Long
+Dim i As Long, Cancel As Boolean
+i = PropCols - 1
+Do Until GetColWidth(i) > 0 Or Cancel = True
+    If i > PropFixedCols Then i = i - 1 Else Cancel = True
+Loop
+If Cancel = False Then GetSheetBorderCol = i Else GetSheetBorderCol = PropFixedCols - 1
 End Function
 
 Private Function GetFrozenRow(ByVal Adjacent As Boolean) As Long
