@@ -651,6 +651,7 @@ SortArrowColor As Long
 ComboMode As FlexComboModeConstants
 ComboItems As String
 Format As String
+DataType As Integer
 End Type
 Private Type TCOLS
 Cols() As TCELL
@@ -2146,10 +2147,12 @@ If VBFlexGridDesignMode = False Then
                 If PropFixedRows > 0 Then
                     For iCol = 0 To (PropFixedCols - 1)
                         VBFlexGridColsInfo(iCol).Key = vbNullString
+                        VBFlexGridColsInfo(iCol).DataType = 0
                     Next iCol
                     For iCol = 0 To (.Fields.Count - 1)
                         Me.TextMatrix(0, iCol + PropFixedCols) = .Fields(iCol).Name
                         VBFlexGridColsInfo(iCol + PropFixedCols).Key = .Fields(iCol).Name
+                        VBFlexGridColsInfo(iCol + PropFixedCols).DataType = .Fields(iCol).Type
                     Next iCol
                 End If
                 If .RecordCount > 0 Then
@@ -6446,6 +6449,25 @@ Else
     Next i
 End If
 Call RedrawGrid
+End Property
+
+Public Property Get ColDataType(ByVal Index As Long) As Integer
+Attribute ColDataType.VB_Description = "Returns/sets the data type for the specified column."
+Attribute ColDataType.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColDataType = VBFlexGridColsInfo(Index).DataType
+End Property
+
+Public Property Let ColDataType(ByVal Index As Long, ByVal Value As Integer)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).DataType = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).DataType = Value
+    Next i
+End If
 End Property
 
 Public Property Get MergeRow(ByVal Index As Long) As Boolean
