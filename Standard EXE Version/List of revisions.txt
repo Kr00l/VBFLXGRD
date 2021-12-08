@@ -1,5 +1,10 @@
 List of revisions:
 
+08-Dec-2021
+- Included the ColDataType property. (As Integer; not restricted to an enum)
+  Setting ADO DataSource will predefine the column data type. (.ColDataType(i) property)
+  It's an information property only, intended to free the ColData property for other use cases.
+
 07-Dec-2021
 - Included the FixGridLineOffsets property.
   It defaults to False to ensure visual compatibility with the MS(H)FlexGrid control.
