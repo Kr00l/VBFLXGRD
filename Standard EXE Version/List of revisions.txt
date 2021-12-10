@@ -1,5 +1,9 @@
 List of revisions:
 
+10-Dec-2021
+- Included the MirrorAlignGeneral property.
+  This may be useful for right-to-left reading-order properties.
+
 08-Dec-2021
 - Included the ColDataType property. (As Integer; not restricted to an enum)
   Setting ADO DataSource will predefine the column data type. (.ColDataType(i) property)
