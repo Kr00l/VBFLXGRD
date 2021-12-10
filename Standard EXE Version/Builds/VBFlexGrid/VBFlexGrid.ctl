@@ -1328,10 +1328,11 @@ Private PropGridLinesFrozen As FlexGridLineConstants
 Private PropGridLineWidth As Integer
 Private PropGridLineWidthFixed As Integer
 Private PropGridLineWidthFrozen As Integer
-Private PropFixGridLineOffsets As Boolean
 Private PropTextStyle As FlexTextStyleConstants
 Private PropTextStyleFixed As FlexTextStyleConstants
 Private PropPictureType As FlexPictureTypeConstants
+Private PropFixGridLineOffsets As Boolean
+Private PropMirrorAlignGeneral As Boolean
 Private PropWordWrap As Boolean
 Private PropSingleLine As Boolean
 Private PropEllipsisFormat As FlexEllipsisFormatConstants
@@ -1581,10 +1582,11 @@ PropGridLinesFrozen = FlexGridLineFlat
 PropGridLineWidth = 1
 PropGridLineWidthFixed = -1
 PropGridLineWidthFrozen = -1
-PropFixGridLineOffsets = False
 PropTextStyle = FlexTextStyleFlat
 PropTextStyleFixed = FlexTextStyleFlat
 PropPictureType = FlexPictureTypeColor
+PropFixGridLineOffsets = False
+PropMirrorAlignGeneral = False
 PropWordWrap = False
 PropSingleLine = False
 PropEllipsisFormat = FlexEllipsisFormatNone
@@ -1678,10 +1680,11 @@ PropGridLinesFrozen = .ReadProperty("GridLinesFrozen", FlexGridLineFlat)
 PropGridLineWidth = .ReadProperty("GridLineWidth", 1)
 PropGridLineWidthFixed = .ReadProperty("GridLineWidthFixed", -1)
 PropGridLineWidthFrozen = .ReadProperty("GridLineWidthFrozen", -1)
-PropFixGridLineOffsets = .ReadProperty("FixGridLineOffsets", PropFixGridLineOffsets)
 PropTextStyle = .ReadProperty("TextStyle", FlexTextStyleFlat)
 PropTextStyleFixed = .ReadProperty("TextStyleFixed", FlexTextStyleFlat)
 PropPictureType = .ReadProperty("PictureType", FlexPictureTypeColor)
+PropFixGridLineOffsets = .ReadProperty("FixGridLineOffsets", PropFixGridLineOffsets)
+PropMirrorAlignGeneral = .ReadProperty("MirrorAlignGeneral", PropMirrorAlignGeneral)
 PropWordWrap = .ReadProperty("WordWrap", False)
 PropSingleLine = .ReadProperty("SingleLine", False)
 PropEllipsisFormat = .ReadProperty("EllipsisFormat", FlexEllipsisFormatNone)
@@ -1771,10 +1774,11 @@ With PropBag
 .WriteProperty "GridLineWidth", PropGridLineWidth, 1
 .WriteProperty "GridLineWidthFixed", PropGridLineWidthFixed, -1
 .WriteProperty "GridLineWidthFrozen", PropGridLineWidthFrozen, -1
-.WriteProperty "FixGridLineOffsets", PropFixGridLineOffsets, False
 .WriteProperty "TextStyle", PropTextStyle, FlexTextStyleFlat
 .WriteProperty "TextStyleFixed", PropTextStyleFixed, FlexTextStyleFlat
 .WriteProperty "PictureType", PropPictureType, FlexPictureTypeColor
+.WriteProperty "FixGridLineOffsets", PropFixGridLineOffsets, False
+.WriteProperty "MirrorAlignGeneral", PropMirrorAlignGeneral, False
 .WriteProperty "WordWrap", PropWordWrap, False
 .WriteProperty "SingleLine", PropSingleLine, False
 .WriteProperty "EllipsisFormat", PropEllipsisFormat, FlexEllipsisFormatNone
@@ -3722,17 +3726,6 @@ Call RedrawGrid
 UserControl.PropertyChanged "GridLineWidthFrozen"
 End Property
 
-Public Property Get FixGridLineOffsets() As Boolean
-Attribute FixGridLineOffsets.VB_Description = "Returns/sets whether to fix the grid line offsets. If set to false it ensures visual compatibility with the MS flex grid control."
-FixGridLineOffsets = PropFixGridLineOffsets
-End Property
-
-Public Property Let FixGridLineOffsets(ByVal Value As Boolean)
-PropFixGridLineOffsets = Value
-Call RedrawGrid
-UserControl.PropertyChanged "FixGridLineOffsets"
-End Property
-
 Public Property Get TextStyle() As FlexTextStyleConstants
 Attribute TextStyle.VB_Description = "Returns/sets 3D effects for displaying text."
 TextStyle = PropTextStyle
@@ -3778,6 +3771,28 @@ Select Case Value
         Err.Raise 380
 End Select
 UserControl.PropertyChanged "PictureType"
+End Property
+
+Public Property Get FixGridLineOffsets() As Boolean
+Attribute FixGridLineOffsets.VB_Description = "Returns/sets whether to fix the grid line offsets. If set to false it ensures visual compatibility with the MS flex grid control."
+FixGridLineOffsets = PropFixGridLineOffsets
+End Property
+
+Public Property Let FixGridLineOffsets(ByVal Value As Boolean)
+PropFixGridLineOffsets = Value
+Call RedrawGrid
+UserControl.PropertyChanged "FixGridLineOffsets"
+End Property
+
+Public Property Get MirrorAlignGeneral() As Boolean
+Attribute MirrorAlignGeneral.VB_Description = "Returns/sets whether to mirror alignment general. This may be useful for right-to-left reading-order properties."
+MirrorAlignGeneral = PropMirrorAlignGeneral
+End Property
+
+Public Property Let MirrorAlignGeneral(ByVal Value As Boolean)
+PropMirrorAlignGeneral = Value
+Call RedrawGrid
+UserControl.PropertyChanged "MirrorAlignGeneral"
 End Property
 
 Public Property Get WordWrap() As Boolean
@@ -4562,10 +4577,18 @@ Select Case Alignment
     Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
         If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_RIGHT Else dwStyle = dwStyle Or ES_LEFT
     Case FlexAlignmentGeneral
-        If Not IsNumeric(Text) Then
-            If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_LEFT Else dwStyle = dwStyle Or ES_RIGHT
+        If PropMirrorAlignGeneral = False Then
+            If Not IsNumeric(Text) Then
+                If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_LEFT Else dwStyle = dwStyle Or ES_RIGHT
+            Else
+                If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_RIGHT Else dwStyle = dwStyle Or ES_LEFT
+            End If
         Else
-            If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_RIGHT Else dwStyle = dwStyle Or ES_LEFT
+            If Not IsNumeric(Text) Then
+                If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_RIGHT Else dwStyle = dwStyle Or ES_LEFT
+            Else
+                If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_LEFT Else dwStyle = dwStyle Or ES_RIGHT
+            End If
         End If
 End Select
 If PropWordWrap = True Or PropSingleLine = False Then
@@ -10479,10 +10502,18 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
         Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
             DrawFlags = DrawFlags Or DT_RIGHT
         Case FlexAlignmentGeneral
-            If Not IsNumeric(Text) Then
-                DrawFlags = DrawFlags Or DT_LEFT
+            If PropMirrorAlignGeneral = False Then
+                If Not IsNumeric(Text) Then
+                    DrawFlags = DrawFlags Or DT_LEFT
+                Else
+                    DrawFlags = DrawFlags Or DT_RIGHT
+                End If
             Else
-                DrawFlags = DrawFlags Or DT_RIGHT
+                If Not IsNumeric(Text) Then
+                    DrawFlags = DrawFlags Or DT_RIGHT
+                Else
+                    DrawFlags = DrawFlags Or DT_LEFT
+                End If
             End If
     End Select
     If PropWordWrap = True Then
@@ -10948,10 +10979,18 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
         Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
             DrawFlags = DrawFlags Or DT_RIGHT
         Case FlexAlignmentGeneral
-            If Not IsNumeric(Text) Then
-                DrawFlags = DrawFlags Or DT_LEFT
+            If PropMirrorAlignGeneral = False Then
+                If Not IsNumeric(Text) Then
+                    DrawFlags = DrawFlags Or DT_LEFT
+                Else
+                    DrawFlags = DrawFlags Or DT_RIGHT
+                End If
             Else
-                DrawFlags = DrawFlags Or DT_RIGHT
+                If Not IsNumeric(Text) Then
+                    DrawFlags = DrawFlags Or DT_RIGHT
+                Else
+                    DrawFlags = DrawFlags Or DT_LEFT
+                End If
             End If
     End Select
     If PropWordWrap = True Then
@@ -12266,10 +12305,18 @@ If hDC <> 0 Then
         Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
             Format = Format Or DT_RIGHT
         Case FlexAlignmentGeneral
-            If Not IsNumeric(Text) Then
-                Format = Format Or DT_LEFT
+            If PropMirrorAlignGeneral = False Then
+                If Not IsNumeric(Text) Then
+                    Format = Format Or DT_LEFT
+                Else
+                    Format = Format Or DT_RIGHT
+                End If
             Else
-                Format = Format Or DT_RIGHT
+                If Not IsNumeric(Text) Then
+                    Format = Format Or DT_RIGHT
+                Else
+                    Format = Format Or DT_LEFT
+                End If
             End If
     End Select
     If PropWordWrap = True Then

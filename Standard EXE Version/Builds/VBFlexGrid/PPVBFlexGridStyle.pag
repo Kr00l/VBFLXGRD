@@ -9,13 +9,22 @@ Begin VB.PropertyPage PPVBFlexGridStyle
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   8100
    ScaleWidth      =   6225
+   Begin VB.CheckBox CheckMirrorAlignGeneral 
+      Alignment       =   1  'Right Justify
+      Caption         =   "MirrorAlignGeneral"
+      Height          =   285
+      Left            =   3120
+      TabIndex        =   27
+      Top             =   3075
+      Width           =   1650
+   End
    Begin VB.CheckBox CheckFixGridLineOffsets 
       Alignment       =   1  'Right Justify
       Caption         =   "FixGridLineOffsets"
       Height          =   285
-      Left            =   3120
-      TabIndex        =   6
-      Top             =   480
+      Left            =   120
+      TabIndex        =   26
+      Top             =   3075
       Width           =   1650
    End
    Begin VB.ComboBox ComboGridLinesFrozen 
@@ -31,8 +40,8 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "SingleLine"
       Height          =   285
       Left            =   3120
-      TabIndex        =   28
-      Top             =   3075
+      TabIndex        =   29
+      Top             =   3435
       Width           =   1650
    End
    Begin VB.TextBox TextFormatString 
@@ -40,15 +49,15 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Left            =   1560
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   30
-      Top             =   3480
+      TabIndex        =   31
+      Top             =   3840
       Width           =   4395
    End
    Begin VB.ComboBox ComboEllipsisFormatFixed 
       Height          =   315
       Left            =   4560
       Style           =   2  'Dropdown List
-      TabIndex        =   26
+      TabIndex        =   25
       Top             =   2640
       Width           =   1380
    End
@@ -56,7 +65,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Height          =   315
       Left            =   1560
       Style           =   2  'Dropdown List
-      TabIndex        =   24
+      TabIndex        =   23
       Top             =   2640
       Width           =   1380
    End
@@ -64,7 +73,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Height          =   315
       Left            =   1560
       Style           =   2  'Dropdown List
-      TabIndex        =   22
+      TabIndex        =   21
       Top             =   2280
       Width           =   1380
    End
@@ -72,7 +81,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Height          =   315
       Left            =   1560
       Style           =   2  'Dropdown List
-      TabIndex        =   20
+      TabIndex        =   19
       Top             =   1920
       Width           =   1380
    End
@@ -81,35 +90,35 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "WordWrap"
       Height          =   285
       Left            =   120
-      TabIndex        =   27
-      Top             =   3075
+      TabIndex        =   28
+      Top             =   3435
       Width           =   1650
    End
    Begin VB.TextBox TextColWidthMax 
       Height          =   315
       Left            =   4560
-      TabIndex        =   18
+      TabIndex        =   17
       Top             =   1560
       Width           =   1380
    End
    Begin VB.TextBox TextColWidthMin 
       Height          =   315
       Left            =   1560
-      TabIndex        =   16
+      TabIndex        =   15
       Top             =   1560
       Width           =   1380
    End
    Begin VB.TextBox TextRowHeightMax 
       Height          =   315
       Left            =   4560
-      TabIndex        =   14
+      TabIndex        =   13
       Top             =   1200
       Width           =   1380
    End
    Begin VB.TextBox TextRowHeightMin 
       Height          =   315
       Left            =   1560
-      TabIndex        =   12
+      TabIndex        =   11
       Top             =   1200
       Width           =   1380
    End
@@ -117,7 +126,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Height          =   315
       Left            =   4560
       Style           =   2  'Dropdown List
-      TabIndex        =   10
+      TabIndex        =   9
       Top             =   840
       Width           =   1380
    End
@@ -125,7 +134,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Height          =   315
       Left            =   1560
       Style           =   2  'Dropdown List
-      TabIndex        =   8
+      TabIndex        =   7
       Top             =   840
       Width           =   1380
    End
@@ -157,15 +166,15 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "FormatString:"
       Height          =   240
       Left            =   120
-      TabIndex        =   29
-      Top             =   3480
+      TabIndex        =   30
+      Top             =   3840
       Width           =   1410
    End
    Begin VB.Label LabelEllipsisFormatFixed 
       Caption         =   "EllipsisFormatFixed:"
       Height          =   240
       Left            =   3120
-      TabIndex        =   25
+      TabIndex        =   24
       Top             =   2640
       Width           =   1410
    End
@@ -173,7 +182,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "EllipsisFormat:"
       Height          =   240
       Left            =   120
-      TabIndex        =   23
+      TabIndex        =   22
       Top             =   2640
       Width           =   1410
    End
@@ -181,7 +190,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "PictureType:"
       Height          =   240
       Left            =   120
-      TabIndex        =   21
+      TabIndex        =   20
       Top             =   2280
       Width           =   1410
    End
@@ -189,7 +198,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "MergeCells:"
       Height          =   240
       Left            =   120
-      TabIndex        =   19
+      TabIndex        =   18
       Top             =   1920
       Width           =   1410
    End
@@ -197,7 +206,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "ColWidthMax:"
       Height          =   240
       Left            =   3120
-      TabIndex        =   17
+      TabIndex        =   16
       Top             =   1560
       Width           =   1410
    End
@@ -205,7 +214,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "ColWidthMin:"
       Height          =   240
       Left            =   120
-      TabIndex        =   15
+      TabIndex        =   14
       Top             =   1560
       Width           =   1410
    End
@@ -213,7 +222,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "RowHeightMax:"
       Height          =   240
       Left            =   3120
-      TabIndex        =   13
+      TabIndex        =   12
       Top             =   1200
       Width           =   1410
    End
@@ -221,7 +230,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "RowHeightMin:"
       Height          =   240
       Left            =   120
-      TabIndex        =   11
+      TabIndex        =   10
       Top             =   1200
       Width           =   1410
    End
@@ -229,7 +238,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "TextStyleFixed:"
       Height          =   240
       Left            =   3120
-      TabIndex        =   9
+      TabIndex        =   8
       Top             =   840
       Width           =   1410
    End
@@ -237,7 +246,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "TextStyle:"
       Height          =   240
       Left            =   120
-      TabIndex        =   7
+      TabIndex        =   6
       Top             =   840
       Width           =   1410
    End
@@ -397,7 +406,6 @@ With PropertyPage.SelectedControls(0)
 .GridLines = ComboGridLines.ItemData(ComboGridLines.ListIndex)
 .GridLinesFixed = ComboGridLinesFixed.ItemData(ComboGridLinesFixed.ListIndex)
 .GridLinesFrozen = ComboGridLinesFrozen.ItemData(ComboGridLinesFrozen.ListIndex)
-.FixGridLineOffsets = CBool(CheckFixGridLineOffsets.Value = vbChecked)
 .TextStyle = ComboTextStyle.ItemData(ComboTextStyle.ListIndex)
 .TextStyleFixed = ComboTextStyleFixed.ItemData(ComboTextStyleFixed.ListIndex)
 .RowHeightMin = CLng(TextRowHeightMin.Text)
@@ -408,6 +416,8 @@ With PropertyPage.SelectedControls(0)
 .PictureType = ComboPictureType.ItemData(ComboPictureType.ListIndex)
 .EllipsisFormat = ComboEllipsisFormat.ItemData(ComboEllipsisFormat.ListIndex)
 .EllipsisFormatFixed = ComboEllipsisFormatFixed.ItemData(ComboEllipsisFormatFixed.ListIndex)
+.FixGridLineOffsets = CBool(CheckFixGridLineOffsets.Value = vbChecked)
+.MirrorAlignGeneral = CBool(CheckMirrorAlignGeneral.Value = vbChecked)
 .WordWrap = CBool(CheckWordWrap.Value = vbChecked)
 .FormatString = TextFormatString.Text
 End With
@@ -436,7 +446,6 @@ For i = 0 To ComboGridLinesFrozen.ListCount - 1
         Exit For
     End If
 Next i
-CheckFixGridLineOffsets.Value = IIf(.FixGridLineOffsets = True, vbChecked, vbUnchecked)
 For i = 0 To ComboTextStyle.ListCount - 1
     If ComboTextStyle.ItemData(i) = .TextStyle Then
         ComboTextStyle.ListIndex = i
@@ -477,6 +486,8 @@ For i = 0 To ComboEllipsisFormatFixed.ListCount - 1
         Exit For
     End If
 Next i
+CheckFixGridLineOffsets.Value = IIf(.FixGridLineOffsets = True, vbChecked, vbUnchecked)
+CheckMirrorAlignGeneral.Value = IIf(.MirrorAlignGeneral = True, vbChecked, vbUnchecked)
 CheckWordWrap.Value = IIf(.WordWrap = True, vbChecked, vbUnchecked)
 CheckSingleLine.Value = IIf(.SingleLine = True, vbChecked, vbUnchecked)
 TextFormatString.Text = .FormatString
@@ -495,11 +506,6 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub ComboGridLinesFrozen_Click()
-If FreezeChanged = True Then Exit Sub
-PropertyPage.Changed = True
-End Sub
-
-Private Sub CheckFixGridLineOffsets_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
@@ -714,6 +720,16 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub ComboEllipsisFormatFixed_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckFixGridLineOffsets_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckMirrorAlignGeneral_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
