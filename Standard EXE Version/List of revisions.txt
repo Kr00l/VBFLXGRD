@@ -1,5 +1,10 @@
 List of revisions:
 
+13-Dec-2021
+- Included the ComboButtonAlignment/ColComboButtonAlignment property.
+  ComboButtonAlignment defaults to 1 - Right and ColComboButtonAlignment defaults to -1 (inherit from ComboButtonAlignment).
+  This may be useful for right-to-left reading-order properties.
+
 10-Dec-2021
 - Included the MirrorAlignGeneral property.
   This may be useful for right-to-left reading-order properties.
