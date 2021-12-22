@@ -4582,13 +4582,13 @@ Select Case Alignment
         If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_RIGHT Else dwStyle = dwStyle Or ES_LEFT
     Case FlexAlignmentGeneral
         If PropMirrorAlignGeneral = False Then
-            If Not IsNumeric(Text) Then
+            If Not IsNumeric(Text) And Not IsDate(Text) Then
                 If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_LEFT Else dwStyle = dwStyle Or ES_RIGHT
             Else
                 If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_RIGHT Else dwStyle = dwStyle Or ES_LEFT
             End If
         Else
-            If Not IsNumeric(Text) Then
+            If Not IsNumeric(Text) And Not IsDate(Text) Then
                 If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_RIGHT Else dwStyle = dwStyle Or ES_LEFT
             Else
                 If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_LEFT Else dwStyle = dwStyle Or ES_RIGHT
@@ -10603,13 +10603,13 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
             DrawFlags = DrawFlags Or DT_RIGHT
         Case FlexAlignmentGeneral
             If PropMirrorAlignGeneral = False Then
-                If Not IsNumeric(Text) Then
+                If Not IsNumeric(Text) And Not IsDate(Text) Then
                     DrawFlags = DrawFlags Or DT_LEFT
                 Else
                     DrawFlags = DrawFlags Or DT_RIGHT
                 End If
             Else
-                If Not IsNumeric(Text) Then
+                If Not IsNumeric(Text) And Not IsDate(Text) Then
                     DrawFlags = DrawFlags Or DT_RIGHT
                 Else
                     DrawFlags = DrawFlags Or DT_LEFT
@@ -11118,13 +11118,13 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
             DrawFlags = DrawFlags Or DT_RIGHT
         Case FlexAlignmentGeneral
             If PropMirrorAlignGeneral = False Then
-                If Not IsNumeric(Text) Then
+                If Not IsNumeric(Text) And Not IsDate(Text) Then
                     DrawFlags = DrawFlags Or DT_LEFT
                 Else
                     DrawFlags = DrawFlags Or DT_RIGHT
                 End If
             Else
-                If Not IsNumeric(Text) Then
+                If Not IsNumeric(Text) And Not IsDate(Text) Then
                     DrawFlags = DrawFlags Or DT_RIGHT
                 Else
                     DrawFlags = DrawFlags Or DT_LEFT
@@ -12466,13 +12466,13 @@ If hDC <> 0 Then
             Format = Format Or DT_RIGHT
         Case FlexAlignmentGeneral
             If PropMirrorAlignGeneral = False Then
-                If Not IsNumeric(Text) Then
+                If Not IsNumeric(Text) And Not IsDate(Text) Then
                     Format = Format Or DT_LEFT
                 Else
                     Format = Format Or DT_RIGHT
                 End If
             Else
-                If Not IsNumeric(Text) Then
+                If Not IsNumeric(Text) And Not IsDate(Text) Then
                     Format = Format Or DT_RIGHT
                 Else
                     Format = Format Or DT_LEFT
@@ -16247,6 +16247,7 @@ Do While i <= Right And j <= UBound(Temp)
     Cmp = 0
     Select Case Sort
         Case FlexSortGenericAscending, FlexSortGenericDescending
+            ' Sort strings and numbers only. (dates will be sorted as strings)
             If Not IsNumeric(Data(i).Cols(Col).Text) Or Not IsNumeric(Temp(j).Cols(Col).Text) Then
                 If Data(i).Cols(Col).Text < Temp(j).Cols(Col).Text Then
                     Cmp = -1
