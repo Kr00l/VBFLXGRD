@@ -1,5 +1,10 @@
 List of revisions:
 
+22-Dec-2021
+- FlexAlignmentGeneral now aligns for dates to the right. (Like MS(H)FlexGrid)
+  Though FlexSortGenericAscending/FlexSortGenericDescending still sort either text or numeric number. (no dates like in MS(H)FlexGrid)
+  For dates keep using FlexSortDateAscending/FlexSortDateDescending.
+
 13-Dec-2021
 - Included the ComboButtonAlignment/ColComboButtonAlignment property.
   ComboButtonAlignment defaults to 1 - Right and ColComboButtonAlignment defaults to -1 (inherit from ComboButtonAlignment).
