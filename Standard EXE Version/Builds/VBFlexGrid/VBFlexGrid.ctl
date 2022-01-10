@@ -5051,15 +5051,20 @@ If IndexLong > -1 And IndexLong < PropFixedRows Then
 ElseIf IndexLong < 0 Or IndexLong > PropRows Then
     Err.Raise Number:=30002, Description:="Grid does not contain that row"
 Else
-    PropRows = PropRows + 1
-    ReDim Preserve VBFlexGridCells.Rows(0 To (PropRows - 1)) As TCOLS
-    Dim iRow As Long
-    If IndexLong < (PropRows - 1) Then
-        For iRow = ((PropRows - 1) - 1) To IndexLong Step -1
-            LSet VBFlexGridCells.Rows(iRow + 1) = VBFlexGridCells.Rows(iRow)
-        Next iRow
+    If PropRows > 0 Then
+        PropRows = PropRows + 1
+        ReDim Preserve VBFlexGridCells.Rows(0 To (PropRows - 1)) As TCOLS
+        Dim iRow As Long
+        If IndexLong < (PropRows - 1) Then
+            For iRow = ((PropRows - 1) - 1) To IndexLong Step -1
+                LSet VBFlexGridCells.Rows(iRow + 1) = VBFlexGridCells.Rows(iRow)
+            Next iRow
+        End If
+        LSet VBFlexGridCells.Rows(IndexLong) = VBFlexGridDefaultCols
+    Else
+        PropRows = PropRows + 1
+        If PropCols > 0 Then Call InitFlexGridCells
     End If
-    LSet VBFlexGridCells.Rows(IndexLong) = VBFlexGridDefaultCols
     Dim Pos1 As Long, Pos2 As Long, iCol As Long, ColSeparator As String
     ColSeparator = GetColSeparator()
     If PropClipMode = FlexClipModeNormal Then
@@ -5094,7 +5099,7 @@ Else
     End If
     Dim RCP As TROWCOLPARAMS
     With RCP
-    .Flags = RCPF_SETSCROLLBARS
+    .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
     Select Case PropSelectionMode
         Case FlexSelectionModeByColumn
             .Mask = .Mask Or RCPM_ROWSEL
@@ -5124,7 +5129,7 @@ Else
     ReDim Preserve VBFlexGridCells.Rows(0 To (PropRows - 1)) As TCOLS
     Dim RCP As TROWCOLPARAMS
     With RCP
-    .Flags = RCPF_SETSCROLLBARS
+    .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
     If VBFlexGridRow > (PropRows - 1) Then
         .Mask = .Mask Or RCPM_ROW
         .Row = (PropRows - 1)
