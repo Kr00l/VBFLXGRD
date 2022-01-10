@@ -1,5 +1,8 @@
 List of revisions:
 
+10-Jan-2022
+- Bugfix in the AddItem method.
+
 22-Dec-2021
 - FlexAlignmentGeneral now aligns for dates to the right. (Like MS(H)FlexGrid)
   Though FlexSortGenericAscending/FlexSortGenericDescending still sort either text or numeric number. (no dates like in MS(H)FlexGrid)
