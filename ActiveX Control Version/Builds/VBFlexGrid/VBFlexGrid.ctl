@@ -5025,7 +5025,7 @@ If Not VBFlexGridFlexDataSource Is Nothing Then
     End If
     End With
 Else
-    Me.Refresh
+    Call RedrawGrid
 End If
 End Property
 
