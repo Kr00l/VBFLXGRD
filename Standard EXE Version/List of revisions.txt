@@ -1,5 +1,8 @@
 List of revisions:
 
+30-May-2022
+- Setting .FlexDataSource to nothing will invalidate the grid now and does not cause an immediate redraw anymore.
+
 10-Jan-2022
 - Bugfix in the AddItem method.
 
