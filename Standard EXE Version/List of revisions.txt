@@ -1,5 +1,10 @@
 List of revisions:
 
+08-Jun-2022
+- Bugfix in the .RowPosition() and .ColPosition() property.
+  Now it is a round trip swap instead of a direct swap between index and value.
+  This behavior matches now to the MS(H)FlexGrid control.
+
 30-May-2022
 - Setting .FlexDataSource to nothing will invalidate the grid now and does not cause an immediate redraw anymore.
 
