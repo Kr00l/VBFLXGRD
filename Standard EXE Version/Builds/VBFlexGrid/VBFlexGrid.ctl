@@ -6028,25 +6028,36 @@ End Property
 Public Property Let ColPosition(ByVal Index As Long, ByVal Value As Long)
 If (Index < 0 Or Index > (PropCols - 1)) Or (Value < 0 Or Value > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
 If Index = Value Then Exit Property
-Dim iRow As Long, iCol As Long, Swap1() As TCELL, Swap2 As TCOLINFO
-With VBFlexGridCells
-ReDim Swap1(0 To (PropRows - 1)) As TCELL
-For iRow = 0 To (PropRows - 1): LSet Swap1(iRow) = .Rows(iRow).Cols(Index): Next iRow
+Dim iRow As Long, iCol As Long, Swap1 As TCELL, Swap2 As TCOLINFO
 LSet Swap2 = VBFlexGridColsInfo(Index)
 If Index > Value Then
+    For iRow = 0 To (PropRows - 1)
+        With VBFlexGridCells.Rows(iRow)
+        LSet Swap1 = .Cols(Index)
+        For iCol = Index To (Value + 1) Step -1
+            LSet .Cols(iCol) = .Cols(iCol - 1)
+        Next iCol
+        LSet .Cols(Value) = Swap1
+        End With
+    Next iRow
     For iCol = Index To (Value + 1) Step -1
-        For iRow = 0 To (PropRows - 1): LSet .Rows(iRow).Cols(iCol) = .Rows(iRow).Cols(iCol - 1): Next iRow
         LSet VBFlexGridColsInfo(iCol) = VBFlexGridColsInfo(iCol - 1)
     Next iCol
 ElseIf Index < Value Then
+    For iRow = 0 To (PropRows - 1)
+        With VBFlexGridCells.Rows(iRow)
+        LSet Swap1 = .Cols(Index)
+        For iCol = Index To (Value - 1)
+            LSet .Cols(iCol) = .Cols(iCol + 1)
+        Next iCol
+        LSet .Cols(Value) = Swap1
+        End With
+    Next iRow
     For iCol = Index To (Value - 1)
-        For iRow = 0 To (PropRows - 1): LSet .Rows(iRow).Cols(iCol) = .Rows(iRow).Cols(iCol + 1): Next iRow
         LSet VBFlexGridColsInfo(iCol) = VBFlexGridColsInfo(iCol + 1)
     Next iCol
 End If
-For iRow = 0 To (PropRows - 1): LSet .Rows(iRow).Cols(Value) = Swap1(iRow): Next iRow
 LSet VBFlexGridColsInfo(Value) = Swap2
-End With
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_LEFTCOL
