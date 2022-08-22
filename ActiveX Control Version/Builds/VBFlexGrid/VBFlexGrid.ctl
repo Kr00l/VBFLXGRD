@@ -2990,6 +2990,8 @@ Else
         End If
     End If
 End If
+Dim RowsPerPage As Long
+RowsPerPage = -1
 If Value > 0 And PropRows < 1 Then
     PropRows = Value
     If PropCols > 0 Then Call InitFlexGridCells
@@ -3007,6 +3009,8 @@ ElseIf Value <> PropRows And PropCols > 0 Then
         For i = (PropRows - 1) To (Value - 1)
             LSet VBFlexGridCells.Rows(i) = VBFlexGridDefaultCols
         Next i
+    Else
+        RowsPerPage = GetRowsPerPageRev(Value - 1)
     End If
     PropRows = Value
 Else
@@ -3041,14 +3045,14 @@ If .Row < PropFixedRows And PropRows > PropFixedRows Then
     If Not (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then .Mask = .Mask Or RCPM_ROWSEL
     If PropSelectionMode <> FlexSelectionModeByColumn Then .RowSel = PropFixedRows Else .RowSel = (PropRows - 1)
 End If
-If VBFlexGridTopRow > (PropRows - 1) Then
+If RowsPerPage > -1 Then
+    If VBFlexGridTopRow > (PropRows - 1) - RowsPerPage + 1 Then
+        .Mask = .Mask Or RCPM_TOPROW
+        .TopRow = (PropRows - 1) - RowsPerPage + 1
+    End If
+ElseIf VBFlexGridTopRow > (PropRows - 1) Then
     .Mask = .Mask Or RCPM_TOPROW
-    Select Case PropScrollBars
-        Case vbVertical, vbBoth
-            .Flags = .Flags Or RCPF_CHECKTOPROW
-        Case Else
-            .Flags = .Flags Or RCPF_FORCETOPROWMASK
-    End Select
+    .Flags = .Flags Or RCPF_CHECKTOPROW
     .TopRow = (PropRows - 1)
 End If
 Call SetRowColParams(RCP)
@@ -3079,6 +3083,8 @@ Else
         End If
     End If
 End If
+Dim ColsPerPage As Long
+ColsPerPage = -1
 If Value > 0 And PropCols < 1 Then
     PropCols = Value
     If PropRows > 0 Then Call InitFlexGridCells
@@ -3111,6 +3117,7 @@ ElseIf Value <> PropCols And PropRows > 0 Then
         Next i
         ReDim Preserve VBFlexGridColsInfo(0 To (Value - 1)) As TCOLINFO
         ReDim Preserve VBFlexGridDefaultCols.Cols(0 To (Value - 1)) As TCELL
+        ColsPerPage = GetColsPerPageRev(Value - 1)
     End If
     PropCols = Value
 Else
@@ -3146,14 +3153,14 @@ If .Col < PropFixedCols And PropCols > PropFixedCols Then
     If Not (.Mask And RCPM_COLSEL) = RCPM_COLSEL Then .Mask = .Mask Or RCPM_COLSEL
     If PropSelectionMode <> FlexSelectionModeByRow Then .ColSel = PropFixedCols Else .ColSel = (PropCols - 1)
 End If
-If VBFlexGridLeftCol > (PropCols - 1) Then
+If ColsPerPage > -1 Then
+    If VBFlexGridLeftCol > (PropCols - 1) - ColsPerPage + 1 Then
+        .Mask = .Mask Or RCPM_LEFTCOL
+        .LeftCol = (PropCols - 1) - ColsPerPage + 1
+    End If
+ElseIf VBFlexGridLeftCol > (PropCols - 1) Then
     .Mask = .Mask Or RCPM_LEFTCOL
-    Select Case PropScrollBars
-        Case vbHorizontal, vbBoth
-            .Flags = .Flags Or RCPF_CHECKLEFTCOL
-        Case Else
-            .Flags = .Flags Or RCPF_FORCELEFTCOLMASK
-    End Select
+    .Flags = .Flags Or RCPF_CHECKLEFTCOL
     .LeftCol = (PropCols - 1)
 End If
 Call SetRowColParams(RCP)
@@ -5120,13 +5127,19 @@ ElseIf Index = (PropRows - 1) And (PropRows - PropFixedRows) = 1 Then
     Err.Raise Number:=30015, Description:="Can not remove last non-fixed row"
 Else
     PropRows = PropRows - 1
-    Dim iRow As Long
-    If Index < ((PropRows - 1) + 1) Then
-        For iRow = Index To (PropRows - 1)
-            LSet VBFlexGridCells.Rows(iRow) = VBFlexGridCells.Rows(iRow + 1)
-        Next iRow
+    Dim RowsPerPage As Long
+    RowsPerPage = -1
+    If PropCols > 0 Then
+        Dim iRow As Long
+        If Index < ((PropRows - 1) + 1) Then
+            For iRow = Index To (PropRows - 1)
+                LSet VBFlexGridCells.Rows(iRow) = VBFlexGridCells.Rows(iRow + 1)
+            Next iRow
+        End If
+        ReDim Preserve VBFlexGridCells.Rows(0 To (PropRows - 1)) As TCOLS
+        RowsPerPage = GetRowsPerPageRev(PropRows - 1)
     End If
-    ReDim Preserve VBFlexGridCells.Rows(0 To (PropRows - 1)) As TCOLS
+    If VBFlexGridComboCueRow > (PropRows - 1) Then VBFlexGridComboCueRow = (PropRows - 1)
     Dim RCP As TROWCOLPARAMS
     With RCP
     .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
@@ -5144,7 +5157,12 @@ Else
             .Mask = .Mask Or RCPM_ROWSEL
             .RowSel = (PropRows - 1)
     End Select
-    If VBFlexGridTopRow > (PropRows - 1) Then
+    If RowsPerPage > -1 Then
+        If VBFlexGridTopRow > (PropRows - 1) - RowsPerPage + 1 Then
+            .Mask = .Mask Or RCPM_TOPROW
+            .TopRow = (PropRows - 1) - RowsPerPage + 1
+        End If
+    ElseIf VBFlexGridTopRow > (PropRows - 1) Then
         .Mask = .Mask Or RCPM_TOPROW
         .Flags = .Flags Or RCPF_CHECKTOPROW
         .TopRow = (PropRows - 1)
@@ -13203,6 +13221,7 @@ End If
 End Function
 
 Private Sub ClearSelectedRows()
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
 Dim i As Long
 For i = 0 To (PropRows - 1)
     With VBFlexGridCells.Rows(i).RowInfo
