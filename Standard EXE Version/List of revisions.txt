@@ -1,5 +1,8 @@
 List of revisions:
 
+22-Aug-2022
+- Bugfix in the RemoveItem method and Rows/Cols property.
+
 08-Jun-2022
 - Bugfix in the .RowPosition() and .ColPosition() property.
   Now it is a round trip swap instead of a direct swap between index and value.
