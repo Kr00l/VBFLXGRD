@@ -946,6 +946,7 @@ Private Const PS_SOLID As Long = 0
 Private Const PS_DASH As Long = 1
 Private Const PS_DOT As Long = 2
 Private Const PS_INSIDEFRAME As Long = 6
+Private Const NULL_BRUSH As Long = 5
 Private Const SB_HORZ As Long = 0
 Private Const SB_VERT As Long = 1
 Private Const SB_LINELEFT As Long = 0
@@ -10548,7 +10549,9 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
                 End If
             End If
             hPenOld = SelectObject(hDC, VBFlexGridFocusRectPen)
+            Brush = SelectObject(hDC, GetStockObject(NULL_BRUSH))
             Rectangle hDC, .Left, .Top, .Right, .Bottom
+            SelectObject hDC, Brush
             If hPenOld <> 0 Then
                 SelectObject hDC, hPenOld
                 hPenOld = 0
@@ -11137,7 +11140,9 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
                 End If
             End If
             hPenOld = SelectObject(hDC, VBFlexGridFocusRectPen)
+            Brush = SelectObject(hDC, GetStockObject(NULL_BRUSH))
             Rectangle hDC, .Left, .Top, .Right, .Bottom
+            SelectObject hDC, Brush
             If hPenOld <> 0 Then
                 SelectObject hDC, hPenOld
                 hPenOld = 0
