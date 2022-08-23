@@ -1,5 +1,8 @@
 List of revisions:
 
+23-Aug-2022
+- The pen style for FlexFocusRectFlat uses now a NULL_BRUSH.
+
 22-Aug-2022
 - Bugfix in the RemoveItem method and Rows/Cols property.
 
