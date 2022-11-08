@@ -1,13 +1,13 @@
 VERSION 5.00
 Begin VB.PropertyPage PPVBFlexGridStyle 
    Caption         =   "Style"
-   ClientHeight    =   8100
+   ClientHeight    =   8820
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   6225
    LockControls    =   -1  'True
    PaletteMode     =   0  'Halftone
-   ScaleHeight     =   8100
+   ScaleHeight     =   8820
    ScaleWidth      =   6225
    Begin VB.CheckBox CheckMirrorAlignGeneral 
       Alignment       =   1  'Right Justify
