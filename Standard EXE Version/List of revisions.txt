@@ -1,5 +1,11 @@
 List of revisions:
 
+08-Nov-2022
+- Included the Copy/Paste method.
+- Included the ClipCopyMode property. Currently only 0 - Normal and 1 - IncludeFixedRows.
+  This value affects the Copy method and the Clip Get-Property. (not the Clip Let-Property)
+  To have Clip Get/Let behave the same keep it as 0 - Normal.
+
 23-Aug-2022
 - The pen style for FlexFocusRectFlat uses now a NULL_BRUSH.
 
