@@ -5202,6 +5202,12 @@ Attribute Copy.VB_Description = "Copies the current selection of the flex grid t
 Call SetClipboardText(Me.Clip)
 End Sub
 
+Public Sub Cut()
+Attribute Cut.VB_Description = "Deletes (cuts) the current selection of the flex grid and copy the deleted text to the clipboard."
+Me.Copy
+Me.Clear FlexClearSelection, FlexClearText
+End Sub
+
 Public Sub Paste()
 Attribute Paste.VB_Description = "Pastes the current content of the clipboard at the current selection of the flex grid."
 Me.Clip = GetClipboardText()
