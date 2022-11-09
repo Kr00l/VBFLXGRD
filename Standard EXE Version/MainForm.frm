@@ -20,7 +20,7 @@ Begin VB.Form MainForm
       Top             =   5895
       Width           =   13830
       Begin VB.CommandButton Command9 
-         Caption         =   "Set .Clip"
+         Caption         =   "Paste"
          Height          =   315
          Left            =   9480
          TabIndex        =   27
@@ -44,7 +44,7 @@ Begin VB.Form MainForm
          Width           =   1335
       End
       Begin VB.CommandButton Command8 
-         Caption         =   "Get .Clip"
+         Caption         =   "Copy"
          Height          =   315
          Left            =   9480
          TabIndex        =   26
@@ -570,11 +570,11 @@ UserEditingForm.Show vbModal
 End Sub
 
 Private Sub Command8_Click()
-SetClipboardText VBFlexGrid1.Clip
+VBFlexGrid1.Copy
 End Sub
 
 Private Sub Command9_Click()
-VBFlexGrid1.Clip = GetClipboardText()
+VBFlexGrid1.Paste
 End Sub
 
 Private Sub Command16_Click()
