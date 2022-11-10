@@ -1,5 +1,11 @@
 List of revisions:
 
+10-Nov-2022
+- Included the ClipSeparatorCol/ClipSeparatorRow run-time property. These default to vbTab and vbCr.
+  It can be useful to change the default and to support more than one character.
+  Example is the row separator vbCrLf for better MS Excel exchange.
+  However, if ClipSeparators property is set, then that will be used. (overwriting the default but limited to 1 character per)
+
 09-Nov-2022
 - Included the Copy/Cut/Paste method.
 - Included the ClipCopyMode property. Currently only 0 - Normal and 1 - IncludeFixedRows.
