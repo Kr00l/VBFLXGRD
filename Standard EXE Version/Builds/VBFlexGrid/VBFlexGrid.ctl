@@ -5097,13 +5097,16 @@ Else
         PropRows = PropRows + 1
         If PropCols > 0 Then Call InitFlexGridCells
     End If
-    Dim Pos1 As Long, Pos2 As Long, iCol As Long, ColSeparator As String
-    ColSeparator = GetColSeparator()
+    Dim Pos1 As Long, Pos2 As Long, iCol As Long
+    Dim ClipColSeparator As String, ClipColSeparatorLen As Long
+    ClipColSeparator = GetClipColSeparator()
+    ClipColSeparatorLen = Len(ClipColSeparator)
     If PropClipMode = FlexClipModeNormal Then
         Do
-            Pos1 = InStr(Pos1 + 1, Item, ColSeparator)
+            Pos1 = InStr(Pos1 + 1, Item, ClipColSeparator)
+            If Pos1 > 0 Then Pos1 = Pos1 + ClipColSeparatorLen - 1
             If Pos1 > 0 Then
-                If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - 1))
+                If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - ClipColSeparatorLen))
             Else
                 If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1))
             End If
@@ -5114,9 +5117,10 @@ Else
         Dim ColLoop As Boolean
         Do
             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
-                Pos1 = InStr(Pos1 + 1, Item, ColSeparator)
+                Pos1 = InStr(Pos1 + 1, Item, ClipColSeparator)
+                If Pos1 > 0 Then Pos1 = Pos1 + ClipColSeparatorLen - 1
                 If Pos1 > 0 Then
-                    If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - 1))
+                    If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - ClipColSeparatorLen))
                 Else
                     If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1))
                 End If
@@ -6925,7 +6929,8 @@ If VBFlexGridRow < 0 Or VBFlexGridCol < 0 Then Err.Raise 7
 Dim iRow As Long, iCol As Long, SelRange As TCELLRANGE, Buffer As String
 Dim UBoundRows As Long, UBoundCols As Long
 Dim StrArr() As String, StrSize As Long
-Dim ColSeparator As String, RowSeparator As String
+Dim ClipColSeparator As String, ClipColSeparatorLen As Long
+Dim ClipRowSeparator As String, ClipRowSeparatorLen As Long
 Call GetSelRangeStruct(SelRange)
 If PropClipMode = FlexClipModeNormal Then
     UBoundRows = (SelRange.BottomRow - SelRange.TopRow)
@@ -6951,8 +6956,10 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     End Select
 End If
 If UBoundRows > -1 And UBoundCols > -1 Then ReDim StrArr(0 To UBoundRows, 0 To UBoundCols) As String
-ColSeparator = GetColSeparator()
-RowSeparator = GetRowSeparator()
+ClipColSeparator = GetClipColSeparator()
+ClipColSeparatorLen = Len(ClipColSeparator)
+ClipRowSeparator = GetClipRowSeparator()
+ClipRowSeparatorLen = Len(ClipRowSeparator)
 If PropClipMode = FlexClipModeNormal Then
     Select Case PropClipCopyMode
         Case FlexClipCopyModeNormal
@@ -6960,9 +6967,9 @@ If PropClipMode = FlexClipModeNormal Then
                 For iCol = SelRange.LeftCol To SelRange.RightCol
                     Call GetCellText(iRow, iCol, Buffer)
                     If iCol < SelRange.RightCol Then
-                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & ColSeparator
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & ClipColSeparator
                     ElseIf iRow < SelRange.BottomRow Then
-                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & RowSeparator
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & ClipRowSeparator
                     Else
                         StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer
                     End If
@@ -6973,9 +6980,9 @@ If PropClipMode = FlexClipModeNormal Then
                 For iRow = 0 To PropFixedRows - 1
                     Call GetCellText(iRow, iCol, Buffer)
                     If iCol < SelRange.RightCol Then
-                        StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer & ColSeparator
+                        StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer & ClipColSeparator
                     ElseIf iRow < SelRange.BottomRow Then
-                        StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer & RowSeparator
+                        StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer & ClipRowSeparator
                     Else
                         StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer
                     End If
@@ -6985,9 +6992,9 @@ If PropClipMode = FlexClipModeNormal Then
                 For iCol = SelRange.LeftCol To SelRange.RightCol
                     Call GetCellText(iRow, iCol, Buffer)
                     If iCol < SelRange.RightCol Then
-                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & ColSeparator
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & ClipColSeparator
                     ElseIf iRow < SelRange.BottomRow Then
-                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & RowSeparator
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & ClipRowSeparator
                     Else
                         StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer
                     End If
@@ -7011,9 +7018,9 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                             Call GetCellText(iRow, iCol, Buffer)
                             If iCol < SelRange.RightCol Then
-                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & ColSeparator
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & ClipColSeparator
                             ElseIf iRow < SelRange.BottomRow Then
-                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & RowSeparator
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & ClipRowSeparator
                             Else
                                 StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer
                             End If
@@ -7033,9 +7040,9 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
                             Call GetCellText(iRow, iCol, Buffer)
                             If iCol < SelRange.RightCol Then
-                                StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & ColSeparator
+                                StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & ClipColSeparator
                             ElseIf iRow < SelRange.BottomRow Then
-                                StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & RowSeparator
+                                StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & ClipRowSeparator
                             Else
                                 StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer
                             End If
@@ -7056,9 +7063,9 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                             Call GetCellText(iRow, iCol, Buffer)
                             If iCol < SelRange.RightCol Then
-                                StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & ColSeparator
+                                StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & ClipColSeparator
                             ElseIf iRow < SelRange.BottomRow Then
-                                StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & RowSeparator
+                                StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & ClipRowSeparator
                             Else
                                 StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer
                             End If
@@ -7098,20 +7105,25 @@ ElseIf VBFlexGridCol < 0 Then
 End If
 Dim SelRange As TCELLRANGE, Temp As String, iRow As Long, iCol As Long
 Dim Pos1 As Long, Pos2 As Long, Pos3 As Long, Pos4 As Long
-Dim ColSeparator As String, RowSeparator As String
+Dim ClipColSeparator As String, ClipColSeparatorLen As Long
+Dim ClipRowSeparator As String, ClipRowSeparatorLen As Long
 Call GetSelRangeStruct(SelRange)
-ColSeparator = GetColSeparator()
-RowSeparator = GetRowSeparator()
+ClipColSeparator = GetClipColSeparator()
+ClipColSeparatorLen = Len(ClipColSeparator)
+ClipRowSeparator = GetClipRowSeparator()
+ClipRowSeparatorLen = Len(ClipRowSeparator)
 With VBFlexGridCells
 If PropClipMode = FlexClipModeNormal Then
     Do
-        Pos1 = InStr(Pos1 + 1, Value, RowSeparator)
+        Pos1 = InStr(Pos1 + 1, Value, ClipRowSeparator)
+        If Pos1 > 0 Then Pos1 = Pos1 + ClipRowSeparatorLen - 1
         If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
-            If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1) Else Temp = Mid$(Value, Pos2 + 1)
+            If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - ClipRowSeparatorLen) Else Temp = Mid$(Value, Pos2 + 1)
             Do
-                Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
+                Pos3 = InStr(Pos3 + 1, Temp, ClipColSeparator)
+                If Pos3 > 0 Then Pos3 = Pos3 + ClipColSeparatorLen - 1
                 If Pos3 > 0 Then
-                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1))
+                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - ClipColSeparatorLen))
                 Else
                     If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
                 End If
@@ -7128,14 +7140,16 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     Dim RowLoop As Boolean, ColLoop As Boolean
     Do
         If (.Rows(SelRange.TopRow + iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
-            Pos1 = InStr(Pos1 + 1, Value, RowSeparator)
+            Pos1 = InStr(Pos1 + 1, Value, ClipRowSeparator)
+            If Pos1 > 0 Then Pos1 = Pos1 + ClipRowSeparatorLen - 1
             If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
-                If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1) Else Temp = Mid$(Value, Pos2 + 1)
+                If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - ClipRowSeparatorLen) Else Temp = Mid$(Value, Pos2 + 1)
                 Do
                     If (VBFlexGridColsInfo(SelRange.LeftCol + iCol).State And CLIS_HIDDEN) = 0 Then
-                        Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
+                        Pos3 = InStr(Pos3 + 1, Temp, ClipColSeparator)
+                        If Pos3 > 0 Then Pos3 = Pos3 + ClipColSeparatorLen - 1
                         If Pos3 > 0 Then
-                            If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1))
+                            If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - ClipColSeparatorLen))
                         Else
                             If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
                         End If
@@ -15765,19 +15779,19 @@ If hRgn <> 0 Then
 End If
 End Sub
 
-Private Function GetColSeparator() As String
+Private Function GetClipColSeparator() As String
 If PropClipSeparators = vbNullString Then
-    GetColSeparator = vbTab
+    GetClipColSeparator = vbTab
 Else
-    GetColSeparator = Left$(PropClipSeparators, 1)
+    GetClipColSeparator = Left$(PropClipSeparators, 1)
 End If
 End Function
 
-Private Function GetRowSeparator() As String
+Private Function GetClipRowSeparator() As String
 If PropClipSeparators = vbNullString Then
-    GetRowSeparator = vbCr
+    GetClipRowSeparator = vbCr
 Else
-    GetRowSeparator = Right$(PropClipSeparators, 1)
+    GetClipRowSeparator = Right$(PropClipSeparators, 1)
 End If
 End Function
 
