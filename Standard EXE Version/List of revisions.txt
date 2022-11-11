@@ -7,7 +7,7 @@ List of revisions:
   However, if ClipSeparators property is set, then that will be used. (overwriting the default but limited to 1 character per)
 
 09-Nov-2022
-- Included the Copy/Cut/Paste method.
+- Included the Copy/Cut/Paste/Delete method.
 - Included the ClipCopyMode property. Currently only 0 - Normal and 1 - IncludeFixedRows.
   This value affects the Copy method and the Clip Get-Property. (not the Clip Let-Property)
   To have Clip Get/Let behave the same keep it as 0 - Normal.
