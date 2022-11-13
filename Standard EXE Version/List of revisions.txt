@@ -1,5 +1,10 @@
 List of revisions:
 
+13-Nov-2022
+- Included the ClipPasteMode property. Currently only 0 - Normal and 1 - AutoSelection.
+  This value affects the Paste method and the Clip Let-Property. (not the Clip Get-Property)
+  To have Clip Get/Let behave the same keep it as 0 - Normal.
+
 10-Nov-2022
 - Included the ClipSeparatorCol/ClipSeparatorRow run-time property. These default to vbTab and vbCr.
   It can be useful to change the default and to support more than one character.
