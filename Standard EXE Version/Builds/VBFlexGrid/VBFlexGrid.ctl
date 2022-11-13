@@ -59,6 +59,7 @@ Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
 Private FlexClipCopyModeNormal, FlexClipCopyModeIncludeFixedRows
+Private FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection
 Private FlexFindDirectionDown, FlexFindDirectionUp
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
 Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace, FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4, FlexEditReasonComboCueAltUpDown
@@ -322,6 +323,10 @@ End Enum
 Public Enum FlexClipCopyModeConstants
 FlexClipCopyModeNormal = 0
 FlexClipCopyModeIncludeFixedRows = 1
+End Enum
+Public Enum FlexClipPasteModeConstants
+FlexClipPasteModeNormal = 0
+FlexClipPasteModeAutoSelection = 1
 End Enum
 Public Enum FlexFindDirectionConstants
 FlexFindDirectionDown = 0
@@ -1356,6 +1361,7 @@ Private PropShowLabelTips As Boolean
 Private PropClipSeparators As String
 Private PropClipMode As FlexClipModeConstants
 Private PropClipCopyMode As FlexClipCopyModeConstants
+Private PropClipPasteMode As FlexClipPasteModeConstants
 Private PropFormatString As String
 Private PropIMEMode As FlexIMEModeConstants
 Private PropWantReturn As Boolean
@@ -1615,6 +1621,7 @@ PropShowLabelTips = False
 PropClipSeparators = vbNullString
 PropClipMode = FlexClipModeNormal
 PropClipCopyMode = FlexClipCopyModeNormal
+PropClipPasteMode = FlexClipPasteModeNormal
 PropFormatString = vbNullString
 PropIMEMode = FlexIMEModeNoControl
 PropWantReturn = False
@@ -1714,6 +1721,7 @@ PropShowLabelTips = .ReadProperty("ShowLabelTips", False)
 PropClipSeparators = VarToStr(.ReadProperty("ClipSeparators", vbNullString))
 PropClipMode = .ReadProperty("ClipMode", FlexClipModeNormal)
 PropClipCopyMode = .ReadProperty("ClipCopyMode", FlexClipCopyModeNormal)
+PropClipPasteMode = .ReadProperty("ClipPasteMode", FlexClipPasteModeNormal)
 PropFormatString = VarToStr(.ReadProperty("FormatString", vbNullString))
 PropIMEMode = .ReadProperty("IMEMode", FlexIMEModeNoControl)
 PropWantReturn = .ReadProperty("WantReturn", False)
@@ -1809,6 +1817,7 @@ With PropBag
 .WriteProperty "ClipSeparators", StrToVar(PropClipSeparators), vbNullString
 .WriteProperty "ClipMode", PropClipMode, FlexClipModeNormal
 .WriteProperty "ClipCopyMode", PropClipCopyMode, FlexClipCopyModeNormal
+.WriteProperty "ClipPasteMode", PropClipPasteMode, FlexClipPasteModeNormal
 .WriteProperty "FormatString", StrToVar(PropFormatString), vbNullString
 .WriteProperty "IMEMode", PropIMEMode, FlexIMEModeNoControl
 .WriteProperty "WantReturn", PropWantReturn, False
@@ -4108,6 +4117,21 @@ Select Case Value
         Err.Raise 380
 End Select
 UserControl.PropertyChanged "ClipCopyMode"
+End Property
+
+Public Property Get ClipPasteMode() As FlexClipPasteModeConstants
+Attribute ClipPasteMode.VB_Description = "Returns/sets a value that determines how content is pasted from the clipboard or by doing a clip command."
+ClipPasteMode = PropClipPasteMode
+End Property
+
+Public Property Let ClipPasteMode(ByVal Value As FlexClipPasteModeConstants)
+Select Case Value
+    Case FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection
+        PropClipPasteMode = Value
+    Case Else
+        Err.Raise 380
+End Select
+UserControl.PropertyChanged "ClipPasteMode"
 End Property
 
 Public Property Get FormatString() As String
@@ -7117,6 +7141,10 @@ Dim SelRange As TCELLRANGE, Temp As String, iRow As Long, iCol As Long
 Dim Pos1 As Long, Pos2 As Long, Pos3 As Long, Pos4 As Long
 Dim CSCol As String, CSColLen As Long, CSRow As String, CSRowLen As Long
 Call GetSelRangeStruct(SelRange)
+If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+    SelRange.RightCol = SelRange.LeftCol
+    SelRange.BottomRow = SelRange.TopRow
+End If
 CSCol = GetClipSeparatorCol()
 CSColLen = Len(CSCol)
 CSRow = GetClipSeparatorRow()
@@ -7126,10 +7154,16 @@ If PropClipMode = FlexClipModeNormal Then
     Do
         Pos1 = InStr(Pos1 + 1, Value, CSRow)
         If Pos1 > 0 Then Pos1 = Pos1 + CSRowLen - 1
+        If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+            If (SelRange.TopRow + iRow) <= (PropRows - 1) And (SelRange.TopRow + iRow) > SelRange.BottomRow Then SelRange.BottomRow = SelRange.TopRow + iRow
+        End If
         If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
             If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - CSRowLen) Else Temp = Mid$(Value, Pos2 + 1)
             Do
                 Pos3 = InStr(Pos3 + 1, Temp, CSCol)
+                If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+                    If (SelRange.LeftCol + iCol) <= (PropCols - 1) And (SelRange.LeftCol + iCol) > SelRange.RightCol Then SelRange.RightCol = SelRange.LeftCol + iCol
+                End If
                 If Pos3 > 0 Then
                     Pos3 = Pos3 + CSColLen - 1
                     If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
@@ -7151,11 +7185,17 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
         If (.Rows(SelRange.TopRow + iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
             Pos1 = InStr(Pos1 + 1, Value, CSRow)
             If Pos1 > 0 Then Pos1 = Pos1 + CSRowLen - 1
+            If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+                If (SelRange.TopRow + iRow) <= (PropRows - 1) And (SelRange.TopRow + iRow) > SelRange.BottomRow Then SelRange.BottomRow = SelRange.TopRow + iRow
+            End If
             If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
                 If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - CSRowLen) Else Temp = Mid$(Value, Pos2 + 1)
                 Do
                     If (VBFlexGridColsInfo(SelRange.LeftCol + iCol).State And CLIS_HIDDEN) = 0 Then
                         Pos3 = InStr(Pos3 + 1, Temp, CSCol)
+                        If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+                            If (SelRange.LeftCol + iCol) <= (PropCols - 1) And (SelRange.LeftCol + iCol) > SelRange.RightCol Then SelRange.RightCol = SelRange.LeftCol + iCol
+                        End If
                         If Pos3 > 0 Then
                             Pos3 = Pos3 + CSColLen - 1
                             If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
@@ -7184,6 +7224,22 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     Loop Until RowLoop = False
 End If
 End With
+If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+    Dim RCP As TROWCOLPARAMS
+    With RCP
+    .Mask = RCPM_ROW Or RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL
+    .Row = SelRange.TopRow
+    .Col = SelRange.LeftCol
+    .RowSel = SelRange.BottomRow
+    .ColSel = SelRange.RightCol
+    End With
+    If VBFlexGridIndirectCellRef.InProc = False Then
+        Call SetRowColParams(RCP)
+    Else
+        ' The clip command was called for an arbitrary cell or range of cells.
+        ' Thus the current selection was already ignored and it is not necessary to select the new range.
+    End If
+End If
 Call RedrawGrid
 End Property
 
