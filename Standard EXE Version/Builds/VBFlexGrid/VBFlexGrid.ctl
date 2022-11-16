@@ -58,7 +58,7 @@ Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCe
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
-Private FlexClipCopyModeNormal, FlexClipCopyModeIncludeFixedRows
+Private FlexClipCopyModeNormal, FlexClipCopyModeIncludeFixedRows, FlexClipCopyModeIncludeFixedColumns, FlexClipCopyModeIncludeFixedAll
 Private FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection
 Private FlexFindDirectionDown, FlexFindDirectionUp
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
@@ -323,6 +323,8 @@ End Enum
 Public Enum FlexClipCopyModeConstants
 FlexClipCopyModeNormal = 0
 FlexClipCopyModeIncludeFixedRows = 1
+FlexClipCopyModeIncludeFixedColumns = 2
+FlexClipCopyModeIncludeFixedAll = 3
 End Enum
 Public Enum FlexClipPasteModeConstants
 FlexClipPasteModeNormal = 0
@@ -1369,6 +1371,7 @@ Private PropExtendLastCol As Boolean
 Private PropRowSortArrows As Long
 Private PropAllowScrollLock As Boolean
 Private PropSheetBorder As Boolean
+Private PropAutoClipboard As Boolean
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -1629,6 +1632,7 @@ PropExtendLastCol = False
 PropRowSortArrows = 0
 PropAllowScrollLock = False
 PropSheetBorder = True
+PropAutoClipboard = False
 Call CreateVBFlexGrid
 End Sub
 
@@ -1729,6 +1733,7 @@ PropExtendLastCol = .ReadProperty("ExtendLastCol", False)
 PropRowSortArrows = .ReadProperty("RowSortArrows", 0)
 PropAllowScrollLock = .ReadProperty("AllowScrollLock", False)
 PropSheetBorder = .ReadProperty("SheetBorder", True)
+PropAutoClipboard = .ReadProperty("AutoClipboard", False)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -1825,6 +1830,7 @@ With PropBag
 .WriteProperty "RowSortArrows", PropRowSortArrows, 0
 .WriteProperty "AllowScrollLock", PropAllowScrollLock, False
 .WriteProperty "SheetBorder", PropSheetBorder, True
+.WriteProperty "AutoClipboard", PropAutoClipboard, False
 End With
 End Sub
 
@@ -4111,7 +4117,7 @@ End Property
 
 Public Property Let ClipCopyMode(ByVal Value As FlexClipCopyModeConstants)
 Select Case Value
-    Case FlexClipCopyModeNormal, FlexClipCopyModeIncludeFixedRows
+    Case FlexClipCopyModeNormal, FlexClipCopyModeIncludeFixedRows, FlexClipCopyModeIncludeFixedColumns, FlexClipCopyModeIncludeFixedAll
         PropClipCopyMode = Value
     Case Else
         Err.Raise 380
@@ -4347,6 +4353,16 @@ Public Property Let SheetBorder(ByVal Value As Boolean)
 PropSheetBorder = Value
 Call RedrawGrid
 UserControl.PropertyChanged "SheetBorder"
+End Property
+
+Public Property Get AutoClipboard() As Boolean
+Attribute AutoClipboard.VB_Description = "Returns/sets whether the flex grid should handle the clipboard keys and automatically perform copy, cut, paste and delete operations."
+AutoClipboard = PropAutoClipboard
+End Property
+
+Public Property Let AutoClipboard(ByVal Value As Boolean)
+PropAutoClipboard = Value
+UserControl.PropertyChanged "AutoClipboard"
 End Property
 
 Private Sub CreateVBFlexGrid()
@@ -6972,6 +6988,11 @@ If PropClipMode = FlexClipModeNormal Then
     Select Case PropClipCopyMode
         Case FlexClipCopyModeIncludeFixedRows
             UBoundRows = UBoundRows + PropFixedRows
+        Case FlexClipCopyModeIncludeFixedColumns
+            UBoundCols = UBoundCols + PropFixedCols
+        Case FlexClipCopyModeIncludeFixedAll
+            UBoundRows = UBoundRows + PropFixedRows
+            UBoundCols = UBoundCols + PropFixedCols
     End Select
 ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     UBoundRows = -1
@@ -6987,6 +7008,17 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
             For iRow = 0 To PropFixedRows - 1
                 If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then UBoundRows = UBoundRows + 1
             Next iRow
+        Case FlexClipCopyModeIncludeFixedColumns
+            For iCol = 0 To PropFixedCols - 1
+                If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then UBoundCols = UBoundCols + 1
+            Next iCol
+        Case FlexClipCopyModeIncludeFixedAll
+            For iRow = 0 To PropFixedRows - 1
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then UBoundRows = UBoundRows + 1
+            Next iRow
+            For iCol = 0 To PropFixedCols - 1
+                If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then UBoundCols = UBoundCols + 1
+            Next iCol
     End Select
 End If
 If UBoundRows > -1 And UBoundCols > -1 Then ReDim StrArr(0 To UBoundRows, 0 To UBoundCols) As String
@@ -7031,6 +7063,74 @@ If PropClipMode = FlexClipModeNormal Then
                         StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & CSRow
                     Else
                         StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer
+                    End If
+                Next iCol
+            Next iRow
+        Case FlexClipCopyModeIncludeFixedColumns
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                For iCol = 0 To PropFixedCols - 1
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol) = Buffer & CSRow
+                    Else
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol) = Buffer
+                    End If
+                Next iCol
+                For iCol = SelRange.LeftCol To SelRange.RightCol
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSRow
+                    Else
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer
+                    End If
+                Next iCol
+            Next iRow
+        Case FlexClipCopyModeIncludeFixedAll
+            For iRow = 0 To PropFixedRows - 1
+                For iCol = 0 To PropFixedCols - 1
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow, iCol) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow, iCol) = Buffer & CSRow
+                    Else
+                        StrArr(iRow, iCol) = Buffer
+                    End If
+                Next iCol
+                For iCol = SelRange.LeftCol To SelRange.RightCol
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSRow
+                    Else
+                        StrArr(iRow, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer
+                    End If
+                Next iCol
+            Next iRow
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                For iCol = 0 To PropFixedCols - 1
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol) = Buffer & CSRow
+                    Else
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol) = Buffer
+                    End If
+                Next iCol
+                For iCol = SelRange.LeftCol To SelRange.RightCol
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSRow
+                    Else
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer
                     End If
                 Next iCol
             Next iRow
@@ -7102,6 +7202,118 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                                 StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
                             Else
                                 StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                Else
+                    ArrRowAdj = ArrRowAdj + 1
+                End If
+                ArrColAdj = 0
+            Next iRow
+        Case FlexClipCopyModeIncludeFixedColumns
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                    For iCol = 0 To PropFixedCols - 1
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                    ArrColAdj = 0
+                    For iCol = SelRange.LeftCol To SelRange.RightCol
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (PropFixedCols - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (PropFixedCols - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (PropFixedCols - SelRange.LeftCol) - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                Else
+                    ArrRowAdj = ArrRowAdj + 1
+                End If
+                ArrColAdj = 0
+            Next iRow
+        Case FlexClipCopyModeIncludeFixedAll
+            For iRow = 0 To PropFixedRows - 1
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                    For iCol = 0 To PropFixedCols - 1
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow - ArrRowAdj, iCol - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                    ArrColAdj = 0
+                    For iCol = SelRange.LeftCol To SelRange.RightCol
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow - ArrRowAdj, iCol + (PropFixedCols - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow - ArrRowAdj, iCol + (PropFixedCols - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow - ArrRowAdj, iCol + (PropFixedCols - SelRange.LeftCol) - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                Else
+                    ArrRowAdj = ArrRowAdj + 1
+                End If
+                ArrColAdj = 0
+            Next iRow
+            ArrRowAdj = 0
+            ArrColAdj = 0
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                    For iCol = 0 To PropFixedCols - 1
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                    ArrColAdj = 0
+                    For iCol = SelRange.LeftCol To SelRange.RightCol
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol + (PropFixedCols - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol + (PropFixedCols - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow + (PropFixedRows - SelRange.TopRow) - ArrRowAdj, iCol + (PropFixedCols - SelRange.LeftCol) - ArrColAdj) = Buffer
                             End If
                         Else
                             ArrColAdj = ArrColAdj + 1
@@ -17026,6 +17238,35 @@ Select Case wMsg
                                 End If
                             End If
                     End Select
+                End If
+                If PropAutoClipboard = True Then
+                    If PropAllowUserEditing = False Then
+                        If GetShiftStateFromMsg() = vbCtrlMask And (KeyCode = vbKeyC Or KeyCode = vbKeyInsert) Then Me.Copy
+                    Else
+                        Select Case GetShiftStateFromMsg()
+                            Case vbShiftMask
+                                Select Case KeyCode
+                                    Case vbKeyDelete
+                                        Me.Cut
+                                    Case vbKeyInsert
+                                        Me.Paste
+                                End Select
+                            Case vbCtrlMask
+                                Select Case KeyCode
+                                    Case vbKeyC, vbKeyInsert
+                                        Me.Copy
+                                    Case vbKeyX
+                                        Me.Cut
+                                    Case vbKeyV
+                                        Me.Paste
+                                End Select
+                            Case Else
+                                Select Case KeyCode
+                                    Case vbKeyDelete
+                                        Me.Delete
+                                End Select
+                        End Select
+                    End If
                 End If
             ElseIf wMsg = WM_KEYUP Then
                 RaiseEvent KeyUp(KeyCode, GetShiftStateFromMsg())

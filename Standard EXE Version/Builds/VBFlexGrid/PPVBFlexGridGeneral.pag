@@ -9,6 +9,14 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   8820
    ScaleWidth      =   6225
+   Begin VB.CheckBox CheckAutoClipboard 
+      Caption         =   "AutoClipboard"
+      Height          =   285
+      Left            =   4200
+      TabIndex        =   67
+      Top             =   5520
+      Width           =   1920
+   End
    Begin VB.ComboBox ComboClipPasteMode 
       Height          =   315
       Left            =   1800
@@ -705,6 +713,10 @@ With ComboClipCopyMode
 .ItemData(.NewIndex) = FlexClipCopyModeNormal
 .AddItem FlexClipCopyModeIncludeFixedRows & " - IncludeFixedRows"
 .ItemData(.NewIndex) = FlexClipCopyModeIncludeFixedRows
+.AddItem FlexClipCopyModeIncludeFixedColumns & " - IncludeFixedColumns"
+.ItemData(.NewIndex) = FlexClipCopyModeIncludeFixedColumns
+.AddItem FlexClipCopyModeIncludeFixedAll & " - IncludeFixedAll"
+.ItemData(.NewIndex) = FlexClipCopyModeIncludeFixedAll
 End With
 With ComboClipPasteMode
 .AddItem FlexClipPasteModeNormal & " - Normal"
@@ -822,6 +834,7 @@ End If
 .ExtendLastCol = CBool(CheckExtendLastCol.Value = vbChecked)
 .AllowScrollLock = CBool(CheckAllowScrollLock.Value = vbChecked)
 .SheetBorder = CBool(CheckSheetBorder.Value = vbChecked)
+.AutoClipboard = CBool(CheckAutoClipboard.Value = vbChecked)
 End With
 Call PropertyPage_SelectionChanged
 End Sub
@@ -957,6 +970,7 @@ CheckWantReturn.Value = IIf(.WantReturn = True, vbChecked, vbUnchecked)
 CheckExtendLastCol.Value = IIf(.ExtendLastCol = True, vbChecked, vbUnchecked)
 CheckAllowScrollLock.Value = IIf(.AllowScrollLock = True, vbChecked, vbUnchecked)
 CheckSheetBorder.Value = IIf(.SheetBorder = True, vbChecked, vbUnchecked)
+CheckAutoClipboard.Value = IIf(.AutoClipboard = True, vbChecked, vbUnchecked)
 End With
 FreezeChanged = False
 End Sub
@@ -1477,6 +1491,11 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckSheetBorder_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckAutoClipboard_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
