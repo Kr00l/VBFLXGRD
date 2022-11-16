@@ -1,5 +1,9 @@
 List of revisions:
 
+16-Nov-2022
+- Added enum 2 - IncludeFixedColumns and 3 - IncludeFixedAll for the ClipCopyMode property.
+- Included the AutoClipboard property.
+
 13-Nov-2022
 - Included the ClipPasteMode property. Currently only 0 - Normal and 1 - AutoSelection.
   This value affects the Paste method and the Clip Let-Property. (not the Clip Get-Property)
