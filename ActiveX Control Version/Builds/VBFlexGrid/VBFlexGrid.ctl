@@ -12567,7 +12567,7 @@ If hDC <> 0 Then
     End If
     With LBLI
     .Flags = LBLI_VALID
-    If TextRect.Right <= VBFlexGridClientRect.Right And TextRect.Bottom <= VBFlexGridClientRect.Bottom Then
+    If CalcRect.Right <= VBFlexGridClientRect.Right And CalcRect.Bottom <= VBFlexGridClientRect.Bottom Then
         If CalcRect.Right <= TextRect.Right And CalcRect.Bottom <= TextRect.Bottom Then .Flags = .Flags Or LBLI_UNFOLDED
     End If
     If (Format And DT_CENTER) = DT_CENTER Then
