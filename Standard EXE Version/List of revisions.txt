@@ -1,5 +1,8 @@
 List of revisions:
 
+26-Nov-2022
+- Minor bugfix in the internal GetLabelInfo method. (related to the ShowLabelTips property only)
+
 16-Nov-2022
 - Added enum 2 - IncludeFixedColumns and 3 - IncludeFixedAll for the ClipCopyMode property.
 - Included the AutoClipboard property.
