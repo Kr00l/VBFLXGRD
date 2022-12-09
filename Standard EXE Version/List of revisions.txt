@@ -1,5 +1,9 @@
 List of revisions:
 
+09-Dec-2022
+- Included the cell flooding feature. (CellFloodPercent/CellFloodColor/FloodColor property)
+  Added enum FlexCellFloodPercent and FlexCellFloodColor for the Cell property.
+
 26-Nov-2022
 - Minor bugfix in the internal GetLabelInfo method. (related to the ShowLabelTips property only)
 
