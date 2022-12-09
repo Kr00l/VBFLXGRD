@@ -54,7 +54,7 @@ Private FlexClearEverything, FlexClearText, FlexClearFormatting
 Private FlexTabControls, FlexTabCells, FlexTabNext
 Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
 Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
-Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort
+Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
@@ -292,6 +292,8 @@ FlexCellBackColor = 6
 FlexCellForeColor = 7
 FlexCellToolTipText = 8
 FlexCellComboCue = 9
+FlexCellFloodPercent = 10
+FlexCellFloodColor = 11
 FlexCellFontName = 13
 FlexCellFontSize = 14
 FlexCellFontBold = 15
@@ -626,6 +628,8 @@ BackColor As Long
 ForeColor As Long
 ToolTipText As String
 ComboCue As FlexComboCueConstants
+FloodPercent As Integer
+FloodColor As Long
 FontName As String
 FontSize As Single
 FontBold As Boolean
@@ -1309,6 +1313,7 @@ Private PropGridColor As OLE_COLOR
 Private PropGridColorFixed As OLE_COLOR
 Private PropGridColorFrozen As OLE_COLOR
 Private PropSortArrowColor As OLE_COLOR
+Private PropFloodColor As OLE_COLOR
 Private PropMousePointer As Integer, PropMouseIcon As IPictureDisp
 Private PropMouseTrack As Boolean
 Private PropRightToLeft As Boolean
@@ -1489,6 +1494,7 @@ With VBFlexGridDefaultCell
 .Alignment = -1
 .BackColor = -1
 .ForeColor = -1
+.FloodColor = -1
 End With
 With VBFlexGridDefaultRowInfo
 .Height = -1
@@ -1566,6 +1572,7 @@ PropGridColor = &HC0C0C0
 PropGridColorFixed = vbBlack
 PropGridColorFrozen = vbBlack
 PropSortArrowColor = vbGrayText
+PropFloodColor = &H80FF80
 PropMousePointer = 0: Set PropMouseIcon = Nothing
 PropMouseTrack = False
 PropRightToLeft = Ambient.RightToLeft
@@ -1664,6 +1671,7 @@ PropGridColor = .ReadProperty("GridColor", &HC0C0C0)
 PropGridColorFixed = .ReadProperty("GridColorFixed", vbBlack)
 PropGridColorFrozen = .ReadProperty("GridColorFrozen", vbBlack)
 PropSortArrowColor = .ReadProperty("SortArrowColor", vbGrayText)
+PropFloodColor = .ReadProperty("FloodColor", &H80FF80)
 Me.Enabled = .ReadProperty("Enabled", True)
 Me.OLEDropMode = .ReadProperty("OLEDropMode", vbOLEDropNone)
 PropMousePointer = .ReadProperty("MousePointer", 0)
@@ -1762,6 +1770,7 @@ With PropBag
 .WriteProperty "GridColorFixed", PropGridColorFixed, vbBlack
 .WriteProperty "GridColorFrozen", PropGridColorFrozen, vbBlack
 .WriteProperty "SortArrowColor", PropSortArrowColor, vbGrayText
+.WriteProperty "FloodColor", PropFloodColor, &H80FF80
 .WriteProperty "Enabled", Me.Enabled, True
 .WriteProperty "OLEDropMode", Me.OLEDropMode, vbOLEDropNone
 .WriteProperty "MousePointer", PropMousePointer, 0
@@ -2556,6 +2565,17 @@ Public Property Let SortArrowColor(ByVal Value As OLE_COLOR)
 PropSortArrowColor = Value
 Me.Refresh
 UserControl.PropertyChanged "SortArrowColor"
+End Property
+
+Public Property Get FloodColor() As OLE_COLOR
+Attribute FloodColor.VB_Description = "Returns/sets the color used to flood cells."
+FloodColor = PropFloodColor
+End Property
+
+Public Property Let FloodColor(ByVal Value As OLE_COLOR)
+PropFloodColor = Value
+Me.Refresh
+UserControl.PropertyChanged "FloodColor"
 End Property
 
 Public Property Get Enabled() As Boolean
@@ -6763,6 +6783,10 @@ Select Case Setting
         Cell = Me.CellToolTipText
     Case FlexCellComboCue
         Cell = Me.CellComboCue
+    Case FlexCellFloodPercent
+        Cell = Me.CellFloodPercent
+    Case FlexCellFloodColor
+        Cell = Me.CellFloodColor
     Case FlexCellFontName
         Cell = Me.CellFontName
     Case FlexCellFontSize
@@ -6835,6 +6859,10 @@ Select Case Setting
         Me.CellToolTipText = Value
     Case FlexCellComboCue
         Me.CellComboCue = Value
+    Case FlexCellFloodPercent
+        Me.CellFloodPercent = Value
+    Case FlexCellFloodColor
+        Me.CellFloodColor = Value
     Case FlexCellFontName
         Me.CellFontName = Value
     Case FlexCellFontSize
@@ -7809,6 +7837,77 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
         With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
             .Cols(j).ComboCue = Value
+        Next j
+        End With
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get CellFloodPercent() As Integer
+Attribute CellFloodPercent.VB_Description = "Returns/sets the percentage of flooding in a cell or range of selected cells."
+Attribute CellFloodPercent.VB_MemberFlags = "400"
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+CellFloodPercent = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FloodPercent
+End Property
+
+Public Property Let CellFloodPercent(ByVal Value As Integer)
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+Select Case Value
+    Case -100 To 100
+    Case Else
+        Err.Raise 380
+End Select
+If PropFillStyle = FlexFillStyleSingle Then
+    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FloodPercent = Value
+ElseIf PropFillStyle = FlexFillStyleRepeat Then
+    Dim i As Long, j As Long, SelRange As TCELLRANGE
+    Call GetSelRangeStruct(SelRange)
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i)
+        For j = SelRange.LeftCol To SelRange.RightCol
+            .Cols(j).FloodPercent = Value
+        Next j
+        End With
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get CellFloodColor() As Long
+Attribute CellFloodColor.VB_Description = "Returns/sets the color to be used for flooding in a cell or range of selected cells."
+Attribute CellFloodColor.VB_MemberFlags = "400"
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+CellFloodColor = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FloodColor
+End Property
+
+Public Property Let CellFloodColor(ByVal Value As Long)
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+If PropFillStyle = FlexFillStyleSingle Then
+    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FloodColor = Value
+ElseIf PropFillStyle = FlexFillStyleRepeat Then
+    Dim i As Long, j As Long, SelRange As TCELLRANGE
+    Call GetSelRangeStruct(SelRange)
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i)
+        For j = SelRange.LeftCol To SelRange.RightCol
+            .Cols(j).FloodColor = Value
         Next j
         End With
     Next i
@@ -10857,6 +10956,10 @@ If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) 
         ExtTextOut hDC, 0, 0, ETO_OPAQUE, CellRect, 0, 0, 0
         SetBkColor hDC, Brush
     End If
+    If .FloodPercent <> 0 Then
+        If .FloodColor = -1 Then Brush = WinColor(PropFloodColor) Else Brush = WinColor(.FloodColor)
+        Call DrawCellFlooding(hDC, CellRect, .FloodPercent, Brush)
+    End If
 Else
     Brush = SelectObject(hDC, VBFlexGridBackColorSelBrush)
     PatBlt hDC, CellRect.Left, CellRect.Top, CellRect.Right - CellRect.Left, CellRect.Bottom - CellRect.Top, vbPatCopy
@@ -11447,6 +11550,10 @@ If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) 
         Brush = SetBkColor(hDC, WinColor(.BackColor))
         ExtTextOut hDC, 0, 0, ETO_OPAQUE, CellRect, 0, 0, 0
         SetBkColor hDC, Brush
+    End If
+    If .FloodPercent <> 0 Then
+        If .FloodColor = -1 Then Brush = WinColor(PropFloodColor) Else Brush = WinColor(.FloodColor)
+        Call DrawCellFlooding(hDC, CellRect, .FloodPercent, Brush)
     End If
 Else
     Brush = SelectObject(hDC, VBFlexGridBackColorSelBrush)
@@ -16091,6 +16198,24 @@ If hRgn <> 0 Then
     DeleteObject hRgn
     hRgn = 0
 End If
+End Sub
+
+Private Sub DrawCellFlooding(ByVal hDC As Long, ByRef CellRect As RECT, ByVal Percent As Integer, ByVal Color As Long)
+If hDC = 0 Then Exit Sub
+Dim RC As RECT, OldColor As Long
+RC.Top = CellRect.Top
+RC.Bottom = CellRect.Bottom
+OldColor = SetBkColor(hDC, Color)
+If Percent > 0 Then
+    RC.Left = CellRect.Left
+    RC.Right = CellRect.Left + ((CellRect.Right - CellRect.Left) * (Percent / 100#))
+    ExtTextOut hDC, 0, 0, ETO_OPAQUE, RC, 0, 0, 0
+ElseIf Percent < 0 Then
+    RC.Left = CellRect.Right - ((CellRect.Right - CellRect.Left) * (-Percent / 100#))
+    RC.Right = CellRect.Right
+    ExtTextOut hDC, 0, 0, ETO_OPAQUE, RC, 0, 0, 0
+End If
+SetBkColor hDC, OldColor
 End Sub
 
 Private Function GetClipSeparatorCol() As String
