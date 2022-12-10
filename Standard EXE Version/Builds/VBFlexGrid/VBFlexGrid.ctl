@@ -292,8 +292,8 @@ FlexCellBackColor = 6
 FlexCellForeColor = 7
 FlexCellToolTipText = 8
 FlexCellComboCue = 9
-FlexCellFloodPercent = 10
-FlexCellFloodColor = 11
+FlexCellFloodPercent = 11
+FlexCellFloodColor = 12
 FlexCellFontName = 13
 FlexCellFontSize = 14
 FlexCellFontBold = 15
@@ -628,6 +628,7 @@ BackColor As Long
 ForeColor As Long
 ToolTipText As String
 ComboCue As FlexComboCueConstants
+wReserved As Integer
 FloodPercent As Integer
 FloodColor As Long
 FontName As String
