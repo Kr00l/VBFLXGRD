@@ -1,5 +1,8 @@
 List of revisions:
 
+11-Dec-2022
+- Included the parameter 'Control As Long' in the ComboButtonOwnerDraw event.
+
 09-Dec-2022
 - Included the cell flooding feature. (CellFloodPercent/CellFloodColor/FloodColor property)
   Added enum FlexCellFloodPercent and FlexCellFloodColor for the Cell property.
