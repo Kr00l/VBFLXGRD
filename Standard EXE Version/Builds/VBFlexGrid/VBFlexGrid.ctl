@@ -746,7 +746,7 @@ Public Event ComboCloseUp()
 Attribute ComboCloseUp.VB_Description = "Occurs when the drop-down list has been closed."
 Public Event ComboButtonClick()
 Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to button."
-Public Event ComboButtonOwnerDraw(ByVal Action As Long, ByVal State As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
+Public Event ComboButtonOwnerDraw(ByVal Control As Long, ByVal Action As Long, ByVal State As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
 Attribute ComboButtonOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn combo button has changed."
 Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
 Attribute DividerDblClick.VB_Description = "Occurs when the user double-clicked the divider on a row or a column."
@@ -16772,7 +16772,7 @@ If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
     
 Else
     With DIS
-    RaiseEvent ComboButtonOwnerDraw(.ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
+    RaiseEvent ComboButtonOwnerDraw(.CtlType, .ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
     End With
 End If
 End Sub
