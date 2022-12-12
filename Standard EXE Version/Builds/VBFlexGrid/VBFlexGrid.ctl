@@ -1573,7 +1573,7 @@ PropGridColor = &HC0C0C0
 PropGridColorFixed = vbBlack
 PropGridColorFrozen = vbBlack
 PropSortArrowColor = vbGrayText
-PropFloodColor = &H80FF80
+PropFloodColor = &HC0&
 PropMousePointer = 0: Set PropMouseIcon = Nothing
 PropMouseTrack = False
 PropRightToLeft = Ambient.RightToLeft
@@ -1672,7 +1672,7 @@ PropGridColor = .ReadProperty("GridColor", &HC0C0C0)
 PropGridColorFixed = .ReadProperty("GridColorFixed", vbBlack)
 PropGridColorFrozen = .ReadProperty("GridColorFrozen", vbBlack)
 PropSortArrowColor = .ReadProperty("SortArrowColor", vbGrayText)
-PropFloodColor = .ReadProperty("FloodColor", &H80FF80)
+PropFloodColor = .ReadProperty("FloodColor", &HC0&)
 Me.Enabled = .ReadProperty("Enabled", True)
 Me.OLEDropMode = .ReadProperty("OLEDropMode", vbOLEDropNone)
 PropMousePointer = .ReadProperty("MousePointer", 0)
@@ -1771,7 +1771,7 @@ With PropBag
 .WriteProperty "GridColorFixed", PropGridColorFixed, vbBlack
 .WriteProperty "GridColorFrozen", PropGridColorFrozen, vbBlack
 .WriteProperty "SortArrowColor", PropSortArrowColor, vbGrayText
-.WriteProperty "FloodColor", PropFloodColor, &H80FF80
+.WriteProperty "FloodColor", PropFloodColor, &HC0&
 .WriteProperty "Enabled", Me.Enabled, True
 .WriteProperty "OLEDropMode", Me.OLEDropMode, vbOLEDropNone
 .WriteProperty "MousePointer", PropMousePointer, 0
@@ -10957,14 +10957,14 @@ If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) 
         ExtTextOut hDC, 0, 0, ETO_OPAQUE, CellRect, 0, 0, 0
         SetBkColor hDC, Brush
     End If
-    If .FloodPercent <> 0 Then
-        If .FloodColor = -1 Then Brush = WinColor(PropFloodColor) Else Brush = WinColor(.FloodColor)
-        Call DrawCellFlooding(hDC, CellRect, .FloodPercent, Brush)
-    End If
 Else
     Brush = SelectObject(hDC, VBFlexGridBackColorSelBrush)
     PatBlt hDC, CellRect.Left, CellRect.Top, CellRect.Right - CellRect.Left, CellRect.Bottom - CellRect.Top, vbPatCopy
     SelectObject hDC, Brush
+End If
+If .FloodPercent <> 0 Then
+    If .FloodColor = -1 Then Brush = WinColor(PropFloodColor) Else Brush = WinColor(.FloodColor)
+    Call DrawCellFlooding(hDC, CellRect, .FloodPercent, Brush)
 End If
 If Not .Picture Is Nothing Then
     If .Picture.Handle <> 0 Then
@@ -11552,14 +11552,14 @@ If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) 
         ExtTextOut hDC, 0, 0, ETO_OPAQUE, CellRect, 0, 0, 0
         SetBkColor hDC, Brush
     End If
-    If .FloodPercent <> 0 Then
-        If .FloodColor = -1 Then Brush = WinColor(PropFloodColor) Else Brush = WinColor(.FloodColor)
-        Call DrawCellFlooding(hDC, CellRect, .FloodPercent, Brush)
-    End If
 Else
     Brush = SelectObject(hDC, VBFlexGridBackColorSelBrush)
     PatBlt hDC, CellRect.Left, CellRect.Top, CellRect.Right - CellRect.Left, CellRect.Bottom - CellRect.Top, vbPatCopy
     SelectObject hDC, Brush
+End If
+If .FloodPercent <> 0 Then
+    If .FloodColor = -1 Then Brush = WinColor(PropFloodColor) Else Brush = WinColor(.FloodColor)
+    Call DrawCellFlooding(hDC, CellRect, .FloodPercent, Brush)
 End If
 If Not .Picture Is Nothing Then
     If .Picture.Handle <> 0 Then
