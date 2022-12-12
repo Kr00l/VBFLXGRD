@@ -1,5 +1,9 @@
 List of revisions:
 
+12-Dec-2022
+- Cell flooding now also fills on selected cells.
+  Changed default FloodColor from &H80FF80 to &HC0& to be better readable on selections. (like vsFlexGrid)
+
 11-Dec-2022
 - Included the parameter 'CtlType As Long' in the ComboButtonOwnerDraw event.
 
