@@ -12297,14 +12297,14 @@ If hDC <> 0 Then
             End With
             Pos2 = Pos1
         Loop Until Pos1 = 0
-        If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
-            Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
-            Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
-            GetTextSize.CX = GetTextSize.CX + SortArrowClientSize.CX
-        End If
     Else
         Dim TM As TEXTMETRIC
         If GetTextMetrics(hDC, TM) <> 0 Then GetTextSize.CY = TM.TMHeight
+    End If
+    If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
+        Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
+        Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
+        GetTextSize.CX = GetTextSize.CX + SortArrowClientSize.CX
     End If
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
