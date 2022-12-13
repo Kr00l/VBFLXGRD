@@ -11712,12 +11712,6 @@ If hDC <> 0 Then
         Set TempFont = Nothing
     End If
     End With
-    Dim SortArrowClientSize As SIZEAPI
-    If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
-        Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI
-        Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
-        GetTextSize.CX = SortArrowClientSize.CX
-    End If
     If Not Text = vbNullString Then
         If PropSingleLine = False Then
             If InStr(Text, vbCrLf) Then Text = Replace$(Text, vbCrLf, vbCr)
@@ -11737,13 +11731,18 @@ If hDC <> 0 Then
             GetTextExtentPoint32 hDC, ByVal StrPtr(Temp), Len(Temp), Size
             With GetTextSize
             .CY = .CY + Size.CY
-            If (Size.CX + SortArrowClientSize.CX) > .CX Then .CX = Size.CX + SortArrowClientSize.CX
+            If Size.CX > .CX Then .CX = Size.CX
             End With
             Pos2 = Pos1
         Loop Until Pos1 = 0
     Else
         Dim TM As TEXTMETRIC
         If GetTextMetrics(hDC, TM) <> 0 Then GetTextSize.CY = TM.TMHeight
+    End If
+    If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
+        Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
+        Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
+        GetTextSize.CX = GetTextSize.CX + SortArrowClientSize.CX
     End If
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
@@ -15577,7 +15576,7 @@ If GetTextMetrics(hDC, TM) <> 0 Then
     CalcSize.CY = CalcSize.CX / 2
     DrawSize.CX = CalcSize.CX + 1
     DrawSize.CY = CalcSize.CY + 1
-    ClientSize.CX = DrawSize.CX + VBFlexGridDrawInfo.CellTextWidthPadding
+    ClientSize.CX = DrawSize.CX + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
     ClientSize.CY = TM.TMHeight
 Else
     CalcSize.CX = 0
