@@ -11782,12 +11782,50 @@ If hDC <> 0 Then
         Set TempFont = Nothing
     End If
     If Not Text = vbNullString Then
+        Dim CellRect As RECT
+        With CellRect
+        .Left = 0
+        .Top = 0
+        .Right = GetColWidth(iCol)
+        .Bottom = GetRowHeight(iRow)
+        End With
+        Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
+        If PropAllowUserEditing = True Then
+            If VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue <> FlexComboCueNone Then
+                Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
+                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
+                If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
+                    ComboCueAlignment = VBFlexGridComboButtonAlignment
+                Else
+                    ComboCueAlignment = VBFlexGridColsInfo(iCol).ComboButtonAlignment
+                End If
+            ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
+                If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
+                    Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
+                    ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                    If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
+                    If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
+                        ComboCueAlignment = VBFlexGridComboButtonAlignment
+                    Else
+                        ComboCueAlignment = VBFlexGridColsInfo(iCol).ComboButtonAlignment
+                    End If
+                End If
+            End If
+        End If
         Dim TextRect As RECT, DrawFlags As Long
         With TextRect
-        .Left = (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-        .Top = (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
-        .Right = GetColWidth(iCol) - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-        .Bottom = GetRowHeight(iRow) - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        If ComboCueWidth > 0 Then
+            If ComboCueAlignment = FlexLeftRightAlignmentRight Then
+                .Right = .Right - ComboCueWidth
+            ElseIf ComboCueAlignment = FlexLeftRightAlignmentLeft Then
+                .Left = .Left + ComboCueWidth
+            End If
+        End If
+        .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
         End With
         DrawFlags = DT_NOPREFIX
         If VBFlexGridRTLReading = True Then DrawFlags = DrawFlags Or DT_RTLREADING
@@ -12449,6 +12487,30 @@ If (CellRect.Bottom - CellRect.Top) <= 0 Or (CellRect.Right - CellRect.Left) <= 
 Dim hDC As Long
 hDC = GetDC(VBFlexGridHandle)
 If hDC <> 0 Then
+    Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
+    If PropAllowUserEditing = True Then
+        If VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue <> FlexComboCueNone Then
+            Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
+            ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+            If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
+            If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
+                ComboCueAlignment = VBFlexGridComboButtonAlignment
+            Else
+                ComboCueAlignment = VBFlexGridColsInfo(iCol).ComboButtonAlignment
+            End If
+        ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
+            If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
+                Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
+                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
+                If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
+                    ComboCueAlignment = VBFlexGridComboButtonAlignment
+                Else
+                    ComboCueAlignment = VBFlexGridColsInfo(iCol).ComboButtonAlignment
+                End If
+            End If
+        End If
+    End If
     Dim Text As String, TextRect As RECT
     Call GetCellText(iRow, iCol, Text)
     If StrPtr(Text) = 0 Then Text = ""
@@ -12456,6 +12518,13 @@ If hDC <> 0 Then
     .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
     .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
     .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+    If ComboCueWidth > 0 Then
+        If ComboCueAlignment = FlexLeftRightAlignmentRight Then
+            .Right = .Right - ComboCueWidth
+        ElseIf ComboCueAlignment = FlexLeftRightAlignmentLeft Then
+            .Left = .Left + ComboCueWidth
+        End If
+    End If
     .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
     End With
     Dim hFontTemp As Long, hFontOld As Long
