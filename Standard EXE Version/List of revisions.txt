@@ -1,5 +1,12 @@
 List of revisions:
 
+20-Dec-2022
+- Included the Checkboxes feature. (CellChecked property)
+  Added enum FlexCellChecked for the Cell property.
+  Added hit result enum FlexHitResultCheckBox.
+  Included the CellBeforeCheck/CellCheck event.
+  This fires only by mouse click or space key. (not by code via CellChecked property)
+
 17-Dec-2022
 - The TextRect in the internal GetLabelInfo/GetTextHeight function now adjusted for potential ComboCue.
 
