@@ -21,7 +21,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-#Const ImplementThemedComboButton = True
+#Const ImplementThemedControls = True
 #Const ImplementDataSource = True ' True = Required: msdatsrc.tlb
 #Const ImplementFlexDataSource = True ' True = Required: IVBFlexDataSource.cls
 #Const ImplementPreTranslateMsg = (VBFLXGRD_OCX <> 0)
@@ -40,7 +40,7 @@ Private FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus
 Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy, FlexFocusRectFlat
 Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
-Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled
+Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled, FlexHitResultCheckBox
 Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral
 Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
 Private FlexRowSizingModeIndividual, FlexRowSizingModeAll
@@ -54,7 +54,7 @@ Private FlexClearEverything, FlexClearText, FlexClearFormatting
 Private FlexTabControls, FlexTabCells, FlexTabNext
 Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
 Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
-Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort
+Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellChecked, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
@@ -70,6 +70,7 @@ Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComb
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
+Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -175,6 +176,7 @@ FlexHitResultDividerFrozenColumnLeft = 8
 FlexHitResultDividerFrozenColumnRight = 9
 FlexHitResultComboCue = 10
 FlexHitResultComboCueDisabled = 11
+FlexHitResultCheckBox = 12
 End Enum
 Public Enum FlexAlignmentConstants
 FlexAlignmentLeftTop = 0
@@ -292,6 +294,7 @@ FlexCellBackColor = 6
 FlexCellForeColor = 7
 FlexCellToolTipText = 8
 FlexCellComboCue = 9
+FlexCellChecked = 10
 FlexCellFloodPercent = 11
 FlexCellFloodColor = 12
 FlexCellFontName = 13
@@ -403,6 +406,12 @@ Public Enum FlexSortArrowConstants
 FlexSortArrowNone = 0
 FlexSortArrowAscending = 1
 FlexSortArrowDescending = 2
+End Enum
+Public Enum FlexCheckBoxConstants
+FlexNoCheckBox = -1
+FlexUnchecked = 0
+FlexChecked = 1
+FlexGrayed = 2
 End Enum
 Private Type RECT
 Left As Long
@@ -628,7 +637,7 @@ BackColor As Long
 ForeColor As Long
 ToolTipText As String
 ComboCue As FlexComboCueConstants
-wReserved As Integer
+Checked As Integer
 FloodPercent As Integer
 FloodColor As Long
 FontName As String
@@ -754,6 +763,10 @@ Public Event CellClick(ByVal Row As Long, ByVal Col As Long, ByVal Button As Int
 Attribute CellClick.VB_Description = "Occurs when a cell is clicked."
 Public Event CellDblClick(ByVal Row As Long, ByVal Col As Long, ByVal Button As Integer)
 Attribute CellDblClick.VB_Description = "Occurs when a cell is double clicked."
+Public Event CellBeforeCheck(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean)
+Attribute CellBeforeCheck.VB_Description = "Occurs before a cell is about to be checked."
+Public Event CellCheck(ByVal Row As Long, ByVal Col As Long)
+Attribute CellCheck.VB_Description = "Occurs when a cell is checked."
 Public Event PreviewKeyDown(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
 Attribute PreviewKeyDown.VB_Description = "Occurs before the KeyDown event."
 Public Event PreviewKeyUp(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
@@ -895,13 +908,14 @@ Private Declare Function GetCapture Lib "user32" () As Long
 Private Declare Function SetCapture Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function ReleaseCapture Lib "user32" () As Long
 
-#If ImplementThemedComboButton = True Then
+#If ImplementThemedControls = True Then
 
 Private Enum UxThemeComboBoxParts
 CP_DROPDOWNBUTTON = 1
 End Enum
 Private Enum UxThemeButtonParts
 BP_PUSHBUTTON = 1
+BP_CHECKBOX = 3
 End Enum
 Private Enum UxThemeComboBoxStates
 CBXS_NORMAL = 1
@@ -914,6 +928,20 @@ PBS_NORMAL = 1
 PBS_HOT = 2
 PBS_PRESSED = 3
 PBS_DISABLED = 4
+End Enum
+Private Enum UxThemeCheckBoxStates
+CBS_UNCHECKEDNORMAL = 1
+CBS_UNCHECKEDHOT = 2
+CBS_UNCHECKEDPRESSED = 3
+CBS_UNCHECKEDDISABLED = 4
+CBS_CHECKEDNORMAL = 5
+CBS_CHECKEDHOT = 6
+CBS_CHECKEDPRESSED = 7
+CBS_CHECKEDDISABLED = 8
+CBS_MIXEDNORMAL = 9
+CBS_MIXEDHOT = 10
+CBS_MIXEDPRESSED = 11
+CBS_MIXEDDISABLED = 12
 End Enum
 Private Declare Function IsThemeBackgroundPartiallyTransparent Lib "uxtheme" (ByVal Theme As Long, iPartId As Long, iStateId As Long) As Long
 Private Declare Function DrawThemeParentBackground Lib "uxtheme" (ByVal hWnd As Long, ByVal hDC As Long, ByRef pRect As RECT) As Long
@@ -1076,10 +1104,12 @@ Private Const MCN_SELECT As Long = (MCN_FIRST + 4)
 Private Const GDTR_MIN As Long = 1
 Private Const GDTR_MAX As Long = 2
 Private Const DFC_SCROLL As Long = &H3, DFCS_SCROLLCOMBOBOX As Long = &H5
-Private Const DFC_BUTTON As Long = &H4, DFCS_BUTTONPUSH As Long = &H10, DFCS_ADJUSTRECT As Long = &H2000
+Private Const DFC_BUTTON As Long = &H4, DFCS_BUTTONCHECK As Long = &H0, DFCS_BUTTONPUSH As Long = &H10
 Private Const DFCS_INACTIVE As Long = &H100
 Private Const DFCS_PUSHED As Long = &H200
+Private Const DFCS_CHECKED As Long = &H400
 Private Const DFCS_HOT As Long = &H1000
+Private Const DFCS_ADJUSTRECT As Long = &H2000
 Private Const DFCS_FLAT As Long = &H4000
 Private Const WS_BORDER As Long = &H800000
 Private Const WS_DLGFRAME As Long = &H400000
@@ -1275,6 +1305,7 @@ Private VBFlexGridSort As FlexSortConstants
 Private VBFlexGridExtendLastCol As Long
 Private VBFlexGridInvertSelection As Boolean
 Private VBFlexGridClipSeparatorCol As String, VBFlexGridClipSeparatorRow As String
+Private VBFlexGridCheckBoxSize As Long
 
 #If ImplementFlexDataSource = True Then
 
@@ -1495,6 +1526,7 @@ With VBFlexGridDefaultCell
 .Alignment = -1
 .BackColor = -1
 .ForeColor = -1
+.Checked = -1
 .FloodColor = -1
 End With
 With VBFlexGridDefaultRowInfo
@@ -1544,6 +1576,7 @@ If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VBFlexGridFocusBorder.CY, 0
 VBFlexGridExtendLastCol = -1
 VBFlexGridClipSeparatorCol = vbTab
 VBFlexGridClipSeparatorRow = vbCr
+VBFlexGridCheckBoxSize = (13 * PixelsPerDIP_X())
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -6784,6 +6817,8 @@ Select Case Setting
         Cell = Me.CellToolTipText
     Case FlexCellComboCue
         Cell = Me.CellComboCue
+    Case FlexCellChecked
+        Cell = Me.CellChecked
     Case FlexCellFloodPercent
         Cell = Me.CellFloodPercent
     Case FlexCellFloodColor
@@ -6860,6 +6895,8 @@ Select Case Setting
         Me.CellToolTipText = Value
     Case FlexCellComboCue
         Me.CellComboCue = Value
+    Case FlexCellChecked
+        Me.CellChecked = Value
     Case FlexCellFloodPercent
         Me.CellFloodPercent = Value
     Case FlexCellFloodColor
@@ -7838,6 +7875,44 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
         With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
             .Cols(j).ComboCue = Value
+        Next j
+        End With
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get CellChecked() As FlexCheckBoxConstants
+Attribute CellChecked.VB_Description = "Returns/sets the check mark in a cell or range of selected cells."
+Attribute CellChecked.VB_MemberFlags = "400"
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+CellChecked = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Checked
+End Property
+
+Public Property Let CellChecked(ByVal Value As FlexCheckBoxConstants)
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+Select Case Value
+    Case FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed
+    Case Else
+        Err.Raise 380
+End Select
+If PropFillStyle = FlexFillStyleSingle Then
+    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Checked = Value
+ElseIf PropFillStyle = FlexFillStyleRepeat Then
+    Dim i As Long, j As Long, SelRange As TCELLRANGE
+    Call GetSelRangeStruct(SelRange)
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i)
+        For j = SelRange.LeftCol To SelRange.RightCol
+            .Cols(j).Checked = Value
         Next j
         End With
     Next i
@@ -11031,6 +11106,30 @@ If Not .Picture Is Nothing Then
         End Select
     End If
 End If
+If .Checked > -1 Then
+    Dim CheckBoxRect As RECT, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
+    LSet CheckBoxRect = TextRect
+    Select Case .PictureAlignment
+        Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridCheckBoxSize) / 2)
+        Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridCheckBoxSize) / 2)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridCheckBoxSize) / 2)
+        Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridCheckBoxSize)
+    End Select
+    If CheckBoxOffsetX > 0 Then CheckBoxRect.Left = CheckBoxRect.Left + CheckBoxOffsetX
+    If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
+    CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridCheckBoxSize
+    CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridCheckBoxSize
+    Call DrawCellCheckBox(hDC, CheckBoxRect, .Checked)
+    Select Case .PictureAlignment
+        Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+            TextRect.Left = TextRect.Left + VBFlexGridCheckBoxSize + VBFlexGridDrawInfo.CellTextWidthPadding
+        Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+            TextRect.Right = TextRect.Right - VBFlexGridCheckBoxSize - VBFlexGridDrawInfo.CellTextWidthPadding
+    End Select
+End If
 Dim OldTextColor As Long
 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) = ODS_FOCUS Then
     If Not Text = vbNullString Then
@@ -11625,6 +11724,30 @@ If Not .Picture Is Nothing Then
                 TextRect.Right = TextRect.Right - PictureWidth
         End Select
     End If
+End If
+If .Checked > -1 Then
+    Dim CheckBoxRect As RECT, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
+    LSet CheckBoxRect = TextRect
+    Select Case .PictureAlignment
+        Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridCheckBoxSize) / 2)
+        Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridCheckBoxSize) / 2)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridCheckBoxSize) / 2)
+        Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridCheckBoxSize)
+    End Select
+    If CheckBoxOffsetX > 0 Then CheckBoxRect.Left = CheckBoxRect.Left + CheckBoxOffsetX
+    If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
+    CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridCheckBoxSize
+    CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridCheckBoxSize
+    Call DrawCellCheckBox(hDC, CheckBoxRect, .Checked)
+    Select Case .PictureAlignment
+        Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+            TextRect.Left = TextRect.Left + VBFlexGridCheckBoxSize + VBFlexGridDrawInfo.CellTextWidthPadding
+        Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+            TextRect.Right = TextRect.Right - VBFlexGridCheckBoxSize - VBFlexGridDrawInfo.CellTextWidthPadding
+    End Select
 End If
 Dim OldTextColor As Long
 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) = ODS_FOCUS Then
@@ -12402,6 +12525,14 @@ If hDC <> 0 Then
                 End Select
             End If
         End If
+        If .Checked > -1 Then
+            Select Case .PictureAlignment
+                Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                    TextRect.Left = TextRect.Left + VBFlexGridCheckBoxSize + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+                Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                    TextRect.Right = TextRect.Right - VBFlexGridCheckBoxSize - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+            End Select
+        End If
         If PropWordWrap = True Then
             DrawFlags = DrawFlags Or DT_WORDBREAK
         ElseIf PropSingleLine = True Then
@@ -12601,9 +12732,9 @@ If HTI.PT.X >= 0 Then
         Next iCol
     End If
 End If
-If PropAllowUserEditing = True Then
-    If iRowHit > -1 And iColHit > -1 Then
-        Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
+If iRowHit > -1 And iColHit > -1 Then
+    Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
+    If PropAllowUserEditing = True Then
         If VBFlexGridCells.Rows(iRowHit).Cols(iColHit).ComboCue <> FlexComboCueNone Then
             Call GetGridLineOffsets(iRowHit, iColHit, GridLineOffsets)
             ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
@@ -12658,8 +12789,53 @@ If PropAllowUserEditing = True Then
             End If
         End If
     End If
-End If
-If iRowHit > -1 And iColHit > -1 Then
+    If VBFlexGridCells.Rows(iRowHit).Cols(iColHit).Checked > -1 Then
+        Dim CheckBoxRect As RECT, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
+        With CheckBoxRect
+        .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        If ComboCueWidth > 0 Then
+            If ComboCueAlignment = FlexLeftRightAlignmentRight Then
+                .Right = .Right - ComboCueWidth
+            ElseIf ComboCueAlignment = FlexLeftRightAlignmentLeft Then
+                .Left = .Left + ComboCueWidth
+            End If
+        End If
+        .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        End With
+        With VBFlexGridCells.Rows(iRowHit).Cols(iColHit)
+        If Not .Picture Is Nothing Then
+            If .Picture.Handle <> 0 Then
+                Select Case .PictureAlignment
+                    Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                        CheckBoxRect.Left = CheckBoxRect.Left + CHimetricToPixel_X(.Picture.Width)
+                    Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                        CheckBoxRect.Right = CheckBoxRect.Right - CHimetricToPixel_X(.Picture.Width)
+                End Select
+            End If
+        End If
+        Select Case .PictureAlignment
+            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridCheckBoxSize) / 2)
+            Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridCheckBoxSize) / 2)
+                CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridCheckBoxSize) / 2)
+            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridCheckBoxSize)
+        End Select
+        If CheckBoxOffsetX > 0 Then CheckBoxRect.Left = CheckBoxRect.Left + CheckBoxOffsetX
+        If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
+        CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridCheckBoxSize
+        CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridCheckBoxSize
+        End With
+        If PtInRect(CheckBoxRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
+            HTI.HitResult = FlexHitResultCheckBox
+            HTI.HitRow = iRowHit
+            HTI.HitCol = iColHit
+            Exit Sub
+        End If
+    End If
     If iRowHit >= VBFlexGridTopRow Then
         If iColHit >= VBFlexGridLeftCol Then
             HTI.HitResult = FlexHitResultCell
@@ -13138,6 +13314,14 @@ If hDC <> 0 Then
                     TextRect.Right = TextRect.Right - CHimetricToPixel_X(.Picture.Width)
             End Select
         End If
+    End If
+    If .Checked > -1 Then
+        Select Case .PictureAlignment
+            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                TextRect.Left = TextRect.Left + VBFlexGridCheckBoxSize + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                TextRect.Right = TextRect.Right - VBFlexGridCheckBoxSize - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        End Select
     End If
     End With
     Format = DT_NOPREFIX
@@ -15483,6 +15667,8 @@ VBFlexGridMouseMoveChanged = False
 Select Case HTI.HitResult
     Case FlexHitResultNoWhere, FlexHitResultComboCue, FlexHitResultComboCueDisabled
         Exit Function
+    Case FlexHitResultCheckBox
+        If HTI.HitRow <= (PropFixedRows - 1) Or HTI.HitCol <= (PropFixedCols - 1) Then Exit Function
     Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
         VBFlexGridCaptureDividerDrag = True
         Dim iRow As Long, iCol As Long, Cancel As Boolean
@@ -16269,6 +16455,76 @@ If hRgn <> 0 Then
 End If
 End Sub
 
+Private Sub DrawCellCheckBox(ByVal hDC As Long, ByRef RC As RECT, ByVal Checked As Integer)
+If hDC = 0 Then Exit Sub
+Dim Theme As Long
+
+#If ImplementThemedControls = True Then
+
+If VBFlexGridHandle <> 0 Then
+    If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
+    If Theme <> 0 Then
+        Dim CheckState As Long
+        Select Case Checked
+            Case FlexUnchecked
+                CheckState = CBS_UNCHECKEDNORMAL
+            Case FlexChecked
+                CheckState = CBS_CHECKEDNORMAL
+            Case FlexGrayed
+                CheckState = CBS_MIXEDNORMAL
+        End Select
+        If IsThemeBackgroundPartiallyTransparent(Theme, BP_CHECKBOX, CheckState) <> 0 Then DrawThemeParentBackground VBFlexGridHandle, hDC, RC
+        DrawThemeBackground Theme, hDC, BP_CHECKBOX, CheckState, RC, RC
+        CloseThemeData Theme
+    End If
+End If
+
+#End If
+
+If Theme = 0 Then
+    Dim Flags As Long
+    Flags = DFCS_BUTTONCHECK Or DFCS_FLAT
+    If Checked = FlexChecked Then Flags = Flags Or DFCS_CHECKED
+    DrawFrameControl hDC, RC, DFC_BUTTON, Flags
+    If Checked = FlexGrayed Then
+        ' DrawFrameControl does not support indeterminate checkboxes.
+        ' We fill a rectangle inside the checkbox like IE10 does.
+        Dim Padding As Long, Brush As Long
+        Padding = (RC.Right - RC.Left) * 4 / 13
+        RC.Left = RC.Left + Padding
+        RC.Top = RC.Top + Padding
+        RC.Right = RC.Right - Padding
+        RC.Bottom = RC.Bottom - Padding
+        If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
+            Brush = GetSysColorBrush(COLOR_WINDOWTEXT)
+        Else
+            Brush = GetSysColorBrush(COLOR_GRAYTEXT)
+        End If
+        FillRect hDC, RC, Brush
+    End If
+End If
+End Sub
+
+Private Sub SetCellCheck(ByVal iRow As Long, ByVal iCol As Long)
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
+Dim Cancel As Boolean
+RaiseEvent CellBeforeCheck(iRow, iCol, Cancel)
+If Cancel = False Then
+    With VBFlexGridCells.Rows(iRow).Cols(iCol)
+    If .Checked > -1 Then
+        Select Case .Checked
+            Case FlexUnchecked
+                .Checked = FlexChecked
+            Case FlexChecked, FlexGrayed
+                .Checked = FlexUnchecked
+        End Select
+    End If
+    End With
+    Call RedrawGrid
+    RaiseEvent CellCheck(iRow, iCol)
+End If
+End Sub
+
 Private Sub DrawCellFlooding(ByVal hDC As Long, ByRef CellRect As RECT, ByVal Percent As Integer, ByVal Color As Long)
 If hDC = 0 Then Exit Sub
 Dim RC As RECT, OldColor As Long
@@ -16693,7 +16949,7 @@ Private Sub ComboButtonDraw(ByRef DIS As DRAWITEMSTRUCT)
 If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
     Dim OldTextColor As Long
     
-    #If ImplementThemedComboButton = True Then
+    #If ImplementThemedControls = True Then
     
     Dim Theme As Long, ThemeDropDown As Boolean
     If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then
@@ -17419,7 +17675,15 @@ Select Case wMsg
                         Case vbKeyF2
                             If CreateEdit(FlexEditReasonF2) = True Then Exit Function
                         Case vbKeySpace
-                            If CreateEdit(FlexEditReasonSpace) = True Then Exit Function
+                            If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                                If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Checked > -1 Then
+                                    Call SetCellCheck(VBFlexGridRow, VBFlexGridCol)
+                                ElseIf CreateEdit(FlexEditReasonSpace) = True Then
+                                    Exit Function
+                                End If
+                            Else
+                                If CreateEdit(FlexEditReasonSpace) = True Then Exit Function
+                            End If
                         Case vbKeyBack
                             If CreateEdit(FlexEditReasonBackSpace) = True Then Exit Function
                         Case vbKeyF4
@@ -17439,6 +17703,12 @@ Select Case wMsg
                                 End If
                             End If
                     End Select
+                Else
+                    If KeyCode = vbKeySpace Then
+                        If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                            If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Checked > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol)
+                        End If
+                    End If
                 End If
                 If PropAutoClipboard = True Then
                     If PropAllowUserEditing = False Then
@@ -17583,6 +17853,8 @@ Select Case wMsg
                             Case Else
                                 CreateEdit FlexEditReasonComboCueClick, .HitRow, .HitCol
                         End Select
+                    ElseIf .HitResult = FlexHitResultCheckBox Then
+                        Call SetCellCheck(.HitRow, .HitCol)
                     End If
                 End If
             End If
