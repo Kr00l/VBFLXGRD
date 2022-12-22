@@ -40,7 +40,7 @@ Private FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus
 Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy, FlexFocusRectFlat
 Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
-Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled, FlexHitResultCheckBox
+Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled, FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
 Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral
 Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
 Private FlexRowSizingModeIndividual, FlexRowSizingModeAll
@@ -70,7 +70,7 @@ Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComb
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
-Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed
+Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -177,6 +177,7 @@ FlexHitResultDividerFrozenColumnRight = 9
 FlexHitResultComboCue = 10
 FlexHitResultComboCueDisabled = 11
 FlexHitResultCheckBox = 12
+FlexHitResultCheckBoxDisabled = 13
 End Enum
 Public Enum FlexAlignmentConstants
 FlexAlignmentLeftTop = 0
@@ -412,6 +413,9 @@ FlexNoCheckBox = -1
 FlexUnchecked = 0
 FlexChecked = 1
 FlexGrayed = 2
+FlexDisabledUnchecked = 3
+FlexDisabledChecked = 4
+FlexDisabledGrayed = 5
 End Enum
 Private Type RECT
 Left As Long
@@ -7900,7 +7904,7 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Select Case Value
-    Case FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed
+    Case FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
     Case Else
         Err.Raise 380
 End Select
@@ -12830,7 +12834,12 @@ If iRowHit > -1 And iColHit > -1 Then
         CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridCheckBoxSize
         End With
         If PtInRect(CheckBoxRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
-            HTI.HitResult = FlexHitResultCheckBox
+            Select Case VBFlexGridCells.Rows(iRowHit).Cols(iColHit).Checked
+                Case FlexUnchecked, FlexChecked, FlexGrayed
+                    HTI.HitResult = FlexHitResultCheckBox
+                Case FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
+                    HTI.HitResult = FlexHitResultCheckBoxDisabled
+            End Select
             HTI.HitRow = iRowHit
             HTI.HitCol = iColHit
             Exit Sub
@@ -15667,7 +15676,7 @@ VBFlexGridMouseMoveChanged = False
 Select Case HTI.HitResult
     Case FlexHitResultNoWhere, FlexHitResultComboCue, FlexHitResultComboCueDisabled
         Exit Function
-    Case FlexHitResultCheckBox
+    Case FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
         If HTI.HitRow <= (PropFixedRows - 1) Or HTI.HitCol <= (PropFixedCols - 1) Then Exit Function
     Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
         VBFlexGridCaptureDividerDrag = True
@@ -16472,6 +16481,12 @@ If VBFlexGridHandle <> 0 Then
                 CheckState = CBS_CHECKEDNORMAL
             Case FlexGrayed
                 CheckState = CBS_MIXEDNORMAL
+            Case FlexDisabledUnchecked
+                CheckState = CBS_UNCHECKEDDISABLED
+            Case FlexDisabledChecked
+                CheckState = CBS_CHECKEDDISABLED
+            Case FlexDisabledGrayed
+                CheckState = CBS_MIXEDDISABLED
         End Select
         If IsThemeBackgroundPartiallyTransparent(Theme, BP_CHECKBOX, CheckState) <> 0 Then DrawThemeParentBackground VBFlexGridHandle, hDC, RC
         DrawThemeBackground Theme, hDC, BP_CHECKBOX, CheckState, RC, RC
@@ -16485,44 +16500,56 @@ If Theme = 0 Then
     Dim Flags As Long
     Flags = DFCS_BUTTONCHECK Or DFCS_FLAT
     If Checked = FlexChecked Then Flags = Flags Or DFCS_CHECKED
+    Select Case Checked
+        Case FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
+            Flags = Flags Or DFCS_INACTIVE
+    End Select
     DrawFrameControl hDC, RC, DFC_BUTTON, Flags
-    If Checked = FlexGrayed Then
-        ' DrawFrameControl does not support indeterminate checkboxes.
-        ' We fill a rectangle inside the checkbox like IE10 does.
-        Dim Padding As Long, Brush As Long
-        Padding = (RC.Right - RC.Left) * 4 / 13
-        RC.Left = RC.Left + Padding
-        RC.Top = RC.Top + Padding
-        RC.Right = RC.Right - Padding
-        RC.Bottom = RC.Bottom - Padding
-        If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
-            Brush = GetSysColorBrush(COLOR_WINDOWTEXT)
-        Else
-            Brush = GetSysColorBrush(COLOR_GRAYTEXT)
-        End If
-        FillRect hDC, RC, Brush
-    End If
+    Select Case Checked
+        Case FlexGrayed, FlexDisabledGrayed
+            ' DrawFrameControl does not support indeterminate checkboxes.
+            ' We fill a rectangle inside the checkbox like IE10 does.
+            Dim Padding As Long, Brush As Long
+            Padding = (RC.Right - RC.Left) * 4 / 13
+            RC.Left = RC.Left + Padding
+            RC.Top = RC.Top + Padding
+            RC.Right = RC.Right - Padding
+            RC.Bottom = RC.Bottom - Padding
+            If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
+                If Not (Flags And DFCS_HOT) = DFCS_HOT Then
+                    Brush = GetSysColorBrush(COLOR_WINDOWTEXT)
+                Else
+                    Brush = GetSysColorBrush(COLOR_HOTLIGHT)
+                End If
+            Else
+                Brush = GetSysColorBrush(COLOR_GRAYTEXT)
+            End If
+            FillRect hDC, RC, Brush
+    End Select
 End If
 End Sub
 
 Private Sub SetCellCheck(ByVal iRow As Long, ByVal iCol As Long)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
-Dim Cancel As Boolean
-RaiseEvent CellBeforeCheck(iRow, iCol, Cancel)
-If Cancel = False Then
-    With VBFlexGridCells.Rows(iRow).Cols(iCol)
-    If .Checked > -1 Then
-        Select Case .Checked
-            Case FlexUnchecked
-                .Checked = FlexChecked
-            Case FlexChecked, FlexGrayed
-                .Checked = FlexUnchecked
-        End Select
-    End If
-    End With
-    Call RedrawGrid
-    RaiseEvent CellCheck(iRow, iCol)
+With VBFlexGridCells.Rows(iRow).Cols(iCol)
+If .Checked > -1 Then
+    Select Case .Checked
+        Case FlexUnchecked, FlexChecked, FlexGrayed
+            Dim Cancel As Boolean
+            RaiseEvent CellBeforeCheck(iRow, iCol, Cancel)
+            If Cancel = False Then
+                Select Case .Checked
+                    Case FlexUnchecked
+                        .Checked = FlexChecked
+                    Case FlexChecked, FlexGrayed
+                        .Checked = FlexUnchecked
+                End Select
+                Call RedrawGrid
+                RaiseEvent CellCheck(iRow, iCol)
+            End If
+    End Select
 End If
+End With
 End Sub
 
 Private Sub DrawCellFlooding(ByVal hDC As Long, ByRef CellRect As RECT, ByVal Percent As Integer, ByVal Color As Long)
