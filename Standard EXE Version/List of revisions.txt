@@ -1,5 +1,9 @@
 List of revisions:
 
+22-Dec-2022
+- Added FlexDisabledUnchecked/FlexDisabledChecked/FlexDisabledGrayed enum to FlexCheckBoxConstants.
+- New hit result FlexHitResultCheckBoxDisabled.
+
 20-Dec-2022
 - Included the Checkboxes feature. (CellChecked property)
   Added enum FlexCellChecked for the Cell property.
