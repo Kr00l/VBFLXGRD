@@ -8,5 +8,5 @@ VTableHandle = 25, 25, 1225, 698, C
 VBFlexGridBase = 101, 174, 1266, 847, C
 VBFlexGrid = 85, 78, 1355, 933, C, 50, 50, 1259, 723, C
 IVBFlexDataSource = 0, 0, 0, 0, C
-PPVBFlexGridGeneral = 161, 175, 1326, 848, C, 49, 35, 1214, 708, C
-PPVBFlexGridStyle = 78, 78, 1265, 728, C, 210, 147, 1375, 820, C
+PPVBFlexGridGeneral = 161, 175, 1326, 848, C, 455, 231, 1620, 904, C
+PPVBFlexGridStyle = 78, 78, 1265, 728, C, 192, 113, 1357, 786, C
