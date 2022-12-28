@@ -1,5 +1,11 @@
 List of revisions:
 
+28-Dec-2022
+- Improved AutoSize/FormatString to resize based on best fit rather than text measure only.
+  Best fit means to include ComboCue, CheckBox, Picture (NoOverlap align only) and ColSortArrow.
+  ColSortArrow was previously included in the internal GetTextSize (CX/CY) function which could be misleading.
+  Now included new internal GetBestWidth function and renamed GetTextHeight to GetBestHeight.
+
 22-Dec-2022
 - Added FlexDisabledUnchecked/FlexDisabledChecked/FlexDisabledGrayed enum to FlexCheckBoxConstants.
 - New hit result FlexHitResultCheckBoxDisabled.
