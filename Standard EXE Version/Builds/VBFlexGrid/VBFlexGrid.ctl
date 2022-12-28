@@ -12402,6 +12402,7 @@ If hDC <> 0 Then
         hFontOld = SelectObject(hDC, hFontTemp)
         Set TempFont = Nothing
     End If
+    Dim CY As Long
     If Not Text = vbNullString Then
         Dim CellRect As RECT
         With CellRect
@@ -12484,11 +12485,15 @@ If hDC <> 0 Then
                 TextRect.Left = TextRect.Left + SortArrowClientSize.CX
             End If
         End If
-        GetBestHeight = DrawText(hDC, StrPtr(Text), -1, TextRect, DrawFlags Or DT_CALCRECT)
+        CY = DrawText(hDC, StrPtr(Text), -1, TextRect, DrawFlags Or DT_CALCRECT)
     Else
         Dim TM As TEXTMETRIC
-        If GetTextMetrics(hDC, TM) <> 0 Then GetBestHeight = TM.TMHeight
+        If GetTextMetrics(hDC, TM) <> 0 Then CY = TM.TMHeight
     End If
+    If PropBestFitMode <> FlexBestFitModeTextOnly Then
+        ' Void
+    End If
+    GetBestHeight = CY
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
     If hDCTemp <> 0 Then ReleaseDC VBFlexGridHandle, hDCTemp
@@ -12508,20 +12513,12 @@ If hDC <> 0 Then
     CX = GetTextSize(iRow, iCol, Text, hDC).CX
     If PropBestFitMode <> FlexBestFitModeTextOnly Then
         With VBFlexGridCells.Rows(iRow).Cols(iCol)
-        Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, CellWidth As Long
+        Dim ComboCueWidth As Long
         If PropAllowUserEditing = True Then
             If .ComboCue <> FlexComboCueNone Then
-                Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
                 ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
-                CellWidth = GetColWidth(iCol)
-                If ((CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = (CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
             ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
-                If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
-                    Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
-                    ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
-                    CellWidth = GetColWidth(iCol)
-                    If ((CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = (CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
-                End If
+                If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
             End If
         End If
         If ComboCueWidth > 0 Then CX = CX + ComboCueWidth
