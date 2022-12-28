@@ -71,6 +71,7 @@ Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboBut
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
 Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
+Private FlexBestFitModeTextOnly, FlexBestFitModeFull
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -416,6 +417,10 @@ FlexGrayed = 2
 FlexDisabledUnchecked = 3
 FlexDisabledChecked = 4
 FlexDisabledGrayed = 5
+End Enum
+Public Enum FlexBestFitModeConstants
+FlexBestFitModeTextOnly = 0
+FlexBestFitModeFull = 1
 End Enum
 Private Type RECT
 Left As Long
@@ -1413,6 +1418,7 @@ Private PropRowSortArrows As Long
 Private PropAllowScrollLock As Boolean
 Private PropSheetBorder As Boolean
 Private PropAutoClipboard As Boolean
+Private PropBestFitMode As FlexBestFitModeConstants
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -1678,6 +1684,7 @@ PropRowSortArrows = 0
 PropAllowScrollLock = False
 PropSheetBorder = True
 PropAutoClipboard = False
+PropBestFitMode = FlexBestFitModeTextOnly
 Call CreateVBFlexGrid
 End Sub
 
@@ -1780,6 +1787,7 @@ PropRowSortArrows = .ReadProperty("RowSortArrows", 0)
 PropAllowScrollLock = .ReadProperty("AllowScrollLock", False)
 PropSheetBorder = .ReadProperty("SheetBorder", True)
 PropAutoClipboard = .ReadProperty("AutoClipboard", False)
+PropBestFitMode = .ReadProperty("BestFitMode", FlexBestFitModeTextOnly)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -1878,6 +1886,7 @@ With PropBag
 .WriteProperty "AllowScrollLock", PropAllowScrollLock, False
 .WriteProperty "SheetBorder", PropSheetBorder, True
 .WriteProperty "AutoClipboard", PropAutoClipboard, False
+.WriteProperty "BestFitMode", PropBestFitMode, FlexBestFitModeTextOnly
 End With
 End Sub
 
@@ -4420,6 +4429,21 @@ End Property
 Public Property Let AutoClipboard(ByVal Value As Boolean)
 PropAutoClipboard = Value
 UserControl.PropertyChanged "AutoClipboard"
+End Property
+
+Public Property Get BestFitMode() As FlexBestFitModeConstants
+Attribute BestFitMode.VB_Description = "Returns/sets a value that determines which cell contents are considered in best-fit resizing operations."
+BestFitMode = PropBestFitMode
+End Property
+
+Public Property Let BestFitMode(ByVal Value As FlexBestFitModeConstants)
+Select Case Value
+    Case FlexBestFitModeTextOnly, FlexBestFitModeFull
+        PropBestFitMode = Value
+    Case Else
+        Err.Raise 380
+End Select
+UserControl.PropertyChanged "BestFitMode"
 End Property
 
 Private Sub CreateVBFlexGrid()
@@ -8887,6 +8911,30 @@ Pixels = GetTextSize(Row, Col, Text).CY
 If Pixels > 0 Then TextHeight = UserControl.ScaleY(Pixels, vbPixels, vbTwips)
 End Function
 
+Public Function BestWidth(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Long
+Attribute BestWidth.VB_Description = "Returns the best-fit width of the given string using the font of the current or an arbitrary cell (row/col subscripts)."
+If Row < -1 Then Err.Raise 380
+If Col < -1 Then Err.Raise 380
+If Row = -1 Then Row = VBFlexGridRow
+If Col = -1 Then Col = VBFlexGridCol
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+Dim Pixels As Long
+Pixels = GetBestWidth(Row, Col, Text)
+If Pixels > 0 Then BestWidth = UserControl.ScaleX(Pixels + (COLINFO_WIDTH_SPACING_DIP * PixelsPerDIP_X()), vbPixels, vbTwips)
+End Function
+
+Public Function BestHeight(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Long
+Attribute BestHeight.VB_Description = "Returns the best-fit height of the given string using the font of the current or an arbitrary cell (row/col subscripts)."
+If Row < -1 Then Err.Raise 380
+If Col < -1 Then Err.Raise 380
+If Row = -1 Then Row = VBFlexGridRow
+If Col = -1 Then Col = VBFlexGridCol
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+Dim Pixels As Long
+Pixels = GetBestHeight(Row, Col, Text)
+If Pixels > 0 Then BestHeight = UserControl.ScaleY(Pixels + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()), vbPixels, vbTwips)
+End Function
+
 Public Property Get Picture() As IPictureDisp
 Attribute Picture.VB_Description = "Returns a picture of the flex grid control, suitable for printing, saving to disk, copying to the clipboard, or assigning to a different control."
 Attribute Picture.VB_MemberFlags = "400"
@@ -12458,46 +12506,48 @@ End If
 If hDC <> 0 Then
     Dim CX As Long
     CX = GetTextSize(iRow, iCol, Text, hDC).CX
-    With VBFlexGridCells.Rows(iRow).Cols(iCol)
-    Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, CellWidth As Long
-    If PropAllowUserEditing = True Then
-        If .ComboCue <> FlexComboCueNone Then
-            Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
-            ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
-            CellWidth = GetColWidth(iCol)
-            If ((CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = (CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
-        ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
-            If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
+    If PropBestFitMode <> FlexBestFitModeTextOnly Then
+        With VBFlexGridCells.Rows(iRow).Cols(iCol)
+        Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, CellWidth As Long
+        If PropAllowUserEditing = True Then
+            If .ComboCue <> FlexComboCueNone Then
                 Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
                 ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
                 CellWidth = GetColWidth(iCol)
                 If ((CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = (CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
+            ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
+                If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
+                    Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
+                    ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                    CellWidth = GetColWidth(iCol)
+                    If ((CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = (CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
+                End If
             End If
         End If
-    End If
-    If ComboCueWidth > 0 Then CX = CX + ComboCueWidth
-    If Not .Picture Is Nothing Then
-        If .Picture.Handle <> 0 Then
+        If ComboCueWidth > 0 Then CX = CX + ComboCueWidth
+        If Not .Picture Is Nothing Then
+            If .Picture.Handle <> 0 Then
+                Select Case .PictureAlignment
+                    Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                        CX = CX + CHimetricToPixel_X(.Picture.Width)
+                End Select
+            End If
+        End If
+        If .Checked > -1 Then
             Select Case .PictureAlignment
-                Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
-                    CX = CX + CHimetricToPixel_X(.Picture.Width)
+                Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                    CX = CX + VBFlexGridCheckBoxSize + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
             End Select
         End If
-    End If
-    If .Checked > -1 Then
-        Select Case .PictureAlignment
-            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
-                CX = CX + VBFlexGridCheckBoxSize + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-        End Select
-    End If
-    If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
-        Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
-        Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
-        CX = CX + SortArrowClientSize.CX
+        If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
+            Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
+            Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
+            CX = CX + SortArrowClientSize.CX
+        End If
+        End With
     End If
     GetBestWidth = CX
     If hDCTemp <> 0 Then ReleaseDC VBFlexGridHandle, hDCTemp
-    End With
 End If
 End Function
 
