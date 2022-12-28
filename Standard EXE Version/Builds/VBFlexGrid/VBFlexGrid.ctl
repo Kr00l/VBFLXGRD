@@ -4257,7 +4257,7 @@ If Not PropFormatString = vbNullString Then
                     Case Else
                         .Alignment = FlexAlignmentGeneral
                 End Select
-                .Width = GetTextSize(0, iCol, Temp).CX + Spacing
+                .Width = GetBestWidth(0, iCol, Temp) + Spacing
                 End With
                 Call SetCellText(0, iCol, Trim$(Temp))
                 Pos2 = Pos1
@@ -4267,7 +4267,7 @@ If Not PropFormatString = vbNullString Then
             Pos2 = 0
         End If
         If (Not FormatRow = vbNullString Or PosRemainder > 0) And PropFixedCols > 0 Then
-            Dim iRow As Long
+            Dim iRow As Long, CX As Long
             Do
                 Pos1 = InStr(Pos1 + 1, FormatRow, "|")
                 Pos2 = Pos1
@@ -4284,9 +4284,8 @@ If Not PropFormatString = vbNullString Then
                 Else
                     Temp = Mid$(FormatRow, Pos2 + 1)
                 End If
-                With GetTextSize(iRow, 0, Temp)
-                If (.CX + Spacing) > VBFlexGridColsInfo(0).Width Then VBFlexGridColsInfo(0).Width = .CX + Spacing
-                End With
+                CX = GetBestWidth(iRow, 0, Temp)
+                If (CX + Spacing) > VBFlexGridColsInfo(0).Width Then VBFlexGridColsInfo(0).Width = CX + Spacing
                 Call SetCellText(iRow, 0, Trim$(Temp))
                 Pos2 = Pos1
                 iRow = iRow + 1
@@ -8752,35 +8751,35 @@ End If
 Dim hDC As Long
 hDC = GetDC(VBFlexGridHandle)
 Dim iRow As Long, iCol As Long, Text As String, Spacing As Long, Size As SIZEAPI, EqualSize As SIZEAPI
+Dim RowOrColScope1 As Long, RowOrColScope2 As Long
 If Mode = FlexAutoSizeModeColWidth Then
     Spacing = (COLINFO_WIDTH_SPACING_DIP * PixelsPerDIP_X()) + CLng(UserControl.ScaleX(ExtraSpace, vbTwips, vbPixels))
     EqualSize.CX = -1
-    Dim RowScope1 As Long, RowScope2 As Long
     Select Case Scope
         Case FlexAutoSizeScopeAll
-            RowScope1 = 0
-            RowScope2 = PropRows - 1
+            RowOrColScope1 = 0
+            RowOrColScope2 = PropRows - 1
         Case FlexAutoSizeScopeFixed
-            RowScope1 = 0
-            RowScope2 = PropFixedRows - 1
+            RowOrColScope1 = 0
+            RowOrColScope2 = PropFixedRows - 1
         Case FlexAutoSizeScopeScrollable
-            RowScope1 = PropFixedRows + PropFrozenRows
-            RowScope2 = PropRows - 1
+            RowOrColScope1 = PropFixedRows + PropFrozenRows
+            RowOrColScope2 = PropRows - 1
         Case FlexAutoSizeScopeMovable
-            RowScope1 = PropFixedRows
-            RowScope2 = PropRows - 1
+            RowOrColScope1 = PropFixedRows
+            RowOrColScope2 = PropRows - 1
         Case FlexAutoSizeScopeFrozen
-            RowScope1 = PropFixedRows
-            RowScope2 = (PropFixedRows + PropFrozenRows) - 1
+            RowOrColScope1 = PropFixedRows
+            RowOrColScope2 = (PropFixedRows + PropFrozenRows) - 1
     End Select
     For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
         With VBFlexGridColsInfo(iCol)
         If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
             .Width = -1
-            For iRow = RowScope1 To RowScope2
+            For iRow = RowOrColScope1 To RowOrColScope2
                 If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                     Call GetCellText(iRow, iCol, Text)
-                    Size.CX = GetTextSize(iRow, iCol, Text, hDC).CX
+                    Size.CX = GetBestWidth(iRow, iCol, Text, hDC)
                     If Size.CX > 0 Then
                         Size.CX = Size.CX + Spacing
                         If Size.CX > .Width Then .Width = Size.CX
@@ -8801,32 +8800,31 @@ If Mode = FlexAutoSizeModeColWidth Then
 ElseIf Mode = FlexAutoSizeModeRowHeight Then
     Spacing = (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()) + CLng(UserControl.ScaleY(ExtraSpace, vbTwips, vbPixels))
     EqualSize.CY = -1
-    Dim ColScope1 As Long, ColScope2 As Long
     Select Case Scope
         Case FlexAutoSizeScopeAll
-            ColScope1 = 0
-            ColScope2 = PropCols - 1
+            RowOrColScope1 = 0
+            RowOrColScope2 = PropCols - 1
         Case FlexAutoSizeScopeFixed
-            ColScope1 = 0
-            ColScope2 = PropFixedCols - 1
+            RowOrColScope1 = 0
+            RowOrColScope2 = PropFixedCols - 1
         Case FlexAutoSizeScopeScrollable
-            ColScope1 = PropFixedCols + PropFrozenCols
-            ColScope2 = PropCols - 1
+            RowOrColScope1 = PropFixedCols + PropFrozenCols
+            RowOrColScope2 = PropCols - 1
         Case FlexAutoSizeScopeMovable
-            ColScope1 = PropFixedCols
-            ColScope2 = PropCols - 1
+            RowOrColScope1 = PropFixedCols
+            RowOrColScope2 = PropCols - 1
         Case FlexAutoSizeScopeFrozen
-            ColScope1 = PropFixedCols
-            ColScope2 = (PropFixedCols + PropFrozenCols) - 1
+            RowOrColScope1 = PropFixedCols
+            RowOrColScope2 = (PropFixedCols + PropFrozenCols) - 1
     End Select
     For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
         With VBFlexGridCells.Rows(iRow).RowInfo
         If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
             .Height = -1
-            For iCol = ColScope1 To ColScope2
+            For iCol = RowOrColScope1 To RowOrColScope2
                 If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                     Call GetCellText(iRow, iCol, Text)
-                    Size.CY = GetTextHeight(iRow, iCol, Text, hDC)
+                    Size.CY = GetBestHeight(iRow, iCol, Text, hDC)
                     If Size.CY > 0 Then
                         Size.CY = Size.CY + Spacing
                         If Size.CY > .Height Then .Height = Size.CY
@@ -12316,18 +12314,13 @@ If hDC <> 0 Then
         Dim TM As TEXTMETRIC
         If GetTextMetrics(hDC, TM) <> 0 Then GetTextSize.CY = TM.TMHeight
     End If
-    If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
-        Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
-        Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
-        GetTextSize.CX = GetTextSize.CX + SortArrowClientSize.CX
-    End If
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
     If hDCTemp <> 0 Then ReleaseDC VBFlexGridHandle, hDCTemp
 End If
 End Function
 
-Private Function GetTextHeight(ByVal iRow As Long, ByVal iCol As Long, ByVal Text As String, Optional ByVal hDC As Long) As Long
+Private Function GetBestHeight(ByVal iRow As Long, ByVal iCol As Long, ByVal Text As String, Optional ByVal hDC As Long) As Long
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Function
 Dim hDCTemp As Long
 If hDC = 0 Then
@@ -12371,7 +12364,7 @@ If hDC <> 0 Then
         End With
         Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
         If PropAllowUserEditing = True Then
-            If VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue <> FlexComboCueNone Then
+            If .ComboCue <> FlexComboCueNone Then
                 Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
                 ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
                 If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
@@ -12443,13 +12436,66 @@ If hDC <> 0 Then
                 TextRect.Left = TextRect.Left + SortArrowClientSize.CX
             End If
         End If
-        GetTextHeight = DrawText(hDC, StrPtr(Text), -1, TextRect, DrawFlags Or DT_CALCRECT)
+        GetBestHeight = DrawText(hDC, StrPtr(Text), -1, TextRect, DrawFlags Or DT_CALCRECT)
     Else
         Dim TM As TEXTMETRIC
-        If GetTextMetrics(hDC, TM) <> 0 Then GetTextHeight = TM.TMHeight
+        If GetTextMetrics(hDC, TM) <> 0 Then GetBestHeight = TM.TMHeight
     End If
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
+    If hDCTemp <> 0 Then ReleaseDC VBFlexGridHandle, hDCTemp
+    End With
+End If
+End Function
+
+Private Function GetBestWidth(ByVal iRow As Long, ByVal iCol As Long, ByVal Text As String, Optional ByVal hDC As Long) As Long
+If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Function
+Dim hDCTemp As Long
+If hDC = 0 Then
+    hDCTemp = GetDC(VBFlexGridHandle)
+    hDC = hDCTemp
+End If
+If hDC <> 0 Then
+    Dim CX As Long
+    CX = GetTextSize(iRow, iCol, Text, hDC).CX
+    With VBFlexGridCells.Rows(iRow).Cols(iCol)
+    Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, CellWidth As Long
+    If PropAllowUserEditing = True Then
+        If .ComboCue <> FlexComboCueNone Then
+            Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
+            ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+            CellWidth = GetColWidth(iCol)
+            If ((CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = (CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
+        ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
+            If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
+                Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
+                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                CellWidth = GetColWidth(iCol)
+                If ((CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = (CellWidth - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
+            End If
+        End If
+    End If
+    If ComboCueWidth > 0 Then CX = CX + ComboCueWidth
+    If Not .Picture Is Nothing Then
+        If .Picture.Handle <> 0 Then
+            Select Case .PictureAlignment
+                Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                    CX = CX + CHimetricToPixel_X(.Picture.Width)
+            End Select
+        End If
+    End If
+    If .Checked > -1 Then
+        Select Case .PictureAlignment
+            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                CX = CX + VBFlexGridCheckBoxSize + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        End Select
+    End If
+    If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
+        Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
+        Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
+        CX = CX + SortArrowClientSize.CX
+    End If
+    GetBestWidth = CX
     If hDCTemp <> 0 Then ReleaseDC VBFlexGridHandle, hDCTemp
     End With
 End If
@@ -13116,14 +13162,17 @@ If iRow > -1 Then
 End If
 End Sub
 
-Private Sub GetLabelInfo(ByVal iRow As Long, ByVal iCol As Long, ByRef LBLI As TLABELINFO)
+Private Sub GetLabelInfo(ByVal iRow As Long, ByVal iCol As Long, ByRef LBLI As TLABELINFO, Optional ByVal hDC As Long)
 LBLI.Flags = 0
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
 Dim CellRect As RECT
 Call GetCellRect(iRow, iCol, False, CellRect)
 If (CellRect.Bottom - CellRect.Top) <= 0 Or (CellRect.Right - CellRect.Left) <= 0 Then Exit Sub
-Dim hDC As Long
-hDC = GetDC(VBFlexGridHandle)
+Dim hDCTemp As Long
+If hDC = 0 Then
+    hDCTemp = GetDC(VBFlexGridHandle)
+    hDC = hDCTemp
+End If
 If hDC <> 0 Then
     Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
     If PropAllowUserEditing = True Then
@@ -13298,7 +13347,7 @@ If hDC <> 0 Then
     End With
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
-    ReleaseDC VBFlexGridHandle, hDC
+    If hDCTemp <> 0 Then ReleaseDC VBFlexGridHandle, hDCTemp
 End If
 End Sub
 
