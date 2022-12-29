@@ -1,5 +1,8 @@
 List of revisions:
 
+29-Dec-2022
+- DIP metrics are converted to pixels now only once at UserControl_Initialize in new internal TPIXELMETRICS structure.
+
 28-Dec-2022
 - Improved AutoSize/FormatString to resize based on best fit rather than text measure only.
   Best fit means to include ComboCue, CheckBox, Picture (NoOverlap align only) and ColSortArrow.
