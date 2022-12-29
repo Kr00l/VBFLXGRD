@@ -8911,30 +8911,6 @@ Pixels = GetTextSize(Row, Col, Text).CY
 If Pixels > 0 Then TextHeight = UserControl.ScaleY(Pixels, vbPixels, vbTwips)
 End Function
 
-Public Function BestWidth(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Long
-Attribute BestWidth.VB_Description = "Returns the best-fit width of the given string using the font of the current or an arbitrary cell (row/col subscripts)."
-If Row < -1 Then Err.Raise 380
-If Col < -1 Then Err.Raise 380
-If Row = -1 Then Row = VBFlexGridRow
-If Col = -1 Then Col = VBFlexGridCol
-If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
-Dim Pixels As Long
-Pixels = GetBestWidth(Row, Col, Text)
-If Pixels > 0 Then BestWidth = UserControl.ScaleX(Pixels + (COLINFO_WIDTH_SPACING_DIP * PixelsPerDIP_X()), vbPixels, vbTwips)
-End Function
-
-Public Function BestHeight(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Long
-Attribute BestHeight.VB_Description = "Returns the best-fit height of the given string using the font of the current or an arbitrary cell (row/col subscripts)."
-If Row < -1 Then Err.Raise 380
-If Col < -1 Then Err.Raise 380
-If Row = -1 Then Row = VBFlexGridRow
-If Col = -1 Then Col = VBFlexGridCol
-If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
-Dim Pixels As Long
-Pixels = GetBestHeight(Row, Col, Text)
-If Pixels > 0 Then BestHeight = UserControl.ScaleY(Pixels + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()), vbPixels, vbTwips)
-End Function
-
 Public Property Get Picture() As IPictureDisp
 Attribute Picture.VB_Description = "Returns a picture of the flex grid control, suitable for printing, saving to disk, copying to the clipboard, or assigning to a different control."
 Attribute Picture.VB_MemberFlags = "400"
