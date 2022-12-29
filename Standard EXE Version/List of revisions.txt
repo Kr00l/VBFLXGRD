@@ -5,8 +5,7 @@ List of revisions:
   Best fit means to include ComboCue, CheckBox, Picture (NoOverlap align only) and ColSortArrow.
   ColSortArrow was previously included in the internal GetTextSize (CX/CY) function which could be misleading.
   Now included new internal GetBestWidth function and renamed GetTextHeight to GetBestHeight.
-- Included BestWidth/BestHeight functions. (likewise to TextWidth/TextHeight)
-- Included BestFitMode property which defaults to 0 - TextOnly. (used for AutoSize/FormatString/BestWidth/BestHeight)
+- Included BestFitMode property which defaults to 0 - TextOnly. (used for AutoSize/FormatString)
 
 22-Dec-2022
 - Added FlexDisabledUnchecked/FlexDisabledChecked/FlexDisabledGrayed enum to FlexCheckBoxConstants.
