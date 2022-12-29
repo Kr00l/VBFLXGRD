@@ -71,7 +71,7 @@ Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboBut
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
 Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
-Private FlexBestFitModeTextOnly, FlexBestFitModeFull
+Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -421,6 +421,7 @@ End Enum
 Public Enum FlexBestFitModeConstants
 FlexBestFitModeTextOnly = 0
 FlexBestFitModeFull = 1
+FlexBestFitModeSortArrowText = 2
 End Enum
 Private Type RECT
 Left As Long
@@ -4438,7 +4439,7 @@ End Property
 
 Public Property Let BestFitMode(ByVal Value As FlexBestFitModeConstants)
 Select Case Value
-    Case FlexBestFitModeTextOnly, FlexBestFitModeFull
+    Case FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText
         PropBestFitMode = Value
     Case Else
         Err.Raise 380
@@ -12489,34 +12490,39 @@ If hDC <> 0 Then
     CX = GetTextSize(iRow, iCol, Text, hDC).CX
     If PropBestFitMode <> FlexBestFitModeTextOnly Then
         With VBFlexGridCells.Rows(iRow).Cols(iCol)
-        Dim ComboCueWidth As Long
-        If PropAllowUserEditing = True Then
-            If .ComboCue <> FlexComboCueNone Then
-                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
-            ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
-                If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+        If PropBestFitMode = FlexBestFitModeFull Then
+            Dim ComboCueWidth As Long
+            If PropAllowUserEditing = True Then
+                If .ComboCue <> FlexComboCueNone Then
+                    ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
+                    If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                End If
             End If
-        End If
-        If ComboCueWidth > 0 Then CX = CX + ComboCueWidth
-        If Not .Picture Is Nothing Then
-            If .Picture.Handle <> 0 Then
+            If ComboCueWidth > 0 Then CX = CX + ComboCueWidth
+            If Not .Picture Is Nothing Then
+                If .Picture.Handle <> 0 Then
+                    Select Case .PictureAlignment
+                        Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                            CX = CX + CHimetricToPixel_X(.Picture.Width)
+                    End Select
+                End If
+            End If
+            If .Checked > -1 Then
                 Select Case .PictureAlignment
-                    Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
-                        CX = CX + CHimetricToPixel_X(.Picture.Width)
+                    Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                        CX = CX + VBFlexGridCheckBoxSize + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
                 End Select
             End If
         End If
-        If .Checked > -1 Then
-            Select Case .PictureAlignment
-                Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
-                    CX = CX + VBFlexGridCheckBoxSize + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-            End Select
-        End If
-        If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
-            Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
-            Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
-            CX = CX + SortArrowClientSize.CX
-        End If
+        Select Case PropBestFitMode
+            Case FlexBestFitModeFull, FlexBestFitModeSortArrowText
+                If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
+                    Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
+                    Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
+                    CX = CX + SortArrowClientSize.CX
+                End If
+        End Select
         End With
     End If
     GetBestWidth = CX
