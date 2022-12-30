@@ -688,6 +688,8 @@ ComboButtonAlignment As FlexLeftRightAlignmentConstants
 ComboItems As String
 Format As String
 DataType As Integer
+NumericPrecision As Byte
+NumericScale As Byte
 End Type
 Private Type TCOLS
 Cols() As TCELL
@@ -2258,11 +2260,15 @@ If VBFlexGridDesignMode = False Then
                     For iCol = 0 To (PropFixedCols - 1)
                         VBFlexGridColsInfo(iCol).Key = vbNullString
                         VBFlexGridColsInfo(iCol).DataType = 0
+                        VBFlexGridColsInfo(iCol).NumericPrecision = 0
+                        VBFlexGridColsInfo(iCol).NumericScale = 0
                     Next iCol
                     For iCol = 0 To (.Fields.Count - 1)
                         Me.TextMatrix(0, iCol + PropFixedCols) = .Fields(iCol).Name
                         VBFlexGridColsInfo(iCol + PropFixedCols).Key = .Fields(iCol).Name
                         VBFlexGridColsInfo(iCol + PropFixedCols).DataType = .Fields(iCol).Type
+                        VBFlexGridColsInfo(iCol + PropFixedCols).NumericPrecision = .Fields(iCol).Precision
+                        VBFlexGridColsInfo(iCol + PropFixedCols).NumericScale = .Fields(iCol).NumericScale
                     Next iCol
                 End If
                 If .RecordCount > 0 Then
@@ -6785,6 +6791,44 @@ Else
     Dim i As Long
     For i = 0 To (PropCols - 1)
         VBFlexGridColsInfo(i).DataType = Value
+    Next i
+End If
+End Property
+
+Public Property Get ColNumericPrecision(ByVal Index As Long) As Byte
+Attribute ColNumericPrecision.VB_Description = "Returns/sets the numeric precision of the data for the specified column."
+Attribute ColNumericPrecision.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColNumericPrecision = VBFlexGridColsInfo(Index).NumericPrecision
+End Property
+
+Public Property Let ColNumericPrecision(ByVal Index As Long, ByVal Value As Byte)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).NumericPrecision = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).NumericPrecision = Value
+    Next i
+End If
+End Property
+
+Public Property Get ColNumericScale(ByVal Index As Long) As Byte
+Attribute ColNumericScale.VB_Description = "Returns/sets the numeric scale of the data for the specified column."
+Attribute ColNumericScale.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColNumericScale = VBFlexGridColsInfo(Index).NumericScale
+End Property
+
+Public Property Let ColNumericScale(ByVal Index As Long, ByVal Value As Byte)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).NumericScale = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).NumericScale = Value
     Next i
 End If
 End Property
@@ -12360,7 +12404,7 @@ If hDC <> 0 Then
 End If
 End Function
 
-Private Function GetBestHeight(ByVal iRow As Long, ByVal iCol As Long, ByVal Text As String, Optional ByVal hDC As Long) As Long
+Private Function GetBestHeight(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As String, Optional ByVal hDC As Long) As Long
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Function
 Dim hDCTemp As Long
 If hDC = 0 Then
@@ -12494,7 +12538,7 @@ If hDC <> 0 Then
 End If
 End Function
 
-Private Function GetBestWidth(ByVal iRow As Long, ByVal iCol As Long, ByVal Text As String, Optional ByVal hDC As Long) As Long
+Private Function GetBestWidth(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As String, Optional ByVal hDC As Long) As Long
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Function
 Dim hDCTemp As Long
 If hDC = 0 Then
