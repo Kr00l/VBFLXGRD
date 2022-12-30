@@ -1,5 +1,10 @@
 List of revisions:
 
+30-Dec-2022
+- Included the ColNumericPrecision/ColNumericScale property. (As Byte)
+  Setting ADO DataSource will predefine the column numeric precision/scale.
+  It's an information property only, but useful to better format text in a column. (ColFormat property)
+
 29-Dec-2022
 - DIP metrics are converted to pixels now only once at UserControl_Initialize in new internal TPIXELMETRICS structure.
 
