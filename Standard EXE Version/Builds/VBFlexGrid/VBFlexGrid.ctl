@@ -71,7 +71,7 @@ Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboBut
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
 Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
-Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText
+Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -422,6 +422,7 @@ Public Enum FlexBestFitModeConstants
 FlexBestFitModeTextOnly = 0
 FlexBestFitModeFull = 1
 FlexBestFitModeSortArrowText = 2
+FlexBestFitModeOtherText = 3
 End Enum
 Private Type RECT
 Left As Long
@@ -4455,7 +4456,7 @@ End Property
 
 Public Property Let BestFitMode(ByVal Value As FlexBestFitModeConstants)
 Select Case Value
-    Case FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText
+    Case FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
         PropBestFitMode = Value
     Case Else
         Err.Raise 380
@@ -12482,7 +12483,8 @@ If hDC <> 0 Then
         If GetTextMetrics(hDC, TM) <> 0 Then CY = TM.TMHeight
     End If
     If PropBestFitMode <> FlexBestFitModeTextOnly Then
-        ' Void
+        ' The height of the sort arrow client size equals to TM.TMHeight.
+        ' No other content currently adjusts the text rect at the height.
     End If
     GetBestHeight = CY
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
@@ -12504,31 +12506,32 @@ If hDC <> 0 Then
     CX = GetTextSize(iRow, iCol, Text, hDC).CX
     If PropBestFitMode <> FlexBestFitModeTextOnly Then
         With VBFlexGridCells.Rows(iRow).Cols(iCol)
-        If PropBestFitMode = FlexBestFitModeFull Then
-            Dim ComboCueWidth As Long
-            If PropAllowUserEditing = True Then
-                If .ComboCue <> FlexComboCueNone Then
-                    ComboCueWidth = VBFlexGridPixelMetrics.ComboButtonWidth
-                ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
-                    If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then ComboCueWidth = VBFlexGridPixelMetrics.ComboButtonWidth
+        Select Case PropBestFitMode
+            Case FlexBestFitModeFull, FlexBestFitModeOtherText
+                Dim ComboCueWidth As Long
+                If PropAllowUserEditing = True Then
+                    If .ComboCue <> FlexComboCueNone Then
+                        ComboCueWidth = VBFlexGridPixelMetrics.ComboButtonWidth
+                    ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
+                        If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then ComboCueWidth = VBFlexGridPixelMetrics.ComboButtonWidth
+                    End If
                 End If
-            End If
-            If ComboCueWidth > 0 Then CX = CX + ComboCueWidth
-            If Not .Picture Is Nothing Then
-                If .Picture.Handle <> 0 Then
+                If ComboCueWidth > 0 Then CX = CX + ComboCueWidth
+                If Not .Picture Is Nothing Then
+                    If .Picture.Handle <> 0 Then
+                        Select Case .PictureAlignment
+                            Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                                CX = CX + CHimetricToPixel_X(.Picture.Width)
+                        End Select
+                    End If
+                End If
+                If .Checked > -1 Then
                     Select Case .PictureAlignment
-                        Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
-                            CX = CX + CHimetricToPixel_X(.Picture.Width)
+                        Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                            CX = CX + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
                     End Select
                 End If
-            End If
-            If .Checked > -1 Then
-                Select Case .PictureAlignment
-                    Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
-                        CX = CX + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
-                End Select
-            End If
-        End If
+        End Select
         Select Case PropBestFitMode
             Case FlexBestFitModeFull, FlexBestFitModeSortArrowText
                 If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then

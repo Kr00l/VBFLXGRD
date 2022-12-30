@@ -369,6 +369,8 @@ With ComboBestFitMode
 .ItemData(.NewIndex) = FlexBestFitModeFull
 .AddItem FlexBestFitModeSortArrowText & " - SortArrowText"
 .ItemData(.NewIndex) = FlexBestFitModeSortArrowText
+.AddItem FlexBestFitModeOtherText & " - OtherText"
+.ItemData(.NewIndex) = FlexBestFitModeOtherText
 End With
 With ComboMergeCells
 .AddItem FlexMergeCellsNever & " - Never"
