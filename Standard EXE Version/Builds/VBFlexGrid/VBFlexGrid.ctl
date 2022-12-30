@@ -690,6 +690,7 @@ Format As String
 DataType As Integer
 NumericPrecision As Byte
 NumericScale As Byte
+DataCapacity As Long
 End Type
 Private Type TCOLS
 Cols() As TCELL
@@ -2262,6 +2263,7 @@ If VBFlexGridDesignMode = False Then
                         VBFlexGridColsInfo(iCol).DataType = 0
                         VBFlexGridColsInfo(iCol).NumericPrecision = 0
                         VBFlexGridColsInfo(iCol).NumericScale = 0
+                        VBFlexGridColsInfo(iCol).DataCapacity = 0
                     Next iCol
                     For iCol = 0 To (.Fields.Count - 1)
                         Me.TextMatrix(0, iCol + PropFixedCols) = .Fields(iCol).Name
@@ -2269,6 +2271,7 @@ If VBFlexGridDesignMode = False Then
                         VBFlexGridColsInfo(iCol + PropFixedCols).DataType = .Fields(iCol).Type
                         VBFlexGridColsInfo(iCol + PropFixedCols).NumericPrecision = .Fields(iCol).Precision
                         VBFlexGridColsInfo(iCol + PropFixedCols).NumericScale = .Fields(iCol).NumericScale
+                        VBFlexGridColsInfo(iCol + PropFixedCols).DataCapacity = .Fields(iCol).DefinedSize
                     Next iCol
                 End If
                 If .RecordCount > 0 Then
@@ -6829,6 +6832,25 @@ Else
     Dim i As Long
     For i = 0 To (PropCols - 1)
         VBFlexGridColsInfo(i).NumericScale = Value
+    Next i
+End If
+End Property
+
+Public Property Get ColDataCapacity(ByVal Index As Long) As Long
+Attribute ColDataCapacity.VB_Description = "Returns/sets the data capacity for the specified column."
+Attribute ColDataCapacity.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColDataCapacity = VBFlexGridColsInfo(Index).DataCapacity
+End Property
+
+Public Property Let ColDataCapacity(ByVal Index As Long, ByVal Value As Long)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).DataCapacity = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).DataCapacity = Value
     Next i
 End If
 End Property
