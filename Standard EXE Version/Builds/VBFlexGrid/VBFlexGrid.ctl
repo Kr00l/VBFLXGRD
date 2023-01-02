@@ -1327,6 +1327,8 @@ Private VBFlexGridSort As FlexSortConstants
 Private VBFlexGridExtendLastCol As Long
 Private VBFlexGridInvertSelection As Boolean
 Private VBFlexGridClipSeparatorCol As String, VBFlexGridClipSeparatorRow As String
+Private VBFlexGridHotRow As Long, VBFlexGridHotCol As Long
+Private VBFlexGridHotHitResult As FlexHitResultConstants
 
 #If ImplementFlexDataSource = True Then
 
@@ -1608,6 +1610,9 @@ If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VBFlexGridFocusBorder.CY, 0
 VBFlexGridExtendLastCol = -1
 VBFlexGridClipSeparatorCol = vbTab
 VBFlexGridClipSeparatorRow = vbCr
+VBFlexGridHotRow = -1
+VBFlexGridHotCol = -1
+VBFlexGridHotHitResult = FlexHitResultNoWhere
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -10961,6 +10966,8 @@ If PropAllowUserEditing = True Then
                 ComboCueCtlType = ODT_BUTTON
         End Select
         Select Case .ComboCue
+            Case FlexComboCueDropDown, FlexComboCueButton
+                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
             Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
                 ComboCueItemState = ODS_DISABLED
         End Select
@@ -10980,6 +10987,8 @@ If PropAllowUserEditing = True Then
                     ComboCueCtlType = ODT_BUTTON
             End Select
             Select Case VBFlexGridComboCue
+                Case FlexComboCueDropDown, FlexComboCueButton
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
                 Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
                     ComboCueItemState = ODS_DISABLED
             End Select
@@ -11115,7 +11124,7 @@ If .Checked > -1 Then
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
-    Call DrawCellCheckBox(hDC, CheckBoxRect, .Checked)
+    Call DrawCellCheckBox(hDC, CheckBoxRect, iRow, iCol, .Checked)
     Select Case .PictureAlignment
         Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
@@ -11570,6 +11579,8 @@ If PropAllowUserEditing = True Then
                 ComboCueCtlType = ODT_BUTTON
         End Select
         Select Case .ComboCue
+            Case FlexComboCueDropDown, FlexComboCueButton
+                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
             Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
                 ComboCueItemState = ODS_DISABLED
         End Select
@@ -11589,6 +11600,8 @@ If PropAllowUserEditing = True Then
                     ComboCueCtlType = ODT_BUTTON
             End Select
             Select Case VBFlexGridComboCue
+                Case FlexComboCueDropDown, FlexComboCueButton
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
                 Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
                     ComboCueItemState = ODS_DISABLED
             End Select
@@ -11734,7 +11747,7 @@ If .Checked > -1 Then
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
-    Call DrawCellCheckBox(hDC, CheckBoxRect, .Checked)
+    Call DrawCellCheckBox(hDC, CheckBoxRect, iRow, iCol, .Checked)
     Select Case .PictureAlignment
         Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
@@ -16516,7 +16529,7 @@ If hRgn <> 0 Then
 End If
 End Sub
 
-Private Sub DrawCellCheckBox(ByVal hDC As Long, ByRef RC As RECT, ByVal Checked As Integer)
+Private Sub DrawCellCheckBox(ByVal hDC As Long, ByRef RC As RECT, ByVal iRow As Long, ByVal iCol As Long, ByVal Checked As Integer)
 If hDC = 0 Then Exit Sub
 Dim Theme As Long
 
@@ -16528,11 +16541,23 @@ If VBFlexGridHandle <> 0 Then
         Dim CheckState As Long
         Select Case Checked
             Case FlexUnchecked
-                CheckState = CBS_UNCHECKEDNORMAL
+                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
+                    CheckState = CBS_UNCHECKEDHOT
+                Else
+                    CheckState = CBS_UNCHECKEDNORMAL
+                End If
             Case FlexChecked
-                CheckState = CBS_CHECKEDNORMAL
+                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
+                    CheckState = CBS_CHECKEDHOT
+                Else
+                    CheckState = CBS_CHECKEDNORMAL
+                End If
             Case FlexGrayed
-                CheckState = CBS_MIXEDNORMAL
+                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
+                    CheckState = CBS_MIXEDHOT
+                Else
+                    CheckState = CBS_MIXEDNORMAL
+                End If
             Case FlexDisabledUnchecked
                 CheckState = CBS_UNCHECKEDDISABLED
             Case FlexDisabledChecked
@@ -16553,6 +16578,8 @@ If Theme = 0 Then
     Flags = DFCS_BUTTONCHECK Or DFCS_FLAT
     If Checked = FlexChecked Then Flags = Flags Or DFCS_CHECKED
     Select Case Checked
+        Case FlexUnchecked, FlexChecked, FlexGrayed
+            If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then Flags = Flags Or DFCS_HOT
         Case FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
             Flags = Flags Or DFCS_INACTIVE
     End Select
@@ -17941,6 +17968,35 @@ Select Case wMsg
         End If
     Case WM_MOUSEMOVE
         Call ProcessMouseMove(GetMouseStateFromParam(wParam), Get_X_lParam(lParam), Get_Y_lParam(lParam))
+        If PropMouseTrack = True Then
+            With HTI
+            .PT.X = Get_X_lParam(lParam)
+            .PT.Y = Get_Y_lParam(lParam)
+            Call GetHitTestInfo(HTI)
+            If .HitRow > -1 And .HitCol > -1 Then
+                If VBFlexGridHotRow <> .HitRow Or VBFlexGridHotCol <> .HitCol Or VBFlexGridHotHitResult <> .HitResult Then
+                    VBFlexGridHotRow = .HitRow
+                    VBFlexGridHotCol = .HitCol
+                    VBFlexGridHotHitResult = .HitResult
+                    Call RedrawGrid
+                End If
+            Else
+                If VBFlexGridHotRow > -1 And VBFlexGridHotCol > -1 Then
+                    VBFlexGridHotRow = -1
+                    VBFlexGridHotCol = -1
+                    VBFlexGridHotHitResult = FlexHitResultNoWhere
+                    Call RedrawGrid
+                End If
+            End If
+            End With
+        End If
+    Case WM_MOUSELEAVE
+        If VBFlexGridHotRow > -1 And VBFlexGridHotCol > -1 Then
+            VBFlexGridHotRow = -1
+            VBFlexGridHotCol = -1
+            VBFlexGridHotHitResult = FlexHitResultNoWhere
+            Call RedrawGrid
+        End If
     Case WM_LBUTTONUP
         Call ProcessLButtonUp(GetShiftStateFromParam(wParam), Get_X_lParam(lParam), Get_Y_lParam(lParam))
         ReleaseCapture
