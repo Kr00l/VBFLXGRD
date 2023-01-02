@@ -1,5 +1,8 @@
 List of revisions:
 
+02-Jan-2023
+- ComboCue/CheckBox now hot-tracked when MouseTrack property is set to True.
+
 30-Dec-2022
 - Included the ColNumericPrecision/ColNumericScale property. (As Byte)
   Included the ColDataCapacity property. (As Long)
