@@ -1,5 +1,9 @@
 List of revisions:
 
+07-Jan-2023
+- Included the parameter 'Reason As FlexCellCheckReasonConstants' in the CellBeforeCheck event.
+- Checkboxes now react on double click.
+
 02-Jan-2023
 - ComboCue/CheckBox now hot-tracked when MouseTrack property is set to True.
 
