@@ -71,6 +71,7 @@ Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboBut
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
 Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
+Private FlexCellCheckReasonMouse, FlexCellCheckReasonKeyboard
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
 #End If
 Public Enum FlexOLEDropModeConstants
@@ -417,6 +418,10 @@ FlexGrayed = 2
 FlexDisabledUnchecked = 3
 FlexDisabledChecked = 4
 FlexDisabledGrayed = 5
+End Enum
+Public Enum FlexCellCheckReasonConstants
+FlexCellCheckReasonMouse = 0
+FlexCellCheckReasonKeyboard = 1
 End Enum
 Public Enum FlexBestFitModeConstants
 FlexBestFitModeTextOnly = 0
@@ -784,7 +789,7 @@ Public Event CellClick(ByVal Row As Long, ByVal Col As Long, ByVal Button As Int
 Attribute CellClick.VB_Description = "Occurs when a cell is clicked."
 Public Event CellDblClick(ByVal Row As Long, ByVal Col As Long, ByVal Button As Integer)
 Attribute CellDblClick.VB_Description = "Occurs when a cell is double clicked."
-Public Event CellBeforeCheck(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean)
+Public Event CellBeforeCheck(ByVal Row As Long, ByVal Col As Long, ByVal Reason As FlexCellCheckReasonConstants, ByRef Cancel As Boolean)
 Attribute CellBeforeCheck.VB_Description = "Occurs before a cell is about to be checked."
 Public Event CellCheck(ByVal Row As Long, ByVal Col As Long)
 Attribute CellCheck.VB_Description = "Occurs when a cell is checked."
@@ -16291,6 +16296,8 @@ End If
 Select Case VBFlexGridCaptureHitResult
     Case FlexHitResultNoWhere, FlexHitResultComboCue, FlexHitResultComboCueDisabled
         Exit Sub
+    Case FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
+        If VBFlexGridCaptureRow <= (PropFixedRows - 1) Or VBFlexGridCaptureCol <= (PropFixedCols - 1) Then Exit Sub
     Case Else
         If VBFlexGridCaptureRow = -1 Or VBFlexGridCaptureCol = -1 Then Exit Sub
 End Select
@@ -16608,14 +16615,14 @@ If Theme = 0 Then
 End If
 End Sub
 
-Private Sub SetCellCheck(ByVal iRow As Long, ByVal iCol As Long)
+Private Sub SetCellCheck(ByVal iRow As Long, ByVal iCol As Long, ByVal Reason As FlexCellCheckReasonConstants)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
 If .Checked > -1 Then
     Select Case .Checked
         Case FlexUnchecked, FlexChecked, FlexGrayed
             Dim Cancel As Boolean
-            RaiseEvent CellBeforeCheck(iRow, iCol, Cancel)
+            RaiseEvent CellBeforeCheck(iRow, iCol, Reason, Cancel)
             If Cancel = False Then
                 Select Case .Checked
                     Case FlexUnchecked
@@ -17783,7 +17790,7 @@ Select Case wMsg
                         Case vbKeySpace
                             If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                                 If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Checked > -1 Then
-                                    Call SetCellCheck(VBFlexGridRow, VBFlexGridCol)
+                                    Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
                                 ElseIf CreateEdit(FlexEditReasonSpace) = True Then
                                     Exit Function
                                 End If
@@ -17812,7 +17819,7 @@ Select Case wMsg
                 Else
                     If KeyCode = vbKeySpace Then
                         If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
-                            If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Checked > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol)
+                            If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Checked > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
                         End If
                     End If
                 End If
@@ -17960,7 +17967,7 @@ Select Case wMsg
                                 CreateEdit FlexEditReasonComboCueClick, .HitRow, .HitCol
                         End Select
                     ElseIf .HitResult = FlexHitResultCheckBox Then
-                        Call SetCellCheck(.HitRow, .HitCol)
+                        Call SetCellCheck(.HitRow, .HitCol, FlexCellCheckReasonMouse)
                     End If
                 End If
             End If
@@ -18216,6 +18223,8 @@ Select Case wMsg
                     RaiseEvent DividerDblClick(.HitRowDivider, .HitColDivider)
                 Case FlexHitResultCell
                     RaiseEvent CellDblClick(.HitRow, .HitCol, vbLeftButton)
+                Case FlexHitResultCheckBox
+                    Call SetCellCheck(.HitRow, .HitCol, FlexCellCheckReasonMouse)
             End Select
         Else
             If .HitResult = FlexHitResultCell Then
