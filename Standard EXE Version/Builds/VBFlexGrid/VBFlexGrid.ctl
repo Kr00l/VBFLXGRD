@@ -70,7 +70,7 @@ Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComb
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
-Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
+Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
 Private FlexCellCheckReasonMouse, FlexCellCheckReasonKeyboard
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
 #End If
@@ -415,9 +415,11 @@ FlexNoCheckBox = -1
 FlexUnchecked = 0
 FlexChecked = 1
 FlexGrayed = 2
-FlexDisabledUnchecked = 3
-FlexDisabledChecked = 4
-FlexDisabledGrayed = 5
+FlexTextAsCheckBox = 3
+FlexDisabledUnchecked = 4
+FlexDisabledChecked = 5
+FlexDisabledGrayed = 6
+FlexDisabledTextAsCheckBox = 7
 End Enum
 Public Enum FlexCellCheckReasonConstants
 FlexCellCheckReasonMouse = 0
@@ -617,6 +619,7 @@ MouseCol As Long
 End Type
 Private Const LBLI_VALID As Long = &H1
 Private Const LBLI_UNFOLDED As Long = &H2
+Private Const LBLI_HIDDEN As Long = &H4
 Private Type TLABELINFO
 Flags As Long
 RC As RECT
@@ -8021,7 +8024,7 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Select Case Value
-    Case FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
+    Case FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
     Case Else
         Err.Raise 380
 End Select
@@ -11000,7 +11003,7 @@ If PropAllowUserEditing = True Then
         End If
     End If
 End If
-Dim Text As String, TextRect As RECT
+Dim Text As String, TextRect As RECT, HiddenText As Boolean
 Call GetCellText(iRow, iCol, Text)
 With TextRect
 .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
@@ -11129,12 +11132,16 @@ If .Checked > -1 Then
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
-    Call DrawCellCheckBox(hDC, CheckBoxRect, iRow, iCol, .Checked)
+    Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, .Checked)
     Select Case .PictureAlignment
         Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
         Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
             TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
+    End Select
+    Select Case .Checked
+        Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
+            HiddenText = True
     End Select
 End If
 Dim OldTextColor As Long
@@ -11302,7 +11309,7 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSor
         TextRect.Left = TextRect.Left + SortArrowClientSize.CX
     End If
 End If
-If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top Then
+If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
     Dim TextStyle As FlexTextStyleConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyleFixed
@@ -11613,7 +11620,7 @@ If PropAllowUserEditing = True Then
         End If
     End If
 End If
-Dim Text As String, TextRect As RECT
+Dim Text As String, TextRect As RECT, HiddenText As Boolean
 Call GetCellText(iRow, iCol, Text)
 With TextRect
 .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
@@ -11752,12 +11759,16 @@ If .Checked > -1 Then
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
-    Call DrawCellCheckBox(hDC, CheckBoxRect, iRow, iCol, .Checked)
+    Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, .Checked)
     Select Case .PictureAlignment
         Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
         Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
             TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
+    End Select
+    Select Case .Checked
+        Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
+            HiddenText = True
     End Select
 End If
 Dim OldTextColor As Long
@@ -11846,7 +11857,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End Select
     End With
 End If
-If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top Then
+If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
     Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyle
@@ -12902,9 +12913,9 @@ If iRowHit > -1 And iColHit > -1 Then
         End With
         If PtInRect(CheckBoxRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
             Select Case VBFlexGridCells.Rows(iRowHit).Cols(iColHit).Checked
-                Case FlexUnchecked, FlexChecked, FlexGrayed
+                Case FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox
                     HTI.HitResult = FlexHitResultCheckBox
-                Case FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
+                Case FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
                     HTI.HitResult = FlexHitResultCheckBoxDisabled
             End Select
             HTI.HitRow = iRowHit
@@ -13328,7 +13339,7 @@ If hDC <> 0 Then
             End If
         End If
     End If
-    Dim Text As String, TextRect As RECT
+    Dim Text As String, TextRect As RECT, HiddenText As Boolean
     Call GetCellText(iRow, iCol, Text)
     If StrPtr(Text) = 0 Then Text = ""
     With TextRect
@@ -13401,6 +13412,10 @@ If hDC <> 0 Then
             Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
                 TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
         End Select
+        Select Case .Checked
+            Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
+                HiddenText = True
+        End Select
     End If
     End With
     Format = DT_NOPREFIX
@@ -13463,6 +13478,7 @@ If hDC <> 0 Then
     If CalcRect.Right <= VBFlexGridClientRect.Right And CalcRect.Bottom <= VBFlexGridClientRect.Bottom Then
         If CalcRect.Right <= TextRect.Right And CalcRect.Bottom <= TextRect.Bottom Then .Flags = .Flags Or LBLI_UNFOLDED
     End If
+    If HiddenText = True Then .Flags = .Flags Or LBLI_HIDDEN
     If (Format And DT_CENTER) = DT_CENTER Then
         Result = (((TextRect.Right - TextRect.Left) - (CalcRect.Right - CalcRect.Left)) / 2)
         CalcRect.Left = CalcRect.Left + Result
@@ -16536,8 +16552,22 @@ If hRgn <> 0 Then
 End If
 End Sub
 
-Private Sub DrawCellCheckBox(ByVal hDC As Long, ByRef RC As RECT, ByVal iRow As Long, ByVal iCol As Long, ByVal Checked As Integer)
+Private Sub DrawCellCheckBox(ByVal hDC As Long, ByRef RC As RECT, ByRef Text As String, ByVal iRow As Long, ByVal iCol As Long, ByVal Checked As Integer)
 If hDC = 0 Then Exit Sub
+Select Case Checked
+    Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
+        If Not Text = vbNullString Then
+            On Error Resume Next
+            If CBool(Text) = False Then
+                If Checked = FlexTextAsCheckBox Then Checked = FlexUnchecked Else Checked = FlexDisabledUnchecked
+            Else
+                If Checked = FlexTextAsCheckBox Then Checked = FlexChecked Else Checked = FlexDisabledChecked
+            End If
+            On Error GoTo 0
+        Else
+            If Checked = FlexTextAsCheckBox Then Checked = FlexGrayed Else Checked = FlexDisabledGrayed
+        End If
+End Select
 Dim Theme As Long
 
 #If ImplementThemedControls = True Then
@@ -16620,17 +16650,18 @@ If PropRows < 1 Or PropCols < 1 Then Exit Sub
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
 If .Checked > -1 Then
     Select Case .Checked
-        Case FlexUnchecked, FlexChecked, FlexGrayed
+        Case FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox
             Dim Cancel As Boolean
             RaiseEvent CellBeforeCheck(iRow, iCol, Reason, Cancel)
             If Cancel = False Then
                 Select Case .Checked
                     Case FlexUnchecked
                         .Checked = FlexChecked
+                        Call RedrawGrid
                     Case FlexChecked, FlexGrayed
                         .Checked = FlexUnchecked
+                        Call RedrawGrid
                 End Select
-                Call RedrawGrid
                 RaiseEvent CellCheck(iRow, iCol)
             End If
     End Select
@@ -18046,7 +18077,7 @@ Select Case wMsg
                     Call GetHitTestInfo(HTI)
                     If .HitRow > -1 And .HitCol > -1 Then
                         If PropShowLabelTips = True Then Call GetLabelInfo(.HitRow, .HitCol, LBLI)
-                        If (LBLI.Flags And LBLI_VALID) = LBLI_VALID And Not (LBLI.Flags And LBLI_UNFOLDED) = LBLI_UNFOLDED Then
+                        If (LBLI.Flags And LBLI_VALID) = LBLI_VALID And Not (LBLI.Flags And LBLI_UNFOLDED) = LBLI_UNFOLDED And Not (LBLI.Flags And LBLI_HIDDEN) = LBLI_HIDDEN Then
                             Call GetCellText(.HitRow, .HitCol, Text)
                             If (LBLI.DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
                                 If InStr(Text, vbCr) Then Text = Replace$(Text, vbCr, vbNullString)
