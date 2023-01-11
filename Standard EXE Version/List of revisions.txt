@@ -1,5 +1,12 @@
 List of revisions:
 
+11-Jan-2023
+- Added FlexTextAsCheckBox/FlexDisabledTextAsCheckBox enum to FlexCheckBoxConstants.
+  This maps the cell text to a check box state dynamically.
+  Empty text (like DBNull) as grayed state, else text to boolean conversion to either checked or unchecked state.
+  The application is responsible to react on CellCheck event to update the cell text to the new state.
+  Furthermore the cell text gets hidden/not drawn. Also the label info is as if the cell has no text.
+
 07-Jan-2023
 - Included the parameter 'Reason As FlexCellCheckReasonConstants' in the CellBeforeCheck event.
 - Checkboxes now react on double click.
