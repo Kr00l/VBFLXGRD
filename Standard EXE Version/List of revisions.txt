@@ -1,5 +1,9 @@
 List of revisions:
 
+18-Jan-2023
+- Included the ColNullable property. (As Boolean; added CLIS_NULLABLE)
+  Setting ADO DataSource will predefine the information only property.
+
 11-Jan-2023
 - Added FlexTextAsCheckBox/FlexDisabledTextAsCheckBox enum to FlexCheckBoxConstants.
   This maps the cell text to a check box state dynamically.
