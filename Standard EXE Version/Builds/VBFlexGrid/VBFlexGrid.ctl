@@ -680,6 +680,7 @@ End Type
 Private Const COLINFO_WIDTH_SPACING_DIP As Long = 6
 Private Const CLIS_HIDDEN As Long = &H1
 Private Const CLIS_MERGE As Long = &H2
+Private Const CLIS_NULLABLE As Long = &H4
 Private Type TCOLINFO
 Width As Long
 Data As Long
@@ -2274,6 +2275,7 @@ If VBFlexGridDesignMode = False Then
                     For iCol = 0 To (PropFixedCols - 1)
                         VBFlexGridColsInfo(iCol).Key = vbNullString
                         VBFlexGridColsInfo(iCol).DataType = 0
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Then VBFlexGridColsInfo(iCol).State = VBFlexGridColsInfo(iCol).State And Not CLIS_NULLABLE
                         VBFlexGridColsInfo(iCol).NumericPrecision = 0
                         VBFlexGridColsInfo(iCol).NumericScale = 0
                         VBFlexGridColsInfo(iCol).DataCapacity = 0
@@ -2282,6 +2284,11 @@ If VBFlexGridDesignMode = False Then
                         Me.TextMatrix(0, iCol + PropFixedCols) = .Fields(iCol).Name
                         VBFlexGridColsInfo(iCol + PropFixedCols).Key = .Fields(iCol).Name
                         VBFlexGridColsInfo(iCol + PropFixedCols).DataType = .Fields(iCol).Type
+                        If (.Fields(iCol).Attributes And &H20) = &H20 Then ' adFldIsNullable
+                            If (VBFlexGridColsInfo(iCol + PropFixedCols).State And CLIS_NULLABLE) = 0 Then VBFlexGridColsInfo(iCol + PropFixedCols).State = VBFlexGridColsInfo(iCol + PropFixedCols).State Or CLIS_NULLABLE
+                        Else
+                            If (VBFlexGridColsInfo(iCol + PropFixedCols).State And CLIS_NULLABLE) = CLIS_NULLABLE Then VBFlexGridColsInfo(iCol + PropFixedCols).State = VBFlexGridColsInfo(iCol + PropFixedCols).State And Not CLIS_NULLABLE
+                        End If
                         VBFlexGridColsInfo(iCol + PropFixedCols).NumericPrecision = .Fields(iCol).Precision
                         VBFlexGridColsInfo(iCol + PropFixedCols).NumericScale = .Fields(iCol).NumericScale
                         VBFlexGridColsInfo(iCol + PropFixedCols).DataCapacity = .Fields(iCol).DefinedSize
@@ -6808,6 +6815,37 @@ Else
     For i = 0 To (PropCols - 1)
         VBFlexGridColsInfo(i).DataType = Value
     Next i
+End If
+End Property
+
+Public Property Get ColNullable(ByVal Index As Long) As Boolean
+Attribute ColNullable.VB_Description = "Returns/sets a value that determines whether null values are allowed at the data source for the specified column."
+Attribute ColNullable.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColNullable = CBool((VBFlexGridColsInfo(Index).State And CLIS_NULLABLE) = CLIS_NULLABLE)
+End Property
+
+Public Property Let ColNullable(ByVal Index As Long, ByVal Value As Boolean)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    With VBFlexGridColsInfo(Index)
+    If Value = True Then
+        If (.State And CLIS_NULLABLE) = 0 Then .State = .State Or CLIS_NULLABLE
+    Else
+        If (.State And CLIS_NULLABLE) = CLIS_NULLABLE Then .State = .State And Not CLIS_NULLABLE
+    End If
+    End With
+Else
+    Dim i As Long
+    If Value = True Then
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_NULLABLE) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_NULLABLE
+        Next i
+    Else
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_NULLABLE) = CLIS_NULLABLE Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_NULLABLE
+        Next i
+    End If
 End If
 End Property
 
