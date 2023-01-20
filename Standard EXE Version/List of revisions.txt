@@ -1,5 +1,10 @@
 List of revisions:
 
+20-Jan-2023
+- Setting FlexDataSource will predefine the column keys. (.ColKey(i) property, like vsFlexGrid)
+- Included the IVBFlexDataSource2 interface that can be implemented in addition to the primary IVBFlexDataSource interface.
+  The new interface enables some further enhancements, but it may be extended in future releases.
+
 18-Jan-2023
 - Included the ColNullable property. (As Boolean; added CLIS_NULLABLE)
   Setting ADO DataSource will predefine the information only property.
