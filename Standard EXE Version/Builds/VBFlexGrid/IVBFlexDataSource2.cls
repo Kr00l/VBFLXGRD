@@ -13,8 +13,8 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Public Function NoFieldNames() As Boolean
-Attribute NoFieldNames.VB_Description = "Interface function to indicate whether or not the data source has field names."
+Public Function GetFlags() As Long
+Attribute GetFlags.VB_Description = "Interface function to get options from the data provider."
 End Function
 
 Public Function GetToolTipText(ByVal Field As Long, ByVal Record As Long) As String
