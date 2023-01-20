@@ -8,15 +8,6 @@ Begin VB.Form UserEditingForm
    ScaleHeight     =   6900
    ScaleWidth      =   13830
    StartUpPosition =   3  'Windows Default
-   Begin VBFlexGridDemo.VBFlexGrid VBFlexGrid2 
-      Height          =   2775
-      Left            =   4080
-      TabIndex        =   11
-      Top             =   1680
-      Width           =   5295
-      _ExtentX        =   9340
-      _ExtentY        =   4895
-   End
    Begin VB.Frame Frame2 
       Caption         =   "Edit on return key (by code)"
       Height          =   1335
