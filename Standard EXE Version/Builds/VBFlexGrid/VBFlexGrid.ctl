@@ -73,7 +73,7 @@ Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
 Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
 Private FlexCellCheckReasonMouse, FlexCellCheckReasonKeyboard
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
-Private FlexDataSourceNoFieldNames, FlexDataSourceToolTipText
+Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -433,8 +433,9 @@ FlexBestFitModeSortArrowText = 2
 FlexBestFitModeOtherText = 3
 End Enum
 Public Enum FlexDataSourceFlags
-FlexDataSourceNoFieldNames = 1
-FlexDataSourceToolTipText = 2
+FlexDataSourceUnboundFixedColumns = 1
+FlexDataSourceNoFieldNames = 2
+FlexDataSourceToolTipText = 4
 End Enum
 Private Type RECT
 Left As Long
@@ -5225,15 +5226,32 @@ If Not VBFlexGridFlexDataSource Is Nothing Then
     Dim FieldCount As Long, RecordCount As Long, iRow As Long, iCol As Long
     FieldCount = .GetFieldCount
     If FieldCount > 0 Then
-        Me.Cols = FieldCount
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            Me.Cols = FieldCount
+        Else
+            Me.Cols = PropFixedCols + FieldCount
+        End If
         If PropFixedRows > 0 Then
             Dim FieldName As String
-            If (VBFlexGridFlexDataSourceFlags And FlexDataSourceNoFieldNames) = 0 Then
-                For iCol = 0 To (FieldCount - 1)
-                    FieldName = .GetFieldName(iCol)
-                    Me.TextMatrix(0, iCol) = FieldName
-                    VBFlexGridColsInfo(iCol).Key = FieldName
+            If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+                If (VBFlexGridFlexDataSourceFlags And FlexDataSourceNoFieldNames) = 0 Then
+                    For iCol = 0 To (FieldCount - 1)
+                        FieldName = .GetFieldName(iCol)
+                        Me.TextMatrix(0, iCol) = FieldName
+                        VBFlexGridColsInfo(iCol).Key = FieldName
+                    Next iCol
+                End If
+            Else
+                For iCol = 0 To (PropFixedCols - 1)
+                    VBFlexGridColsInfo(iCol).Key = vbNullString
                 Next iCol
+                If (VBFlexGridFlexDataSourceFlags And FlexDataSourceNoFieldNames) = 0 Then
+                    For iCol = 0 To (FieldCount - 1)
+                        FieldName = .GetFieldName(iCol)
+                        Me.TextMatrix(0, iCol + PropFixedCols) = FieldName
+                        VBFlexGridColsInfo(iCol + PropFixedCols).Key = FieldName
+                    Next iCol
+                End If
             End If
         End If
         RecordCount = .GetRecordCount
@@ -12331,7 +12349,15 @@ If VBFlexGridFlexDataSource Is Nothing Then
     TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
 Else
     If iRow >= PropFixedRows Then
-        TextOut = VBFlexGridFlexDataSource.GetData(iCol, iRow - PropFixedRows)
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            TextOut = VBFlexGridFlexDataSource.GetData(iCol, iRow - PropFixedRows)
+        Else
+            If iCol >= PropFixedCols Then
+                TextOut = VBFlexGridFlexDataSource.GetData(iCol - PropFixedCols, iRow - PropFixedRows)
+            Else
+                TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
+            End If
+        End If
     Else
         TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
     End If
@@ -12354,7 +12380,15 @@ If VBFlexGridFlexDataSource Is Nothing Then
     VBFlexGridCells.Rows(iRow).Cols(iCol).Text = TextIn
 Else
     If iRow >= PropFixedRows Then
-        VBFlexGridFlexDataSource.SetData iCol, iRow - PropFixedRows, TextIn
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            VBFlexGridFlexDataSource.SetData iCol, iRow - PropFixedRows, TextIn
+        Else
+            If iCol >= PropFixedCols Then
+                VBFlexGridFlexDataSource.SetData iCol - PropFixedCols, iRow - PropFixedRows, TextIn
+            Else
+                VBFlexGridCells.Rows(iRow).Cols(iCol).Text = TextIn
+            End If
+        End If
     Else
         VBFlexGridCells.Rows(iRow).Cols(iCol).Text = TextIn
     End If
@@ -12379,7 +12413,15 @@ If VBFlexGridFlexDataSource2 Is Nothing Or (VBFlexGridFlexDataSourceFlags And Fl
     TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText
 Else
     If iRow >= PropFixedRows Then
-        TextOut = VBFlexGridFlexDataSource2.GetToolTipText(iCol, iRow - PropFixedRows)
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            TextOut = VBFlexGridFlexDataSource2.GetToolTipText(iCol, iRow - PropFixedRows)
+        Else
+            If iCol >= PropFixedCols Then
+                TextOut = VBFlexGridFlexDataSource2.GetToolTipText(iCol - PropFixedCols, iRow - PropFixedRows)
+            Else
+                TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText
+            End If
+        End If
     Else
         TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText
     End If
@@ -12402,7 +12444,15 @@ If VBFlexGridFlexDataSource2 Is Nothing Or (VBFlexGridFlexDataSourceFlags And Fl
     VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText = TextIn
 Else
     If iRow >= PropFixedRows Then
-        VBFlexGridFlexDataSource2.SetToolTipText iCol, iRow - PropFixedRows, TextIn
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            VBFlexGridFlexDataSource2.SetToolTipText iCol, iRow - PropFixedRows, TextIn
+        Else
+            If iCol >= PropFixedCols Then
+                VBFlexGridFlexDataSource2.SetToolTipText iCol - PropFixedCols, iRow - PropFixedRows, TextIn
+            Else
+                VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText = TextIn
+            End If
+        End If
     Else
         VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText = TextIn
     End If
