@@ -1,5 +1,10 @@
 List of revisions:
 
+23-Jan-2023
+- Included ColCheckBoxAlignment/FixedCheckBoxAlignment property.
+  ColCheckBoxAlignment defaults to FlexCheckBoxAlignmentUsePictureAlignment.
+  FixedCheckBoxAlignment defaults to -1 and thus inherits from ColCheckBoxAlignment.
+
 21-Jan-2023
 - Added FlexDataSourceUnboundFixedColumns enum to FlexDataSourceFlags.
 
