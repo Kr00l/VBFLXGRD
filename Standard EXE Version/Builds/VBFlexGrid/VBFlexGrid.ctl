@@ -72,6 +72,7 @@ Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
 Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
 Private FlexCellCheckReasonMouse, FlexCellCheckReasonKeyboard
+Private FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentCenterTop, FlexCheckBoxAlignmentCenterCenter, FlexCheckBoxAlignmentCenterBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom, FlexCheckBoxAlignmentUsePictureAlignment
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
 Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText
 #End If
@@ -426,6 +427,18 @@ Public Enum FlexCellCheckReasonConstants
 FlexCellCheckReasonMouse = 0
 FlexCellCheckReasonKeyboard = 1
 End Enum
+Public Enum FlexCheckBoxAlignmentConstants
+FlexCheckBoxAlignmentLeftTop = 0
+FlexCheckBoxAlignmentLeftCenter = 1
+FlexCheckBoxAlignmentLeftBottom = 2
+FlexCheckBoxAlignmentCenterTop = 3
+FlexCheckBoxAlignmentCenterCenter = 4
+FlexCheckBoxAlignmentCenterBottom = 5
+FlexCheckBoxAlignmentRightTop = 6
+FlexCheckBoxAlignmentRightCenter = 7
+FlexCheckBoxAlignmentRightBottom = 8
+FlexCheckBoxAlignmentUsePictureAlignment = 9
+End Enum
 Public Enum FlexBestFitModeConstants
 FlexBestFitModeTextOnly = 0
 FlexBestFitModeFull = 1
@@ -701,6 +714,8 @@ SortArrowColor As Long
 ComboMode As FlexComboModeConstants
 ComboButtonAlignment As FlexLeftRightAlignmentConstants
 ComboItems As String
+CheckBoxAlignment As FlexCheckBoxAlignmentConstants
+FixedCheckBoxAlignment As FlexCheckBoxAlignmentConstants
 Format As String
 DataType As Integer
 NumericPrecision As Byte
@@ -1588,6 +1603,8 @@ With VBFlexGridDefaultColInfo
 .SortArrowAlignment = FlexLeftRightAlignmentRight
 .SortArrowColor = -1
 .ComboButtonAlignment = -1
+.CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment
+.FixedCheckBoxAlignment = -1
 End With
 VBFlexGridCaptureRow = -1
 VBFlexGridCaptureCol = -1
@@ -6816,6 +6833,60 @@ Else
 End If
 End Property
 
+Public Property Get ColCheckBoxAlignment(ByVal Index As Long) As FlexCheckBoxAlignmentConstants
+Attribute ColCheckBoxAlignment.VB_Description = "Returns/sets the check box alignment in a column."
+Attribute ColCheckBoxAlignment.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30004, Description:="Invalid Col value for alignment"
+ColCheckBoxAlignment = VBFlexGridColsInfo(Index).CheckBoxAlignment
+End Property
+
+Public Property Let ColCheckBoxAlignment(ByVal Index As Long, ByVal Value As FlexCheckBoxAlignmentConstants)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30004, Description:="Invalid Col value for alignment"
+Select Case Value
+    Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentCenterTop, FlexCheckBoxAlignmentCenterCenter, FlexCheckBoxAlignmentCenterBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom, FlexCheckBoxAlignmentUsePictureAlignment
+    Case Else
+        Err.Raise Number:=30005, Description:="Invalid Alignment value"
+End Select
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).CheckBoxAlignment = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).CheckBoxAlignment = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get FixedCheckBoxAlignment(ByVal Index As Long) As FlexCheckBoxAlignmentConstants
+Attribute FixedCheckBoxAlignment.VB_Description = "Returns/sets the check box alignment in the fixed cells of a column."
+Attribute FixedCheckBoxAlignment.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30004, Description:="Invalid Col value for alignment"
+If VBFlexGridColsInfo(Index).FixedCheckBoxAlignment = -1 Then
+    FixedCheckBoxAlignment = VBFlexGridColsInfo(Index).CheckBoxAlignment
+Else
+    FixedCheckBoxAlignment = VBFlexGridColsInfo(Index).FixedCheckBoxAlignment
+End If
+End Property
+
+Public Property Let FixedCheckBoxAlignment(ByVal Index As Long, ByVal Value As FlexCheckBoxAlignmentConstants)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30004, Description:="Invalid Col value for alignment"
+Select Case Value
+    Case -1, FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentCenterTop, FlexCheckBoxAlignmentCenterCenter, FlexCheckBoxAlignmentCenterBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom, FlexCheckBoxAlignmentUsePictureAlignment
+    Case Else
+        Err.Raise Number:=30005, Description:="Invalid Alignment value"
+End Select
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).FixedCheckBoxAlignment = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).FixedCheckBoxAlignment = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
 Public Property Get ColFormat(ByVal Index As Long) As String
 Attribute ColFormat.VB_Description = "Returns/sets the format used to display numeric values."
 Attribute ColFormat.VB_MemberFlags = "400"
@@ -11192,26 +11263,53 @@ If Not .Picture Is Nothing Then
     End If
 End If
 If .Checked > -1 Then
-    Dim CheckBoxRect As RECT, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
+    Dim CheckBoxRect As RECT, CheckBoxAlignment As FlexCheckBoxAlignmentConstants, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
     LSet CheckBoxRect = TextRect
-    Select Case .PictureAlignment
-        Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+    If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
+        CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+    Else
+        CheckBoxAlignment = VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment
+    End If
+    If CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+        Select Case .PictureAlignment
+            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+            Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+        End Select
+    End If
+    Select Case CheckBoxAlignment
+        Case FlexCheckBoxAlignmentLeftCenter
             CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
-        Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+        Case FlexCheckBoxAlignmentLeftBottom
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentCenterTop
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+        Case FlexCheckBoxAlignmentCenterCenter
             CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
             CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
-        Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+        Case FlexCheckBoxAlignmentCenterBottom
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightTop
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightCenter
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightBottom
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
     End Select
     If CheckBoxOffsetX > 0 Then CheckBoxRect.Left = CheckBoxRect.Left + CheckBoxOffsetX
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
     Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, .Checked)
-    Select Case .PictureAlignment
-        Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+    Select Case CheckBoxAlignment
+        Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
-        Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+        Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
             TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
     End Select
     Select Case .Checked
@@ -11819,26 +11917,50 @@ If Not .Picture Is Nothing Then
     End If
 End If
 If .Checked > -1 Then
-    Dim CheckBoxRect As RECT, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
+    Dim CheckBoxRect As RECT, CheckBoxAlignment As FlexCheckBoxAlignmentConstants, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
     LSet CheckBoxRect = TextRect
-    Select Case .PictureAlignment
-        Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+    If VBFlexGridColsInfo(iCol).CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+        Select Case .PictureAlignment
+            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+            Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+        End Select
+    Else
+        CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+    End If
+    Select Case CheckBoxAlignment
+        Case FlexCheckBoxAlignmentLeftCenter
             CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
-        Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+        Case FlexCheckBoxAlignmentLeftBottom
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentCenterTop
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+        Case FlexCheckBoxAlignmentCenterCenter
             CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
             CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
-        Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+        Case FlexCheckBoxAlignmentCenterBottom
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightTop
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightCenter
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightBottom
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
     End Select
     If CheckBoxOffsetX > 0 Then CheckBoxRect.Left = CheckBoxRect.Left + CheckBoxOffsetX
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
     Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, .Checked)
-    Select Case .PictureAlignment
-        Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+    Select Case CheckBoxAlignment
+        Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
-        Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+        Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
             TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
     End Select
     Select Case .Checked
@@ -12705,10 +12827,30 @@ If hDC <> 0 Then
             End If
         End If
         If .Checked > -1 Then
-            Select Case .PictureAlignment
-                Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+            Dim CheckBoxAlignment As FlexCheckBoxAlignmentConstants
+            If iRow < PropFixedRows Or iCol < PropFixedCols Then
+                If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
+                    CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+                Else
+                    CheckBoxAlignment = VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment
+                End If
+            Else
+                CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+            End If
+            If CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+                Select Case .PictureAlignment
+                    Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                        CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+                    Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                        CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+                    Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                        CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+                End Select
+            End If
+            Select Case CheckBoxAlignment
+                Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
                     TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
-                Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
                     TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
             End Select
         End If
@@ -12776,8 +12918,28 @@ If hDC <> 0 Then
                     End If
                 End If
                 If .Checked > -1 Then
-                    Select Case .PictureAlignment
-                        Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                    Dim CheckBoxAlignment As FlexCheckBoxAlignmentConstants
+                    If iRow < PropFixedRows Or iCol < PropFixedCols Then
+                        If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
+                            CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+                        Else
+                            CheckBoxAlignment = VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment
+                        End If
+                    Else
+                        CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+                    End If
+                    If CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+                        Select Case .PictureAlignment
+                            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                                CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+                            Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                                CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+                            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                                CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+                        End Select
+                    End If
+                    Select Case CheckBoxAlignment
+                        Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
                             CX = CX + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
                     End Select
                 End If
@@ -13027,7 +13189,7 @@ If iRowHit > -1 And iColHit > -1 Then
         End If
     End If
     If VBFlexGridCells.Rows(iRowHit).Cols(iColHit).Checked > -1 Then
-        Dim CheckBoxRect As RECT, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
+        Dim CheckBoxRect As RECT, CheckBoxAlignment As FlexCheckBoxAlignmentConstants, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
         With CheckBoxRect
         .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
         .Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
@@ -13042,6 +13204,25 @@ If iRowHit > -1 And iColHit > -1 Then
         .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
         End With
         With VBFlexGridCells.Rows(iRowHit).Cols(iColHit)
+        If iRowHit < PropFixedRows Or iColHit < PropFixedCols Then
+            If VBFlexGridColsInfo(iColHit).FixedCheckBoxAlignment = -1 Then
+                CheckBoxAlignment = VBFlexGridColsInfo(iColHit).CheckBoxAlignment
+            Else
+                CheckBoxAlignment = VBFlexGridColsInfo(iColHit).FixedCheckBoxAlignment
+            End If
+        Else
+            CheckBoxAlignment = VBFlexGridColsInfo(iColHit).CheckBoxAlignment
+        End If
+        If CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+            Select Case .PictureAlignment
+                Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                    CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+                Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                    CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+                Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                    CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+            End Select
+        End If
         If Not .Picture Is Nothing Then
             If .Picture.Handle <> 0 Then
                 Select Case .PictureAlignment
@@ -13052,14 +13233,26 @@ If iRowHit > -1 And iColHit > -1 Then
                 End Select
             End If
         End If
-        Select Case .PictureAlignment
-            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+        Select Case CheckBoxAlignment
+            Case FlexCheckBoxAlignmentLeftCenter
                 CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
-            Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+            Case FlexCheckBoxAlignmentLeftBottom
+                CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+            Case FlexCheckBoxAlignmentCenterTop
+                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            Case FlexCheckBoxAlignmentCenterCenter
                 CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
                 CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
-            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+            Case FlexCheckBoxAlignmentCenterBottom
+                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+                CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+            Case FlexCheckBoxAlignmentRightTop
                 CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+            Case FlexCheckBoxAlignmentRightCenter
+                CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+            Case FlexCheckBoxAlignmentRightBottom
+                CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+                CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
         End Select
         If CheckBoxOffsetX > 0 Then CheckBoxRect.Left = CheckBoxRect.Left + CheckBoxOffsetX
         If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
@@ -13561,10 +13754,30 @@ If hDC <> 0 Then
         End If
     End If
     If .Checked > -1 Then
-        Select Case .PictureAlignment
-            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+        Dim CheckBoxAlignment As FlexCheckBoxAlignmentConstants
+        If iRow < PropFixedRows Or iCol < PropFixedCols Then
+            If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
+                CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+            Else
+                CheckBoxAlignment = VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment
+            End If
+        Else
+            CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+        End If
+        If CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+            Select Case .PictureAlignment
+                Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                    CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+                Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                    CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+                Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                    CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+            End Select
+        End If
+        Select Case CheckBoxAlignment
+            Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
                 TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
-            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+            Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
                 TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
         End Select
         Select Case .Checked
