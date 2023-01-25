@@ -1,5 +1,10 @@
 List of revisions:
 
+25-Jan-2023
+- Added FlexRowSizingModeUniform enum to FlexRowSizingModeConstants.
+  Included related RowHeightUniform run-time property. The default value is -1 as disabled alias.
+  A uniform row height is applicable for all rows that do not have a specific height assigned to them.
+
 23-Jan-2023
 - Included ColCheckBoxAlignment/FixedCheckBoxAlignment property.
   ColCheckBoxAlignment defaults to FlexCheckBoxAlignmentUsePictureAlignment.
