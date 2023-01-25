@@ -43,7 +43,7 @@ Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyl
 Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled, FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
 Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral
 Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
-Private FlexRowSizingModeIndividual, FlexRowSizingModeAll
+Private FlexRowSizingModeIndividual, FlexRowSizingModeAll, FlexRowSizingModeUniform
 Private FlexMergeCellsNever, FlexMergeCellsFree, FlexMergeCellsRestrictRows, FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll, FlexMergeCellsFixedOnly
 Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending, FlexSortCustomText
 Private FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
@@ -217,6 +217,7 @@ End Enum
 Public Enum FlexRowSizingModeConstants
 FlexRowSizingModeIndividual = 0
 FlexRowSizingModeAll = 1
+FlexRowSizingModeUniform = 2
 End Enum
 Public Enum FlexMergeCellsConstants
 FlexMergeCellsNever = 0
@@ -1302,6 +1303,7 @@ Private VBFlexGridDefaultRowHeight As Long
 Private VBFlexGridDefaultColWidth As Long
 Private VBFlexGridDefaultFixedRowHeight As Long
 Private VBFlexGridDefaultFixedColWidth As Long
+Private VBFlexGridUniformRowHeight As Long
 Private VBFlexGridRow As Long, VBFlexGridCol As Long
 Private VBFlexGridRowSel As Long, VBFlexGridColSel As Long
 Private VBFlexGridTopRow As Long, VBFlexGridLeftCol As Long
@@ -1606,6 +1608,7 @@ With VBFlexGridDefaultColInfo
 .CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment
 .FixedCheckBoxAlignment = -1
 End With
+VBFlexGridUniformRowHeight = -1
 VBFlexGridCaptureRow = -1
 VBFlexGridCaptureCol = -1
 VBFlexGridCaptureHitResult = FlexHitResultNoWhere
@@ -3443,7 +3446,7 @@ End Property
 
 Public Property Let RowSizingMode(ByVal Value As FlexRowSizingModeConstants)
 Select Case Value
-    Case FlexRowSizingModeIndividual, FlexRowSizingModeAll
+    Case FlexRowSizingModeIndividual, FlexRowSizingModeAll, FlexRowSizingModeUniform
         PropRowSizingMode = Value
     Case Else
         Err.Raise 380
@@ -6014,6 +6017,32 @@ Else
             VBFlexGridCells.Rows(i).RowInfo.Height = -1
         End If
     Next i
+End If
+Dim RCP As TROWCOLPARAMS
+With RCP
+.Mask = RCPM_TOPROW
+.Flags = RCPF_CHECKTOPROW Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.TopRow = VBFlexGridTopRow
+Call SetRowColParams(RCP)
+End With
+End Property
+
+Public Property Get RowHeightUniform() As Long
+Attribute RowHeightUniform.VB_Description = "Returns/sets a uniform row height in twips for all rows that do not have specific height assigned to them."
+Attribute RowHeightUniform.VB_MemberFlags = "400"
+If VBFlexGridUniformRowHeight > -1 Then
+    RowHeightUniform = UserControl.ScaleY(VBFlexGridUniformRowHeight, vbPixels, vbTwips)
+Else
+    RowHeightUniform = -1
+End If
+End Property
+
+Public Property Let RowHeightUniform(ByVal Value As Long)
+If Value < -1 Then Err.Raise Number:=30013, Description:="Invalid Row Height value"
+If Value > -1 Then
+    VBFlexGridUniformRowHeight = UserControl.ScaleY(Value, vbTwips, vbPixels)
+Else
+    VBFlexGridUniformRowHeight = -1
 End If
 Dim RCP As TROWCOLPARAMS
 With RCP
@@ -12592,16 +12621,20 @@ Private Function GetRowHeight(ByVal iRow As Long) As Long
 If PropRows < 1 Or PropCols < 1 Then Exit Function
 If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
     If VBFlexGridCells.Rows(iRow).RowInfo.Height = -1 Then
-        If (iRow > (PropFixedRows - 1) And PropFixedCols = 0) Or VBFlexGridDefaultFixedRowHeight = -1 Then
-            GetRowHeight = VBFlexGridDefaultRowHeight
-        ElseIf iRow > (PropFixedRows - 1) Then
-            If VBFlexGridDefaultRowHeight > VBFlexGridDefaultFixedRowHeight Then
+        If VBFlexGridUniformRowHeight = -1 Then
+            If (iRow > (PropFixedRows - 1) And PropFixedCols = 0) Or VBFlexGridDefaultFixedRowHeight = -1 Then
                 GetRowHeight = VBFlexGridDefaultRowHeight
+            ElseIf iRow > (PropFixedRows - 1) Then
+                If VBFlexGridDefaultRowHeight > VBFlexGridDefaultFixedRowHeight Then
+                    GetRowHeight = VBFlexGridDefaultRowHeight
+                Else
+                    GetRowHeight = VBFlexGridDefaultFixedRowHeight
+                End If
             Else
                 GetRowHeight = VBFlexGridDefaultFixedRowHeight
             End If
         Else
-            GetRowHeight = VBFlexGridDefaultFixedRowHeight
+            GetRowHeight = VBFlexGridUniformRowHeight
         End If
     Else
         GetRowHeight = VBFlexGridCells.Rows(iRow).RowInfo.Height
@@ -16403,12 +16436,18 @@ If VBFlexGridCaptureDividerDrag = True Then
                 End If
                 RaiseEvent AfterUserResize(iRow, iCol, NewSize)
                 If NewSize > 0 Then .CY = UserControl.ScaleY(NewSize, vbTwips, vbPixels) Else .CY = 0
-                VBFlexGridCells.Rows(iRow).RowInfo.Height = .CY
-                If PropRowSizingMode = FlexRowSizingModeAll Then
-                    For i = 0 To PropRows - 1
-                        VBFlexGridCells.Rows(i).RowInfo.Height = .CY
-                    Next i
-                End If
+                Select Case PropRowSizingMode
+                    Case FlexRowSizingModeIndividual
+                        VBFlexGridCells.Rows(iRow).RowInfo.Height = .CY
+                    Case FlexRowSizingModeAll
+                        VBFlexGridCells.Rows(iRow).RowInfo.Height = .CY
+                        For i = 0 To PropRows - 1
+                            VBFlexGridCells.Rows(i).RowInfo.Height = .CY
+                        Next i
+                    Case FlexRowSizingModeUniform
+                        VBFlexGridUniformRowHeight = .CY
+                        VBFlexGridCells.Rows(iRow).RowInfo.Height = -1
+                End Select
             ElseIf iCol > -1 Then
                 For i = 0 To iCol - 1
                     If i >= VBFlexGridLeftCol Then

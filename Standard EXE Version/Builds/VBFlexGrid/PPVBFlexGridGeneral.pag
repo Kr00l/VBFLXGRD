@@ -673,6 +673,8 @@ With ComboRowSizingMode
 .ItemData(.NewIndex) = FlexRowSizingModeIndividual
 .AddItem FlexRowSizingModeAll & " - All"
 .ItemData(.NewIndex) = FlexRowSizingModeAll
+.AddItem FlexRowSizingModeUniform & " - Uniform"
+.ItemData(.NewIndex) = FlexRowSizingModeUniform
 End With
 With ComboTabBehavior
 .AddItem FlexTabControls & " - Controls"
