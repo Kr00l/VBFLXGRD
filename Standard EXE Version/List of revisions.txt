@@ -1,5 +1,9 @@
 List of revisions:
 
+28-Jan-2023
+- Included the ColResizable property. (As Boolean; added CLIS_NOSIZING)
+- Added FlexDataSourceNoData enum to FlexDataSourceFlags.
+
 25-Jan-2023
 - Added FlexRowSizingModeUniform enum to FlexRowSizingModeConstants.
   Included related RowHeightUniform run-time property. The default value is -1 as disabled alias.
