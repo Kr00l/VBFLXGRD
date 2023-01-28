@@ -692,6 +692,7 @@ Private Const ROWINFO_HEIGHT_SPACING_DIP As Long = 3
 Private Const RWIS_HIDDEN As Long = &H1
 Private Const RWIS_MERGE As Long = &H2
 Private Const RWIS_SELECTED As Long = &H4
+Private Const RWIS_NOSIZING As Long = &H8
 Private Type TROWINFO
 Height As Long
 Data As Long
@@ -6202,6 +6203,41 @@ End Property
 
 Public Property Let RowIndex(ByVal ID As Long, ByVal Value As Long)
 Err.Raise Number:=383, Description:="Property is read-only"
+End Property
+
+Public Property Get RowResizable(ByVal Index As Long) As Boolean
+Attribute RowResizable.VB_Description = "Returns/sets a value that determines whether the user can resize the specified row."
+Attribute RowResizable.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+RowResizable = CBool((VBFlexGridCells.Rows(Index).RowInfo.State And RWIS_NOSIZING) = 0)
+End Property
+
+Public Property Let RowResizable(ByVal Index As Long, ByVal Value As Boolean)
+If Index <> -1 And (Index < 0 Or Index > (PropRows - 1)) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+If Index > -1 Then
+    With VBFlexGridCells.Rows(Index).RowInfo
+    If Value = True Then
+        If (.State And RWIS_NOSIZING) = RWIS_NOSIZING Then .State = .State And Not RWIS_NOSIZING
+    Else
+        If (.State And RWIS_NOSIZING) = 0 Then .State = .State Or RWIS_NOSIZING
+    End If
+    End With
+Else
+    Dim i As Long
+    If Value = True Then
+        For i = 0 To (PropRows - 1)
+            With VBFlexGridCells.Rows(i).RowInfo
+            If (.State And RWIS_NOSIZING) = RWIS_NOSIZING Then .State = .State And Not RWIS_NOSIZING
+            End With
+        Next i
+    Else
+        For i = 0 To (PropRows - 1)
+            With VBFlexGridCells.Rows(i).RowInfo
+            If (.State And RWIS_NOSIZING) = 0 Then .State = .State Or CLIS_NOSIZING
+            End With
+        Next i
+    End If
+End If
 End Property
 
 Public Property Get RowIsVisible(ByVal Index As Long, Optional ByVal Visibility As FlexVisibilityConstants) As Boolean
@@ -13364,9 +13400,21 @@ If iRowHit > -1 And iColHit > -1 Then
                             iRowDivider = iRowDivider - 1
                             If iRowDivider = -1 Then Exit Do
                         Loop
-                        If iRowDivider = -1 Then HTI.HitResult = FlexHitResultCell
+                        If iRowDivider = -1 Then
+                            HTI.HitResult = FlexHitResultCell
+                        Else
+                            If (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_NOSIZING) = RWIS_NOSIZING Then
+                                iRowDivider = -1
+                                HTI.HitResult = FlexHitResultCell
+                            End If
+                        End If
                     Else
-                        HTI.HitResult = FlexHitResultDividerRowBottom
+                        If (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_NOSIZING) = 0 Then
+                            HTI.HitResult = FlexHitResultDividerRowBottom
+                        Else
+                            iRowDivider = -1
+                            HTI.HitResult = FlexHitResultCell
+                        End If
                     End If
                 End If
             Else
@@ -13397,9 +13445,21 @@ If iRowHit > -1 And iColHit > -1 Then
                                     iRowDivider = iRowDivider - 1
                                     If iRowDivider = -1 Then Exit Do
                                 Loop
-                                If iRowDivider = -1 Then HTI.HitResult = FlexHitResultCell
+                                If iRowDivider = -1 Then
+                                    HTI.HitResult = FlexHitResultCell
+                                Else
+                                    If (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_NOSIZING) = RWIS_NOSIZING Then
+                                        iRowDivider = -1
+                                        HTI.HitResult = FlexHitResultCell
+                                    End If
+                                End If
                             Else
-                                HTI.HitResult = FlexHitResultDividerRowBottom
+                                If (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_NOSIZING) = 0 Then
+                                    HTI.HitResult = FlexHitResultDividerRowBottom
+                                Else
+                                    iRowDivider = -1
+                                    HTI.HitResult = FlexHitResultCell
+                                End If
                             End If
                         End If
                     Else
@@ -13469,9 +13529,21 @@ If iRowHit > -1 And iColHit > -1 Then
                             iRowDivider = iRowDivider - 1
                             If iRowDivider = -1 Then Exit Do
                         Loop
-                        If iRowDivider = -1 Then HTI.HitResult = FlexHitResultCell
+                        If iRowDivider = -1 Then
+                            HTI.HitResult = FlexHitResultCell
+                        Else
+                            If (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_NOSIZING) = RWIS_NOSIZING Then
+                                iRowDivider = -1
+                                HTI.HitResult = FlexHitResultCell
+                            End If
+                        End If
                     Else
-                        HTI.HitResult = FlexHitResultDividerRowBottom
+                        If (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_NOSIZING) = 0 Then
+                            HTI.HitResult = FlexHitResultDividerRowBottom
+                        Else
+                            iRowDivider = -1
+                            HTI.HitResult = FlexHitResultCell
+                        End If
                     End If
                 End If
             Else
@@ -13635,7 +13707,14 @@ Else
                         iRowDivider = iRowDivider - 1
                         If iRowDivider = -1 Then Exit Do
                     Loop
-                    If iRowDivider = -1 Then HTI.HitResult = FlexHitResultNoWhere
+                    If iRowDivider = -1 Then
+                        HTI.HitResult = FlexHitResultNoWhere
+                    Else
+                        If (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_NOSIZING) = RWIS_NOSIZING Then
+                            iRowDivider = -1
+                            HTI.HitResult = FlexHitResultNoWhere
+                        End If
+                    End If
                 End If
             End If
         ElseIf iRowHit > -1 And PropAllowUserResizing <> FlexAllowUserResizingRows Then
@@ -13652,7 +13731,7 @@ Else
                     Else
                         If (VBFlexGridColsInfo(iColDivider).State And CLIS_NOSIZING) = CLIS_NOSIZING Then
                             iColDivider = -1
-                            HTI.HitResult = FlexHitResultCell
+                            HTI.HitResult = FlexHitResultNoWhere
                         End If
                     End If
                 End If
