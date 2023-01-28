@@ -1,7 +1,7 @@
 List of revisions:
 
 28-Jan-2023
-- Included the ColResizable property. (As Boolean; added CLIS_NOSIZING)
+- Included the ColResizable/RowResizable property. (As Boolean; added CLIS_NOSIZING/RWIS_NOSIZING)
 - Added FlexDataSourceNoData enum to FlexDataSourceFlags.
 
 25-Jan-2023
