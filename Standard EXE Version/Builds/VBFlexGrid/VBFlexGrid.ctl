@@ -702,6 +702,7 @@ Private Const COLINFO_WIDTH_SPACING_DIP As Long = 6
 Private Const CLIS_HIDDEN As Long = &H1
 Private Const CLIS_MERGE As Long = &H2
 Private Const CLIS_NULLABLE As Long = &H4
+Private Const CLIS_NOSIZING As Long = &H8
 Private Type TCOLINFO
 Width As Long
 Data As Long
@@ -7041,6 +7042,37 @@ Else
     For i = 0 To (PropCols - 1)
         VBFlexGridColsInfo(i).DataCapacity = Value
     Next i
+End If
+End Property
+
+Public Property Get ColResizable(ByVal Index As Long) As Boolean
+Attribute ColResizable.VB_Description = "Returns/sets a value that determines whether the user can resize the specified column."
+Attribute ColResizable.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColResizable = CBool((VBFlexGridColsInfo(Index).State And CLIS_NOSIZING) = 0)
+End Property
+
+Public Property Let ColResizable(ByVal Index As Long, ByVal Value As Boolean)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    With VBFlexGridColsInfo(Index)
+    If Value = True Then
+        If (.State And CLIS_NOSIZING) = CLIS_NOSIZING Then .State = .State And Not CLIS_NOSIZING
+    Else
+        If (.State And CLIS_NOSIZING) = 0 Then .State = .State Or CLIS_NOSIZING
+    End If
+    End With
+Else
+    Dim i As Long
+    If Value = True Then
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_NOSIZING) = CLIS_NOSIZING Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_NOSIZING
+        Next i
+    Else
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_NOSIZING) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_NOSIZING
+        Next i
+    End If
 End If
 End Property
 
@@ -13390,10 +13422,22 @@ If iRowHit > -1 And iColHit > -1 Then
                         iColDivider = iColDivider - 1
                         If iColDivider = -1 Then Exit Do
                     Loop
-                    If iColDivider = -1 Then HTI.HitResult = FlexHitResultCell
+                    If iColDivider = -1 Then
+                        HTI.HitResult = FlexHitResultCell
+                    Else
+                        If (VBFlexGridColsInfo(iColDivider).State And CLIS_NOSIZING) = CLIS_NOSIZING Then
+                            iColDivider = -1
+                            HTI.HitResult = FlexHitResultCell
+                        End If
+                    End If
                 Else
                     If iColDivider <> VBFlexGridExtendLastCol Then
-                        HTI.HitResult = FlexHitResultDividerColumnRight
+                        If (VBFlexGridColsInfo(iColDivider).State And CLIS_NOSIZING) = 0 Then
+                            HTI.HitResult = FlexHitResultDividerColumnRight
+                        Else
+                            iColDivider = -1
+                            HTI.HitResult = FlexHitResultCell
+                        End If
                     Else
                         ' Avoid divider column right hit test info for the extended last column only.
                         iColDivider = -1
@@ -13603,7 +13647,14 @@ Else
                         iColDivider = iColDivider - 1
                         If iColDivider = -1 Then Exit Do
                     Loop
-                    If iColDivider = -1 Then HTI.HitResult = FlexHitResultNoWhere
+                    If iColDivider = -1 Then
+                        HTI.HitResult = FlexHitResultNoWhere
+                    Else
+                        If (VBFlexGridColsInfo(iColDivider).State And CLIS_NOSIZING) = CLIS_NOSIZING Then
+                            iColDivider = -1
+                            HTI.HitResult = FlexHitResultCell
+                        End If
+                    End If
                 End If
             End If
         End If
