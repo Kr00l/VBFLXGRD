@@ -13754,40 +13754,62 @@ End If
 End Sub
 
 Private Sub AdjustRectColDividerSpacing(ByRef RC As RECT, ByVal iCol As Long)
-Dim Spacing As Long
-Spacing = VBFlexGridPixelMetrics.DividerSpacing.CX
-If iCol > 0 Then
-    If (RC.Right - RC.Left) >= (Spacing * 2) Then
-        RC.Left = RC.Left + Spacing
+If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then
+    Dim Spacing As Long
+    Spacing = VBFlexGridPixelMetrics.DividerSpacing.CX
+    If iCol > 0 Then
+        If (RC.Right - RC.Left) >= (Spacing * 2) Then
+            iCol = iCol - 1
+            Do While (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN
+                iCol = iCol - 1
+                If iCol = -1 Then Exit Do
+            Loop
+            If iCol = -1 Then
+                RC.Left = RC.Left + Spacing
+            Else
+                If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then RC.Left = RC.Left + Spacing
+            End If
+            RC.Right = RC.Right - Spacing
+        Else
+            ' Rectangle is not wide enough to include the spacing.
+            RC.Left = RC.Left + ((RC.Right - RC.Left) / 2)
+            RC.Right = RC.Left ' Remainder
+        End If
+    ElseIf iCol > -1 Then
+        ' First column need divider spacing to the right only.
         RC.Right = RC.Right - Spacing
-    Else
-        ' Rectangle is not wide enough to include the spacing.
-        RC.Left = RC.Left + ((RC.Right - RC.Left) / 2)
-        RC.Right = RC.Left ' Remainder
+        If RC.Right < RC.Left Then RC.Right = RC.Left
     End If
-ElseIf iCol > -1 Then
-    ' First column need divider spacing to the right only.
-    RC.Right = RC.Right - Spacing
-    If RC.Right < RC.Left Then RC.Right = RC.Left
 End If
 End Sub
 
 Private Sub AdjustRectRowDividerSpacing(ByRef RC As RECT, ByVal iRow As Long)
-Dim Spacing As Long
-Spacing = VBFlexGridPixelMetrics.DividerSpacing.CY
-If iRow > 0 Then
-    If (RC.Bottom - RC.Top) >= (Spacing * 2) Then
-        RC.Top = RC.Top + Spacing
+If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then
+    Dim Spacing As Long
+    Spacing = VBFlexGridPixelMetrics.DividerSpacing.CY
+    If iRow > 0 Then
+        If (RC.Bottom - RC.Top) >= (Spacing * 2) Then
+            iRow = iRow - 1
+            Do While (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
+                iRow = iRow - 1
+                If iRow = -1 Then Exit Do
+            Loop
+            If iRow = -1 Then
+                RC.Top = RC.Top + Spacing
+            Else
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Top = RC.Top + Spacing
+            End If
+            RC.Bottom = RC.Bottom - Spacing
+        Else
+            ' Rectangle is not wide enough to include the spacing.
+            RC.Top = RC.Top + ((RC.Bottom - RC.Top) / 2)
+            RC.Bottom = RC.Top ' Remainder
+        End If
+    ElseIf iRow > -1 Then
+        ' First row need divider spacing to the bottom only.
         RC.Bottom = RC.Bottom - Spacing
-    Else
-        ' Rectangle is not wide enough to include the spacing.
-        RC.Top = RC.Top + ((RC.Bottom - RC.Top) / 2)
-        RC.Bottom = RC.Top ' Remainder
+        If RC.Bottom < RC.Top Then RC.Bottom = RC.Top
     End If
-ElseIf iRow > -1 Then
-    ' First row need divider spacing to the bottom only.
-    RC.Bottom = RC.Bottom - Spacing
-    If RC.Bottom < RC.Top Then RC.Bottom = RC.Top
 End If
 End Sub
 
