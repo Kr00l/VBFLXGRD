@@ -4077,7 +4077,9 @@ Public Property Let Sort(ByVal Value As FlexSortConstants)
 
 #If ImplementFlexDataSource Then
 
-If Not VBFlexGridFlexDataSource Is Nothing Then Err.Raise Number:=5, Description:="This functionality is disabled when custom data source is set."
+If Not VBFlexGridFlexDataSource Is Nothing Then
+    If (VBFlexGridFlexDataSourceFlags And FlexDataSourceNoData) = 0 Then Err.Raise Number:=5, Description:="This functionality is disabled when custom data source is set."
+End If
 
 #End If
 
@@ -13390,8 +13392,8 @@ If iRowHit > -1 And iColHit > -1 Then
                     TempRect.Bottom = .Bottom
                     iRowDivider = iRowHit
                     If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
-                        HTI.HitResult = FlexHitResultDividerRowTop
                         iRowDivider = iRowDivider - 1
+                        HTI.HitResult = FlexHitResultDividerRowTop
                         If iRowDivider = (VBFlexGridTopRow - 1) Then
                             ' Gap adjustment between the topmost row and the non-scrollable rows for divider row top only.
                             iRowDivider = iRowDivider - (VBFlexGridTopRow - (PropFixedRows + PropFrozenRows))
@@ -13438,9 +13440,9 @@ If iRowHit > -1 And iColHit > -1 Then
                             TempRect.Bottom = .Bottom
                             iRowDivider = iRowHit
                             If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
-                                HTI.HitResult = FlexHitResultDividerRowTop
                                 iRowDivider = iRowDivider - 1
-                                ' Gap adjustment not needed as row hit is below fixed rows.
+                                HTI.HitResult = FlexHitResultDividerRowTop
+                                ' Gap adjustment not needed as row hit is below non-scrollable rows.
                                 Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
                                     iRowDivider = iRowDivider - 1
                                     If iRowDivider = -1 Then Exit Do
@@ -13472,8 +13474,8 @@ If iRowHit > -1 And iColHit > -1 Then
                 TempRect.Right = .Right
                 iColDivider = iColHit
                 If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
-                    HTI.HitResult = FlexHitResultDividerColumnLeft
                     iColDivider = iColDivider - 1
+                    HTI.HitResult = FlexHitResultDividerColumnLeft
                     If iColDivider = (VBFlexGridLeftCol - 1) Then
                         ' Gap adjustment between the leftmost column and the non-scrollable columns for divider column left only.
                         iColDivider = iColDivider - (VBFlexGridLeftCol - (PropFixedCols + PropFrozenCols))
@@ -13523,8 +13525,9 @@ If iRowHit > -1 And iColHit > -1 Then
                     TempRect.Bottom = .Bottom
                     iRowDivider = iRowHit
                     If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
-                        HTI.HitResult = FlexHitResultDividerRowTop
                         iRowDivider = iRowDivider - 1
+                        HTI.HitResult = FlexHitResultDividerRowTop
+                        ' Gap adjustment not needed as row hit is below non-scrollable rows.
                         Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
                             iRowDivider = iRowDivider - 1
                             If iRowDivider = -1 Then Exit Do
@@ -13703,6 +13706,10 @@ Else
                 If HTI.PT.Y < (.Bottom + VBFlexGridPixelMetrics.DividerSpacing.CY) Then
                     iRowDivider = (PropRows - 1)
                     HTI.HitResult = FlexHitResultDividerRowBottom
+                    If iRowDivider = (VBFlexGridTopRow - 1) Then
+                        ' Gap adjustment between the topmost row and the non-scrollable rows for divider row top only.
+                        iRowDivider = iRowDivider - (VBFlexGridTopRow - (PropFixedRows + PropFrozenRows))
+                    End If
                     Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
                         iRowDivider = iRowDivider - 1
                         If iRowDivider = -1 Then Exit Do
@@ -13722,6 +13729,10 @@ Else
                 If HTI.PT.X < (.Right + VBFlexGridPixelMetrics.DividerSpacing.CX) Then
                     iColDivider = (PropCols - 1)
                     HTI.HitResult = FlexHitResultDividerColumnRight
+                    If iColDivider = (VBFlexGridLeftCol - 1) Then
+                        ' Gap adjustment between the leftmost column and the non-scrollable columns for divider column left only.
+                        iColDivider = iColDivider - (VBFlexGridLeftCol - (PropFixedCols + PropFrozenCols))
+                    End If
                     Do While (VBFlexGridColsInfo(iColDivider).State And CLIS_HIDDEN) = CLIS_HIDDEN
                         iColDivider = iColDivider - 1
                         If iColDivider = -1 Then Exit Do
@@ -13767,7 +13778,7 @@ If iCol > 0 Then
     End If
 ElseIf iCol > -1 Then
     ' First column need divider spacing to the right only.
-    RC.Right = RC.Right - Spacing
+    If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then RC.Right = RC.Right - Spacing
     If RC.Right < RC.Left Then RC.Right = RC.Left
 End If
 End Sub
@@ -13786,7 +13797,7 @@ If iRow > 0 Then
     End If
 ElseIf iRow > -1 Then
     ' First row need divider spacing to the bottom only.
-    RC.Bottom = RC.Bottom - Spacing
+    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Bottom = RC.Bottom - Spacing
     If RC.Bottom < RC.Top Then RC.Bottom = RC.Top
 End If
 End Sub
