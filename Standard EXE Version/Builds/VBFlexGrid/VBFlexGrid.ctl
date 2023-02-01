@@ -13393,12 +13393,6 @@ If iRowHit > -1 And iColHit > -1 Then
                     If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
                         iRowDivider = GetRowDividerTop(iRowHit)
                         HTI.HitResult = FlexHitResultDividerRowTop
-                        If iRowDivider > -1 Then
-                            Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
-                                iRowDivider = iRowDivider - 1
-                                If iRowDivider = -1 Then Exit Do
-                            Loop
-                        End If
                         If iRowDivider = -1 Then
                             HTI.HitResult = FlexHitResultCell
                         Else
@@ -13439,12 +13433,6 @@ If iRowHit > -1 And iColHit > -1 Then
                             If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
                                 iRowDivider = GetRowDividerTop(iRowHit)
                                 HTI.HitResult = FlexHitResultDividerRowTop
-                                If iRowDivider > -1 Then
-                                    Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
-                                        iRowDivider = iRowDivider - 1
-                                        If iRowDivider = -1 Then Exit Do
-                                    Loop
-                                End If
                                 If iRowDivider = -1 Then
                                     HTI.HitResult = FlexHitResultCell
                                 Else
@@ -13474,12 +13462,6 @@ If iRowHit > -1 And iColHit > -1 Then
                 If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
                     iColDivider = GetColDividerLeft(iColHit)
                     HTI.HitResult = FlexHitResultDividerColumnLeft
-                    If iColDivider > -1 Then
-                        Do While (VBFlexGridColsInfo(iColDivider).State And CLIS_HIDDEN) = CLIS_HIDDEN
-                            iColDivider = iColDivider - 1
-                            If iColDivider = -1 Then Exit Do
-                        Loop
-                    End If
                     If iColDivider = -1 Then
                         HTI.HitResult = FlexHitResultCell
                     Else
@@ -13523,12 +13505,6 @@ If iRowHit > -1 And iColHit > -1 Then
                     If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
                         iRowDivider = GetRowDividerTop(iRowHit)
                         HTI.HitResult = FlexHitResultDividerRowTop
-                        If iRowDivider > -1 Then
-                            Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
-                                iRowDivider = iRowDivider - 1
-                                If iRowDivider = -1 Then Exit Do
-                            Loop
-                        End If
                         If iRowDivider = -1 Then
                             HTI.HitResult = FlexHitResultCell
                         Else
@@ -13577,12 +13553,6 @@ If iRowHit > -1 And iColHit > -1 Then
                         If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
                             iColDivider = GetColDividerFrozenLeft(iColHit)
                             HTI.HitResult = FlexHitResultDividerFrozenColumnLeft
-                            If iColDivider > -1 Then
-                                Do While GetColWidth(iColDivider) = 0
-                                    iColDivider = iColDivider - 1
-                                    If iColDivider = -1 Then Exit Do
-                                Loop
-                            End If
                             If iColDivider = -1 Then
                                 If iColFrozen = -1 Then iColDivider = 0 Else HTI.HitResult = FlexHitResultCell
                             End If
@@ -13604,12 +13574,6 @@ If iRowHit > -1 And iColHit > -1 Then
                             If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
                                 iRowDivider = GetRowDividerFrozenTop(iRowHit)
                                 HTI.HitResult = FlexHitResultDividerFrozenRowTop
-                                If iRowDivider > -1 Then
-                                    Do While GetRowHeight(iRowDivider) = 0
-                                        iRowDivider = iRowDivider - 1
-                                        If iRowDivider = -1 Then Exit Do
-                                    Loop
-                                End If
                                 If iRowDivider = -1 Then
                                     If iRowFrozen = -1 Then iRowDivider = 0 Else HTI.HitResult = FlexHitResultCell
                                 End If
@@ -13632,12 +13596,6 @@ If iRowHit > -1 And iColHit > -1 Then
                         If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
                             iRowDivider = GetRowDividerFrozenTop(iRowHit)
                             HTI.HitResult = FlexHitResultDividerFrozenRowTop
-                            If iRowDivider > -1 Then
-                                Do While GetRowHeight(iRowDivider) = 0
-                                    iRowDivider = iRowDivider - 1
-                                    If iRowDivider = -1 Then Exit Do
-                                Loop
-                            End If
                             If iRowDivider = -1 Then
                                 If iRowFrozen = -1 Then iRowDivider = 0 Else HTI.HitResult = FlexHitResultCell
                             End If
@@ -13660,12 +13618,6 @@ If iRowHit > -1 And iColHit > -1 Then
                     If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
                         iColDivider = GetColDividerFrozenLeft(iColHit)
                         HTI.HitResult = FlexHitResultDividerFrozenColumnLeft
-                        If iColDivider > -1 Then
-                            Do While GetColWidth(iColDivider) = 0
-                                iColDivider = iColDivider - 1
-                                If iColDivider = -1 Then Exit Do
-                            Loop
-                        End If
                         If iColDivider = -1 Then
                             If iColFrozen = -1 Then iColDivider = 0 Else HTI.HitResult = FlexHitResultCell
                         End If
@@ -13687,13 +13639,13 @@ Else
             If iRowHit = -1 And iColHit < PropFixedCols Then
                 If HTI.PT.Y < (.Bottom + VBFlexGridPixelMetrics.DividerSpacing.CY) Then
                     iRowDivider = (PropRows - 1)
-                    HTI.HitResult = FlexHitResultDividerRowBottom
                     If iRowDivider > -1 Then
                         Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
                             iRowDivider = iRowDivider - 1
                             If iRowDivider = -1 Then Exit Do
                         Loop
                     End If
+                    HTI.HitResult = FlexHitResultDividerRowBottom
                     If iRowDivider = -1 Then
                         HTI.HitResult = FlexHitResultNoWhere
                     Else
@@ -13708,13 +13660,13 @@ Else
             If iColHit = -1 And iRowHit < PropFixedRows Then
                 If HTI.PT.X < (.Right + VBFlexGridPixelMetrics.DividerSpacing.CX) Then
                     iColDivider = (PropCols - 1)
-                    HTI.HitResult = FlexHitResultDividerColumnRight
                     If iColDivider > -1 Then
                         Do While (VBFlexGridColsInfo(iColDivider).State And CLIS_HIDDEN) = CLIS_HIDDEN
                             iColDivider = iColDivider - 1
                             If iColDivider = -1 Then Exit Do
                         Loop
                     End If
+                    HTI.HitResult = FlexHitResultDividerColumnRight
                     If iColDivider = -1 Then
                         HTI.HitResult = FlexHitResultNoWhere
                     Else
@@ -13746,18 +13698,27 @@ Private Sub AdjustRectColDividerSpacing(ByRef RC As RECT, ByVal iCol As Long)
 Dim Spacing As Long
 Spacing = VBFlexGridPixelMetrics.DividerSpacing.CX
 If iCol > 0 Then
+    Dim iColLeft As Long
+    iColLeft = GetColDividerLeft(iCol)
     If (RC.Right - RC.Left) >= (Spacing * 2) Then
-        RC.Left = RC.Left + Spacing
-        RC.Right = RC.Right - Spacing
+        If (VBFlexGridColsInfo(iColLeft).State And CLIS_NOSIZING) = 0 Then RC.Left = RC.Left + Spacing
+        If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then RC.Right = RC.Right - Spacing
     Else
         ' Rectangle is not wide enough to include the spacing.
-        RC.Left = RC.Left + ((RC.Right - RC.Left) / 2)
-        RC.Right = RC.Left ' Remainder
+        If (VBFlexGridColsInfo(iColLeft).State And CLIS_NOSIZING) = 0 And (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then
+            RC.Left = RC.Left + ((RC.Right - RC.Left) / 2)
+            RC.Right = RC.Left ' Remainder
+        Else
+            If (VBFlexGridColsInfo(iColLeft).State And CLIS_NOSIZING) = 0 Then RC.Left = RC.Left + ((RC.Right - RC.Left) / 2)
+            If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then RC.Right = RC.Right - ((RC.Right - RC.Left) / 2)
+        End If
     End If
 ElseIf iCol > -1 Then
     ' First column need divider spacing to the right only.
-    If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then RC.Right = RC.Right - Spacing
-    If RC.Right < RC.Left Then RC.Right = RC.Left
+    If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then
+        RC.Right = RC.Right - Spacing
+        If RC.Right < RC.Left Then RC.Right = RC.Left
+    End If
 End If
 End Sub
 
@@ -13765,18 +13726,27 @@ Private Sub AdjustRectRowDividerSpacing(ByRef RC As RECT, ByVal iRow As Long)
 Dim Spacing As Long
 Spacing = VBFlexGridPixelMetrics.DividerSpacing.CY
 If iRow > 0 Then
+    Dim iRowTop As Long
+    iRowTop = GetRowDividerTop(iRow)
     If (RC.Bottom - RC.Top) >= (Spacing * 2) Then
-        RC.Top = RC.Top + Spacing
-        RC.Bottom = RC.Bottom - Spacing
+        If (VBFlexGridCells.Rows(iRowTop).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Top = RC.Top + Spacing
+        If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Bottom = RC.Bottom - Spacing
     Else
         ' Rectangle is not wide enough to include the spacing.
-        RC.Top = RC.Top + ((RC.Bottom - RC.Top) / 2)
-        RC.Bottom = RC.Top ' Remainder
+        If (VBFlexGridCells.Rows(iRowTop).RowInfo.State And RWIS_NOSIZING) = 0 And (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then
+            RC.Top = RC.Top + ((RC.Bottom - RC.Top) / 2)
+            RC.Bottom = RC.Top ' Remainder
+        Else
+            If (VBFlexGridCells.Rows(iRowTop).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Top = RC.Top + ((RC.Bottom - RC.Top) / 2)
+            If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Bottom = RC.Bottom - ((RC.Bottom - RC.Top) / 2)
+        End If
     End If
 ElseIf iRow > -1 Then
     ' First row need divider spacing to the bottom only.
-    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Bottom = RC.Bottom - Spacing
-    If RC.Bottom < RC.Top Then RC.Bottom = RC.Top
+    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then
+        RC.Bottom = RC.Bottom - Spacing
+        If RC.Bottom < RC.Top Then RC.Bottom = RC.Top
+    End If
 End If
 End Sub
 
@@ -14674,6 +14644,12 @@ If iRow >= (PropFixedRows + PropFrozenRows) Then
         iRowDivider = iRowDivider - (iRowTop - (PropFixedRows + PropFrozenRows))
     End If
 End If
+If iRowDivider > -1 Then
+    Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
+        iRowDivider = iRowDivider - 1
+        If iRowDivider = -1 Then Exit Do
+    Loop
+End If
 GetRowDividerTop = iRowDivider
 End Function
 
@@ -14691,6 +14667,12 @@ If iCol >= (PropFixedCols + PropFrozenCols) Then
         ' Gap adjustment between the leftmost column and the non-scrollable columns for divider column left only.
         iColDivider = iColDivider - (iColLeft - (PropFixedCols + PropFrozenCols))
     End If
+End If
+If iColDivider > -1 Then
+    Do While (VBFlexGridColsInfo(iColDivider).State And CLIS_HIDDEN) = CLIS_HIDDEN
+        iColDivider = iColDivider - 1
+        If iColDivider = -1 Then Exit Do
+    Loop
 End If
 GetColDividerLeft = iColDivider
 End Function
@@ -14710,6 +14692,12 @@ If iRow >= (PropFixedRows + PropFrozenRows) Then
         iRowDivider = iRowDivider - (iRowTop - (PropFixedRows + PropFrozenRows))
     End If
 End If
+If iRowDivider > -1 Then
+    Do While GetRowHeight(iRowDivider) = 0
+        iRowDivider = iRowDivider - 1
+        If iRowDivider = -1 Then Exit Do
+    Loop
+End If
 GetRowDividerFrozenTop = iRowDivider
 End Function
 
@@ -14727,6 +14715,12 @@ If iCol >= (PropFixedCols + PropFrozenCols) Then
         ' Gap adjustment between the leftmost column and the non-scrollable columns for divider column left only.
         iColDivider = iColDivider - (iColLeft - (PropFixedCols + PropFrozenCols))
     End If
+End If
+If iColDivider > -1 Then
+    Do While GetColWidth(iColDivider) = 0
+        iColDivider = iColDivider - 1
+        If iColDivider = -1 Then Exit Do
+    Loop
 End If
 GetColDividerFrozenLeft = iColDivider
 End Function
