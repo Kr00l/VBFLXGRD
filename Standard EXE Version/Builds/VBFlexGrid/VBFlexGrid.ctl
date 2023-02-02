@@ -1262,10 +1262,13 @@ Private Const LPSTR_TEXTCALLBACK As Long = (-1)
 Private Const H_MAX As Long = (&HFFFF + 1)
 Private Const NM_FIRST As Long = H_MAX
 Private Const NM_CUSTOMDRAW As Long = (NM_FIRST - 12)
+Private Const TTF_IDISHWND As Long = &H1
+Private Const TTF_CENTERTIP As Long = &H2
+Private Const TTF_RTLREADING As Long = &H4
 Private Const TTF_SUBCLASS As Long = &H10
+Private Const TTF_TRACK As Long = &H20
 Private Const TTF_TRANSPARENT As Long = &H100
 Private Const TTF_PARSELINKS As Long = &H1000
-Private Const TTF_RTLREADING As Long = &H4
 Private Const TTS_ALWAYSTIP As Long = &H1
 Private Const TTS_NOPREFIX As Long = &H2
 Private Const TTN_FIRST As Long = (-520)
@@ -19046,11 +19049,13 @@ Select Case wMsg
                             End If
                         Case vbKeyUp, vbKeyDown, vbKeyLeft, vbKeyRight, vbKeyPageDown, vbKeyPageUp, vbKeyHome, vbKeyEnd
                             If VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
-                                Select Case KeyCode
-                                    Case vbKeyUp, vbKeyDown, vbKeyPageDown, vbKeyPageUp, vbKeyHome, vbKeyEnd
-                                        SendMessage VBFlexGridComboListHandle, wMsg, wParam, ByVal lParam
-                                        Exit Function
-                                End Select
+                                If IsWindowVisible(VBFlexGridComboListHandle) <> 0 Then
+                                    Select Case KeyCode
+                                        Case vbKeyUp, vbKeyDown, vbKeyPageDown, vbKeyPageUp, vbKeyHome, vbKeyEnd
+                                            SendMessage VBFlexGridComboListHandle, wMsg, wParam, ByVal lParam
+                                            Exit Function
+                                    End Select
+                                End If
                             End If
                             Dim SelStart As Long, SelEnd As Long
                             SendMessage hWnd, EM_GETSEL, VarPtr(SelStart), ByVal VarPtr(SelEnd)
