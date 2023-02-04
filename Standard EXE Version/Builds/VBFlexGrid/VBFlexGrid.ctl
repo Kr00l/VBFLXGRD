@@ -750,6 +750,8 @@ Attribute DblClick.VB_Description = "Occurs when the user presses and releases a
 Attribute DblClick.VB_UserMemId = -601
 Public Event Scroll()
 Attribute Scroll.VB_Description = "Occurs when you reposition the scroll box on a control."
+Public Event ScrollTip(ByVal Row As Long, ByVal Col As Long)
+Attribute ScrollTip.VB_Description = "Occurs when the control is about to display a scroll tip."
 Public Event ContextMenu(ByVal X As Single, ByVal Y As Single)
 Attribute ContextMenu.VB_Description = "Occurs when the user clicked the right mouse button or types SHIFT + F10."
 Public Event AfterUserFreeze()
@@ -1247,13 +1249,24 @@ Private Const TTM_ADDTOOL As Long = TTM_ADDTOOLW
 Private Const TTM_NEWTOOLRECTA As Long = (WM_USER + 6)
 Private Const TTM_NEWTOOLRECTW As Long = (WM_USER + 52)
 Private Const TTM_NEWTOOLRECT As Long = TTM_NEWTOOLRECTW
+Private Const TTM_GETTOOLINFOA As Long = (WM_USER + 8)
+Private Const TTM_GETTOOLINFOW As Long = (WM_USER + 53)
+Private Const TTM_GETTOOLINFO As Long = TTM_GETTOOLINFOW
 Private Const TTM_SETTOOLINFOA As Long = (WM_USER + 9)
 Private Const TTM_SETTOOLINFOW As Long = (WM_USER + 54)
 Private Const TTM_SETTOOLINFO As Long = TTM_SETTOOLINFOW
+Private Const TTM_GETTEXTA As Long = (WM_USER + 11)
+Private Const TTM_GETTEXTW As Long = (WM_USER + 56)
+Private Const TTM_GETTEXT As Long = TTM_GETTEXTW
+Private Const TTM_UPDATETIPTEXTA As Long = (WM_USER + 12)
+Private Const TTM_UPDATETIPTEXTW As Long = (WM_USER + 57)
+Private Const TTM_UPDATETIPTEXT As Long = TTM_UPDATETIPTEXTW
 Private Const TTM_GETTOOLCOUNT As Long = (WM_USER + 13)
 Private Const TTM_ENUMTOOLSA As Long = (WM_USER + 14)
 Private Const TTM_ENUMTOOLSW As Long = (WM_USER + 58)
 Private Const TTM_ENUMTOOLS As Long = TTM_ENUMTOOLSW
+Private Const TTM_TRACKACTIVATE As Long = (WM_USER + 17)
+Private Const TTM_TRACKPOSITION As Long = (WM_USER + 18)
 Private Const TTM_SETMAXTIPWIDTH As Long = (WM_USER + 24)
 Private Const TTM_POP As Long = (WM_USER + 28)
 Private Const TTM_UPDATE As Long = (WM_USER + 29)
@@ -1262,8 +1275,6 @@ Private Const LPSTR_TEXTCALLBACK As Long = (-1)
 Private Const H_MAX As Long = (&HFFFF + 1)
 Private Const NM_FIRST As Long = H_MAX
 Private Const NM_CUSTOMDRAW As Long = (NM_FIRST - 12)
-Private Const TTF_IDISHWND As Long = &H1
-Private Const TTF_CENTERTIP As Long = &H2
 Private Const TTF_RTLREADING As Long = &H4
 Private Const TTF_SUBCLASS As Long = &H10
 Private Const TTF_TRACK As Long = &H20
@@ -1279,7 +1290,7 @@ Private Const TTN_SHOW As Long = (TTN_FIRST - 1)
 Implements OLEGuids.IObjectSafety
 Implements OLEGuids.IOleInPlaceActiveObjectVB
 Implements OLEGuids.IOleControlVB
-Private VBFlexGridHandle As Long, VBFlexGridToolTipHandle As Long
+Private VBFlexGridHandle As Long, VBFlexGridToolTipHandle As Long, VBFlexGridScrollTipHandle As Long
 Private VBFlexGridEditHandle As Long, VBFlexGridComboButtonHandle As Long, VBFlexGridComboListHandle As Long, VBFlexGridComboCalendarHandle As Long
 Private VBFlexGridDoubleBufferDC As Long, VBFlexGridDoubleBufferBmp As Long, VBFlexGridDoubleBufferBmpOld As Long
 Private VBFlexGridFontHandle As Long, VBFlexGridFontFixedHandle As Long
@@ -1318,6 +1329,7 @@ Private VBFlexGridCaptureHitResult As FlexHitResultConstants
 Private VBFlexGridCaptureDividerRow As Long, VBFlexGridCaptureDividerCol As Long
 Private VBFlexGridCaptureDividerDrag As Boolean
 Private VBFlexGridToolTipRow As Long, VBFlexGridToolTipCol As Long
+Private VBFlexGridScrollTipTrack As Boolean
 Private VBFlexGridMouseMoveRow As Long, VBFlexGridMouseMoveCol As Long
 Private VBFlexGridMouseMoveChanged As Boolean
 Private VBFlexGridDividerDragSplitterRect As RECT
@@ -1428,6 +1440,7 @@ Private PropFillStyle As FlexFillStyleConstants
 Private PropSelectionMode As FlexSelectionModeConstants
 Private PropScrollBars As VBRUN.ScrollBarConstants
 Private PropScrollTrack As Boolean
+Private PropScrollTipFollowThumb As Boolean
 Private PropDisableNoScroll As Boolean
 Private PropHighLight As FlexHighLightConstants
 Private PropFocusRect As FlexFocusRectConstants
@@ -1458,6 +1471,7 @@ Private PropDirectionAfterReturn As FlexDirectionAfterReturnConstants
 Private PropWrapCellBehavior As FlexWrapCellBehaviorConstants
 Private PropShowInfoTips As Boolean
 Private PropShowLabelTips As Boolean
+Private PropShowScrollTips As Boolean
 Private PropClipSeparators As String
 Private PropClipMode As FlexClipModeConstants
 Private PropClipCopyMode As FlexClipCopyModeConstants
@@ -1709,6 +1723,7 @@ PropFillStyle = FlexFillStyleSingle
 PropSelectionMode = FlexSelectionModeFree
 PropScrollBars = vbBoth
 PropScrollTrack = False
+PropScrollTipFollowThumb = False
 PropDisableNoScroll = False
 PropHighLight = FlexHighLightAlways
 PropFocusRect = FlexFocusRectLight
@@ -1739,6 +1754,7 @@ PropDirectionAfterReturn = FlexDirectionAfterReturnNone
 PropWrapCellBehavior = FlexWrapNone
 PropShowInfoTips = False
 PropShowLabelTips = False
+PropShowScrollTips = False
 PropClipSeparators = vbNullString
 PropClipMode = FlexClipModeNormal
 PropClipCopyMode = FlexClipCopyModeNormal
@@ -1812,6 +1828,7 @@ PropFillStyle = .ReadProperty("FillStyle", FlexFillStyleSingle)
 PropSelectionMode = .ReadProperty("SelectionMode", FlexSelectionModeFree)
 PropScrollBars = .ReadProperty("ScrollBars", vbBoth)
 PropScrollTrack = .ReadProperty("ScrollTrack", False)
+PropScrollTipFollowThumb = .ReadProperty("ScrollTipFollowThumb", False)
 PropDisableNoScroll = .ReadProperty("DisableNoScroll", False)
 PropHighLight = .ReadProperty("HighLight", FlexHighLightAlways)
 PropFocusRect = .ReadProperty("FocusRect", FlexFocusRectLight)
@@ -1842,6 +1859,7 @@ PropDirectionAfterReturn = .ReadProperty("DirectionAfterReturn", FlexDirectionAf
 PropWrapCellBehavior = .ReadProperty("WrapCellBehavior", FlexWrapNone)
 PropShowInfoTips = .ReadProperty("ShowInfoTips", False)
 PropShowLabelTips = .ReadProperty("ShowLabelTips", False)
+PropShowScrollTips = .ReadProperty("ShowScrollTips", False)
 PropClipSeparators = VarToStr(.ReadProperty("ClipSeparators", vbNullString))
 PropClipMode = .ReadProperty("ClipMode", FlexClipModeNormal)
 PropClipCopyMode = .ReadProperty("ClipCopyMode", FlexClipCopyModeNormal)
@@ -1911,6 +1929,7 @@ With PropBag
 .WriteProperty "SelectionMode", PropSelectionMode, FlexSelectionModeFree
 .WriteProperty "ScrollBars", PropScrollBars, vbBoth
 .WriteProperty "ScrollTrack", PropScrollTrack, False
+.WriteProperty "ScrollTipFollowThumb", PropScrollTipFollowThumb, False
 .WriteProperty "DisableNoScroll", PropDisableNoScroll, False
 .WriteProperty "HighLight", PropHighLight, FlexHighLightAlways
 .WriteProperty "FocusRect", PropFocusRect, FlexFocusRectLight
@@ -1941,6 +1960,7 @@ With PropBag
 .WriteProperty "WrapCellBehavior", PropWrapCellBehavior, FlexWrapNone
 .WriteProperty "ShowInfoTips", PropShowInfoTips, False
 .WriteProperty "ShowLabelTips", PropShowLabelTips, False
+.WriteProperty "ShowScrollTips", PropShowScrollTips, False
 .WriteProperty "ClipSeparators", StrToVar(PropClipSeparators), vbNullString
 .WriteProperty "ClipMode", PropClipMode, FlexClipModeNormal
 .WriteProperty "ClipCopyMode", PropClipCopyMode, FlexClipCopyModeNormal
@@ -2869,39 +2889,43 @@ If VBFlexGridHandle <> 0 Then
     dwMask = 0
     dwExStyle = 0
 End If
-If VBFlexGridToolTipHandle <> 0 Then
-    If PropRightToLeft = True Then
-        If PropRightToLeftLayout = True Then dwMask = WS_EX_LAYOUTRTL Else dwMask = WS_EX_RTLREADING
-    Else
-        dwMask = 0
-    End If
-    dwExStyle = GetWindowLong(VBFlexGridToolTipHandle, GWL_EXSTYLE)
-    If (dwExStyle And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Then dwExStyle = dwExStyle And Not WS_EX_LAYOUTRTL
-    If (dwExStyle And WS_EX_RTLREADING) = WS_EX_RTLREADING Then dwExStyle = dwExStyle And Not WS_EX_RTLREADING
-    If (dwExStyle And WS_EX_RIGHT) = WS_EX_RIGHT Then dwExStyle = dwExStyle And Not WS_EX_RIGHT
-    If (dwExStyle And WS_EX_LEFTSCROLLBAR) = WS_EX_LEFTSCROLLBAR Then dwExStyle = dwExStyle And Not WS_EX_LEFTSCROLLBAR
-    If (dwMask And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
-    ' ToolTip control supports only the WS_EX_LAYOUTRTL flag.
-    ' Set TTF_RTLREADING flag when dwMask contains WS_EX_RTLREADING, though WS_EX_RTLREADING will not be actually set.
-    SetWindowLong VBFlexGridToolTipHandle, GWL_EXSTYLE, dwExStyle
-    Dim i As Long, TI As TOOLINFO, Buffer As String
-    With TI
-    .cbSize = LenB(TI)
-    Buffer = String(80, vbNullChar)
-    .lpszText = StrPtr(Buffer)
-    For i = 1 To SendMessage(VBFlexGridToolTipHandle, TTM_GETTOOLCOUNT, 0, ByVal 0&)
-        If SendMessage(VBFlexGridToolTipHandle, TTM_ENUMTOOLS, i - 1, ByVal VarPtr(TI)) <> 0 Then
-            If (dwMask And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Or (dwMask And WS_EX_RTLREADING) = 0 Then
-                If (.uFlags And TTF_RTLREADING) = TTF_RTLREADING Then .uFlags = .uFlags And Not TTF_RTLREADING
-            Else
-                If (.uFlags And TTF_RTLREADING) = 0 Then .uFlags = .uFlags Or TTF_RTLREADING
-            End If
-            SendMessage VBFlexGridToolTipHandle, TTM_SETTOOLINFO, 0, ByVal VarPtr(TI)
-            SendMessage VBFlexGridToolTipHandle, TTM_UPDATE, 0, ByVal 0&
+Dim hToolTip As Long, j As Long
+For j = 1 To 2
+    hToolTip = VBA.Choose(j, VBFlexGridToolTipHandle, VBFlexGridScrollTipHandle)
+    If hToolTip <> 0 Then
+        If PropRightToLeft = True Then
+            If PropRightToLeftLayout = True Then dwMask = WS_EX_LAYOUTRTL Else dwMask = WS_EX_RTLREADING
+        Else
+            dwMask = 0
         End If
-    Next i
-    End With
-End If
+        dwExStyle = GetWindowLong(hToolTip, GWL_EXSTYLE)
+        If (dwExStyle And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Then dwExStyle = dwExStyle And Not WS_EX_LAYOUTRTL
+        If (dwExStyle And WS_EX_RTLREADING) = WS_EX_RTLREADING Then dwExStyle = dwExStyle And Not WS_EX_RTLREADING
+        If (dwExStyle And WS_EX_RIGHT) = WS_EX_RIGHT Then dwExStyle = dwExStyle And Not WS_EX_RIGHT
+        If (dwExStyle And WS_EX_LEFTSCROLLBAR) = WS_EX_LEFTSCROLLBAR Then dwExStyle = dwExStyle And Not WS_EX_LEFTSCROLLBAR
+        If (dwMask And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
+        ' ToolTip control supports only the WS_EX_LAYOUTRTL flag.
+        ' Set TTF_RTLREADING flag when dwMask contains WS_EX_RTLREADING, though WS_EX_RTLREADING will not be actually set.
+        SetWindowLong hToolTip, GWL_EXSTYLE, dwExStyle
+        Dim i As Long, TI As TOOLINFO, Buffer As String
+        With TI
+        .cbSize = LenB(TI)
+        Buffer = String(80, vbNullChar)
+        .lpszText = StrPtr(Buffer)
+        For i = 1 To SendMessage(hToolTip, TTM_GETTOOLCOUNT, 0, ByVal 0&)
+            If SendMessage(hToolTip, TTM_ENUMTOOLS, i - 1, ByVal VarPtr(TI)) <> 0 Then
+                If (dwMask And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Or (dwMask And WS_EX_RTLREADING) = 0 Then
+                    If (.uFlags And TTF_RTLREADING) = TTF_RTLREADING Then .uFlags = .uFlags And Not TTF_RTLREADING
+                Else
+                    If (.uFlags And TTF_RTLREADING) = 0 Then .uFlags = .uFlags Or TTF_RTLREADING
+                End If
+                SendMessage hToolTip, TTM_SETTOOLINFO, 0, ByVal VarPtr(TI)
+                SendMessage hToolTip, TTM_UPDATE, 0, ByVal 0&
+            End If
+        Next i
+        End With
+    End If
+Next j
 UserControl.PropertyChanged "RightToLeft"
 End Property
 
@@ -3556,6 +3580,16 @@ End Property
 Public Property Let ScrollTrack(ByVal Value As Boolean)
 PropScrollTrack = Value
 UserControl.PropertyChanged "ScrollTrack"
+End Property
+
+Public Property Get ScrollTipFollowThumb() As Boolean
+Attribute ScrollTipFollowThumb.VB_Description = "Returns/sets a value that determines whether the scroll tip should follow the thumb as the user scrolls."
+ScrollTipFollowThumb = PropScrollTipFollowThumb
+End Property
+
+Public Property Let ScrollTipFollowThumb(ByVal Value As Boolean)
+PropScrollTipFollowThumb = Value
+UserControl.PropertyChanged "ScrollTipFollowThumb"
 End Property
 
 Public Property Get DisableNoScroll() As Boolean
@@ -4215,6 +4249,23 @@ End If
 UserControl.PropertyChanged "ShowLabelTips"
 End Property
 
+Public Property Get ShowScrollTips() As Boolean
+Attribute ShowScrollTips.VB_Description = "Returns/sets a value that determines whether scroll tips appear when the user moves the scroll box."
+ShowScrollTips = PropShowScrollTips
+End Property
+
+Public Property Let ShowScrollTips(ByVal Value As Boolean)
+PropShowScrollTips = Value
+If VBFlexGridHandle <> 0 And VBFlexGridDesignMode = False Then
+    If PropShowScrollTips = False Then
+        Call DestroyScrollTip
+    Else
+        Call CreateScrollTip
+    End If
+End If
+UserControl.PropertyChanged "ShowScrollTips"
+End Property
+
 Public Property Get ClipSeparators() As String
 Attribute ClipSeparators.VB_Description = "Returns/sets two distinct characters to be used as column (first) and row (second) separators in clip strings. If it is empty, the defaults vbTab and vbCr are used."
 ClipSeparators = PropClipSeparators
@@ -4563,6 +4614,7 @@ If VBFlexGridDesignMode = False Then
         End If
     End If
     If PropShowInfoTips = True Or PropShowLabelTips = True Then Call CreateToolTip
+    If PropShowScrollTips = True Then Call CreateScrollTip
 Else
     VBFlexGridHandle = UserControl.hWnd
     SetRect VBFlexGridClientRect, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight
@@ -4668,10 +4720,38 @@ End If
 Call SetVisualStylesToolTip
 End Sub
 
+Private Sub CreateScrollTip()
+Static Done As Boolean
+If VBFlexGridScrollTipHandle <> 0 Then Exit Sub
+If Done = False Then
+    Call FlexInitCC(ICC_TAB_CLASSES)
+    Done = True
+End If
+Dim dwExStyle As Long
+dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST Or WS_EX_TRANSPARENT
+If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
+VBFlexGridScrollTipHandle = CreateWindowEx(dwExStyle, StrPtr("tooltips_class32"), StrPtr("Scroll Tip"), WS_POPUP Or TTS_ALWAYSTIP Or TTS_NOPREFIX, 0, 0, 0, 0, UserControl.hWnd, 0, App.hInstance, ByVal 0&)
+If VBFlexGridScrollTipHandle <> 0 Then
+    SendMessage VBFlexGridScrollTipHandle, TTM_SETMAXTIPWIDTH, 0, ByVal &H7FFF&
+    Dim TI As TOOLINFO
+    With TI
+    .cbSize = LenB(TI)
+    .hWnd = VBFlexGridHandle
+    .uId = 0
+    .uFlags = TTF_TRACK
+    If VBFlexGridRTLReading = True Then .uFlags = .uFlags Or TTF_RTLREADING
+    .lpszText = 0
+    End With
+    SendMessage VBFlexGridScrollTipHandle, TTM_ADDTOOL, 0, ByVal VarPtr(TI)
+End If
+Call SetVisualStylesScrollTip
+End Sub
+
 Private Sub DestroyVBFlexGrid()
 If VBFlexGridHandle = 0 Then Exit Sub
 Call FlexRemoveSubclass(UserControl.hWnd)
 Call DestroyToolTip
+Call DestroyScrollTip
 If VBFlexGridDesignMode = False Then
     
     #If ImplementPreTranslateMsg = True Then
@@ -4764,6 +4844,13 @@ DestroyWindow VBFlexGridToolTipHandle
 VBFlexGridToolTipHandle = 0
 VBFlexGridToolTipRow = -1
 VBFlexGridToolTipCol = -1
+End Sub
+
+Private Sub DestroyScrollTip()
+If VBFlexGridScrollTipHandle = 0 Then Exit Sub
+DestroyWindow VBFlexGridScrollTipHandle
+VBFlexGridScrollTipHandle = 0
+VBFlexGridScrollTipTrack = False
 End Sub
 
 Private Function CreateEdit(ByVal Reason As FlexEditReasonConstants, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Boolean
@@ -9299,6 +9386,36 @@ If VBFlexGridHandle <> 0 Then
         End If
         ReleaseDC VBFlexGridHandle, hDC
     End If
+End If
+End Property
+
+Public Property Get ScrollTipText() As String
+Attribute ScrollTipText.VB_Description = "Returns/sets the text contained in an object."
+Attribute ScrollTipText.VB_MemberFlags = "400"
+If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
+    Dim TI As TOOLINFO, Buffer As String
+    With TI
+    Buffer = String(260, vbNullChar) & vbNullChar
+    .cbSize = LenB(TI)
+    .hWnd = VBFlexGridHandle
+    .uId = 0
+    .lpszText = StrPtr(Buffer)
+    End With
+    SendMessage VBFlexGridScrollTipHandle, TTM_GETTEXT, Len(Buffer) + 1, ByVal VarPtr(TI)
+    ScrollTipText = Left$(Buffer, InStr(Buffer, vbNullChar) - 1)
+End If
+End Property
+
+Public Property Let ScrollTipText(ByVal Value As String)
+If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
+    Dim TI As TOOLINFO
+    With TI
+    .cbSize = LenB(TI)
+    .hWnd = VBFlexGridHandle
+    .uId = 0
+    .lpszText = StrPtr(Value)
+    End With
+    SendMessage VBFlexGridScrollTipHandle, TTM_UPDATETIPTEXT, 0, ByVal VarPtr(TI)
 End If
 End Property
 
@@ -17315,6 +17432,18 @@ If VBFlexGridHandle <> 0 Then
 End If
 End Sub
 
+Private Sub SetVisualStylesScrollTip()
+If VBFlexGridHandle <> 0 Then
+    If VBFlexGridScrollTipHandle <> 0 And VBFlexGridEnabledVisualStyles = True Then
+        If PropVisualStyles = True Then
+            ActivateVisualStyles VBFlexGridScrollTipHandle
+        Else
+            RemoveVisualStyles VBFlexGridScrollTipHandle
+        End If
+    End If
+End If
+End Sub
+
 Private Sub SetIMEMode(ByVal hWnd As Long, ByVal hIMCOrig As Long, ByVal Value As FlexIMEModeConstants)
 Const IME_CMODE_ALPHANUMERIC As Long = &H0, IME_CMODE_NATIVE As Long = &H1, IME_CMODE_KATAKANA As Long = &H2, IME_CMODE_FULLSHAPE As Long = &H8
 Dim hKL As Long
@@ -17413,6 +17542,50 @@ If VBFlexGridHandle <> 0 And VBFlexGridToolTipHandle <> 0 Then
         If VBFlexGridToolTipHandle <> 0 Then SendMessage VBFlexGridToolTipHandle, TTM_POP, 0, ByVal 0&
     End If
     End With
+End If
+End Sub
+
+Private Sub UpdateScrollTip(ByVal wBar As Long, ByVal TrackPos As Long, ByVal X As Long, ByVal Y As Long)
+If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
+    Dim TI As TOOLINFO
+    With TI
+    .cbSize = LenB(TI)
+    .hWnd = VBFlexGridHandle
+    .uId = 0
+    End With
+    If wBar = SB_HORZ Then
+        RaiseEvent ScrollTip(-1, (PropFixedCols + PropFrozenCols) + TrackPos)
+    ElseIf wBar = SB_VERT Then
+        RaiseEvent ScrollTip((PropFixedRows + PropFrozenRows) + TrackPos, -1)
+    End If
+    If VBFlexGridScrollTipTrack = False Or PropScrollTipFollowThumb = True Then
+        Dim RC As RECT
+        GetWindowRect VBFlexGridHandle, RC
+        If wBar = SB_HORZ Then
+            SendMessage VBFlexGridScrollTipHandle, TTM_TRACKPOSITION, 0, ByVal MakeDWord(X, RC.Bottom)
+        ElseIf wBar = SB_VERT Then
+            SendMessage VBFlexGridScrollTipHandle, TTM_TRACKPOSITION, 0, ByVal MakeDWord(RC.Right, Y)
+        End If
+        If VBFlexGridScrollTipTrack = False Then
+            SendMessage VBFlexGridScrollTipHandle, TTM_TRACKACTIVATE, 1, ByVal VarPtr(TI)
+            VBFlexGridScrollTipTrack = True
+        End If
+    End If
+End If
+End Sub
+
+Private Sub CancelScrollTip()
+If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
+    If VBFlexGridScrollTipTrack = True Then
+        Dim TI As TOOLINFO
+        With TI
+        .cbSize = LenB(TI)
+        .hWnd = VBFlexGridHandle
+        .uId = 0
+        End With
+        SendMessage VBFlexGridScrollTipHandle, TTM_TRACKACTIVATE, 0, ByVal VarPtr(TI)
+        VBFlexGridScrollTipTrack = False
+    End If
 End If
 End Sub
 
@@ -18254,6 +18427,15 @@ Select Case wMsg
                 If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then Call UpdateEditRect
                 RaiseEvent Scroll
             End If
+            If PropShowScrollTips = True Then
+                Select Case LoWord(wParam)
+                    Case SB_THUMBPOSITION
+                        Call CancelScrollTip
+                    Case SB_THUMBTRACK
+                        Pos = GetMessagePos()
+                        Call UpdateScrollTip(wBar, SCI.nTrackPos, Get_X_lParam(Pos), Get_Y_lParam(Pos))
+                End Select
+            End If
             WindowProcControl = 0
             Exit Function
         End If
@@ -18667,7 +18849,6 @@ Select Case wMsg
                     CopyMemory NMTTDI, ByVal lParam, LenB(NMTTDI)
                     ShowInfoTip = False
                     LBLI.Flags = 0
-                    With NMTTDI
                     Dim Text As String
                     With HTI
                     Pos = GetMessagePos()
@@ -18690,6 +18871,7 @@ Select Case wMsg
                     End If
                     End With
                     If Not Text = vbNullString Then
+                        With NMTTDI
                         If Len(Text) <= 80 Then
                             Text = Left$(Text & vbNullChar, 80)
                             CopyMemory .szText(0), ByVal StrPtr(Text), LenB(Text)
@@ -18697,11 +18879,11 @@ Select Case wMsg
                             .lpszText = StrPtr(Text)
                         End If
                         .hInst = 0
+                        End With
                         CopyMemory ByVal lParam, NMTTDI, LenB(NMTTDI)
                     Else
                         ShowInfoTip = False
                     End If
-                    End With
                 Case TTN_SHOW
                     If PropShowLabelTips = True And ShowInfoTip = False Then
                         If (LBLI.Flags And LBLI_VALID) = LBLI_VALID Then
