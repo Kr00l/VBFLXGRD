@@ -9401,7 +9401,7 @@ If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
     .uId = 0
     .lpszText = StrPtr(Buffer)
     End With
-    SendMessage VBFlexGridScrollTipHandle, TTM_GETTEXT, Len(Buffer) + 1, ByVal VarPtr(TI)
+    SendMessage VBFlexGridScrollTipHandle, TTM_GETTEXT, Len(Buffer), ByVal VarPtr(TI)
     ScrollTipText = Left$(Buffer, InStr(Buffer, vbNullChar) - 1)
 End If
 End Property
