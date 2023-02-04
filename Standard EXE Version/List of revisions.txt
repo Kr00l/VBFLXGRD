@@ -1,5 +1,11 @@
 List of revisions:
 
+04-Feb-2023
+- Included the ShowScrollTips property.
+  Use the ScrollTip event and ScrollTipText run-time property.
+  The scroll tip appears at the original thumb position and does not follow the thumb as the user scrolls.
+  If you prefer otherwise set the ScrollTipFollowThumb property to True.
+
 28-Jan-2023
 - Included the ColResizable/RowResizable property. (As Boolean; added CLIS_NOSIZING/RWIS_NOSIZING)
 - Added FlexDataSourceNoData enum to FlexDataSourceFlags.

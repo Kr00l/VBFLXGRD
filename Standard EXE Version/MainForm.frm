@@ -277,6 +277,7 @@ Begin VB.Form MainForm
       AllowUserResizing=   3
       ShowInfoTips    =   -1  'True
       ShowLabelTips   =   -1  'True
+      ShowScrollTips  =   -1  'True
       AllowScrollLock =   -1  'True
    End
    Begin VB.Label Label3 
@@ -419,6 +420,14 @@ Width = Me.ScaleWidth - VBFlexGrid1.Left - Me.ScaleX(8, vbPixels, Me.ScaleMode)
 Height = Me.ScaleHeight - (PicturePanel.Height) - Me.ScaleY(8, vbPixels, Me.ScaleMode)
 If Width > 0 Then VBFlexGrid1.Width = Width
 If Height > 0 Then VBFlexGrid1.Height = Height
+End Sub
+
+Private Sub VBFlexGrid1_ScrollTip(ByVal Row As Long, ByVal Col As Long)
+If Row > -1 Then
+    VBFlexGrid1.ScrollTipText = "Row " & VBFlexGrid1.TextMatrix(Row, 0)
+ElseIf Col > -1 Then
+    VBFlexGrid1.ScrollTipText = "Column " & VBFlexGrid1.TextMatrix(0, Col)
+End If
 End Sub
 
 Private Sub VBFlexGrid1_DividerDblClick(ByVal Row As Long, ByVal Col As Long)
