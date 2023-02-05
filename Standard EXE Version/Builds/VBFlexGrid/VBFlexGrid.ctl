@@ -17566,10 +17566,10 @@ If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
         ElseIf wBar = SB_VERT Then
             SendMessage VBFlexGridScrollTipHandle, TTM_TRACKPOSITION, 0, ByVal MakeDWord(RC.Right, Y)
         End If
-        If VBFlexGridScrollTipTrack = False Then
-            SendMessage VBFlexGridScrollTipHandle, TTM_TRACKACTIVATE, 1, ByVal VarPtr(TI)
-            VBFlexGridScrollTipTrack = True
-        End If
+    End If
+    If VBFlexGridScrollTipTrack = False Then
+        SendMessage VBFlexGridScrollTipHandle, TTM_TRACKACTIVATE, 1, ByVal VarPtr(TI)
+        VBFlexGridScrollTipTrack = True
     End If
 End If
 End Sub
@@ -17582,8 +17582,10 @@ If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
         .cbSize = LenB(TI)
         .hWnd = VBFlexGridHandle
         .uId = 0
+        .lpszText = 0
         End With
         SendMessage VBFlexGridScrollTipHandle, TTM_TRACKACTIVATE, 0, ByVal VarPtr(TI)
+        SendMessage VBFlexGridScrollTipHandle, TTM_UPDATETIPTEXT, 0, ByVal VarPtr(TI)
         VBFlexGridScrollTipTrack = False
     End If
 End If
