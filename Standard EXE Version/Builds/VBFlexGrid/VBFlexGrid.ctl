@@ -1272,6 +1272,7 @@ Private Const TTM_POP As Long = (WM_USER + 28)
 Private Const TTM_UPDATE As Long = (WM_USER + 29)
 Private Const TTM_ADJUSTRECT As Long = (WM_USER + 31)
 Private Const LPSTR_TEXTCALLBACK As Long = (-1)
+Private Const INFOTIPSIZE As Long = 1024
 Private Const H_MAX As Long = (&HFFFF + 1)
 Private Const NM_FIRST As Long = H_MAX
 Private Const NM_CUSTOMDRAW As Long = (NM_FIRST - 12)
@@ -9395,13 +9396,14 @@ Attribute ScrollTipText.VB_MemberFlags = "400"
 If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
     Dim TI As TOOLINFO, Buffer As String
     With TI
-    Buffer = String(260, vbNullChar) & vbNullChar
+    Buffer = String(INFOTIPSIZE, vbNullChar) & vbNullChar
     .cbSize = LenB(TI)
     .hWnd = VBFlexGridHandle
     .uId = 0
     .lpszText = StrPtr(Buffer)
     End With
-    SendMessage VBFlexGridScrollTipHandle, TTM_GETTEXT, Len(Buffer), ByVal VarPtr(TI)
+    ' wParam is only ignored and limited to a length of 80 by the ANSI version of TTM_GETTEXT.
+    SendMessage VBFlexGridScrollTipHandle, TTM_GETTEXT, INFOTIPSIZE + 1, ByVal VarPtr(TI)
     ScrollTipText = Left$(Buffer, InStr(Buffer, vbNullChar) - 1)
 End If
 End Property
