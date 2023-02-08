@@ -4942,8 +4942,6 @@ With EditRect
 .Top = CellRangeRect.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY
 .Right = CellRangeRect.Right - VBFlexGridEditGridLineOffsets.RightBottom.CX
 .Bottom = CellRangeRect.Bottom - VBFlexGridEditGridLineOffsets.RightBottom.CY
-'If .Bottom > VBFlexGridClientRect.Bottom Then .Bottom = VBFlexGridClientRect.Bottom
-'If .Right > VBFlexGridClientRect.Right Then .Right = VBFlexGridClientRect.Right
 End With
 If VBFlexGridComboMode <> FlexComboModeNone Then
     VBFlexGridComboActiveMode = VBFlexGridComboMode
@@ -5293,6 +5291,7 @@ Attribute Refresh.VB_Description = "Forces a complete repaint of a object."
 Attribute Refresh.VB_UserMemId = -550
 UserControl.Refresh
 If VBFlexGridNoRedraw = False And VBFlexGridDesignMode = False Then RedrawWindow UserControl.hWnd, 0, 0, RDW_UPDATENOW Or RDW_INVALIDATE Or RDW_ERASE Or RDW_ALLCHILDREN
+If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then Call UpdateEditRect
 End Sub
 
 #If ImplementDataSource = True Or ImplementFlexDataSource = True Then
@@ -17596,10 +17595,10 @@ End Sub
 Private Sub UpdateEditRect()
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
-    With VBFlexGridEditMergedRange
-    If .TopRow < (PropFixedRows + PropFrozenRows) And .LeftCol < (PropFixedCols + PropFrozenCols) Then
+    If VBFlexGridEditMergedRange.TopRow < (PropFixedRows + PropFrozenRows) And VBFlexGridEditMergedRange.LeftCol < (PropFixedCols + PropFrozenCols) Then
         ' Void
     Else
+        With VBFlexGridEditMergedRange
         Dim RC As RECT, i As Long
         If .BottomRow >= VBFlexGridTopRow Then
             For i = 0 To ((PropFixedRows + PropFrozenRows) - 1)
@@ -17655,22 +17654,37 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
                 RC.Left = RC.Left - GetColWidth(i)
             Next i
         End If
+        End With
+        Dim EditRect As RECT
+        With EditRect
+        .Left = RC.Left + VBFlexGridEditGridLineOffsets.LeftTop.CX
+        .Top = RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY
+        .Right = RC.Right - VBFlexGridEditGridLineOffsets.RightBottom.CX
+        .Bottom = RC.Bottom - VBFlexGridEditGridLineOffsets.RightBottom.CY
+        End With
         If VBFlexGridComboButtonHandle = 0 Then
-            SetWindowPos VBFlexGridEditHandle, 0, RC.Left + VBFlexGridEditGridLineOffsets.LeftTop.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
+            SetWindowPos VBFlexGridEditHandle, 0, EditRect.Left, EditRect.Top, (EditRect.Right - EditRect.Left), (EditRect.Bottom - EditRect.Top), SWP_NOOWNERZORDER Or SWP_NOZORDER
         Else
-            Dim EditRect As RECT, ComboButtonAlignment As FlexLeftRightAlignmentConstants
-            GetClientRect VBFlexGridEditHandle, EditRect
+            Dim ComboButtonWidth As Long, ComboButtonAlignment As FlexLeftRightAlignmentConstants
+            ComboButtonWidth = VBFlexGridPixelMetrics.ComboButtonWidth
             If VBFlexGridColsInfo(VBFlexGridEditCol).ComboButtonAlignment = -1 Then
                 ComboButtonAlignment = VBFlexGridComboButtonAlignment
             Else
                 ComboButtonAlignment = VBFlexGridColsInfo(VBFlexGridEditCol).ComboButtonAlignment
             End If
             If ComboButtonAlignment = FlexLeftRightAlignmentRight Then
-                SetWindowPos VBFlexGridEditHandle, 0, RC.Left + VBFlexGridEditGridLineOffsets.LeftTop.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
-                SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left) + VBFlexGridEditGridLineOffsets.LeftTop.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
+                EditRect.Right = EditRect.Right - ComboButtonWidth
+                If EditRect.Right < EditRect.Left Then EditRect.Right = EditRect.Left
             ElseIf ComboButtonAlignment = FlexLeftRightAlignmentLeft Then
-                SetWindowPos VBFlexGridEditHandle, 0, RC.Right - (EditRect.Right - EditRect.Left) - VBFlexGridEditGridLineOffsets.RightBottom.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
-                SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + VBFlexGridEditGridLineOffsets.LeftTop.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
+                EditRect.Left = EditRect.Left + ComboButtonWidth
+                If EditRect.Left > EditRect.Right Then EditRect.Left = EditRect.Right
+            End If
+            If (((RC.Right - RC.Left) - (VBFlexGridEditGridLineOffsets.LeftTop.CX + VBFlexGridEditGridLineOffsets.RightBottom.CX)) - ComboButtonWidth) < 0 Then ComboButtonWidth = ((RC.Right - RC.Left) - (VBFlexGridEditGridLineOffsets.LeftTop.CX + VBFlexGridEditGridLineOffsets.RightBottom.CX))
+            SetWindowPos VBFlexGridEditHandle, 0, EditRect.Left, EditRect.Top, (EditRect.Right - EditRect.Left), (EditRect.Bottom - EditRect.Top), SWP_NOOWNERZORDER Or SWP_NOZORDER
+            If ComboButtonAlignment = FlexLeftRightAlignmentRight Then
+                SetWindowPos VBFlexGridComboButtonHandle, 0, EditRect.Right, EditRect.Top, ComboButtonWidth, (EditRect.Bottom - EditRect.Top), SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
+            ElseIf ComboButtonAlignment = FlexLeftRightAlignmentLeft Then
+                SetWindowPos VBFlexGridComboButtonHandle, 0, EditRect.Left - ComboButtonWidth, EditRect.Top, ComboButtonWidth, (EditRect.Bottom - EditRect.Top), SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
             End If
             Dim WndRect(0 To 1) As RECT
             Dim hMonitor As Long, MI As MONITORINFO
@@ -17712,7 +17726,6 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
         End If
         If VBFlexGridEditRectChangedFrozen = False Then VBFlexGridEditRectChanged = True
     End If
-    End With
 End If
 End Sub
 
