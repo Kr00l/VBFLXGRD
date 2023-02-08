@@ -4,6 +4,7 @@ List of revisions:
 - Internal 'UpdateEditRect' now takes the window sizes into account. (not position only)
   This makes it possible to use it not only for scroll updates but to use it also for other cases.
   Calling .Refresh method will now also call 'UpdateEditRect' internally, when in edit mode.
+- Bugfix when canceling the BeforeUserResize event to return ProcessLButtonDown = True.
 
 04-Feb-2023
 - Included the ShowScrollTips property.
