@@ -16549,10 +16549,10 @@ Select Case HTI.HitResult
             VBFlexGridDividerDragDirty = True
             Call SetDividerDragSplitterRect(P.X, P.Y)
             Call DrawDividerDragSplitter
-            ProcessLButtonDown = True
         Else
             ReleaseCapture
         End If
+        ProcessLButtonDown = True
         Exit Function
 End Select
 Dim RCP As TROWCOLPARAMS
