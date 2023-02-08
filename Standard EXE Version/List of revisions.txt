@@ -1,5 +1,10 @@
 List of revisions:
 
+08-Feb-2023
+- Internal 'UpdateEditRect' now takes the window sizes into account. (not position only)
+  This makes it possible to use it not only for scroll updates but to use it also for other cases.
+  Calling .Refresh method will now also call 'UpdateEditRect' internally, when in edit mode.
+
 04-Feb-2023
 - Included the ShowScrollTips property.
   Use the ScrollTip event and ScrollTipText run-time property.
