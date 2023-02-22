@@ -74,7 +74,7 @@ Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckB
 Private FlexCellCheckReasonMouse, FlexCellCheckReasonKeyboard
 Private FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentCenterTop, FlexCheckBoxAlignmentCenterCenter, FlexCheckBoxAlignmentCenterBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom, FlexCheckBoxAlignmentUsePictureAlignment
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
-Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoData, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText
+Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoData, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText, FlexDataSourceChecked
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -451,6 +451,7 @@ FlexDataSourceUnboundFixedColumns = 1
 FlexDataSourceNoData = 2
 FlexDataSourceNoFieldNames = 4
 FlexDataSourceToolTipText = 8
+FlexDataSourceChecked = 16
 End Enum
 Private Type RECT
 Left As Long
@@ -704,6 +705,7 @@ Private Const CLIS_HIDDEN As Long = &H1
 Private Const CLIS_MERGE As Long = &H2
 Private Const CLIS_NULLABLE As Long = &H4
 Private Const CLIS_NOSIZING As Long = &H8
+Private Const CLIS_CHECKBOXES As Long = &H10
 Private Type TCOLINFO
 Width As Long
 Data As Long
@@ -7204,6 +7206,37 @@ Else
 End If
 End Property
 
+Public Property Get ColCheckBoxes(ByVal Index As Long) As Boolean
+Attribute ColCheckBoxes.VB_Description = "Returns/sets a value that determines whether check boxes are predefined for the specified column."
+Attribute ColCheckBoxes.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColCheckBoxes = CBool((VBFlexGridColsInfo(Index).State And CLIS_CHECKBOXES) = CLIS_CHECKBOXES)
+End Property
+
+Public Property Let ColCheckBoxes(ByVal Index As Long, ByVal Value As Boolean)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    With VBFlexGridColsInfo(Index)
+    If Value = True Then
+        If (.State And CLIS_CHECKBOXES) = 0 Then .State = .State Or CLIS_CHECKBOXES
+    Else
+        If (.State And CLIS_CHECKBOXES) = CLIS_CHECKBOXES Then .State = .State And Not CLIS_CHECKBOXES
+    End If
+    End With
+Else
+    Dim i As Long
+    If Value = True Then
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXES) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_CHECKBOXES
+        Next i
+    Else
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXES) = CLIS_CHECKBOXES Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_CHECKBOXES
+        Next i
+    End If
+End If
+End Property
+
 Public Property Get MergeRow(ByVal Index As Long) As Boolean
 Attribute MergeRow.VB_Description = "Returns/sets which columns or rows should have their contents merged when the merge cells property is set to a value other than 0 - Never."
 Attribute MergeRow.VB_MemberFlags = "400"
@@ -8350,7 +8383,7 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-CellChecked = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Checked
+CellChecked = GetCellChecked(VBFlexGridRow, VBFlexGridCol)
 End Property
 
 Public Property Let CellChecked(ByVal Value As FlexCheckBoxConstants)
@@ -8365,14 +8398,14 @@ Select Case Value
         Err.Raise 380
 End Select
 If PropFillStyle = FlexFillStyleSingle Then
-    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Checked = Value
+    Call SetCellChecked(VBFlexGridRow, VBFlexGridCol, Value)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
         With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            .Cols(j).Checked = Value
+            Call SetCellChecked(i, j, Value)
         Next j
         End With
     Next i
@@ -11483,7 +11516,9 @@ If Not .Picture Is Nothing Then
         End Select
     End If
 End If
-If .Checked > -1 Then
+Dim Checked As Integer
+Checked = GetCellChecked(iRow, iCol)
+If Checked > -1 Then
     Dim CheckBoxRect As RECT, CheckBoxAlignment As FlexCheckBoxAlignmentConstants, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
     LSet CheckBoxRect = TextRect
     If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
@@ -11526,14 +11561,14 @@ If .Checked > -1 Then
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
-    Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, .Checked)
+    Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, Checked)
     Select Case CheckBoxAlignment
         Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
         Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
             TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
     End Select
-    Select Case .Checked
+    Select Case Checked
         Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
             HiddenText = True
     End Select
@@ -12137,7 +12172,9 @@ If Not .Picture Is Nothing Then
         End Select
     End If
 End If
-If .Checked > -1 Then
+Dim Checked As Integer
+Checked = GetCellChecked(iRow, iCol)
+If Checked > -1 Then
     Dim CheckBoxRect As RECT, CheckBoxAlignment As FlexCheckBoxAlignmentConstants, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
     LSet CheckBoxRect = TextRect
     If VBFlexGridColsInfo(iCol).CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
@@ -12177,14 +12214,14 @@ If .Checked > -1 Then
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
-    Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, .Checked)
+    Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, Checked)
     Select Case CheckBoxAlignment
         Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
         Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
             TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
     End Select
-    Select Case .Checked
+    Select Case Checked
         Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
             HiddenText = True
     End Select
@@ -12813,6 +12850,80 @@ VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText = TextIn
 
 End Sub
 
+Private Function GetCellChecked(ByVal iRow As Long, ByVal iCol As Long) As Integer
+If (VBFlexGridColsInfo(iCol).State And CLIS_CHECKBOXES) = 0 Then
+    GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+Else
+    If iRow >= PropFixedRows Then
+        
+        #If ImplementFlexDataSource = True Then
+        
+        If VBFlexGridFlexDataSource2 Is Nothing Then
+            If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked > -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+        ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceChecked) <> 0 Then
+            If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+                GetCellChecked = VBFlexGridFlexDataSource2.GetChecked(iCol, iRow - PropFixedRows)
+                If GetCellChecked < -1 Or GetCellChecked > 7 Then GetCellChecked = -1
+            Else
+                If iCol >= PropFixedCols Then
+                    GetCellChecked = VBFlexGridFlexDataSource2.GetChecked(iCol - PropFixedCols, iRow - PropFixedRows)
+                    If GetCellChecked < -1 Or GetCellChecked > 7 Then GetCellChecked = -1
+                Else
+                    If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked > -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+                End If
+            End If
+        Else
+            If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked > -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+        End If
+        
+        #Else
+        
+        If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked > -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+        
+        #End If
+        
+    Else
+        GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+    End If
+End If
+End Function
+
+Private Sub SetCellChecked(ByVal iRow As Long, ByVal iCol As Long, ByVal NewValue As Integer)
+If (VBFlexGridColsInfo(iCol).State And CLIS_CHECKBOXES) = 0 Then
+    VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+Else
+    If iRow >= PropFixedRows Then
+        
+        #If ImplementFlexDataSource = True Then
+        
+        If VBFlexGridFlexDataSource2 Is Nothing Then
+            VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+        ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceChecked) <> 0 Then
+            If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+                VBFlexGridFlexDataSource2.SetChecked iCol, iRow - PropFixedRows, NewValue
+            Else
+                If iCol >= PropFixedCols Then
+                    VBFlexGridFlexDataSource2.SetChecked iCol - PropFixedCols, iRow - PropFixedRows, NewValue
+                Else
+                    VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+                End If
+            End If
+        Else
+            VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+        End If
+        
+        #Else
+        
+        VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+        
+        #End If
+        
+    Else
+        VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+    End If
+End If
+End Sub
+
 Private Function GetRowHeight(ByVal iRow As Long) As Long
 If PropRows < 1 Or PropCols < 1 Then Exit Function
 If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
@@ -13055,7 +13166,9 @@ If hDC <> 0 Then
                 End Select
             End If
         End If
-        If .Checked > -1 Then
+        Dim Checked As Integer
+        Checked = GetCellChecked(iRow, iCol)
+        If Checked > -1 Then
             Dim CheckBoxAlignment As FlexCheckBoxAlignmentConstants
             If iRow < PropFixedRows Or iCol < PropFixedCols Then
                 If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
@@ -13146,7 +13259,9 @@ If hDC <> 0 Then
                         End Select
                     End If
                 End If
-                If .Checked > -1 Then
+                Dim Checked As Integer
+                Checked = GetCellChecked(iRow, iCol)
+                If Checked > -1 Then
                     Dim CheckBoxAlignment As FlexCheckBoxAlignmentConstants
                     If iRow < PropFixedRows Or iCol < PropFixedCols Then
                         If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
@@ -13417,7 +13532,9 @@ If iRowHit > -1 And iColHit > -1 Then
             End If
         End If
     End If
-    If VBFlexGridCells.Rows(iRowHit).Cols(iColHit).Checked > -1 Then
+    Dim Checked As Integer
+    Checked = GetCellChecked(iRowHit, iColHit)
+    If Checked > -1 Then
         Dim CheckBoxRect As RECT, CheckBoxAlignment As FlexCheckBoxAlignmentConstants, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
         With CheckBoxRect
         .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
@@ -13489,7 +13606,7 @@ If iRowHit > -1 And iColHit > -1 Then
         CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
         End With
         If PtInRect(CheckBoxRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
-            Select Case VBFlexGridCells.Rows(iRowHit).Cols(iColHit).Checked
+            Select Case Checked
                 Case FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox
                     HTI.HitResult = FlexHitResultCheckBox
                 Case FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
@@ -14001,7 +14118,9 @@ If hDC <> 0 Then
             End Select
         End If
     End If
-    If .Checked > -1 Then
+    Dim Checked As Integer
+    Checked = GetCellChecked(iRow, iCol)
+    If Checked > -1 Then
         Dim CheckBoxAlignment As FlexCheckBoxAlignmentConstants
         If iRow < PropFixedRows Or iCol < PropFixedCols Then
             If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
@@ -14028,7 +14147,7 @@ If hDC <> 0 Then
             Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
                 TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
         End Select
-        Select Case .Checked
+        Select Case Checked
             Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
                 HiddenText = True
         End Select
@@ -17365,26 +17484,26 @@ End Sub
 
 Private Sub SetCellCheck(ByVal iRow As Long, ByVal iCol As Long, ByVal Reason As FlexCellCheckReasonConstants)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
-With VBFlexGridCells.Rows(iRow).Cols(iCol)
-If .Checked > -1 Then
-    Select Case .Checked
+Dim Checked As Integer
+Checked = GetCellChecked(iRow, iCol)
+If Checked > -1 Then
+    Select Case Checked
         Case FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox
             Dim Cancel As Boolean
             RaiseEvent CellBeforeCheck(iRow, iCol, Reason, Cancel)
             If Cancel = False Then
-                Select Case .Checked
+                Select Case Checked
                     Case FlexUnchecked
-                        .Checked = FlexChecked
+                        Call SetCellChecked(iRow, iCol, FlexChecked)
                         Call RedrawGrid
                     Case FlexChecked, FlexGrayed
-                        .Checked = FlexUnchecked
+                        Call SetCellChecked(iRow, iCol, FlexUnchecked)
                         Call RedrawGrid
                 End Select
                 RaiseEvent CellCheck(iRow, iCol)
             End If
     End Select
 End If
-End With
 End Sub
 
 Private Sub DrawCellFlooding(ByVal hDC As Long, ByRef CellRect As RECT, ByVal Percent As Integer, ByVal Color As Long)
@@ -18619,7 +18738,7 @@ Select Case wMsg
                             If CreateEdit(FlexEditReasonF2) = True Then Exit Function
                         Case vbKeySpace
                             If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
-                                If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Checked > -1 Then
+                                If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then
                                     Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
                                 ElseIf CreateEdit(FlexEditReasonSpace) = True Then
                                     Exit Function
@@ -18649,7 +18768,7 @@ Select Case wMsg
                 Else
                     If KeyCode = vbKeySpace Then
                         If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
-                            If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Checked > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
+                            If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
                         End If
                     End If
                 End If

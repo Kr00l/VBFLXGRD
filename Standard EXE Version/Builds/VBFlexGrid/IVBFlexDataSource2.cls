@@ -24,3 +24,11 @@ End Function
 Public Sub SetToolTipText(ByVal Field As Long, ByVal Record As Long, ByVal NewValue As String)
 Attribute SetToolTipText.VB_Description = "Interface method for updating the new tool tip text supplied by the consumer."
 End Sub
+
+Public Function GetChecked(ByVal Field As Long, ByVal Record As Long) As Integer
+Attribute GetChecked.VB_Description = "Interface function for providing check mark to the consumer."
+End Function
+
+Public Sub SetChecked(ByVal Field As Long, ByVal Record As Long, ByVal NewValue As Integer)
+Attribute SetChecked.VB_Description = "Interface method for updating the new check mark supplied by the consumer."
+End Sub
