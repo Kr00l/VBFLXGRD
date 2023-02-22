@@ -70,7 +70,7 @@ Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComb
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
-Private FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
+Private FlexNoCheckBoxEver, FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
 Private FlexCellCheckReasonMouse, FlexCellCheckReasonKeyboard
 Private FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentCenterTop, FlexCheckBoxAlignmentCenterCenter, FlexCheckBoxAlignmentCenterBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom, FlexCheckBoxAlignmentUsePictureAlignment
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
@@ -414,6 +414,7 @@ FlexSortArrowAscending = 1
 FlexSortArrowDescending = 2
 End Enum
 Public Enum FlexCheckBoxConstants
+FlexNoCheckBoxEver = -2
 FlexNoCheckBox = -1
 FlexUnchecked = 0
 FlexChecked = 1
@@ -8393,7 +8394,7 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Select Case Value
-    Case FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
+    Case FlexNoCheckBoxEver, FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
     Case Else
         Err.Raise 380
 End Select
@@ -12859,26 +12860,26 @@ Else
         #If ImplementFlexDataSource = True Then
         
         If VBFlexGridFlexDataSource2 Is Nothing Then
-            If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked > -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+            If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
         ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceChecked) <> 0 Then
             If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
                 GetCellChecked = VBFlexGridFlexDataSource2.GetChecked(iCol, iRow - PropFixedRows)
-                If GetCellChecked < -1 Or GetCellChecked > 7 Then GetCellChecked = -1
+                If GetCellChecked < -2 Or GetCellChecked > 7 Then GetCellChecked = 0
             Else
                 If iCol >= PropFixedCols Then
                     GetCellChecked = VBFlexGridFlexDataSource2.GetChecked(iCol - PropFixedCols, iRow - PropFixedRows)
-                    If GetCellChecked < -1 Or GetCellChecked > 7 Then GetCellChecked = -1
+                    If GetCellChecked < -2 Or GetCellChecked > 7 Then GetCellChecked = 0
                 Else
-                    If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked > -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+                    If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
                 End If
             End If
         Else
-            If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked > -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+            If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
         End If
         
         #Else
         
-        If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked > -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+        If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
         
         #End If
         
