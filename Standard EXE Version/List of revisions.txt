@@ -1,12 +1,15 @@
 List of revisions:
 
+28-Feb-2023
+- Added enum FlexCellTextDisplay for the Cell property.
+- The text in the internal GetLabelInfo is now adjusted by ColFormat, if necessary.
+
 22-Feb-2023
 - Included ColCheckBoxes property. (As Boolean; added CLIS_CHECKBOXES)
   This allows a column to have predefined check boxes. (FlexNoCheckBox -> FlexUnchecked; fixed rows excluded)
 - Included GetChecked/SetChecked to the IVBFlexDataSource2 interface.
   Added FlexDataSourceChecked enum to FlexDataSourceFlags.
   Only those columns with CLIS_CHECKBOXES will fetch from the custom data source.
-- Included FlexNoCheckBoxEver
 - Added FlexNoCheckBoxEver enum to FlexCheckBoxConstants.
   This allows to have no check box for individual cells even when ColCheckBoxes is set to True. (e.g. for frozen rows)
 
