@@ -2,7 +2,6 @@ List of revisions:
 
 28-Feb-2023
 - Added enum FlexCellTextDisplay for the Cell property.
-- The text in the internal GetLabelInfo is now adjusted by ColFormat, if necessary.
 
 22-Feb-2023
 - Included ColCheckBoxes property. (As Boolean; added CLIS_CHECKBOXES)
