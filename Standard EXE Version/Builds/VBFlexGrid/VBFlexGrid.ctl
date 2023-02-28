@@ -54,7 +54,7 @@ Private FlexClearEverything, FlexClearText, FlexClearFormatting
 Private FlexTabControls, FlexTabCells, FlexTabNext
 Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
 Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
-Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellChecked, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort
+Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellChecked, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort, FlexCellTextDisplay
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
@@ -315,6 +315,7 @@ FlexCellTop = 21
 FlexCellWidth = 22
 FlexCellHeight = 23
 FlexCellSort = 24
+FlexCellTextDisplay = 25
 End Enum
 Public Enum FlexAutoSizeModeConstants
 FlexAutoSizeModeColWidth = 0
@@ -7341,6 +7342,8 @@ Select Case Setting
         Cell = Me.CellHeight
     Case FlexCellSort
         Err.Raise Number:=394, Description:="Property is write-only"
+    Case FlexCellTextDisplay
+        Cell = CellTextDisplay()
     Case Else
         Err.Raise 380
 End Select
@@ -7419,6 +7422,8 @@ Select Case Setting
         Err.Raise Number:=383, Description:="Property is read-only"
     Case FlexCellSort
         Me.Sort = Value
+    Case FlexCellTextDisplay
+        Err.Raise Number:=383, Description:="Property is read-only"
     Case Else
         Err.Raise 380
 End Select
@@ -11783,7 +11788,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
         Case FlexEllipsisFormatWord
             DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
     End Select
-    If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+    Call GetTextDisplay(iRow, iCol, Text)
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
@@ -12362,7 +12367,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
         Case FlexEllipsisFormatWord
             DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
     End Select
-    If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+    Call GetTextDisplay(iRow, iCol, Text)
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
@@ -12924,6 +12929,17 @@ Else
     End If
 End If
 End Sub
+
+Private Sub GetTextDisplay(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As String)
+If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+End Sub
+
+Private Function CellTextDisplay() As String
+If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+    Call GetCellText(VBFlexGridRow, VBFlexGridCol, CellTextDisplay)
+    Call GetTextDisplay(VBFlexGridRow, VBFlexGridCol, CellTextDisplay)
+End If
+End Function
 
 Private Function GetRowHeight(ByVal iRow As Long) As Long
 If PropRows < 1 Or PropCols < 1 Then Exit Function
@@ -14055,6 +14071,7 @@ If hDC <> 0 Then
     End If
     Dim Text As String, TextRect As RECT, HiddenText As Boolean
     Call GetCellText(iRow, iCol, Text)
+    Call GetTextDisplay(iRow, iCol, Text)
     If StrPtr(Text) = 0 Then Text = ""
     With TextRect
     .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
@@ -14095,7 +14112,7 @@ If hDC <> 0 Then
         hFontOld = SelectObject(hDC, hFontTemp)
         Set TempFont = Nothing
     End If
-    Dim Alignment As FlexAlignmentConstants, Format As Long
+    Dim Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .Alignment = -1 Then
         If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
             Alignment = VBFlexGridColsInfo(iCol).Alignment
@@ -14154,34 +14171,34 @@ If hDC <> 0 Then
         End Select
     End If
     End With
-    Format = DT_NOPREFIX
-    If VBFlexGridRTLReading = True Then Format = Format Or DT_RTLREADING
+    DrawFlags = DT_NOPREFIX
+    If VBFlexGridRTLReading = True Then DrawFlags = DrawFlags Or DT_RTLREADING
     Select Case Alignment
         Case FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom
-            Format = Format Or DT_LEFT
+            DrawFlags = DrawFlags Or DT_LEFT
         Case FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom
-            Format = Format Or DT_CENTER
+            DrawFlags = DrawFlags Or DT_CENTER
         Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
-            Format = Format Or DT_RIGHT
+            DrawFlags = DrawFlags Or DT_RIGHT
         Case FlexAlignmentGeneral
             If PropMirrorAlignGeneral = False Then
                 If Not IsNumeric(Text) And Not IsDate(Text) Then
-                    Format = Format Or DT_LEFT
+                    DrawFlags = DrawFlags Or DT_LEFT
                 Else
-                    Format = Format Or DT_RIGHT
+                    DrawFlags = DrawFlags Or DT_RIGHT
                 End If
             Else
                 If Not IsNumeric(Text) And Not IsDate(Text) Then
-                    Format = Format Or DT_RIGHT
+                    DrawFlags = DrawFlags Or DT_RIGHT
                 Else
-                    Format = Format Or DT_LEFT
+                    DrawFlags = DrawFlags Or DT_LEFT
                 End If
             End If
     End Select
     If PropWordWrap = True Then
-        Format = Format Or DT_WORDBREAK
+        DrawFlags = DrawFlags Or DT_WORDBREAK
     ElseIf PropSingleLine = True Then
-        Format = Format Or DT_SINGLELINE
+        DrawFlags = DrawFlags Or DT_SINGLELINE
     End If
     ' Ellipsis format will be ignored.
     If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
@@ -14197,15 +14214,15 @@ If hDC <> 0 Then
     LSet CalcRect = TextRect
     Select Case Alignment
         Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
-            Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
+            Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
             Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
             ' DT_VCENTER not applicable to apply here in case of DT_SINGLELINE.
         Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
-            Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
+            Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
             Result = ((TextRect.Bottom - TextRect.Top) - Height)
             ' DT_BOTTOM not applicable to apply here in case of DT_SINGLELINE.
     End Select
-    If Result > 0 Or (Format And DT_SINGLELINE) = DT_SINGLELINE Then
+    If Result > 0 Or (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         CalcRect.Top = CalcRect.Top + Result
         CalcRect.Bottom = CalcRect.Bottom + Result
     End If
@@ -14215,17 +14232,17 @@ If hDC <> 0 Then
         If CalcRect.Right <= TextRect.Right And CalcRect.Bottom <= TextRect.Bottom Then .Flags = .Flags Or LBLI_UNFOLDED
     End If
     If HiddenText = True Then .Flags = .Flags Or LBLI_HIDDEN
-    If (Format And DT_CENTER) = DT_CENTER Then
+    If (DrawFlags And DT_CENTER) = DT_CENTER Then
         Result = (((TextRect.Right - TextRect.Left) - (CalcRect.Right - CalcRect.Left)) / 2)
         CalcRect.Left = CalcRect.Left + Result
         CalcRect.Right = CalcRect.Right + Result
-    ElseIf (Format And DT_RIGHT) = DT_RIGHT Then
+    ElseIf (DrawFlags And DT_RIGHT) = DT_RIGHT Then
         Result = ((TextRect.Right - TextRect.Left) - (CalcRect.Right - CalcRect.Left))
         CalcRect.Left = CalcRect.Left + Result
         CalcRect.Right = CalcRect.Right + Result
     End If
     LSet .RC = CalcRect
-    .DrawFlags = Format
+    .DrawFlags = DrawFlags
     End With
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
@@ -18997,6 +19014,7 @@ Select Case wMsg
                         If PropShowLabelTips = True Then Call GetLabelInfo(.HitRow, .HitCol, LBLI)
                         If (LBLI.Flags And LBLI_VALID) = LBLI_VALID And Not (LBLI.Flags And LBLI_UNFOLDED) = LBLI_UNFOLDED And Not (LBLI.Flags And LBLI_HIDDEN) = LBLI_HIDDEN Then
                             Call GetCellText(.HitRow, .HitCol, Text)
+                            Call GetTextDisplay(.HitRow, .HitCol, Text)
                             If (LBLI.DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
                                 If InStr(Text, vbCr) Then Text = Replace$(Text, vbCr, vbNullString)
                                 If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbNullString)
