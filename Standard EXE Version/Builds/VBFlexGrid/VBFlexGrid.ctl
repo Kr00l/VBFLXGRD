@@ -9275,6 +9275,7 @@ If Mode = FlexAutoSizeModeColWidth Then
             For iRow = RowOrColScope1 To RowOrColScope2
                 If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                     Call GetCellText(iRow, iCol, Text)
+                    Call GetTextDisplay(iRow, iCol, Text)
                     Size.CX = GetBestWidth(iRow, iCol, Text, hDC)
                     If Size.CX > 0 Then
                         Size.CX = Size.CX + Spacing
@@ -9320,6 +9321,7 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
             For iCol = RowOrColScope1 To RowOrColScope2
                 If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                     Call GetCellText(iRow, iCol, Text)
+                    Call GetTextDisplay(iRow, iCol, Text)
                     Size.CY = GetBestHeight(iRow, iCol, Text, hDC)
                     If Size.CY > 0 Then
                         Size.CY = Size.CY + Spacing
