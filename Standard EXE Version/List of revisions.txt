@@ -2,6 +2,9 @@ List of revisions:
 
 28-Feb-2023
 - Added enum FlexCellTextDisplay for the Cell property.
+- Included the FixedFormat property.
+  It defaults to vbNullString (StrPtr() = 0) and thus inherits from ColFormat.
+  Use "" to disable formatting for fixed cells in a column.
 
 22-Feb-2023
 - Included ColCheckBoxes property. (As Boolean; added CLIS_CHECKBOXES)
