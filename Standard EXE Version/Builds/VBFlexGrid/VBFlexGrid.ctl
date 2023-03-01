@@ -725,6 +725,7 @@ ComboItems As String
 CheckBoxAlignment As FlexCheckBoxAlignmentConstants
 FixedCheckBoxAlignment As FlexCheckBoxAlignmentConstants
 Format As String
+FixedFormat As String
 DataType As Integer
 NumericPrecision As Byte
 NumericScale As Byte
@@ -7070,6 +7071,30 @@ End If
 Call RedrawGrid
 End Property
 
+Public Property Get FixedFormat(ByVal Index As Long) As String
+Attribute FixedFormat.VB_Description = "Returns/sets the format used to display numeric values."
+Attribute FixedFormat.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If StrPtr(VBFlexGridColsInfo(Index).FixedFormat) = 0 Then
+    FixedFormat = VBFlexGridColsInfo(Index).Format
+Else
+    FixedFormat = VBFlexGridColsInfo(Index).FixedFormat
+End If
+End Property
+
+Public Property Let FixedFormat(ByVal Index As Long, ByVal Value As String)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).FixedFormat = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).FixedFormat = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
 Public Property Get ColDataType(ByVal Index As Long) As Integer
 Attribute ColDataType.VB_Description = "Returns/sets the data type for the specified column."
 Attribute ColDataType.VB_MemberFlags = "400"
@@ -12933,7 +12958,15 @@ End If
 End Sub
 
 Private Sub GetTextDisplay(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As String)
-If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+If iRow >= PropFixedRows And iCol >= PropFixedCols Then
+    If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+Else
+    If StrPtr(VBFlexGridColsInfo(iCol).FixedFormat) = 0 Then
+        If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+    Else
+        If Not VBFlexGridColsInfo(iCol).FixedFormat = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).FixedFormat, vbUseSystemDayOfWeek, vbUseSystem)
+    End If
+End If
 End Sub
 
 Private Function CellTextDisplay() As String
