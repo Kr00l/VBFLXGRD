@@ -1,5 +1,9 @@
 List of revisions:
 
+13-Mar-2023
+- Included CheckBoxDrawMode run-time property and corresponding CheckBoxOwnerDraw event.
+- Bugfix for FlexDisabledChecked when visual styles are off.
+
 28-Feb-2023
 - Added enum FlexCellTextDisplay for the Cell property.
 - Included the FixedFormat property.
