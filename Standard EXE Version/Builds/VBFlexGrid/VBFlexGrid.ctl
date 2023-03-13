@@ -73,6 +73,7 @@ Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
 Private FlexNoCheckBoxEver, FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
 Private FlexCellCheckReasonMouse, FlexCellCheckReasonKeyboard
 Private FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentCenterTop, FlexCheckBoxAlignmentCenterCenter, FlexCheckBoxAlignmentCenterBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom, FlexCheckBoxAlignmentUsePictureAlignment
+Private FlexCheckBoxDrawModeNormal, FlexCheckBoxDrawModeOwnerDraw
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
 Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoData, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText, FlexDataSourceChecked
 #End If
@@ -441,6 +442,10 @@ FlexCheckBoxAlignmentRightTop = 6
 FlexCheckBoxAlignmentRightCenter = 7
 FlexCheckBoxAlignmentRightBottom = 8
 FlexCheckBoxAlignmentUsePictureAlignment = 9
+End Enum
+Public Enum FlexCheckBoxDrawModeConstants
+FlexCheckBoxDrawModeNormal = 0
+FlexCheckBoxDrawModeOwnerDraw = 1
 End Enum
 Public Enum FlexBestFitModeConstants
 FlexBestFitModeTextOnly = 0
@@ -829,6 +834,8 @@ Public Event CellBeforeCheck(ByVal Row As Long, ByVal Col As Long, ByVal Reason 
 Attribute CellBeforeCheck.VB_Description = "Occurs before a cell is about to be checked."
 Public Event CellCheck(ByVal Row As Long, ByVal Col As Long)
 Attribute CellCheck.VB_Description = "Occurs when a cell is checked."
+Public Event CheckBoxOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
+Attribute CheckBoxOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn check box has changed."
 Public Event PreviewKeyDown(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
 Attribute PreviewKeyDown.VB_Description = "Occurs before the KeyDown event."
 Public Event PreviewKeyUp(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
@@ -1045,7 +1052,9 @@ Private Const TME_LEAVE As Long = &H2
 Private Const TME_NONCLIENT As Long = &H10
 Private Const ODA_DRAWENTIRE As Long = &H1
 Private Const ODS_SELECTED As Long = &H1
+Private Const ODS_GRAYED As Long = &H2
 Private Const ODS_DISABLED As Long = &H4
+Private Const ODS_CHECKED As Long = &H8
 Private Const ODS_FOCUS As Long = &H10
 Private Const ODS_HOTLIGHT As Long = &H40
 Private Const ODS_NOFOCUSRECT As Long = &H200
@@ -1368,6 +1377,7 @@ Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
 Private VBFlexGridComboItems As String
 Private VBFlexGridComboBoxRect As RECT
 Private VBFlexGridComboCalendarRegistered As Boolean
+Private VBFlexGridCheckBoxDrawMode As FlexCheckBoxDrawModeConstants
 Private VBFlexGridWheelScrollLines As Long
 Private VBFlexGridFocusBorder As SIZEAPI
 Private VBFlexGridFocused As Boolean
@@ -1665,6 +1675,7 @@ VBFlexGridComboMode = FlexComboModeNone
 VBFlexGridComboActiveMode = FlexComboModeNone
 VBFlexGridComboButtonAlignment = FlexLeftRightAlignmentRight
 VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal
+VBFlexGridCheckBoxDrawMode = FlexCheckBoxDrawModeNormal
 SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VBFlexGridWheelScrollLines, 0
 If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VBFlexGridFocusBorder.CX, 0) = 0 Then VBFlexGridFocusBorder.CX = 1
 If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VBFlexGridFocusBorder.CY, 0) = 0 Then VBFlexGridFocusBorder.CY = 1
@@ -9898,6 +9909,21 @@ If VBFlexGridComboCalendarHandle <> 0 Then
 End If
 End Property
 
+Public Property Get CheckBoxDrawMode() As FlexCheckBoxDrawModeConstants
+Attribute CheckBoxDrawMode.VB_Description = "Returns/sets a value indicating whether your code or the flex grid will handle drawing of the check box."
+Attribute CheckBoxDrawMode.VB_MemberFlags = "400"
+CheckBoxDrawMode = VBFlexGridCheckBoxDrawMode
+End Property
+
+Public Property Let CheckBoxDrawMode(ByVal Value As FlexCheckBoxDrawModeConstants)
+Select Case Value
+    Case FlexCheckBoxDrawModeNormal, FlexCheckBoxDrawModeOwnerDraw
+        VBFlexGridCheckBoxDrawMode = Value
+    Case Else
+        Err.Raise 380
+End Select
+End Property
+
 Public Property Get Version() As Integer
 Attribute Version.VB_Description = "Returns the version of the flex grid control currently loaded in memory."
 Attribute Version.VB_MemberFlags = "400"
@@ -17458,80 +17484,109 @@ Select Case Checked
             If Checked = FlexTextAsCheckBox Then Checked = FlexGrayed Else Checked = FlexDisabledGrayed
         End If
 End Select
-Dim Theme As Long
-
-#If ImplementThemedControls = True Then
-
-If VBFlexGridHandle <> 0 Then
-    If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
-    If Theme <> 0 Then
-        Dim CheckState As Long
-        Select Case Checked
-            Case FlexUnchecked
-                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
-                    CheckState = CBS_UNCHECKEDHOT
-                Else
-                    CheckState = CBS_UNCHECKEDNORMAL
-                End If
-            Case FlexChecked
-                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
-                    CheckState = CBS_CHECKEDHOT
-                Else
-                    CheckState = CBS_CHECKEDNORMAL
-                End If
-            Case FlexGrayed
-                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
-                    CheckState = CBS_MIXEDHOT
-                Else
-                    CheckState = CBS_MIXEDNORMAL
-                End If
-            Case FlexDisabledUnchecked
-                CheckState = CBS_UNCHECKEDDISABLED
-            Case FlexDisabledChecked
-                CheckState = CBS_CHECKEDDISABLED
-            Case FlexDisabledGrayed
-                CheckState = CBS_MIXEDDISABLED
-        End Select
-        If IsThemeBackgroundPartiallyTransparent(Theme, BP_CHECKBOX, CheckState) <> 0 Then DrawThemeParentBackground VBFlexGridHandle, hDC, RC
-        DrawThemeBackground Theme, hDC, BP_CHECKBOX, CheckState, RC, RC
-        CloseThemeData Theme
-    End If
-End If
-
-#End If
-
-If Theme = 0 Then
-    Dim Flags As Long
-    Flags = DFCS_BUTTONCHECK Or DFCS_FLAT
-    If Checked = FlexChecked Then Flags = Flags Or DFCS_CHECKED
+Dim Handled As Boolean
+If VBFlexGridCheckBoxDrawMode <> FlexCheckBoxDrawModeNormal Then
+    Dim Cancel As Boolean, ItemState As Long, RCItem As RECT, P As POINTAPI
+    Select Case Checked
+        Case FlexChecked, FlexDisabledChecked
+            ItemState = ItemState Or ODS_CHECKED
+        Case FlexGrayed, FlexDisabledGrayed
+            ItemState = ItemState Or ODS_GRAYED
+    End Select
     Select Case Checked
         Case FlexUnchecked, FlexChecked, FlexGrayed
-            If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then Flags = Flags Or DFCS_HOT
+            If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then ItemState = ItemState Or ODS_HOTLIGHT
         Case FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
-            Flags = Flags Or DFCS_INACTIVE
+            ItemState = ItemState Or ODS_DISABLED
     End Select
-    DrawFrameControl hDC, RC, DFC_BUTTON, Flags
-    Select Case Checked
-        Case FlexGrayed, FlexDisabledGrayed
-            ' DrawFrameControl does not support indeterminate checkboxes.
-            ' We fill a rectangle inside the checkbox like IE10 does.
-            Dim Padding As Long, Brush As Long
-            Padding = (RC.Right - RC.Left) * 4 / 13
-            RC.Left = RC.Left + Padding
-            RC.Top = RC.Top + Padding
-            RC.Right = RC.Right - Padding
-            RC.Bottom = RC.Bottom - Padding
-            If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
-                If Not (Flags And DFCS_HOT) = DFCS_HOT Then
-                    Brush = GetSysColorBrush(COLOR_WINDOWTEXT)
+    RCItem.Left = 0
+    RCItem.Top = 0
+    RCItem.Right = RC.Right - RC.Left
+    RCItem.Bottom = RC.Bottom - RC.Top
+    SetViewportOrgEx hDC, RC.Left, RC.Top, P
+    RaiseEvent CheckBoxOwnerDraw(iRow, iCol, Cancel, ItemState, hDC, RCItem.Left, RCItem.Top, RCItem.Right, RCItem.Bottom)
+    SetViewportOrgEx hDC, P.X, P.Y, P
+    Handled = Not Cancel
+End If
+If Handled = False Then
+    Dim Theme As Long
+    
+    #If ImplementThemedControls = True Then
+    
+    If VBFlexGridHandle <> 0 Then
+        If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
+        If Theme <> 0 Then
+            Dim CheckState As Long
+            Select Case Checked
+                Case FlexUnchecked
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
+                        CheckState = CBS_UNCHECKEDHOT
+                    Else
+                        CheckState = CBS_UNCHECKEDNORMAL
+                    End If
+                Case FlexChecked
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
+                        CheckState = CBS_CHECKEDHOT
+                    Else
+                        CheckState = CBS_CHECKEDNORMAL
+                    End If
+                Case FlexGrayed
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
+                        CheckState = CBS_MIXEDHOT
+                    Else
+                        CheckState = CBS_MIXEDNORMAL
+                    End If
+                Case FlexDisabledUnchecked
+                    CheckState = CBS_UNCHECKEDDISABLED
+                Case FlexDisabledChecked
+                    CheckState = CBS_CHECKEDDISABLED
+                Case FlexDisabledGrayed
+                    CheckState = CBS_MIXEDDISABLED
+            End Select
+            If IsThemeBackgroundPartiallyTransparent(Theme, BP_CHECKBOX, CheckState) <> 0 Then DrawThemeParentBackground VBFlexGridHandle, hDC, RC
+            DrawThemeBackground Theme, hDC, BP_CHECKBOX, CheckState, RC, RC
+            CloseThemeData Theme
+        End If
+    End If
+    
+    #End If
+    
+    If Theme = 0 Then
+        Dim Flags As Long
+        Flags = DFCS_BUTTONCHECK Or DFCS_FLAT
+        Select Case Checked
+            Case FlexChecked, FlexDisabledChecked
+                Flags = Flags Or DFCS_CHECKED
+        End Select
+        Select Case Checked
+            Case FlexUnchecked, FlexChecked, FlexGrayed
+                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then Flags = Flags Or DFCS_HOT
+            Case FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
+                Flags = Flags Or DFCS_INACTIVE
+        End Select
+        DrawFrameControl hDC, RC, DFC_BUTTON, Flags
+        Select Case Checked
+            Case FlexGrayed, FlexDisabledGrayed
+                ' DrawFrameControl does not support indeterminate checkboxes.
+                ' We fill a rectangle inside the checkbox like IE10 does.
+                Dim Padding As Long, Brush As Long
+                Padding = (RC.Right - RC.Left) * 4 / 13
+                RC.Left = RC.Left + Padding
+                RC.Top = RC.Top + Padding
+                RC.Right = RC.Right - Padding
+                RC.Bottom = RC.Bottom - Padding
+                If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
+                    If Not (Flags And DFCS_HOT) = DFCS_HOT Then
+                        Brush = GetSysColorBrush(COLOR_WINDOWTEXT)
+                    Else
+                        Brush = GetSysColorBrush(COLOR_HOTLIGHT)
+                    End If
                 Else
-                    Brush = GetSysColorBrush(COLOR_HOTLIGHT)
+                    Brush = GetSysColorBrush(COLOR_GRAYTEXT)
                 End If
-            Else
-                Brush = GetSysColorBrush(COLOR_GRAYTEXT)
-            End If
-            FillRect hDC, RC, Brush
-    End Select
+                FillRect hDC, RC, Brush
+        End Select
+    End If
 End If
 End Sub
 
@@ -18053,11 +18108,11 @@ End Sub
 
 Private Sub ComboButtonDraw(ByRef DIS As DRAWITEMSTRUCT)
 If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
-    Dim OldTextColor As Long
+    Dim Theme As Long, OldTextColor As Long
     
     #If ImplementThemedControls = True Then
     
-    Dim Theme As Long, ThemeDropDown As Boolean
+    Dim ThemeDropDown As Boolean
     If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then
         If DIS.CtlType = ODT_STATIC Then
             If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
@@ -18122,7 +18177,11 @@ If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
             SetTextColor DIS.hDC, OldTextColor
         End If
         CloseThemeData Theme
-    Else
+    End If
+    
+    #End If
+    
+    If Theme = 0 Then
         Dim CtlType As Long, Flags As Long
         If DIS.CtlType = ODT_STATIC Then
             If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
@@ -18159,47 +18218,6 @@ If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
             SetTextColor DIS.hDC, OldTextColor
         End If
     End If
-    
-    #Else
-    
-    Dim CtlType As Long, Flags As Long
-    If DIS.CtlType = ODT_STATIC Then
-        If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
-            CtlType = DFC_SCROLL
-            Flags = DFCS_SCROLLCOMBOBOX
-        Else
-            CtlType = DFC_BUTTON
-            Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
-        End If
-    Else
-        If DIS.CtlType = ODT_COMBOBOX Then
-            CtlType = DFC_SCROLL
-            Flags = DFCS_SCROLLCOMBOBOX
-        ElseIf DIS.CtlType = ODT_BUTTON Then
-            CtlType = DFC_BUTTON
-            Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
-        End If
-    End If
-    If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
-    If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
-    If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
-    DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
-    If CtlType = DFC_BUTTON Then
-        If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
-            If Not (Flags And DFCS_HOT) = DFCS_HOT Then
-                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
-            Else
-                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
-            End If
-        Else
-            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
-        End If
-        Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-        SetTextColor DIS.hDC, OldTextColor
-    End If
-    
-    #End If
-    
 Else
     With DIS
     RaiseEvent ComboButtonOwnerDraw(.CtlType, .ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
