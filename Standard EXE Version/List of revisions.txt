@@ -1,5 +1,10 @@
 List of revisions:
 
+17-Mar-2023
+- Included ComboButtonPicture/ColComboButtonPicture run-time property which allows to customize the appearance of cell combo buttons.
+  Only applicable if the combo button draw mode property is set to 0 - Normal and the combo mode property is set to 3 - Button.
+- Included Row/Col parameter in the ComboButtonOwnerDraw event.
+
 13-Mar-2023
 - Included CheckBoxDrawMode run-time property and corresponding CheckBoxOwnerDraw event.
 - Bugfix for FlexDisabledChecked when visual styles are off.

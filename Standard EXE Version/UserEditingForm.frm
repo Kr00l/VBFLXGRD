@@ -91,6 +91,7 @@ Begin VB.Form UserEditingForm
       Width           =   13455
       _ExtentX        =   23733
       _ExtentY        =   7435
+      MouseTrack      =   -1  'True
       Rows            =   25
       Cols            =   13
       AllowUserEditing=   -1  'True
