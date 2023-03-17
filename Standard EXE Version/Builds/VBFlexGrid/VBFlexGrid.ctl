@@ -725,7 +725,9 @@ SortArrow As FlexSortArrowConstants
 SortArrowAlignment As FlexLeftRightAlignmentConstants
 SortArrowColor As Long
 ComboMode As FlexComboModeConstants
-ComboButtonAlignment As FlexLeftRightAlignmentConstants
+ComboButtonPicture As IPictureDisp
+ComboButtonPictureRenderFlag As Integer
+ComboButtonAlignment As Integer
 ComboItems As String
 CheckBoxAlignment As FlexCheckBoxAlignmentConstants
 FixedCheckBoxAlignment As FlexCheckBoxAlignmentConstants
@@ -822,7 +824,7 @@ Public Event ComboCloseUp()
 Attribute ComboCloseUp.VB_Description = "Occurs when the drop-down list has been closed."
 Public Event ComboButtonClick()
 Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to button."
-Public Event ComboButtonOwnerDraw(ByVal CtlType As Long, ByVal ItemAction As Long, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
+Public Event ComboButtonOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByVal CtlType As Long, ByVal ItemAction As Long, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
 Attribute ComboButtonOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn combo button has changed."
 Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
 Attribute DividerDblClick.VB_Description = "Occurs when the user double-clicked the divider on a row or a column."
@@ -925,6 +927,7 @@ Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, ByRef l
 Private Declare Function GetWindowRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As RECT) As Long
 Private Declare Function MapWindowPoints Lib "user32" (ByVal hWndFrom As Long, ByVal hWndTo As Long, ByRef lppt As Any, ByVal cPoints As Long) As Long
 Private Declare Function SetViewportOrgEx Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByRef lpPoint As POINTAPI) As Long
+Private Declare Function GetViewportOrgEx Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint As POINTAPI) As Long
 Private Declare Function SetRect Lib "user32" (ByRef lpRect As RECT, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function CreateSolidBrush Lib "gdi32" (ByVal crColor As Long) As Long
 Private Declare Function CreatePen Lib "gdi32" (ByVal nPenStyle As Long, ByVal nWidth As Long, ByVal crColor As Long) As Long
@@ -1372,6 +1375,7 @@ Private VBFlexGridEditNoLostFocus As Boolean
 Private VBFlexGridComboCue As FlexComboCueConstants
 Private VBFlexGridComboCueRow As Long, VBFlexGridComboCueCol As Long
 Private VBFlexGridComboMode As FlexComboModeConstants, VBFlexGridComboActiveMode As FlexComboModeConstants
+Private VBFlexGridComboButtonPicture As IPictureDisp, VBFlexGridComboButtonPictureRenderFlag As Integer
 Private VBFlexGridComboButtonAlignment As FlexRightToLeftModeConstants
 Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
 Private VBFlexGridComboItems As String
@@ -6961,6 +6965,48 @@ Else
 End If
 End Property
 
+Public Property Get ColComboButtonPicture(ByVal Index As Long) As IPictureDisp
+Attribute ColComboButtonPicture.VB_Description = "Returns/sets the combo button picture for the specified column. Only applicable if the combo button draw mode property is set to 0 - Normal and the combo mode property is set to 3 - Button."
+Attribute ColComboButtonPicture.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Set ColComboButtonPicture = VBFlexGridColsInfo(Index).ComboButtonPicture
+End Property
+
+Public Property Let ColComboButtonPicture(ByVal Index As Long, ByVal Value As IPictureDisp)
+Set Me.ColComboButtonPicture(Index) = Value
+End Property
+
+Public Property Set ColComboButtonPicture(ByVal Index As Long, ByVal Value As IPictureDisp)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    If Value Is Nothing Then
+        Set VBFlexGridColsInfo(Index).ComboButtonPicture = Nothing
+    Else
+        Set UserControl.Picture = Value
+        Set VBFlexGridColsInfo(Index).ComboButtonPicture = UserControl.Picture
+        Set UserControl.Picture = Nothing
+    End If
+    VBFlexGridColsInfo(Index).ComboButtonPictureRenderFlag = 0
+Else
+    Dim i As Long
+    If Value Is Nothing Then
+        For i = 0 To (PropCols - 1)
+            Set VBFlexGridColsInfo(i).ComboButtonPicture = Nothing
+            VBFlexGridColsInfo(i).ComboButtonPictureRenderFlag = 0
+        Next i
+    Else
+        Set UserControl.Picture = Value
+        For i = 0 To (PropCols - 1)
+            Set VBFlexGridColsInfo(i).ComboButtonPicture = UserControl.Picture
+            VBFlexGridColsInfo(i).ComboButtonPictureRenderFlag = 0
+        Next i
+        Set UserControl.Picture = Nothing
+    End If
+End If
+If VBFlexGridComboButtonHandle <> 0 Then InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
+Call RedrawGrid
+End Property
+
 Public Property Get ColComboButtonAlignment(ByVal Index As Long) As FlexLeftRightAlignmentConstants
 Attribute ColComboButtonAlignment.VB_Description = "Returns/sets the combo button alignment for the specified column."
 Attribute ColComboButtonAlignment.VB_MemberFlags = "400"
@@ -9737,6 +9783,29 @@ If VBFlexGridComboButtonHandle <> 0 Then
 End If
 End Property
 
+Public Property Get ComboButtonPicture() As IPictureDisp
+Attribute ComboButtonPicture.VB_Description = "Returns/sets the combo button picture. Only applicable if the combo button draw mode property is set to 0 - Normal and the combo mode property is set to 3 - Button."
+Attribute ComboButtonPicture.VB_MemberFlags = "400"
+Set ComboButtonPicture = VBFlexGridComboButtonPicture
+End Property
+
+Public Property Let ComboButtonPicture(ByVal Value As IPictureDisp)
+Set Me.ComboButtonPicture = Value
+End Property
+
+Public Property Set ComboButtonPicture(ByVal Value As IPictureDisp)
+If Value Is Nothing Then
+    Set VBFlexGridComboButtonPicture = Nothing
+Else
+    Set UserControl.Picture = Value
+    Set VBFlexGridComboButtonPicture = UserControl.Picture
+    Set UserControl.Picture = Nothing
+End If
+VBFlexGridComboButtonPictureRenderFlag = 0
+If VBFlexGridComboButtonHandle <> 0 Then InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
+Call RedrawGrid
+End Property
+
 Public Property Get ComboButtonAlignment() As FlexLeftRightAlignmentConstants
 Attribute ComboButtonAlignment.VB_Description = "Returns/sets the combo button alignment. This may be useful for right-to-left reading-order properties."
 Attribute ComboButtonAlignment.VB_MemberFlags = "400"
@@ -11903,7 +11972,7 @@ End With
 If ComboCueWidth > 0 Then
     Dim DIS As DRAWITEMSTRUCT, P As POINTAPI
     DIS.CtlType = ComboCueCtlType
-    DIS.CtlID = 0
+    DIS.CtlID = ID_COMBOBUTTONCHILD
     DIS.ItemID = 0
     DIS.ItemAction = ODA_DRAWENTIRE
     DIS.ItemState = ComboCueItemState
@@ -11919,7 +11988,7 @@ If ComboCueWidth > 0 Then
     ElseIf ComboCueAlignment = FlexLeftRightAlignmentLeft Then
         SetViewportOrgEx DIS.hDC, CellRect.Left + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX, CellRect.Top + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CY, P
     End If
-    Call ComboButtonDraw(DIS)
+    Call ComboButtonDraw(iRow, iCol, DIS)
     SetViewportOrgEx DIS.hDC, P.X, P.Y, P
 End If
 End Sub
@@ -12482,7 +12551,7 @@ End With
 If ComboCueWidth > 0 Then
     Dim DIS As DRAWITEMSTRUCT, P As POINTAPI
     DIS.CtlType = ComboCueCtlType
-    DIS.CtlID = 0
+    DIS.CtlID = ID_COMBOBUTTONCHILD
     DIS.ItemID = 0
     DIS.ItemAction = ODA_DRAWENTIRE
     DIS.ItemState = ComboCueItemState
@@ -12498,7 +12567,7 @@ If ComboCueWidth > 0 Then
     ElseIf ComboCueAlignment = FlexLeftRightAlignmentLeft Then
         SetViewportOrgEx DIS.hDC, CellRect.Left + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX, CellRect.Top + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CY, P
     End If
-    Call ComboButtonDraw(DIS)
+    Call ComboButtonDraw(iRow, iCol, DIS)
     SetViewportOrgEx DIS.hDC, P.X, P.Y, P
 End If
 End Sub
@@ -18106,7 +18175,7 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGrid
 End If
 End Sub
 
-Private Sub ComboButtonDraw(ByRef DIS As DRAWITEMSTRUCT)
+Private Sub ComboButtonDraw(ByVal iRow As Long, ByVal iCol As Long, ByRef DIS As DRAWITEMSTRUCT)
 If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
     Dim Theme As Long, OldTextColor As Long
     
@@ -18168,13 +18237,21 @@ If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
             If IsThemeBackgroundPartiallyTransparent(Theme, ButtonPart, ButtonState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
             DrawThemeBackground Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
             GetThemeBackgroundContentRect Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
-            If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
-                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+            If VBFlexGridComboButtonPicture Is Nothing Then
+                If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
+                    If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
+                        OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+                    Else
+                        OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+                    End If
+                    Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                    SetTextColor DIS.hDC, OldTextColor
+                Else
+                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
+                End If
             Else
-                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
             End If
-            Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-            SetTextColor DIS.hDC, OldTextColor
         End If
         CloseThemeData Theme
     End If
@@ -18205,27 +18282,36 @@ If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
         If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
         DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
         If CtlType = DFC_BUTTON Then
-            If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
-                If Not (Flags And DFCS_HOT) = DFCS_HOT Then
-                    OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+            If VBFlexGridComboButtonPicture Is Nothing Then
+                If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
+                    If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
+                        If Not (Flags And DFCS_HOT) = DFCS_HOT Then
+                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+                        Else
+                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
+                        End If
+                    Else
+                        OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+                    End If
+                    Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                    SetTextColor DIS.hDC, OldTextColor
                 Else
-                    OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
+                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
                 End If
             Else
-                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
             End If
-            Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-            SetTextColor DIS.hDC, OldTextColor
         End If
     End If
 Else
     With DIS
-    RaiseEvent ComboButtonOwnerDraw(.CtlType, .ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
+    RaiseEvent ComboButtonOwnerDraw(iRow, iCol, .CtlType, .ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
     End With
 End If
 End Sub
 
 Private Sub ComboButtonDrawEllipsis(ByVal hDC As Long, ByRef ContentRect As RECT)
+If hDC = 0 Then Exit Sub
 Dim OldBkMode As Long, OldTextAlign As Long, hFontOld As Long
 Dim X As Long, Y As Long, Size As SIZEAPI, Result As Long, DX(0 To 2) As Long
 OldBkMode = SetBkMode(hDC, 1)
@@ -18247,6 +18333,45 @@ ExtTextOut hDC, X, Y, ETO_CLIPPED, ContentRect, StrPtr("..."), 3, VarPtr(DX(0))
 SetBkMode hDC, OldBkMode
 SetTextAlign hDC, OldTextAlign
 If hFontOld <> 0 Then SelectObject hDC, hFontOld
+End Sub
+
+Private Sub ComboButtonDrawPicture(ByVal hDC As Long, ByRef ContentRect As RECT, ByVal Picture As IPictureDisp, ByRef RenderFlag As Integer)
+If hDC = 0 Then Exit Sub
+If Picture Is Nothing Then Exit Sub
+If Picture.Handle <> 0 Then
+    Dim P As POINTAPI
+    Dim hRgn As Long, hRgnOld As Long
+    If GetViewportOrgEx(hDC, P) <> 0 Then
+        hRgn = CreateRectRgn(P.X + ContentRect.Left, P.Y + ContentRect.Top, P.X + ContentRect.Right, P.Y + ContentRect.Bottom)
+        If hRgn <> 0 Then
+            hRgnOld = CreateRectRgn(0, 0, 0, 0)
+            If hRgnOld <> 0 Then
+                If GetClipRgn(hDC, hRgnOld) = 0 Then
+                    DeleteObject hRgnOld
+                    hRgnOld = 0
+                End If
+            End If
+            ExtSelectClipRgn hDC, hRgn, RGN_COPY
+        End If
+    End If
+    Dim CX As Long, CY As Long, X As Long, Y As Long
+    CX = CHimetricToPixel_X(Picture.Width)
+    CY = CHimetricToPixel_Y(Picture.Height)
+    X = ContentRect.Left + ((ContentRect.Right - ContentRect.Left - CX) / 2)
+    Y = ContentRect.Top + ((ContentRect.Bottom - ContentRect.Top - CY) / 2)
+    Call RenderPicture(Picture, hDC, X, Y, CX, CY, RenderFlag)
+    If hRgnOld <> 0 Then
+        ExtSelectClipRgn hDC, hRgnOld, RGN_COPY
+        DeleteObject hRgnOld
+        hRgnOld = 0
+    Else
+        ExtSelectClipRgn hDC, 0, RGN_COPY
+    End If
+    If hRgn <> 0 Then
+        DeleteObject hRgn
+        hRgn = 0
+    End If
+End If
 End Sub
 
 Private Function ComboButtonGetState(ByVal dwState As Long) As Boolean
@@ -19212,7 +19337,7 @@ Select Case wMsg
                 Brush = GetSysColorBrush(COLOR_WINDOW)
             End If
             FillRect DIS.hDC, DIS.RCItem, Brush
-            Call ComboButtonDraw(DIS)
+            Call ComboButtonDraw(VBFlexGridEditRow, VBFlexGridEditCol, DIS)
             WindowProcControl = 1
             Exit Function
         End If
