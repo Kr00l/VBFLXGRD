@@ -18245,8 +18245,8 @@ If Handled = False Then
             If IsThemeBackgroundPartiallyTransparent(Theme, ButtonPart, ButtonState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
             DrawThemeBackground Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
             GetThemeBackgroundContentRect Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
-            If VBFlexGridComboButtonPicture Is Nothing Then
-                If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
+            If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
+                If VBFlexGridComboButtonPicture Is Nothing Then
                     If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
                         OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
                     Else
@@ -18255,10 +18255,10 @@ If Handled = False Then
                     Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
                     SetTextColor DIS.hDC, OldTextColor
                 Else
-                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
+                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
                 End If
             Else
-                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
+                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
             End If
         End If
         CloseThemeData Theme
@@ -18290,8 +18290,8 @@ If Handled = False Then
         If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
         DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
         If CtlType = DFC_BUTTON Then
-            If VBFlexGridComboButtonPicture Is Nothing Then
-                If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
+            If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
+                If VBFlexGridComboButtonPicture Is Nothing Then
                     If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
                         If Not (Flags And DFCS_HOT) = DFCS_HOT Then
                             OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
@@ -18304,10 +18304,10 @@ If Handled = False Then
                     Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
                     SetTextColor DIS.hDC, OldTextColor
                 Else
-                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
+                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
                 End If
             Else
-                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
+                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
             End If
         End If
     End If
