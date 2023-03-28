@@ -824,7 +824,7 @@ Public Event ComboCloseUp()
 Attribute ComboCloseUp.VB_Description = "Occurs when the drop-down list has been closed."
 Public Event ComboButtonClick()
 Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to button."
-Public Event ComboButtonOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByVal CtlType As Long, ByVal ItemAction As Long, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
+Public Event ComboButtonOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean, ByVal CtlType As Long, ByVal ItemAction As Long, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
 Attribute ComboButtonOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn combo button has changed."
 Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
 Attribute DividerDblClick.VB_Description = "Occurs when the user double-clicked the divider on a row or a column."
@@ -18176,7 +18176,15 @@ End If
 End Sub
 
 Private Sub ComboButtonDraw(ByVal iRow As Long, ByVal iCol As Long, ByRef DIS As DRAWITEMSTRUCT)
-If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
+Dim Handled As Boolean
+If VBFlexGridComboButtonDrawMode <> FlexComboButtonDrawModeNormal Then
+    Dim Cancel As Boolean
+    With DIS
+    RaiseEvent ComboButtonOwnerDraw(iRow, iCol, Cancel, .CtlType, .ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
+    End With
+    Handled = Not Cancel
+End If
+If Handled = False Then
     Dim Theme As Long, OldTextColor As Long
     
     #If ImplementThemedControls = True Then
@@ -18303,10 +18311,6 @@ If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
             End If
         End If
     End If
-Else
-    With DIS
-    RaiseEvent ComboButtonOwnerDraw(iRow, iCol, .CtlType, .ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
-    End With
 End If
 End Sub
 
