@@ -1379,6 +1379,7 @@ Private VBFlexGridComboMode As FlexComboModeConstants, VBFlexGridComboActiveMode
 Private VBFlexGridComboButtonPicture As IPictureDisp, VBFlexGridComboButtonPictureRenderFlag As Integer
 Private VBFlexGridComboButtonAlignment As FlexRightToLeftModeConstants
 Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
+Private VBFlexGridComboButtonWidth As Long
 Private VBFlexGridComboItems As String
 Private VBFlexGridComboBoxRect As RECT
 Private VBFlexGridComboCalendarRegistered As Boolean
@@ -1681,6 +1682,7 @@ VBFlexGridComboMode = FlexComboModeNone
 VBFlexGridComboActiveMode = FlexComboModeNone
 VBFlexGridComboButtonAlignment = FlexLeftRightAlignmentRight
 VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal
+VBFlexGridComboButtonWidth = -1
 VBFlexGridCheckBoxDrawMode = FlexCheckBoxDrawModeNormal
 SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VBFlexGridWheelScrollLines, 0
 If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VBFlexGridFocusBorder.CX, 0) = 0 Then VBFlexGridFocusBorder.CX = 1
@@ -9871,21 +9873,34 @@ End Select
 End Property
 
 Public Property Get ComboButtonWidth() As Long
-Attribute ComboButtonWidth.VB_Description = "Returns the combo button width in twips."
+Attribute ComboButtonWidth.VB_Description = "Returns/sets the combo button width in twips. Only applicable if the combo mode property is set to 3 - Button."
 Attribute ComboButtonWidth.VB_MemberFlags = "400"
-ComboButtonWidth = UserControl.ScaleX(VBFlexGridPixelMetrics.ComboButtonWidth, vbPixels, vbTwips)
+If VBFlexGridComboButtonWidth = -1 Then
+    ComboButtonWidth = UserControl.ScaleX(VBFlexGridPixelMetrics.ComboButtonWidth, vbPixels, vbTwips)
+Else
+    ComboButtonWidth = UserControl.ScaleX(VBFlexGridComboButtonWidth, vbPixels, vbTwips)
+End If
 End Property
 
 Public Property Let ComboButtonWidth(ByVal Value As Long)
-Err.Raise Number:=383, Description:="Property is read-only"
+If Value < -1 Then Err.Raise 380
+If Value > -1 Then
+    VBFlexGridComboButtonWidth = UserControl.ScaleX(Value, vbTwips, vbPixels)
+Else
+    VBFlexGridComboButtonWidth = -1
+End If
 End Property
 
 Public Property Get ComboButtonClientWidth() As Long
-Attribute ComboButtonClientWidth.VB_Description = "Returns the combo button client width in twips. This is only meaningful if the combo mode property is set to 3 - Button."
+Attribute ComboButtonClientWidth.VB_Description = "Returns the combo button client width in twips. Only applicable if the combo mode property is set to 3 - Button."
 Attribute ComboButtonClientWidth.VB_MemberFlags = "400"
 If VBFlexGridHandle <> 0 Then
     Dim RC As RECT, Theme As Long
-    RC.Right = VBFlexGridPixelMetrics.ComboButtonWidth
+    If VBFlexGridComboButtonWidth = -1 Then
+        RC.Right = VBFlexGridPixelMetrics.ComboButtonWidth
+    Else
+        RC.Right = VBFlexGridComboButtonWidth
+    End If
     
     #If ImplementThemedControls = True Then
     
@@ -12935,7 +12950,11 @@ If CtlType = ODT_COMBOBOX Then
     GetComboButtonWidth = VBFlexGridPixelMetrics.ComboButtonWidth
 ElseIf CtlType = ODT_BUTTON Then
     If VBFlexGridColsInfo(iCol).ComboButtonWidth = -1 Then
-        GetComboButtonWidth = VBFlexGridPixelMetrics.ComboButtonWidth
+        If VBFlexGridComboButtonWidth = -1 Then
+            GetComboButtonWidth = VBFlexGridPixelMetrics.ComboButtonWidth
+        Else
+            GetComboButtonWidth = VBFlexGridComboButtonWidth
+        End If
     Else
         GetComboButtonWidth = VBFlexGridColsInfo(iCol).ComboButtonWidth
     End If
