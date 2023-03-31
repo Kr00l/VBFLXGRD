@@ -1,8 +1,8 @@
 List of revisions:
 
-29-Mar-2023
-- Included ComboButtonWidth/ComboButtonClientWidth read-only property.
-- Included ColComboButtonWidth run-time property.
+31-Mar-2023
+- Included ComboButtonClientWidth read-only property.
+- Included ComboButtonWidth/ColComboButtonWidth run-time property.
 
 28-Mar-2023
 - Included ComboButtonPicture/ColComboButtonPicture run-time property which allows to customize the appearance of cell combo buttons.
