@@ -1,8 +1,0 @@
-Common = 81, 25, 900, 698, C
-VisualStyles = 54, 137, 814, 825, C
-VTableHandle = 122, 33, 865, 706, C
-VBFlexGridBase = -189, 80, 714, 682, C
-VBFlexGrid = 70, 141, 1232, 822, C, 339, 154, 1259, 827, C
-IVBFlexDataSource = 23, 31, 981, 573, C
-PPVBFlexGridGeneral = 153, 128, 1208, 884, C, 22, 29, 847, 711, C
-PPVBFlexGridStyle = 46, 62, 1004, 604, C, 467, 29, 1499, 738, C
