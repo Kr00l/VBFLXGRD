@@ -1,27 +1,67 @@
 VERSION 5.00
 Begin VB.PropertyPage PPVBFlexGridGeneral 
    Caption         =   "General"
-   ClientHeight    =   8100
+   ClientHeight    =   8820
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   6225
    LockControls    =   -1  'True
    PaletteMode     =   0  'Halftone
-   ScaleHeight     =   8100
+   ScaleHeight     =   8820
    ScaleWidth      =   6225
+   Begin VB.CheckBox CheckScrollTipFollowThumb 
+      Caption         =   "ScrollTipFollowThumb"
+      Height          =   285
+      Left            =   4200
+      TabIndex        =   60
+      Top             =   3000
+      Width           =   1920
+   End
+   Begin VB.CheckBox CheckShowScrollTips 
+      Caption         =   "ShowScrollTips"
+      Height          =   285
+      Left            =   4200
+      TabIndex        =   64
+      Top             =   4440
+      Width           =   1920
+   End
+   Begin VB.CheckBox CheckAutoClipboard 
+      Caption         =   "AutoClipboard"
+      Height          =   285
+      Left            =   4200
+      TabIndex        =   69
+      Top             =   6240
+      Width           =   1920
+   End
+   Begin VB.ComboBox ComboClipPasteMode 
+      Height          =   315
+      Left            =   1800
+      Style           =   2  'Dropdown List
+      TabIndex        =   49
+      Top             =   7320
+      Width           =   2235
+   End
+   Begin VB.ComboBox ComboClipCopyMode 
+      Height          =   315
+      Left            =   1800
+      Style           =   2  'Dropdown List
+      TabIndex        =   47
+      Top             =   6960
+      Width           =   2235
+   End
    Begin VB.CheckBox CheckSheetBorder 
       Caption         =   "SheetBorder"
       Height          =   285
       Left            =   4200
-      TabIndex        =   62
-      Top             =   5160
+      TabIndex        =   68
+      Top             =   5880
       Width           =   1920
    End
    Begin VB.CheckBox CheckAllowMultiSelection 
       Caption         =   "AllowMultiSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   52
+      TabIndex        =   56
       Top             =   1560
       Width           =   1920
    End
@@ -29,8 +69,8 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowScrollLock"
       Height          =   285
       Left            =   4200
-      TabIndex        =   61
-      Top             =   4800
+      TabIndex        =   67
+      Top             =   5520
       Width           =   1920
    End
    Begin VB.ComboBox ComboAllowUserFreezing 
@@ -44,16 +84,16 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    Begin VB.TextBox TextRowSortArrows 
       Height          =   315
       Left            =   1800
-      TabIndex        =   49
-      Top             =   7320
+      TabIndex        =   53
+      Top             =   8040
       Width           =   2235
    End
    Begin VB.CheckBox CheckExtendLastCol 
       Caption         =   "ExtendLastCol"
       Height          =   285
       Left            =   4200
-      TabIndex        =   60
-      Top             =   4440
+      TabIndex        =   66
+      Top             =   5160
       Width           =   1920
    End
    Begin VB.TextBox TextFrozenRows 
@@ -82,15 +122,15 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "WantReturn"
       Height          =   285
       Left            =   4200
-      TabIndex        =   59
-      Top             =   4080
+      TabIndex        =   65
+      Top             =   4800
       Width           =   1920
    End
    Begin VB.CheckBox CheckAllowUserEditing 
       Caption         =   "AllowUserEditing"
       Height          =   285
       Left            =   4200
-      TabIndex        =   54
+      TabIndex        =   58
       Top             =   2280
       Width           =   1920
    End
@@ -98,8 +138,8 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   47
-      Top             =   6960
+      TabIndex        =   51
+      Top             =   7680
       Width           =   2235
    End
    Begin VB.ComboBox ComboClipMode 
@@ -194,31 +234,31 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ShowLabelTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   58
-      Top             =   3720
+      TabIndex        =   63
+      Top             =   4080
       Width           =   1920
    End
    Begin VB.CheckBox CheckShowInfoTips 
       Caption         =   "ShowInfoTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   57
-      Top             =   3360
+      TabIndex        =   62
+      Top             =   3720
       Width           =   1920
    End
    Begin VB.CheckBox CheckDisableNoScroll 
       Caption         =   "DisableNoScroll"
       Height          =   285
       Left            =   4200
-      TabIndex        =   56
-      Top             =   3000
+      TabIndex        =   61
+      Top             =   3360
       Width           =   1920
    End
    Begin VB.CheckBox CheckScrollTrack 
       Caption         =   "ScrollTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   55
+      TabIndex        =   59
       Top             =   2640
       Width           =   1920
    End
@@ -226,7 +266,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   53
+      TabIndex        =   57
       Top             =   1920
       Width           =   1920
    End
@@ -234,7 +274,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowBigSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   51
+      TabIndex        =   55
       Top             =   1200
       Width           =   1920
    End
@@ -270,7 +310,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "MouseTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   50
+      TabIndex        =   54
       Top             =   840
       Width           =   1920
    End
@@ -316,6 +356,22 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Top             =   120
       Width           =   1620
    End
+   Begin VB.Label LabelClipPasteMode 
+      Caption         =   "ClipPasteMode:"
+      Height          =   240
+      Left            =   120
+      TabIndex        =   48
+      Top             =   7320
+      Width           =   1620
+   End
+   Begin VB.Label LabelClipCopyMode 
+      Caption         =   "ClipCopyMode:"
+      Height          =   240
+      Left            =   120
+      TabIndex        =   46
+      Top             =   6960
+      Width           =   1620
+   End
    Begin VB.Label LabelAllowUserFreezing 
       Caption         =   "AllowUserFreezing:"
       Height          =   240
@@ -328,8 +384,8 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "RowSortArrows:"
       Height          =   240
       Left            =   120
-      TabIndex        =   48
-      Top             =   7320
+      TabIndex        =   52
+      Top             =   8040
       Width           =   1620
    End
    Begin VB.Label LabelFrozenRows 
@@ -360,8 +416,8 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "IMEMode:"
       Height          =   240
       Left            =   120
-      TabIndex        =   46
-      Top             =   6960
+      TabIndex        =   50
+      Top             =   7680
       Width           =   1620
    End
    Begin VB.Label LabelClipMode 
@@ -633,6 +689,8 @@ With ComboRowSizingMode
 .ItemData(.NewIndex) = FlexRowSizingModeIndividual
 .AddItem FlexRowSizingModeAll & " - All"
 .ItemData(.NewIndex) = FlexRowSizingModeAll
+.AddItem FlexRowSizingModeUniform & " - Uniform"
+.ItemData(.NewIndex) = FlexRowSizingModeUniform
 End With
 With ComboTabBehavior
 .AddItem FlexTabControls & " - Controls"
@@ -667,6 +725,22 @@ With ComboClipMode
 .ItemData(.NewIndex) = FlexClipModeNormal
 .AddItem FlexClipModeExcludeHidden & " - ExcludeHidden"
 .ItemData(.NewIndex) = FlexClipModeExcludeHidden
+End With
+With ComboClipCopyMode
+.AddItem FlexClipCopyModeNormal & " - Normal"
+.ItemData(.NewIndex) = FlexClipCopyModeNormal
+.AddItem FlexClipCopyModeIncludeFixedRows & " - IncludeFixedRows"
+.ItemData(.NewIndex) = FlexClipCopyModeIncludeFixedRows
+.AddItem FlexClipCopyModeIncludeFixedColumns & " - IncludeFixedColumns"
+.ItemData(.NewIndex) = FlexClipCopyModeIncludeFixedColumns
+.AddItem FlexClipCopyModeIncludeFixedAll & " - IncludeFixedAll"
+.ItemData(.NewIndex) = FlexClipCopyModeIncludeFixedAll
+End With
+With ComboClipPasteMode
+.AddItem FlexClipPasteModeNormal & " - Normal"
+.ItemData(.NewIndex) = FlexClipPasteModeNormal
+.AddItem FlexClipPasteModeAutoSelection & " - AutoSelection"
+.ItemData(.NewIndex) = FlexClipPasteModeAutoSelection
 End With
 With ComboIMEMode
 .AddItem FlexIMEModeNoControl & " - NoControl"
@@ -761,6 +835,8 @@ End If
 .WrapCellBehavior = ComboWrapCellBehavior.ItemData(ComboWrapCellBehavior.ListIndex)
 .ClipSeparators = TextClipSeparators.Text
 .ClipMode = ComboClipMode.ItemData(ComboClipMode.ListIndex)
+.ClipCopyMode = ComboClipCopyMode.ItemData(ComboClipCopyMode.ListIndex)
+.ClipPasteMode = ComboClipPasteMode.ItemData(ComboClipPasteMode.ListIndex)
 .IMEMode = ComboIMEMode.ItemData(ComboIMEMode.ListIndex)
 .RowSortArrows = CLng(TextRowSortArrows.Text)
 .MouseTrack = CBool(CheckMouseTrack.Value = vbChecked)
@@ -769,13 +845,16 @@ End If
 .AllowSelection = CBool(CheckAllowSelection.Value = vbChecked)
 .AllowUserEditing = CBool(CheckAllowUserEditing.Value = vbChecked)
 .ScrollTrack = CBool(CheckScrollTrack.Value = vbChecked)
+.ScrollTipFollowThumb = CBool(CheckScrollTipFollowThumb.Value = vbChecked)
 .DisableNoScroll = CBool(CheckDisableNoScroll.Value = vbChecked)
 .ShowInfoTips = CBool(CheckShowInfoTips.Value = vbChecked)
 .ShowLabelTips = CBool(CheckShowLabelTips.Value = vbChecked)
+.ShowScrollTips = CBool(CheckShowScrollTips.Value = vbChecked)
 .WantReturn = CBool(CheckWantReturn.Value = vbChecked)
 .ExtendLastCol = CBool(CheckExtendLastCol.Value = vbChecked)
 .AllowScrollLock = CBool(CheckAllowScrollLock.Value = vbChecked)
 .SheetBorder = CBool(CheckSheetBorder.Value = vbChecked)
+.AutoClipboard = CBool(CheckAutoClipboard.Value = vbChecked)
 End With
 Call PropertyPage_SelectionChanged
 End Sub
@@ -879,6 +958,18 @@ For i = 0 To ComboClipMode.ListCount - 1
         Exit For
     End If
 Next i
+For i = 0 To ComboClipCopyMode.ListCount - 1
+    If ComboClipCopyMode.ItemData(i) = .ClipCopyMode Then
+        ComboClipCopyMode.ListIndex = i
+        Exit For
+    End If
+Next i
+For i = 0 To ComboClipPasteMode.ListCount - 1
+    If ComboClipPasteMode.ItemData(i) = .ClipPasteMode Then
+        ComboClipPasteMode.ListIndex = i
+        Exit For
+    End If
+Next i
 For i = 0 To ComboIMEMode.ListCount - 1
     If ComboIMEMode.ItemData(i) = .IMEMode Then
         ComboIMEMode.ListIndex = i
@@ -892,13 +983,16 @@ CheckAllowMultiSelection.Value = IIf(.AllowMultiSelection = True, vbChecked, vbU
 CheckAllowSelection.Value = IIf(.AllowSelection = True, vbChecked, vbUnchecked)
 CheckAllowUserEditing.Value = IIf(.AllowUserEditing = True, vbChecked, vbUnchecked)
 CheckScrollTrack.Value = IIf(.ScrollTrack = True, vbChecked, vbUnchecked)
+CheckScrollTipFollowThumb.Value = IIf(.ScrollTipFollowThumb = True, vbChecked, vbUnchecked)
 CheckDisableNoScroll.Value = IIf(.DisableNoScroll = True, vbChecked, vbUnchecked)
 CheckShowInfoTips.Value = IIf(.ShowInfoTips = True, vbChecked, vbUnchecked)
 CheckShowLabelTips.Value = IIf(.ShowLabelTips = True, vbChecked, vbUnchecked)
+CheckShowScrollTips.Value = IIf(.ShowScrollTips = True, vbChecked, vbUnchecked)
 CheckWantReturn.Value = IIf(.WantReturn = True, vbChecked, vbUnchecked)
 CheckExtendLastCol.Value = IIf(.ExtendLastCol = True, vbChecked, vbUnchecked)
 CheckAllowScrollLock.Value = IIf(.AllowScrollLock = True, vbChecked, vbUnchecked)
 CheckSheetBorder.Value = IIf(.SheetBorder = True, vbChecked, vbUnchecked)
+CheckAutoClipboard.Value = IIf(.AutoClipboard = True, vbChecked, vbUnchecked)
 End With
 FreezeChanged = False
 End Sub
@@ -1297,6 +1391,16 @@ If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
 
+Private Sub ComboClipCopyMode_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub ComboClipPasteMode_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
 Private Sub ComboIMEMode_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
@@ -1378,6 +1482,11 @@ If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
 
+Private Sub CheckScrollTipFollowThumb_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
 Private Sub CheckDisableNoScroll_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
@@ -1389,6 +1498,11 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckShowLabelTips_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckShowScrollTips_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
@@ -1409,6 +1523,11 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckSheetBorder_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckAutoClipboard_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub

@@ -1,21 +1,29 @@
 VERSION 5.00
 Begin VB.PropertyPage PPVBFlexGridStyle 
    Caption         =   "Style"
-   ClientHeight    =   8100
+   ClientHeight    =   8820
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   6225
    LockControls    =   -1  'True
    PaletteMode     =   0  'Halftone
-   ScaleHeight     =   8100
+   ScaleHeight     =   8820
    ScaleWidth      =   6225
+   Begin VB.ComboBox ComboBestFitMode 
+      Height          =   315
+      Left            =   1560
+      Style           =   2  'Dropdown List
+      TabIndex        =   19
+      Top             =   1920
+      Width           =   1380
+   End
    Begin VB.CheckBox CheckMirrorAlignGeneral 
       Alignment       =   1  'Right Justify
       Caption         =   "MirrorAlignGeneral"
       Height          =   285
       Left            =   3120
-      TabIndex        =   27
-      Top             =   3075
+      TabIndex        =   29
+      Top             =   3435
       Width           =   1650
    End
    Begin VB.CheckBox CheckFixGridLineOffsets 
@@ -23,8 +31,8 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "FixGridLineOffsets"
       Height          =   285
       Left            =   120
-      TabIndex        =   26
-      Top             =   3075
+      TabIndex        =   28
+      Top             =   3435
       Width           =   1650
    End
    Begin VB.ComboBox ComboGridLinesFrozen 
@@ -40,8 +48,8 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "SingleLine"
       Height          =   285
       Left            =   3120
-      TabIndex        =   29
-      Top             =   3435
+      TabIndex        =   31
+      Top             =   3795
       Width           =   1650
    End
    Begin VB.TextBox TextFormatString 
@@ -49,19 +57,27 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Left            =   1560
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   31
-      Top             =   3840
+      TabIndex        =   33
+      Top             =   4200
       Width           =   4395
    End
    Begin VB.ComboBox ComboEllipsisFormatFixed 
       Height          =   315
       Left            =   4560
       Style           =   2  'Dropdown List
-      TabIndex        =   25
-      Top             =   2640
+      TabIndex        =   27
+      Top             =   3000
       Width           =   1380
    End
    Begin VB.ComboBox ComboEllipsisFormat 
+      Height          =   315
+      Left            =   1560
+      Style           =   2  'Dropdown List
+      TabIndex        =   25
+      Top             =   3000
+      Width           =   1380
+   End
+   Begin VB.ComboBox ComboPictureType 
       Height          =   315
       Left            =   1560
       Style           =   2  'Dropdown List
@@ -69,7 +85,7 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Top             =   2640
       Width           =   1380
    End
-   Begin VB.ComboBox ComboPictureType 
+   Begin VB.ComboBox ComboMergeCells 
       Height          =   315
       Left            =   1560
       Style           =   2  'Dropdown List
@@ -77,21 +93,13 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Top             =   2280
       Width           =   1380
    End
-   Begin VB.ComboBox ComboMergeCells 
-      Height          =   315
-      Left            =   1560
-      Style           =   2  'Dropdown List
-      TabIndex        =   19
-      Top             =   1920
-      Width           =   1380
-   End
    Begin VB.CheckBox CheckWordWrap 
       Alignment       =   1  'Right Justify
       Caption         =   "WordWrap"
       Height          =   285
       Left            =   120
-      TabIndex        =   28
-      Top             =   3435
+      TabIndex        =   30
+      Top             =   3795
       Width           =   1650
    End
    Begin VB.TextBox TextColWidthMax 
@@ -154,6 +162,14 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Top             =   120
       Width           =   1380
    End
+   Begin VB.Label LabelBestFitMode 
+      Caption         =   "BestFitMode:"
+      Height          =   240
+      Left            =   120
+      TabIndex        =   18
+      Top             =   1920
+      Width           =   1410
+   End
    Begin VB.Label LabelGridLinesFrozen 
       Caption         =   "GridLinesFrozen:"
       Height          =   240
@@ -166,40 +182,40 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "FormatString:"
       Height          =   240
       Left            =   120
-      TabIndex        =   30
-      Top             =   3840
+      TabIndex        =   32
+      Top             =   4200
       Width           =   1410
    End
    Begin VB.Label LabelEllipsisFormatFixed 
       Caption         =   "EllipsisFormatFixed:"
       Height          =   240
       Left            =   3120
-      TabIndex        =   24
-      Top             =   2640
+      TabIndex        =   26
+      Top             =   3000
       Width           =   1410
    End
    Begin VB.Label LabelEllipsisFormat 
       Caption         =   "EllipsisFormat:"
       Height          =   240
       Left            =   120
-      TabIndex        =   22
-      Top             =   2640
+      TabIndex        =   24
+      Top             =   3000
       Width           =   1410
    End
    Begin VB.Label LabelPictureType 
       Caption         =   "PictureType:"
       Height          =   240
       Left            =   120
-      TabIndex        =   20
-      Top             =   2280
+      TabIndex        =   22
+      Top             =   2640
       Width           =   1410
    End
    Begin VB.Label LabelMergeCells 
       Caption         =   "MergeCells:"
       Height          =   240
       Left            =   120
-      TabIndex        =   18
-      Top             =   1920
+      TabIndex        =   20
+      Top             =   2280
       Width           =   1410
    End
    Begin VB.Label LabelColWidthMax 
@@ -346,6 +362,16 @@ With ComboTextStyleFixed
 .AddItem FlexTextStyleInsetLight & " - InsetLight"
 .ItemData(.NewIndex) = FlexTextStyleInsetLight
 End With
+With ComboBestFitMode
+.AddItem FlexBestFitModeTextOnly & " - TextOnly"
+.ItemData(.NewIndex) = FlexBestFitModeTextOnly
+.AddItem FlexBestFitModeFull & " - Full"
+.ItemData(.NewIndex) = FlexBestFitModeFull
+.AddItem FlexBestFitModeSortArrowText & " - SortArrowText"
+.ItemData(.NewIndex) = FlexBestFitModeSortArrowText
+.AddItem FlexBestFitModeOtherText & " - OtherText"
+.ItemData(.NewIndex) = FlexBestFitModeOtherText
+End With
 With ComboMergeCells
 .AddItem FlexMergeCellsNever & " - Never"
 .ItemData(.NewIndex) = FlexMergeCellsNever
@@ -412,6 +438,7 @@ With PropertyPage.SelectedControls(0)
 .RowHeightMax = CLng(TextRowHeightMax.Text)
 .ColWidthMin = CLng(TextColWidthMin.Text)
 .ColWidthMax = CLng(TextColWidthMax.Text)
+.BestFitMode = ComboBestFitMode.ItemData(ComboBestFitMode.ListIndex)
 .MergeCells = ComboMergeCells.ItemData(ComboMergeCells.ListIndex)
 .PictureType = ComboPictureType.ItemData(ComboPictureType.ListIndex)
 .EllipsisFormat = ComboEllipsisFormat.ItemData(ComboEllipsisFormat.ListIndex)
@@ -462,6 +489,12 @@ TextRowHeightMin.Text = CStr(.RowHeightMin)
 TextRowHeightMax.Text = CStr(.RowHeightMax)
 TextColWidthMin.Text = CStr(.ColWidthMin)
 TextColWidthMax.Text = CStr(.ColWidthMax)
+For i = 0 To ComboBestFitMode.ListCount - 1
+    If ComboBestFitMode.ItemData(i) = .BestFitMode Then
+        ComboBestFitMode.ListIndex = i
+        Exit For
+    End If
+Next i
 For i = 0 To ComboMergeCells.ListCount - 1
     If ComboMergeCells.ItemData(i) = .MergeCells Then
         ComboMergeCells.ListIndex = i
@@ -702,6 +735,11 @@ Else
         TextColWidthMax.SetFocus
     End If
 End If
+End Sub
+
+Private Sub ComboBestFitMode_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
 End Sub
 
 Private Sub ComboMergeCells_Click()

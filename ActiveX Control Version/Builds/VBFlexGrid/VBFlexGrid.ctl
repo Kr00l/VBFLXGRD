@@ -21,7 +21,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-#Const ImplementThemedComboButton = True
+#Const ImplementThemedControls = True
 #Const ImplementDataSource = True ' True = Required: msdatsrc.tlb
 #Const ImplementFlexDataSource = True ' True = Required: IVBFlexDataSource.cls
 #Const ImplementPreTranslateMsg = (VBFLXGRD_OCX <> 0)
@@ -40,10 +40,10 @@ Private FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus
 Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy, FlexFocusRectFlat
 Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
-Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled
+Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled, FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
 Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral
 Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
-Private FlexRowSizingModeIndividual, FlexRowSizingModeAll
+Private FlexRowSizingModeIndividual, FlexRowSizingModeAll, FlexRowSizingModeUniform
 Private FlexMergeCellsNever, FlexMergeCellsFree, FlexMergeCellsRestrictRows, FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll, FlexMergeCellsFixedOnly
 Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending, FlexSortCustomText
 Private FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
@@ -54,10 +54,12 @@ Private FlexClearEverything, FlexClearText, FlexClearFormatting
 Private FlexTabControls, FlexTabCells, FlexTabNext
 Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
 Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
-Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort
+Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellChecked, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort, FlexCellTextDisplay
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
+Private FlexClipCopyModeNormal, FlexClipCopyModeIncludeFixedRows, FlexClipCopyModeIncludeFixedColumns, FlexClipCopyModeIncludeFixedAll
+Private FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection
 Private FlexFindDirectionDown, FlexFindDirectionUp
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
 Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace, FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4, FlexEditReasonComboCueAltUpDown
@@ -68,6 +70,12 @@ Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComb
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
 Private FlexComboButtonDrawModeNormal, FlexComboButtonDrawModeOwnerDraw
 Private FlexSortArrowNone, FlexSortArrowAscending, FlexSortArrowDescending
+Private FlexNoCheckBoxEver, FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
+Private FlexCellCheckReasonMouse, FlexCellCheckReasonKeyboard
+Private FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentCenterTop, FlexCheckBoxAlignmentCenterCenter, FlexCheckBoxAlignmentCenterBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom, FlexCheckBoxAlignmentUsePictureAlignment
+Private FlexCheckBoxDrawModeNormal, FlexCheckBoxDrawModeOwnerDraw
+Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
+Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoData, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText, FlexDataSourceChecked
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -173,6 +181,8 @@ FlexHitResultDividerFrozenColumnLeft = 8
 FlexHitResultDividerFrozenColumnRight = 9
 FlexHitResultComboCue = 10
 FlexHitResultComboCueDisabled = 11
+FlexHitResultCheckBox = 12
+FlexHitResultCheckBoxDisabled = 13
 End Enum
 Public Enum FlexAlignmentConstants
 FlexAlignmentLeftTop = 0
@@ -208,6 +218,7 @@ End Enum
 Public Enum FlexRowSizingModeConstants
 FlexRowSizingModeIndividual = 0
 FlexRowSizingModeAll = 1
+FlexRowSizingModeUniform = 2
 End Enum
 Public Enum FlexMergeCellsConstants
 FlexMergeCellsNever = 0
@@ -290,6 +301,9 @@ FlexCellBackColor = 6
 FlexCellForeColor = 7
 FlexCellToolTipText = 8
 FlexCellComboCue = 9
+FlexCellChecked = 10
+FlexCellFloodPercent = 11
+FlexCellFloodColor = 12
 FlexCellFontName = 13
 FlexCellFontSize = 14
 FlexCellFontBold = 15
@@ -302,6 +316,7 @@ FlexCellTop = 21
 FlexCellWidth = 22
 FlexCellHeight = 23
 FlexCellSort = 24
+FlexCellTextDisplay = 25
 End Enum
 Public Enum FlexAutoSizeModeConstants
 FlexAutoSizeModeColWidth = 0
@@ -317,6 +332,16 @@ End Enum
 Public Enum FlexClipModeConstants
 FlexClipModeNormal = 0
 FlexClipModeExcludeHidden = 1
+End Enum
+Public Enum FlexClipCopyModeConstants
+FlexClipCopyModeNormal = 0
+FlexClipCopyModeIncludeFixedRows = 1
+FlexClipCopyModeIncludeFixedColumns = 2
+FlexClipCopyModeIncludeFixedAll = 3
+End Enum
+Public Enum FlexClipPasteModeConstants
+FlexClipPasteModeNormal = 0
+FlexClipPasteModeAutoSelection = 1
 End Enum
 Public Enum FlexFindDirectionConstants
 FlexFindDirectionDown = 0
@@ -389,6 +414,51 @@ Public Enum FlexSortArrowConstants
 FlexSortArrowNone = 0
 FlexSortArrowAscending = 1
 FlexSortArrowDescending = 2
+End Enum
+Public Enum FlexCheckBoxConstants
+FlexNoCheckBoxEver = -2
+FlexNoCheckBox = -1
+FlexUnchecked = 0
+FlexChecked = 1
+FlexGrayed = 2
+FlexTextAsCheckBox = 3
+FlexDisabledUnchecked = 4
+FlexDisabledChecked = 5
+FlexDisabledGrayed = 6
+FlexDisabledTextAsCheckBox = 7
+End Enum
+Public Enum FlexCellCheckReasonConstants
+FlexCellCheckReasonMouse = 0
+FlexCellCheckReasonKeyboard = 1
+End Enum
+Public Enum FlexCheckBoxAlignmentConstants
+FlexCheckBoxAlignmentLeftTop = 0
+FlexCheckBoxAlignmentLeftCenter = 1
+FlexCheckBoxAlignmentLeftBottom = 2
+FlexCheckBoxAlignmentCenterTop = 3
+FlexCheckBoxAlignmentCenterCenter = 4
+FlexCheckBoxAlignmentCenterBottom = 5
+FlexCheckBoxAlignmentRightTop = 6
+FlexCheckBoxAlignmentRightCenter = 7
+FlexCheckBoxAlignmentRightBottom = 8
+FlexCheckBoxAlignmentUsePictureAlignment = 9
+End Enum
+Public Enum FlexCheckBoxDrawModeConstants
+FlexCheckBoxDrawModeNormal = 0
+FlexCheckBoxDrawModeOwnerDraw = 1
+End Enum
+Public Enum FlexBestFitModeConstants
+FlexBestFitModeTextOnly = 0
+FlexBestFitModeFull = 1
+FlexBestFitModeSortArrowText = 2
+FlexBestFitModeOtherText = 3
+End Enum
+Public Enum FlexDataSourceFlags
+FlexDataSourceUnboundFixedColumns = 1
+FlexDataSourceNoData = 2
+FlexDataSourceNoFieldNames = 4
+FlexDataSourceToolTipText = 8
+FlexDataSourceChecked = 16
 End Enum
 Private Type RECT
 Left As Long
@@ -578,6 +648,7 @@ MouseCol As Long
 End Type
 Private Const LBLI_VALID As Long = &H1
 Private Const LBLI_UNFOLDED As Long = &H2
+Private Const LBLI_HIDDEN As Long = &H4
 Private Type TLABELINFO
 Flags As Long
 RC As RECT
@@ -585,8 +656,6 @@ DrawFlags As Long
 End Type
 Private Type TDRAWINFO
 SelRange As TCELLRANGE
-CellTextWidthPadding As Long
-CellTextHeightPadding As Long
 GridLinePoints(0 To 5) As POINTAPI
 GridLineOffsets As TGRIDLINEOFFSETS
 End Type
@@ -614,6 +683,9 @@ BackColor As Long
 ForeColor As Long
 ToolTipText As String
 ComboCue As FlexComboCueConstants
+Checked As Integer
+FloodPercent As Integer
+FloodColor As Long
 FontName As String
 FontSize As Single
 FontBold As Boolean
@@ -628,6 +700,7 @@ Private Const ROWINFO_HEIGHT_SPACING_DIP As Long = 3
 Private Const RWIS_HIDDEN As Long = &H1
 Private Const RWIS_MERGE As Long = &H2
 Private Const RWIS_SELECTED As Long = &H4
+Private Const RWIS_NOSIZING As Long = &H8
 Private Type TROWINFO
 Height As Long
 Data As Long
@@ -637,6 +710,9 @@ End Type
 Private Const COLINFO_WIDTH_SPACING_DIP As Long = 6
 Private Const CLIS_HIDDEN As Long = &H1
 Private Const CLIS_MERGE As Long = &H2
+Private Const CLIS_NULLABLE As Long = &H4
+Private Const CLIS_NOSIZING As Long = &H8
+Private Const CLIS_CHECKBOXES As Long = &H10
 Private Type TCOLINFO
 Width As Long
 Data As Long
@@ -649,10 +725,19 @@ SortArrow As FlexSortArrowConstants
 SortArrowAlignment As FlexLeftRightAlignmentConstants
 SortArrowColor As Long
 ComboMode As FlexComboModeConstants
-ComboButtonAlignment As FlexLeftRightAlignmentConstants
+ComboButtonPicture As IPictureDisp
+ComboButtonPictureRenderFlag As Integer
+ComboButtonAlignment As Integer
+ComboButtonWidth As Long
 ComboItems As String
+CheckBoxAlignment As FlexCheckBoxAlignmentConstants
+FixedCheckBoxAlignment As FlexCheckBoxAlignmentConstants
 Format As String
+FixedFormat As String
 DataType As Integer
+NumericPrecision As Byte
+NumericScale As Byte
+DataCapacity As Long
 End Type
 Private Type TCOLS
 Cols() As TCELL
@@ -660,6 +745,15 @@ RowInfo As TROWINFO
 End Type
 Private Type TROWS
 Rows() As TCOLS
+End Type
+Private Type TPIXELMETRICS
+DividerSpacing As SIZEAPI
+CellTextWidthPadding As Long
+CellTextHeightPadding As Long
+RowInfoHeightSpacing As Long
+ColInfoWidthSpacing As Long
+ComboButtonWidth As Long
+CheckBoxSize As Long
 End Type
 Public Event Click()
 Attribute Click.VB_Description = "Occurs when the user presses and then releases a mouse button over an object."
@@ -669,6 +763,8 @@ Attribute DblClick.VB_Description = "Occurs when the user presses and releases a
 Attribute DblClick.VB_UserMemId = -601
 Public Event Scroll()
 Attribute Scroll.VB_Description = "Occurs when you reposition the scroll box on a control."
+Public Event ScrollTip(ByVal Row As Long, ByVal Col As Long)
+Attribute ScrollTip.VB_Description = "Occurs when the control is about to display a scroll tip."
 Public Event ContextMenu(ByVal X As Single, ByVal Y As Single)
 Attribute ContextMenu.VB_Description = "Occurs when the user clicked the right mouse button or types SHIFT + F10."
 Public Event AfterUserFreeze()
@@ -729,7 +825,7 @@ Public Event ComboCloseUp()
 Attribute ComboCloseUp.VB_Description = "Occurs when the drop-down list has been closed."
 Public Event ComboButtonClick()
 Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to button."
-Public Event ComboButtonOwnerDraw(ByVal Action As Long, ByVal State As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
+Public Event ComboButtonOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean, ByVal CtlType As Long, ByVal ItemAction As Long, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
 Attribute ComboButtonOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn combo button has changed."
 Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
 Attribute DividerDblClick.VB_Description = "Occurs when the user double-clicked the divider on a row or a column."
@@ -737,6 +833,12 @@ Public Event CellClick(ByVal Row As Long, ByVal Col As Long, ByVal Button As Int
 Attribute CellClick.VB_Description = "Occurs when a cell is clicked."
 Public Event CellDblClick(ByVal Row As Long, ByVal Col As Long, ByVal Button As Integer)
 Attribute CellDblClick.VB_Description = "Occurs when a cell is double clicked."
+Public Event CellBeforeCheck(ByVal Row As Long, ByVal Col As Long, ByVal Reason As FlexCellCheckReasonConstants, ByRef Cancel As Boolean)
+Attribute CellBeforeCheck.VB_Description = "Occurs before a cell is about to be checked."
+Public Event CellCheck(ByVal Row As Long, ByVal Col As Long)
+Attribute CellCheck.VB_Description = "Occurs when a cell is checked."
+Public Event CheckBoxOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
+Attribute CheckBoxOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn check box has changed."
 Public Event PreviewKeyDown(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
 Attribute PreviewKeyDown.VB_Description = "Occurs before the KeyDown event."
 Public Event PreviewKeyUp(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
@@ -826,6 +928,7 @@ Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, ByRef l
 Private Declare Function GetWindowRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As RECT) As Long
 Private Declare Function MapWindowPoints Lib "user32" (ByVal hWndFrom As Long, ByVal hWndTo As Long, ByRef lppt As Any, ByVal cPoints As Long) As Long
 Private Declare Function SetViewportOrgEx Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByRef lpPoint As POINTAPI) As Long
+Private Declare Function GetViewportOrgEx Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint As POINTAPI) As Long
 Private Declare Function SetRect Lib "user32" (ByRef lpRect As RECT, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function CreateSolidBrush Lib "gdi32" (ByVal crColor As Long) As Long
 Private Declare Function CreatePen Lib "gdi32" (ByVal nPenStyle As Long, ByVal nWidth As Long, ByVal crColor As Long) As Long
@@ -878,13 +981,14 @@ Private Declare Function GetCapture Lib "user32" () As Long
 Private Declare Function SetCapture Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function ReleaseCapture Lib "user32" () As Long
 
-#If ImplementThemedComboButton = True Then
+#If ImplementThemedControls = True Then
 
 Private Enum UxThemeComboBoxParts
 CP_DROPDOWNBUTTON = 1
 End Enum
 Private Enum UxThemeButtonParts
 BP_PUSHBUTTON = 1
+BP_CHECKBOX = 3
 End Enum
 Private Enum UxThemeComboBoxStates
 CBXS_NORMAL = 1
@@ -897,6 +1001,20 @@ PBS_NORMAL = 1
 PBS_HOT = 2
 PBS_PRESSED = 3
 PBS_DISABLED = 4
+End Enum
+Private Enum UxThemeCheckBoxStates
+CBS_UNCHECKEDNORMAL = 1
+CBS_UNCHECKEDHOT = 2
+CBS_UNCHECKEDPRESSED = 3
+CBS_UNCHECKEDDISABLED = 4
+CBS_CHECKEDNORMAL = 5
+CBS_CHECKEDHOT = 6
+CBS_CHECKEDPRESSED = 7
+CBS_CHECKEDDISABLED = 8
+CBS_MIXEDNORMAL = 9
+CBS_MIXEDHOT = 10
+CBS_MIXEDPRESSED = 11
+CBS_MIXEDDISABLED = 12
 End Enum
 Private Declare Function IsThemeBackgroundPartiallyTransparent Lib "uxtheme" (ByVal Theme As Long, iPartId As Long, iStateId As Long) As Long
 Private Declare Function DrawThemeParentBackground Lib "uxtheme" (ByVal hWnd As Long, ByVal hDC As Long, ByRef pRect As RECT) As Long
@@ -938,7 +1056,9 @@ Private Const TME_LEAVE As Long = &H2
 Private Const TME_NONCLIENT As Long = &H10
 Private Const ODA_DRAWENTIRE As Long = &H1
 Private Const ODS_SELECTED As Long = &H1
+Private Const ODS_GRAYED As Long = &H2
 Private Const ODS_DISABLED As Long = &H4
+Private Const ODS_CHECKED As Long = &H8
 Private Const ODS_FOCUS As Long = &H10
 Private Const ODS_HOTLIGHT As Long = &H40
 Private Const ODS_NOFOCUSRECT As Long = &H200
@@ -1059,10 +1179,12 @@ Private Const MCN_SELECT As Long = (MCN_FIRST + 4)
 Private Const GDTR_MIN As Long = 1
 Private Const GDTR_MAX As Long = 2
 Private Const DFC_SCROLL As Long = &H3, DFCS_SCROLLCOMBOBOX As Long = &H5
-Private Const DFC_BUTTON As Long = &H4, DFCS_BUTTONPUSH As Long = &H10, DFCS_ADJUSTRECT As Long = &H2000
+Private Const DFC_BUTTON As Long = &H4, DFCS_BUTTONCHECK As Long = &H0, DFCS_BUTTONPUSH As Long = &H10
 Private Const DFCS_INACTIVE As Long = &H100
 Private Const DFCS_PUSHED As Long = &H200
+Private Const DFCS_CHECKED As Long = &H400
 Private Const DFCS_HOT As Long = &H1000
+Private Const DFCS_ADJUSTRECT As Long = &H2000
 Private Const DFCS_FLAT As Long = &H4000
 Private Const WS_BORDER As Long = &H800000
 Private Const WS_DLGFRAME As Long = &H400000
@@ -1145,25 +1267,38 @@ Private Const TTM_ADDTOOL As Long = TTM_ADDTOOLW
 Private Const TTM_NEWTOOLRECTA As Long = (WM_USER + 6)
 Private Const TTM_NEWTOOLRECTW As Long = (WM_USER + 52)
 Private Const TTM_NEWTOOLRECT As Long = TTM_NEWTOOLRECTW
+Private Const TTM_GETTOOLINFOA As Long = (WM_USER + 8)
+Private Const TTM_GETTOOLINFOW As Long = (WM_USER + 53)
+Private Const TTM_GETTOOLINFO As Long = TTM_GETTOOLINFOW
 Private Const TTM_SETTOOLINFOA As Long = (WM_USER + 9)
 Private Const TTM_SETTOOLINFOW As Long = (WM_USER + 54)
 Private Const TTM_SETTOOLINFO As Long = TTM_SETTOOLINFOW
+Private Const TTM_GETTEXTA As Long = (WM_USER + 11)
+Private Const TTM_GETTEXTW As Long = (WM_USER + 56)
+Private Const TTM_GETTEXT As Long = TTM_GETTEXTW
+Private Const TTM_UPDATETIPTEXTA As Long = (WM_USER + 12)
+Private Const TTM_UPDATETIPTEXTW As Long = (WM_USER + 57)
+Private Const TTM_UPDATETIPTEXT As Long = TTM_UPDATETIPTEXTW
 Private Const TTM_GETTOOLCOUNT As Long = (WM_USER + 13)
 Private Const TTM_ENUMTOOLSA As Long = (WM_USER + 14)
 Private Const TTM_ENUMTOOLSW As Long = (WM_USER + 58)
 Private Const TTM_ENUMTOOLS As Long = TTM_ENUMTOOLSW
+Private Const TTM_TRACKACTIVATE As Long = (WM_USER + 17)
+Private Const TTM_TRACKPOSITION As Long = (WM_USER + 18)
 Private Const TTM_SETMAXTIPWIDTH As Long = (WM_USER + 24)
 Private Const TTM_POP As Long = (WM_USER + 28)
 Private Const TTM_UPDATE As Long = (WM_USER + 29)
 Private Const TTM_ADJUSTRECT As Long = (WM_USER + 31)
 Private Const LPSTR_TEXTCALLBACK As Long = (-1)
+Private Const INFOTIPSIZE As Long = 1024
 Private Const H_MAX As Long = (&HFFFF + 1)
 Private Const NM_FIRST As Long = H_MAX
 Private Const NM_CUSTOMDRAW As Long = (NM_FIRST - 12)
+Private Const TTF_RTLREADING As Long = &H4
 Private Const TTF_SUBCLASS As Long = &H10
+Private Const TTF_TRACK As Long = &H20
 Private Const TTF_TRANSPARENT As Long = &H100
 Private Const TTF_PARSELINKS As Long = &H1000
-Private Const TTF_RTLREADING As Long = &H4
 Private Const TTS_ALWAYSTIP As Long = &H1
 Private Const TTS_NOPREFIX As Long = &H2
 Private Const TTN_FIRST As Long = (-520)
@@ -1174,7 +1309,7 @@ Private Const TTN_SHOW As Long = (TTN_FIRST - 1)
 Implements OLEGuids.IObjectSafety
 Implements OLEGuids.IOleInPlaceActiveObjectVB
 Implements OLEGuids.IOleControlVB
-Private VBFlexGridHandle As Long, VBFlexGridToolTipHandle As Long
+Private VBFlexGridHandle As Long, VBFlexGridToolTipHandle As Long, VBFlexGridScrollTipHandle As Long
 Private VBFlexGridEditHandle As Long, VBFlexGridComboButtonHandle As Long, VBFlexGridComboListHandle As Long, VBFlexGridComboCalendarHandle As Long
 Private VBFlexGridDoubleBufferDC As Long, VBFlexGridDoubleBufferBmp As Long, VBFlexGridDoubleBufferBmpOld As Long
 Private VBFlexGridFontHandle As Long, VBFlexGridFontFixedHandle As Long
@@ -1193,6 +1328,7 @@ Private VBFlexGridGridLineWhitePen As Long, VBFlexGridGridLineBlackPen As Long
 Private VBFlexGridIndirectCellRef As TINDIRECTCELLREF
 Private VBFlexGridCells As TROWS, VBFlexGridCellsInit As Boolean
 Private VBFlexGridColsInfo() As TCOLINFO
+Private VBFlexGridPixelMetrics As TPIXELMETRICS
 Private VBFlexGridDrawInfo As TDRAWINFO
 Private VBFlexGridMergeDrawInfo As TMERGEDRAWINFO
 Private VBFlexGridDefaultCell As TCELL
@@ -1203,6 +1339,7 @@ Private VBFlexGridDefaultRowHeight As Long
 Private VBFlexGridDefaultColWidth As Long
 Private VBFlexGridDefaultFixedRowHeight As Long
 Private VBFlexGridDefaultFixedColWidth As Long
+Private VBFlexGridUniformRowHeight As Long
 Private VBFlexGridRow As Long, VBFlexGridCol As Long
 Private VBFlexGridRowSel As Long, VBFlexGridColSel As Long
 Private VBFlexGridTopRow As Long, VBFlexGridLeftCol As Long
@@ -1211,6 +1348,7 @@ Private VBFlexGridCaptureHitResult As FlexHitResultConstants
 Private VBFlexGridCaptureDividerRow As Long, VBFlexGridCaptureDividerCol As Long
 Private VBFlexGridCaptureDividerDrag As Boolean
 Private VBFlexGridToolTipRow As Long, VBFlexGridToolTipCol As Long
+Private VBFlexGridScrollTipTrack As Boolean
 Private VBFlexGridMouseMoveRow As Long, VBFlexGridMouseMoveCol As Long
 Private VBFlexGridMouseMoveChanged As Boolean
 Private VBFlexGridDividerDragSplitterRect As RECT
@@ -1238,11 +1376,14 @@ Private VBFlexGridEditNoLostFocus As Boolean
 Private VBFlexGridComboCue As FlexComboCueConstants
 Private VBFlexGridComboCueRow As Long, VBFlexGridComboCueCol As Long
 Private VBFlexGridComboMode As FlexComboModeConstants, VBFlexGridComboActiveMode As FlexComboModeConstants
+Private VBFlexGridComboButtonPicture As IPictureDisp, VBFlexGridComboButtonPictureRenderFlag As Integer
 Private VBFlexGridComboButtonAlignment As FlexRightToLeftModeConstants
 Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
+Private VBFlexGridComboButtonWidth As Long
 Private VBFlexGridComboItems As String
 Private VBFlexGridComboBoxRect As RECT
 Private VBFlexGridComboCalendarRegistered As Boolean
+Private VBFlexGridCheckBoxDrawMode As FlexCheckBoxDrawModeConstants
 Private VBFlexGridWheelScrollLines As Long
 Private VBFlexGridFocusBorder As SIZEAPI
 Private VBFlexGridFocused As Boolean
@@ -1257,10 +1398,13 @@ Private VBFlexGridEnabledVisualStyles As Boolean
 Private VBFlexGridSort As FlexSortConstants
 Private VBFlexGridExtendLastCol As Long
 Private VBFlexGridInvertSelection As Boolean
+Private VBFlexGridClipSeparatorCol As String, VBFlexGridClipSeparatorRow As String
+Private VBFlexGridHotRow As Long, VBFlexGridHotCol As Long
+Private VBFlexGridHotHitResult As FlexHitResultConstants
 
 #If ImplementFlexDataSource = True Then
 
-Private VBFlexGridFlexDataSource As IVBFlexDataSource
+Private VBFlexGridFlexDataSource As IVBFlexDataSource, VBFlexGridFlexDataSource2 As IVBFlexDataSource2, VBFlexGridFlexDataSourceFlags As Long
 
 #End If
 
@@ -1296,6 +1440,7 @@ Private PropGridColor As OLE_COLOR
 Private PropGridColorFixed As OLE_COLOR
 Private PropGridColorFrozen As OLE_COLOR
 Private PropSortArrowColor As OLE_COLOR
+Private PropFloodColor As OLE_COLOR
 Private PropMousePointer As Integer, PropMouseIcon As IPictureDisp
 Private PropMouseTrack As Boolean
 Private PropRightToLeft As Boolean
@@ -1317,6 +1462,7 @@ Private PropFillStyle As FlexFillStyleConstants
 Private PropSelectionMode As FlexSelectionModeConstants
 Private PropScrollBars As VBRUN.ScrollBarConstants
 Private PropScrollTrack As Boolean
+Private PropScrollTipFollowThumb As Boolean
 Private PropDisableNoScroll As Boolean
 Private PropHighLight As FlexHighLightConstants
 Private PropFocusRect As FlexFocusRectConstants
@@ -1347,8 +1493,11 @@ Private PropDirectionAfterReturn As FlexDirectionAfterReturnConstants
 Private PropWrapCellBehavior As FlexWrapCellBehaviorConstants
 Private PropShowInfoTips As Boolean
 Private PropShowLabelTips As Boolean
+Private PropShowScrollTips As Boolean
 Private PropClipSeparators As String
 Private PropClipMode As FlexClipModeConstants
+Private PropClipCopyMode As FlexClipCopyModeConstants
+Private PropClipPasteMode As FlexClipPasteModeConstants
 Private PropFormatString As String
 Private PropIMEMode As FlexIMEModeConstants
 Private PropWantReturn As Boolean
@@ -1356,6 +1505,8 @@ Private PropExtendLastCol As Boolean
 Private PropRowSortArrows As Long
 Private PropAllowScrollLock As Boolean
 Private PropSheetBorder As Boolean
+Private PropAutoClipboard As Boolean
+Private PropBestFitMode As FlexBestFitModeConstants
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -1468,11 +1619,23 @@ Call SetVTableHandling(Me, VTableInterfaceControl)
 
 #End If
 
+With VBFlexGridPixelMetrics
+.DividerSpacing.CX = DIVIDER_SPACING_DIP * PixelsPerDIP_X()
+.DividerSpacing.CY = DIVIDER_SPACING_DIP * PixelsPerDIP_Y()
+.CellTextWidthPadding = CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()
+.CellTextHeightPadding = CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()
+.RowInfoHeightSpacing = ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()
+.ColInfoWidthSpacing = COLINFO_WIDTH_SPACING_DIP * PixelsPerDIP_X()
+.ComboButtonWidth = GetSystemMetrics(SM_CXVSCROLL)
+.CheckBoxSize = (13 * PixelsPerDIP_X())
+End With
 With VBFlexGridDefaultCell
 .TextStyle = -1
 .Alignment = -1
 .BackColor = -1
 .ForeColor = -1
+.Checked = -1
+.FloodColor = -1
 End With
 With VBFlexGridDefaultRowInfo
 .Height = -1
@@ -1484,7 +1647,11 @@ With VBFlexGridDefaultColInfo
 .SortArrowAlignment = FlexLeftRightAlignmentRight
 .SortArrowColor = -1
 .ComboButtonAlignment = -1
+.ComboButtonWidth = -1
+.CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment
+.FixedCheckBoxAlignment = -1
 End With
+VBFlexGridUniformRowHeight = -1
 VBFlexGridCaptureRow = -1
 VBFlexGridCaptureCol = -1
 VBFlexGridCaptureHitResult = FlexHitResultNoWhere
@@ -1515,10 +1682,17 @@ VBFlexGridComboMode = FlexComboModeNone
 VBFlexGridComboActiveMode = FlexComboModeNone
 VBFlexGridComboButtonAlignment = FlexLeftRightAlignmentRight
 VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal
+VBFlexGridComboButtonWidth = -1
+VBFlexGridCheckBoxDrawMode = FlexCheckBoxDrawModeNormal
 SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VBFlexGridWheelScrollLines, 0
 If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VBFlexGridFocusBorder.CX, 0) = 0 Then VBFlexGridFocusBorder.CX = 1
 If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VBFlexGridFocusBorder.CY, 0) = 0 Then VBFlexGridFocusBorder.CY = 1
 VBFlexGridExtendLastCol = -1
+VBFlexGridClipSeparatorCol = vbTab
+VBFlexGridClipSeparatorRow = vbCr
+VBFlexGridHotRow = -1
+VBFlexGridHotCol = -1
+VBFlexGridHotHitResult = FlexHitResultNoWhere
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -1548,6 +1722,7 @@ PropGridColor = &HC0C0C0
 PropGridColorFixed = vbBlack
 PropGridColorFrozen = vbBlack
 PropSortArrowColor = vbGrayText
+PropFloodColor = &HC0&
 PropMousePointer = 0: Set PropMouseIcon = Nothing
 PropMouseTrack = False
 PropRightToLeft = Ambient.RightToLeft
@@ -1573,6 +1748,7 @@ PropFillStyle = FlexFillStyleSingle
 PropSelectionMode = FlexSelectionModeFree
 PropScrollBars = vbBoth
 PropScrollTrack = False
+PropScrollTipFollowThumb = False
 PropDisableNoScroll = False
 PropHighLight = FlexHighLightAlways
 PropFocusRect = FlexFocusRectLight
@@ -1603,8 +1779,11 @@ PropDirectionAfterReturn = FlexDirectionAfterReturnNone
 PropWrapCellBehavior = FlexWrapNone
 PropShowInfoTips = False
 PropShowLabelTips = False
+PropShowScrollTips = False
 PropClipSeparators = vbNullString
 PropClipMode = FlexClipModeNormal
+PropClipCopyMode = FlexClipCopyModeNormal
+PropClipPasteMode = FlexClipPasteModeNormal
 PropFormatString = vbNullString
 PropIMEMode = FlexIMEModeNoControl
 PropWantReturn = False
@@ -1612,6 +1791,8 @@ PropExtendLastCol = False
 PropRowSortArrows = 0
 PropAllowScrollLock = False
 PropSheetBorder = True
+PropAutoClipboard = False
+PropBestFitMode = FlexBestFitModeTextOnly
 Call CreateVBFlexGrid
 End Sub
 
@@ -1643,6 +1824,7 @@ PropGridColor = .ReadProperty("GridColor", &HC0C0C0)
 PropGridColorFixed = .ReadProperty("GridColorFixed", vbBlack)
 PropGridColorFrozen = .ReadProperty("GridColorFrozen", vbBlack)
 PropSortArrowColor = .ReadProperty("SortArrowColor", vbGrayText)
+PropFloodColor = .ReadProperty("FloodColor", &HC0&)
 Me.Enabled = .ReadProperty("Enabled", True)
 Me.OLEDropMode = .ReadProperty("OLEDropMode", vbOLEDropNone)
 PropMousePointer = .ReadProperty("MousePointer", 0)
@@ -1671,6 +1853,7 @@ PropFillStyle = .ReadProperty("FillStyle", FlexFillStyleSingle)
 PropSelectionMode = .ReadProperty("SelectionMode", FlexSelectionModeFree)
 PropScrollBars = .ReadProperty("ScrollBars", vbBoth)
 PropScrollTrack = .ReadProperty("ScrollTrack", False)
+PropScrollTipFollowThumb = .ReadProperty("ScrollTipFollowThumb", False)
 PropDisableNoScroll = .ReadProperty("DisableNoScroll", False)
 PropHighLight = .ReadProperty("HighLight", FlexHighLightAlways)
 PropFocusRect = .ReadProperty("FocusRect", FlexFocusRectLight)
@@ -1701,8 +1884,11 @@ PropDirectionAfterReturn = .ReadProperty("DirectionAfterReturn", FlexDirectionAf
 PropWrapCellBehavior = .ReadProperty("WrapCellBehavior", FlexWrapNone)
 PropShowInfoTips = .ReadProperty("ShowInfoTips", False)
 PropShowLabelTips = .ReadProperty("ShowLabelTips", False)
+PropShowScrollTips = .ReadProperty("ShowScrollTips", False)
 PropClipSeparators = VarToStr(.ReadProperty("ClipSeparators", vbNullString))
 PropClipMode = .ReadProperty("ClipMode", FlexClipModeNormal)
+PropClipCopyMode = .ReadProperty("ClipCopyMode", FlexClipCopyModeNormal)
+PropClipPasteMode = .ReadProperty("ClipPasteMode", FlexClipPasteModeNormal)
 PropFormatString = VarToStr(.ReadProperty("FormatString", vbNullString))
 PropIMEMode = .ReadProperty("IMEMode", FlexIMEModeNoControl)
 PropWantReturn = .ReadProperty("WantReturn", False)
@@ -1710,6 +1896,8 @@ PropExtendLastCol = .ReadProperty("ExtendLastCol", False)
 PropRowSortArrows = .ReadProperty("RowSortArrows", 0)
 PropAllowScrollLock = .ReadProperty("AllowScrollLock", False)
 PropSheetBorder = .ReadProperty("SheetBorder", True)
+PropAutoClipboard = .ReadProperty("AutoClipboard", False)
+PropBestFitMode = .ReadProperty("BestFitMode", FlexBestFitModeTextOnly)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -1738,6 +1926,7 @@ With PropBag
 .WriteProperty "GridColorFixed", PropGridColorFixed, vbBlack
 .WriteProperty "GridColorFrozen", PropGridColorFrozen, vbBlack
 .WriteProperty "SortArrowColor", PropSortArrowColor, vbGrayText
+.WriteProperty "FloodColor", PropFloodColor, &HC0&
 .WriteProperty "Enabled", Me.Enabled, True
 .WriteProperty "OLEDropMode", Me.OLEDropMode, vbOLEDropNone
 .WriteProperty "MousePointer", PropMousePointer, 0
@@ -1765,6 +1954,7 @@ With PropBag
 .WriteProperty "SelectionMode", PropSelectionMode, FlexSelectionModeFree
 .WriteProperty "ScrollBars", PropScrollBars, vbBoth
 .WriteProperty "ScrollTrack", PropScrollTrack, False
+.WriteProperty "ScrollTipFollowThumb", PropScrollTipFollowThumb, False
 .WriteProperty "DisableNoScroll", PropDisableNoScroll, False
 .WriteProperty "HighLight", PropHighLight, FlexHighLightAlways
 .WriteProperty "FocusRect", PropFocusRect, FlexFocusRectLight
@@ -1795,8 +1985,11 @@ With PropBag
 .WriteProperty "WrapCellBehavior", PropWrapCellBehavior, FlexWrapNone
 .WriteProperty "ShowInfoTips", PropShowInfoTips, False
 .WriteProperty "ShowLabelTips", PropShowLabelTips, False
+.WriteProperty "ShowScrollTips", PropShowScrollTips, False
 .WriteProperty "ClipSeparators", StrToVar(PropClipSeparators), vbNullString
 .WriteProperty "ClipMode", PropClipMode, FlexClipModeNormal
+.WriteProperty "ClipCopyMode", PropClipCopyMode, FlexClipCopyModeNormal
+.WriteProperty "ClipPasteMode", PropClipPasteMode, FlexClipPasteModeNormal
 .WriteProperty "FormatString", StrToVar(PropFormatString), vbNullString
 .WriteProperty "IMEMode", PropIMEMode, FlexIMEModeNoControl
 .WriteProperty "WantReturn", PropWantReturn, False
@@ -1804,6 +1997,8 @@ With PropBag
 .WriteProperty "RowSortArrows", PropRowSortArrows, 0
 .WriteProperty "AllowScrollLock", PropAllowScrollLock, False
 .WriteProperty "SheetBorder", PropSheetBorder, True
+.WriteProperty "AutoClipboard", PropAutoClipboard, False
+.WriteProperty "BestFitMode", PropBestFitMode, FlexBestFitModeTextOnly
 End With
 End Sub
 
@@ -2157,11 +2352,23 @@ If VBFlexGridDesignMode = False Then
                     For iCol = 0 To (PropFixedCols - 1)
                         VBFlexGridColsInfo(iCol).Key = vbNullString
                         VBFlexGridColsInfo(iCol).DataType = 0
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Then VBFlexGridColsInfo(iCol).State = VBFlexGridColsInfo(iCol).State And Not CLIS_NULLABLE
+                        VBFlexGridColsInfo(iCol).NumericPrecision = 0
+                        VBFlexGridColsInfo(iCol).NumericScale = 0
+                        VBFlexGridColsInfo(iCol).DataCapacity = 0
                     Next iCol
                     For iCol = 0 To (.Fields.Count - 1)
                         Me.TextMatrix(0, iCol + PropFixedCols) = .Fields(iCol).Name
                         VBFlexGridColsInfo(iCol + PropFixedCols).Key = .Fields(iCol).Name
                         VBFlexGridColsInfo(iCol + PropFixedCols).DataType = .Fields(iCol).Type
+                        If (.Fields(iCol).Attributes And &H20) = &H20 Then ' adFldIsNullable
+                            If (VBFlexGridColsInfo(iCol + PropFixedCols).State And CLIS_NULLABLE) = 0 Then VBFlexGridColsInfo(iCol + PropFixedCols).State = VBFlexGridColsInfo(iCol + PropFixedCols).State Or CLIS_NULLABLE
+                        Else
+                            If (VBFlexGridColsInfo(iCol + PropFixedCols).State And CLIS_NULLABLE) = CLIS_NULLABLE Then VBFlexGridColsInfo(iCol + PropFixedCols).State = VBFlexGridColsInfo(iCol + PropFixedCols).State And Not CLIS_NULLABLE
+                        End If
+                        VBFlexGridColsInfo(iCol + PropFixedCols).NumericPrecision = .Fields(iCol).Precision
+                        VBFlexGridColsInfo(iCol + PropFixedCols).NumericScale = .Fields(iCol).NumericScale
+                        VBFlexGridColsInfo(iCol + PropFixedCols).DataCapacity = .Fields(iCol).DefinedSize
                     Next iCol
                 End If
                 If .RecordCount > 0 Then
@@ -2229,7 +2436,7 @@ If hDCScreen <> 0 Then
     Dim TM As TEXTMETRIC, hFontOld As Long
     If VBFlexGridFontHandle <> 0 Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontHandle)
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
-        VBFlexGridDefaultRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+        VBFlexGridDefaultRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.RowInfoHeightSpacing
         VBFlexGridDefaultColWidth = VBFlexGridDefaultRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
     If hFontOld <> 0 Then SelectObject hDCScreen, hFontOld
@@ -2250,7 +2457,7 @@ If hDCScreen <> 0 Then
     Dim TM As TEXTMETRIC, hFontOld As Long
     If VBFlexGridFontHandle <> 0 Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontHandle)
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
-        VBFlexGridDefaultRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+        VBFlexGridDefaultRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.RowInfoHeightSpacing
         VBFlexGridDefaultColWidth = VBFlexGridDefaultRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
     If hFontOld <> 0 Then SelectObject hDCScreen, hFontOld
@@ -2290,7 +2497,7 @@ Else
         Dim TM As TEXTMETRIC, hFontOld As Long
         If VBFlexGridFontFixedHandle <> 0 Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontFixedHandle)
         If GetTextMetrics(hDCScreen, TM) <> 0 Then
-            VBFlexGridDefaultFixedRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+            VBFlexGridDefaultFixedRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.RowInfoHeightSpacing
             VBFlexGridDefaultFixedColWidth = VBFlexGridDefaultFixedRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
         End If
         If hFontOld <> 0 Then SelectObject hDCScreen, hFontOld
@@ -2312,7 +2519,7 @@ If hDCScreen <> 0 Then
     Dim TM As TEXTMETRIC, hFontOld As Long
     If VBFlexGridFontFixedHandle <> 0 Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontFixedHandle)
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
-        VBFlexGridDefaultFixedRowHeight = TM.TMHeight + (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y())
+        VBFlexGridDefaultFixedRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.RowInfoHeightSpacing
         VBFlexGridDefaultFixedColWidth = VBFlexGridDefaultFixedRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
     If hFontOld <> 0 Then SelectObject hDCScreen, hFontOld
@@ -2531,6 +2738,17 @@ Me.Refresh
 UserControl.PropertyChanged "SortArrowColor"
 End Property
 
+Public Property Get FloodColor() As OLE_COLOR
+Attribute FloodColor.VB_Description = "Returns/sets the color used to flood cells."
+FloodColor = PropFloodColor
+End Property
+
+Public Property Let FloodColor(ByVal Value As OLE_COLOR)
+PropFloodColor = Value
+Me.Refresh
+UserControl.PropertyChanged "FloodColor"
+End Property
+
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_Description = "Returns/sets a value that determines whether an object can respond to user-generated events."
 Attribute Enabled.VB_UserMemId = -514
@@ -2696,39 +2914,43 @@ If VBFlexGridHandle <> 0 Then
     dwMask = 0
     dwExStyle = 0
 End If
-If VBFlexGridToolTipHandle <> 0 Then
-    If PropRightToLeft = True Then
-        If PropRightToLeftLayout = True Then dwMask = WS_EX_LAYOUTRTL Else dwMask = WS_EX_RTLREADING
-    Else
-        dwMask = 0
-    End If
-    dwExStyle = GetWindowLong(VBFlexGridToolTipHandle, GWL_EXSTYLE)
-    If (dwExStyle And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Then dwExStyle = dwExStyle And Not WS_EX_LAYOUTRTL
-    If (dwExStyle And WS_EX_RTLREADING) = WS_EX_RTLREADING Then dwExStyle = dwExStyle And Not WS_EX_RTLREADING
-    If (dwExStyle And WS_EX_RIGHT) = WS_EX_RIGHT Then dwExStyle = dwExStyle And Not WS_EX_RIGHT
-    If (dwExStyle And WS_EX_LEFTSCROLLBAR) = WS_EX_LEFTSCROLLBAR Then dwExStyle = dwExStyle And Not WS_EX_LEFTSCROLLBAR
-    If (dwMask And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
-    ' ToolTip control supports only the WS_EX_LAYOUTRTL flag.
-    ' Set TTF_RTLREADING flag when dwMask contains WS_EX_RTLREADING, though WS_EX_RTLREADING will not be actually set.
-    SetWindowLong VBFlexGridToolTipHandle, GWL_EXSTYLE, dwExStyle
-    Dim i As Long, TI As TOOLINFO, Buffer As String
-    With TI
-    .cbSize = LenB(TI)
-    Buffer = String(80, vbNullChar)
-    .lpszText = StrPtr(Buffer)
-    For i = 1 To SendMessage(VBFlexGridToolTipHandle, TTM_GETTOOLCOUNT, 0, ByVal 0&)
-        If SendMessage(VBFlexGridToolTipHandle, TTM_ENUMTOOLS, i - 1, ByVal VarPtr(TI)) <> 0 Then
-            If (dwMask And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Or (dwMask And WS_EX_RTLREADING) = 0 Then
-                If (.uFlags And TTF_RTLREADING) = TTF_RTLREADING Then .uFlags = .uFlags And Not TTF_RTLREADING
-            Else
-                If (.uFlags And TTF_RTLREADING) = 0 Then .uFlags = .uFlags Or TTF_RTLREADING
-            End If
-            SendMessage VBFlexGridToolTipHandle, TTM_SETTOOLINFO, 0, ByVal VarPtr(TI)
-            SendMessage VBFlexGridToolTipHandle, TTM_UPDATE, 0, ByVal 0&
+Dim hToolTip As Long, j As Long
+For j = 1 To 2
+    hToolTip = VBA.Choose(j, VBFlexGridToolTipHandle, VBFlexGridScrollTipHandle)
+    If hToolTip <> 0 Then
+        If PropRightToLeft = True Then
+            If PropRightToLeftLayout = True Then dwMask = WS_EX_LAYOUTRTL Else dwMask = WS_EX_RTLREADING
+        Else
+            dwMask = 0
         End If
-    Next i
-    End With
-End If
+        dwExStyle = GetWindowLong(hToolTip, GWL_EXSTYLE)
+        If (dwExStyle And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Then dwExStyle = dwExStyle And Not WS_EX_LAYOUTRTL
+        If (dwExStyle And WS_EX_RTLREADING) = WS_EX_RTLREADING Then dwExStyle = dwExStyle And Not WS_EX_RTLREADING
+        If (dwExStyle And WS_EX_RIGHT) = WS_EX_RIGHT Then dwExStyle = dwExStyle And Not WS_EX_RIGHT
+        If (dwExStyle And WS_EX_LEFTSCROLLBAR) = WS_EX_LEFTSCROLLBAR Then dwExStyle = dwExStyle And Not WS_EX_LEFTSCROLLBAR
+        If (dwMask And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
+        ' ToolTip control supports only the WS_EX_LAYOUTRTL flag.
+        ' Set TTF_RTLREADING flag when dwMask contains WS_EX_RTLREADING, though WS_EX_RTLREADING will not be actually set.
+        SetWindowLong hToolTip, GWL_EXSTYLE, dwExStyle
+        Dim i As Long, TI As TOOLINFO, Buffer As String
+        With TI
+        .cbSize = LenB(TI)
+        Buffer = String(80, vbNullChar)
+        .lpszText = StrPtr(Buffer)
+        For i = 1 To SendMessage(hToolTip, TTM_GETTOOLCOUNT, 0, ByVal 0&)
+            If SendMessage(hToolTip, TTM_ENUMTOOLS, i - 1, ByVal VarPtr(TI)) <> 0 Then
+                If (dwMask And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Or (dwMask And WS_EX_RTLREADING) = 0 Then
+                    If (.uFlags And TTF_RTLREADING) = TTF_RTLREADING Then .uFlags = .uFlags And Not TTF_RTLREADING
+                Else
+                    If (.uFlags And TTF_RTLREADING) = 0 Then .uFlags = .uFlags Or TTF_RTLREADING
+                End If
+                SendMessage hToolTip, TTM_SETTOOLINFO, 0, ByVal VarPtr(TI)
+                SendMessage hToolTip, TTM_UPDATE, 0, ByVal 0&
+            End If
+        Next i
+        End With
+    End If
+Next j
 UserControl.PropertyChanged "RightToLeft"
 End Property
 
@@ -3279,7 +3501,7 @@ End Property
 
 Public Property Let RowSizingMode(ByVal Value As FlexRowSizingModeConstants)
 Select Case Value
-    Case FlexRowSizingModeIndividual, FlexRowSizingModeAll
+    Case FlexRowSizingModeIndividual, FlexRowSizingModeAll, FlexRowSizingModeUniform
         PropRowSizingMode = Value
     Case Else
         Err.Raise 380
@@ -3383,6 +3605,16 @@ End Property
 Public Property Let ScrollTrack(ByVal Value As Boolean)
 PropScrollTrack = Value
 UserControl.PropertyChanged "ScrollTrack"
+End Property
+
+Public Property Get ScrollTipFollowThumb() As Boolean
+Attribute ScrollTipFollowThumb.VB_Description = "Returns/sets a value that determines whether the scroll tip should follow the thumb as the user scrolls."
+ScrollTipFollowThumb = PropScrollTipFollowThumb
+End Property
+
+Public Property Let ScrollTipFollowThumb(ByVal Value As Boolean)
+PropScrollTipFollowThumb = Value
+UserControl.PropertyChanged "ScrollTipFollowThumb"
 End Property
 
 Public Property Get DisableNoScroll() As Boolean
@@ -3907,7 +4139,9 @@ Public Property Let Sort(ByVal Value As FlexSortConstants)
 
 #If ImplementFlexDataSource Then
 
-If Not VBFlexGridFlexDataSource Is Nothing Then Err.Raise Number:=5, Description:="This functionality is disabled when custom data source is set."
+If Not VBFlexGridFlexDataSource Is Nothing Then
+    If (VBFlexGridFlexDataSourceFlags And FlexDataSourceNoData) = 0 Then Err.Raise Number:=5, Description:="This functionality is disabled when custom data source is set."
+End If
 
 #End If
 
@@ -4040,6 +4274,23 @@ End If
 UserControl.PropertyChanged "ShowLabelTips"
 End Property
 
+Public Property Get ShowScrollTips() As Boolean
+Attribute ShowScrollTips.VB_Description = "Returns/sets a value that determines whether scroll tips appear when the user moves the scroll box."
+ShowScrollTips = PropShowScrollTips
+End Property
+
+Public Property Let ShowScrollTips(ByVal Value As Boolean)
+PropShowScrollTips = Value
+If VBFlexGridHandle <> 0 And VBFlexGridDesignMode = False Then
+    If PropShowScrollTips = False Then
+        Call DestroyScrollTip
+    Else
+        Call CreateScrollTip
+    End If
+End If
+UserControl.PropertyChanged "ShowScrollTips"
+End Property
+
 Public Property Get ClipSeparators() As String
 Attribute ClipSeparators.VB_Description = "Returns/sets two distinct characters to be used as column (first) and row (second) separators in clip strings. If it is empty, the defaults vbTab and vbCr are used."
 ClipSeparators = PropClipSeparators
@@ -4083,6 +4334,36 @@ End Select
 UserControl.PropertyChanged "ClipMode"
 End Property
 
+Public Property Get ClipCopyMode() As FlexClipCopyModeConstants
+Attribute ClipCopyMode.VB_Description = "Returns/sets a value that determines what parts are copied to the clipboard or returned by a clip command."
+ClipCopyMode = PropClipCopyMode
+End Property
+
+Public Property Let ClipCopyMode(ByVal Value As FlexClipCopyModeConstants)
+Select Case Value
+    Case FlexClipCopyModeNormal, FlexClipCopyModeIncludeFixedRows, FlexClipCopyModeIncludeFixedColumns, FlexClipCopyModeIncludeFixedAll
+        PropClipCopyMode = Value
+    Case Else
+        Err.Raise 380
+End Select
+UserControl.PropertyChanged "ClipCopyMode"
+End Property
+
+Public Property Get ClipPasteMode() As FlexClipPasteModeConstants
+Attribute ClipPasteMode.VB_Description = "Returns/sets a value that determines how content is pasted from the clipboard or by doing a clip command."
+ClipPasteMode = PropClipPasteMode
+End Property
+
+Public Property Let ClipPasteMode(ByVal Value As FlexClipPasteModeConstants)
+Select Case Value
+    Case FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection
+        PropClipPasteMode = Value
+    Case Else
+        Err.Raise 380
+End Select
+UserControl.PropertyChanged "ClipPasteMode"
+End Property
+
 Public Property Get FormatString() As String
 Attribute FormatString.VB_Description = "Allows you to set up column widths, alignments, and fixed row and column text in the flex grid at design time."
 FormatString = PropFormatString
@@ -4109,7 +4390,7 @@ If Not PropFormatString = vbNullString Then
             FormatCol = PropFormatString
         End If
         Dim Pos1 As Long, Pos2 As Long, Temp As String, Spacing As Long
-        Spacing = (COLINFO_WIDTH_SPACING_DIP * PixelsPerDIP_X())
+        Spacing = VBFlexGridPixelMetrics.ColInfoWidthSpacing
         If Not FormatCol = vbNullString Then
             Dim iCol As Long
             Do
@@ -4142,7 +4423,7 @@ If Not PropFormatString = vbNullString Then
                     Case Else
                         .Alignment = FlexAlignmentGeneral
                 End Select
-                .Width = GetTextSize(0, iCol, Temp).CX + Spacing
+                .Width = GetBestWidth(0, iCol, Temp) + Spacing
                 End With
                 Call SetCellText(0, iCol, Trim$(Temp))
                 Pos2 = Pos1
@@ -4152,7 +4433,7 @@ If Not PropFormatString = vbNullString Then
             Pos2 = 0
         End If
         If (Not FormatRow = vbNullString Or PosRemainder > 0) And PropFixedCols > 0 Then
-            Dim iRow As Long
+            Dim iRow As Long, CX As Long
             Do
                 Pos1 = InStr(Pos1 + 1, FormatRow, "|")
                 Pos2 = Pos1
@@ -4169,9 +4450,8 @@ If Not PropFormatString = vbNullString Then
                 Else
                     Temp = Mid$(FormatRow, Pos2 + 1)
                 End If
-                With GetTextSize(iRow, 0, Temp)
-                If (.CX + Spacing) > VBFlexGridColsInfo(0).Width Then VBFlexGridColsInfo(0).Width = .CX + Spacing
-                End With
+                CX = GetBestWidth(iRow, 0, Temp)
+                If (CX + Spacing) > VBFlexGridColsInfo(0).Width Then VBFlexGridColsInfo(0).Width = CX + Spacing
                 Call SetCellText(iRow, 0, Trim$(Temp))
                 Pos2 = Pos1
                 iRow = iRow + 1
@@ -4298,6 +4578,31 @@ Call RedrawGrid
 UserControl.PropertyChanged "SheetBorder"
 End Property
 
+Public Property Get AutoClipboard() As Boolean
+Attribute AutoClipboard.VB_Description = "Returns/sets whether the flex grid should handle the clipboard keys and automatically perform copy, cut, paste and delete operations."
+AutoClipboard = PropAutoClipboard
+End Property
+
+Public Property Let AutoClipboard(ByVal Value As Boolean)
+PropAutoClipboard = Value
+UserControl.PropertyChanged "AutoClipboard"
+End Property
+
+Public Property Get BestFitMode() As FlexBestFitModeConstants
+Attribute BestFitMode.VB_Description = "Returns/sets a value that determines which cell contents are considered in best-fit resizing operations."
+BestFitMode = PropBestFitMode
+End Property
+
+Public Property Let BestFitMode(ByVal Value As FlexBestFitModeConstants)
+Select Case Value
+    Case FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
+        PropBestFitMode = Value
+    Case Else
+        Err.Raise 380
+End Select
+UserControl.PropertyChanged "BestFitMode"
+End Property
+
 Private Sub CreateVBFlexGrid()
 If VBFlexGridHandle <> 0 Then Exit Sub
 Call InitFlexGridCells
@@ -4334,6 +4639,7 @@ If VBFlexGridDesignMode = False Then
         End If
     End If
     If PropShowInfoTips = True Or PropShowLabelTips = True Then Call CreateToolTip
+    If PropShowScrollTips = True Then Call CreateScrollTip
 Else
     VBFlexGridHandle = UserControl.hWnd
     SetRect VBFlexGridClientRect, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight
@@ -4439,10 +4745,38 @@ End If
 Call SetVisualStylesToolTip
 End Sub
 
+Private Sub CreateScrollTip()
+Static Done As Boolean
+If VBFlexGridScrollTipHandle <> 0 Then Exit Sub
+If Done = False Then
+    Call FlexInitCC(ICC_TAB_CLASSES)
+    Done = True
+End If
+Dim dwExStyle As Long
+dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST Or WS_EX_TRANSPARENT
+If VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
+VBFlexGridScrollTipHandle = CreateWindowEx(dwExStyle, StrPtr("tooltips_class32"), StrPtr("Scroll Tip"), WS_POPUP Or TTS_ALWAYSTIP Or TTS_NOPREFIX, 0, 0, 0, 0, UserControl.hWnd, 0, App.hInstance, ByVal 0&)
+If VBFlexGridScrollTipHandle <> 0 Then
+    SendMessage VBFlexGridScrollTipHandle, TTM_SETMAXTIPWIDTH, 0, ByVal &H7FFF&
+    Dim TI As TOOLINFO
+    With TI
+    .cbSize = LenB(TI)
+    .hWnd = VBFlexGridHandle
+    .uId = 0
+    .uFlags = TTF_TRACK
+    If VBFlexGridRTLReading = True Then .uFlags = .uFlags Or TTF_RTLREADING
+    .lpszText = 0
+    End With
+    SendMessage VBFlexGridScrollTipHandle, TTM_ADDTOOL, 0, ByVal VarPtr(TI)
+End If
+Call SetVisualStylesScrollTip
+End Sub
+
 Private Sub DestroyVBFlexGrid()
 If VBFlexGridHandle = 0 Then Exit Sub
 Call FlexRemoveSubclass(UserControl.hWnd)
 Call DestroyToolTip
+Call DestroyScrollTip
 If VBFlexGridDesignMode = False Then
     
     #If ImplementPreTranslateMsg = True Then
@@ -4537,6 +4871,13 @@ VBFlexGridToolTipRow = -1
 VBFlexGridToolTipCol = -1
 End Sub
 
+Private Sub DestroyScrollTip()
+If VBFlexGridScrollTipHandle = 0 Then Exit Sub
+DestroyWindow VBFlexGridScrollTipHandle
+VBFlexGridScrollTipHandle = 0
+VBFlexGridScrollTipTrack = False
+End Sub
+
 Private Function CreateEdit(ByVal Reason As FlexEditReasonConstants, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Boolean
 Static InProc As Boolean
 If VBFlexGridHandle = 0 Or VBFlexGridEditHandle <> 0 Or InProc = True Then Exit Function
@@ -4625,8 +4966,6 @@ With EditRect
 .Top = CellRangeRect.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY
 .Right = CellRangeRect.Right - VBFlexGridEditGridLineOffsets.RightBottom.CX
 .Bottom = CellRangeRect.Bottom - VBFlexGridEditGridLineOffsets.RightBottom.CY
-'If .Bottom > VBFlexGridClientRect.Bottom Then .Bottom = VBFlexGridClientRect.Bottom
-'If .Right > VBFlexGridClientRect.Right Then .Right = VBFlexGridClientRect.Right
 End With
 If VBFlexGridComboMode <> FlexComboModeNone Then
     VBFlexGridComboActiveMode = VBFlexGridComboMode
@@ -4636,7 +4975,7 @@ ElseIf VBFlexGridColsInfo(VBFlexGridEditCol).ComboMode <> FlexComboModeNone Then
     ComboItems = VBFlexGridColsInfo(VBFlexGridEditCol).ComboItems
 End If
 If VBFlexGridComboActiveMode <> FlexComboModeNone Then
-    ComboButtonWidth = GetSystemMetrics(SM_CXVSCROLL)
+    ComboButtonWidth = GetComboButtonWidth(VBFlexGridEditCol, FlexComboCueNone)
     If VBFlexGridColsInfo(VBFlexGridEditCol).ComboButtonAlignment = -1 Then
         ComboButtonAlignment = VBFlexGridComboButtonAlignment
     Else
@@ -4706,9 +5045,9 @@ If VBFlexGridEditHandle <> 0 Then
     End With
     SendMessage VBFlexGridEditHandle, WM_SETFONT, hFont, ByVal 0&
     If VBFlexGridRTLLayout = False Then
-        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord((CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()) - VBFlexGridEditGridLineOffsets.LeftTop.CX, (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()) - VBFlexGridEditGridLineOffsets.RightBottom.CX)
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(VBFlexGridPixelMetrics.CellTextWidthPadding - VBFlexGridEditGridLineOffsets.LeftTop.CX, VBFlexGridPixelMetrics.CellTextWidthPadding - VBFlexGridEditGridLineOffsets.RightBottom.CX)
     Else
-        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord((CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()) - VBFlexGridEditGridLineOffsets.RightBottom.CX, (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()) - VBFlexGridEditGridLineOffsets.LeftTop.CX)
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(VBFlexGridPixelMetrics.CellTextWidthPadding - VBFlexGridEditGridLineOffsets.RightBottom.CX, VBFlexGridPixelMetrics.CellTextWidthPadding - VBFlexGridEditGridLineOffsets.LeftTop.CX)
     End If
     SendMessage VBFlexGridEditHandle, WM_SETTEXT, 0, ByVal StrPtr(Text)
     VBFlexGridEditTextChanged = False
@@ -4976,6 +5315,7 @@ Attribute Refresh.VB_Description = "Forces a complete repaint of a object."
 Attribute Refresh.VB_UserMemId = -550
 UserControl.Refresh
 If VBFlexGridNoRedraw = False And VBFlexGridDesignMode = False Then RedrawWindow UserControl.hWnd, 0, 0, RDW_UPDATENOW Or RDW_INVALIDATE Or RDW_ERASE Or RDW_ALLCHILDREN
+If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then Call UpdateEditRect
 End Sub
 
 #If ImplementDataSource = True Or ImplementFlexDataSource = True Then
@@ -5014,15 +5354,44 @@ End Property
 Public Property Set FlexDataSource(ByVal Value As IVBFlexDataSource)
 Set VBFlexGridFlexDataSource = Value
 If Not VBFlexGridFlexDataSource Is Nothing Then
+    If TypeOf VBFlexGridFlexDataSource Is IVBFlexDataSource2 Then
+        Set VBFlexGridFlexDataSource2 = VBFlexGridFlexDataSource
+        VBFlexGridFlexDataSourceFlags = VBFlexGridFlexDataSource2.GetFlags()
+    Else
+        Set VBFlexGridFlexDataSource2 = Nothing
+        VBFlexGridFlexDataSourceFlags = 0
+    End If
     With VBFlexGridFlexDataSource
     Dim FieldCount As Long, RecordCount As Long, iRow As Long, iCol As Long
     FieldCount = .GetFieldCount
     If FieldCount > 0 Then
-        Me.Cols = FieldCount
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            Me.Cols = FieldCount
+        Else
+            Me.Cols = PropFixedCols + FieldCount
+        End If
         If PropFixedRows > 0 Then
-            For iCol = 0 To (FieldCount - 1)
-                Me.TextMatrix(0, iCol) = .GetFieldName(iCol)
-            Next iCol
+            Dim FieldName As String
+            If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+                If (VBFlexGridFlexDataSourceFlags And FlexDataSourceNoFieldNames) = 0 Then
+                    For iCol = 0 To (FieldCount - 1)
+                        FieldName = .GetFieldName(iCol)
+                        Me.TextMatrix(0, iCol) = FieldName
+                        VBFlexGridColsInfo(iCol).Key = FieldName
+                    Next iCol
+                End If
+            Else
+                For iCol = 0 To (PropFixedCols - 1)
+                    VBFlexGridColsInfo(iCol).Key = vbNullString
+                Next iCol
+                If (VBFlexGridFlexDataSourceFlags And FlexDataSourceNoFieldNames) = 0 Then
+                    For iCol = 0 To (FieldCount - 1)
+                        FieldName = .GetFieldName(iCol)
+                        Me.TextMatrix(0, iCol + PropFixedCols) = FieldName
+                        VBFlexGridColsInfo(iCol + PropFixedCols).Key = FieldName
+                    Next iCol
+                End If
+            End If
         End If
         RecordCount = .GetRecordCount
         If RecordCount > 0 Then
@@ -5033,6 +5402,8 @@ If Not VBFlexGridFlexDataSource Is Nothing Then
     End If
     End With
 Else
+    Set VBFlexGridFlexDataSource2 = Nothing
+    VBFlexGridFlexDataSourceFlags = 0
     Call RedrawGrid
 End If
 End Property
@@ -5073,13 +5444,16 @@ Else
         PropRows = PropRows + 1
         If PropCols > 0 Then Call InitFlexGridCells
     End If
-    Dim Pos1 As Long, Pos2 As Long, iCol As Long, ColSeparator As String
-    ColSeparator = GetColSeparator()
+    Dim Pos1 As Long, Pos2 As Long, iCol As Long
+    Dim CSCol As String, CSColLen As Long
+    CSCol = GetClipSeparatorCol()
+    CSColLen = Len(CSCol)
     If PropClipMode = FlexClipModeNormal Then
         Do
-            Pos1 = InStr(Pos1 + 1, Item, ColSeparator)
+            Pos1 = InStr(Pos1 + 1, Item, CSCol)
             If Pos1 > 0 Then
-                If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - 1))
+                Pos1 = Pos1 + CSColLen - 1
+                If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - CSColLen))
             Else
                 If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1))
             End If
@@ -5090,9 +5464,10 @@ Else
         Dim ColLoop As Boolean
         Do
             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
-                Pos1 = InStr(Pos1 + 1, Item, ColSeparator)
+                Pos1 = InStr(Pos1 + 1, Item, CSCol)
                 If Pos1 > 0 Then
-                    If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - 1))
+                    Pos1 = Pos1 + CSColLen - 1
+                    If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - CSColLen))
                 Else
                     If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1))
                 End If
@@ -5171,6 +5546,30 @@ Else
     Call SetRowColParams(RCP)
     End With
 End If
+End Sub
+
+Public Sub Copy()
+Attribute Copy.VB_Description = "Copies the current selection of the flex grid to the clipboard."
+Call SetClipboardText(Me.Clip)
+End Sub
+
+Public Sub Cut()
+Attribute Cut.VB_Description = "Deletes (cuts) the current selection of the flex grid and copy the deleted text to the clipboard."
+Me.Copy
+Me.Clear FlexClearSelection, FlexClearText
+Me.CellEnsureVisible
+End Sub
+
+Public Sub Paste()
+Attribute Paste.VB_Description = "Pastes the current content of the clipboard at the current selection of the flex grid."
+Me.Clip = GetClipboardText()
+Me.CellEnsureVisible
+End Sub
+
+Public Sub Delete()
+Attribute Delete.VB_Description = "Deletes the current selection of the flex grid."
+Me.Clear FlexClearSelection, FlexClearText
+Me.CellEnsureVisible
 End Sub
 
 Public Sub Clear(Optional ByVal Where As FlexClearWhereConstants, Optional ByVal What As FlexClearWhatConstants)
@@ -5747,6 +6146,32 @@ Call SetRowColParams(RCP)
 End With
 End Property
 
+Public Property Get RowHeightUniform() As Long
+Attribute RowHeightUniform.VB_Description = "Returns/sets a uniform row height in twips for all rows that do not have specific height assigned to them."
+Attribute RowHeightUniform.VB_MemberFlags = "400"
+If VBFlexGridUniformRowHeight > -1 Then
+    RowHeightUniform = UserControl.ScaleY(VBFlexGridUniformRowHeight, vbPixels, vbTwips)
+Else
+    RowHeightUniform = -1
+End If
+End Property
+
+Public Property Let RowHeightUniform(ByVal Value As Long)
+If Value < -1 Then Err.Raise Number:=30013, Description:="Invalid Row Height value"
+If Value > -1 Then
+    VBFlexGridUniformRowHeight = UserControl.ScaleY(Value, vbTwips, vbPixels)
+Else
+    VBFlexGridUniformRowHeight = -1
+End If
+Dim RCP As TROWCOLPARAMS
+With RCP
+.Mask = RCPM_TOPROW
+.Flags = RCPF_CHECKTOPROW Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.TopRow = VBFlexGridTopRow
+Call SetRowColParams(RCP)
+End With
+End Property
+
 Public Property Get RowData(ByVal Index As Long) As Long
 Attribute RowData.VB_Description = "Array of long integer values with one item for each row (RowData) and for each column (ColData) of the flex grid."
 Attribute RowData.VB_MemberFlags = "400"
@@ -5894,6 +6319,41 @@ End Property
 
 Public Property Let RowIndex(ByVal ID As Long, ByVal Value As Long)
 Err.Raise Number:=383, Description:="Property is read-only"
+End Property
+
+Public Property Get RowResizable(ByVal Index As Long) As Boolean
+Attribute RowResizable.VB_Description = "Returns/sets a value that determines whether the user can resize the specified row."
+Attribute RowResizable.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+RowResizable = CBool((VBFlexGridCells.Rows(Index).RowInfo.State And RWIS_NOSIZING) = 0)
+End Property
+
+Public Property Let RowResizable(ByVal Index As Long, ByVal Value As Boolean)
+If Index <> -1 And (Index < 0 Or Index > (PropRows - 1)) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+If Index > -1 Then
+    With VBFlexGridCells.Rows(Index).RowInfo
+    If Value = True Then
+        If (.State And RWIS_NOSIZING) = RWIS_NOSIZING Then .State = .State And Not RWIS_NOSIZING
+    Else
+        If (.State And RWIS_NOSIZING) = 0 Then .State = .State Or RWIS_NOSIZING
+    End If
+    End With
+Else
+    Dim i As Long
+    If Value = True Then
+        For i = 0 To (PropRows - 1)
+            With VBFlexGridCells.Rows(i).RowInfo
+            If (.State And RWIS_NOSIZING) = RWIS_NOSIZING Then .State = .State And Not RWIS_NOSIZING
+            End With
+        Next i
+    Else
+        For i = 0 To (PropRows - 1)
+            With VBFlexGridCells.Rows(i).RowInfo
+            If (.State And RWIS_NOSIZING) = 0 Then .State = .State Or CLIS_NOSIZING
+            End With
+        Next i
+    End If
+End If
 End Property
 
 Public Property Get RowIsVisible(ByVal Index As Long, Optional ByVal Visibility As FlexVisibilityConstants) As Boolean
@@ -6509,6 +6969,48 @@ Else
 End If
 End Property
 
+Public Property Get ColComboButtonPicture(ByVal Index As Long) As IPictureDisp
+Attribute ColComboButtonPicture.VB_Description = "Returns/sets the combo button picture for the specified column. Only applicable if the combo button draw mode property is set to 0 - Normal and the combo mode property is set to 3 - Button."
+Attribute ColComboButtonPicture.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Set ColComboButtonPicture = VBFlexGridColsInfo(Index).ComboButtonPicture
+End Property
+
+Public Property Let ColComboButtonPicture(ByVal Index As Long, ByVal Value As IPictureDisp)
+Set Me.ColComboButtonPicture(Index) = Value
+End Property
+
+Public Property Set ColComboButtonPicture(ByVal Index As Long, ByVal Value As IPictureDisp)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    If Value Is Nothing Then
+        Set VBFlexGridColsInfo(Index).ComboButtonPicture = Nothing
+    Else
+        Set UserControl.Picture = Value
+        Set VBFlexGridColsInfo(Index).ComboButtonPicture = UserControl.Picture
+        Set UserControl.Picture = Nothing
+    End If
+    VBFlexGridColsInfo(Index).ComboButtonPictureRenderFlag = 0
+Else
+    Dim i As Long
+    If Value Is Nothing Then
+        For i = 0 To (PropCols - 1)
+            Set VBFlexGridColsInfo(i).ComboButtonPicture = Nothing
+            VBFlexGridColsInfo(i).ComboButtonPictureRenderFlag = 0
+        Next i
+    Else
+        Set UserControl.Picture = Value
+        For i = 0 To (PropCols - 1)
+            Set VBFlexGridColsInfo(i).ComboButtonPicture = UserControl.Picture
+            VBFlexGridColsInfo(i).ComboButtonPictureRenderFlag = 0
+        Next i
+        Set UserControl.Picture = Nothing
+    End If
+End If
+If VBFlexGridComboButtonHandle <> 0 Then InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
+Call RedrawGrid
+End Property
+
 Public Property Get ColComboButtonAlignment(ByVal Index As Long) As FlexLeftRightAlignmentConstants
 Attribute ColComboButtonAlignment.VB_Description = "Returns/sets the combo button alignment for the specified column."
 Attribute ColComboButtonAlignment.VB_MemberFlags = "400"
@@ -6537,6 +7039,38 @@ Else
 End If
 End Property
 
+Public Property Get ColComboButtonWidth(ByVal Index As Long) As Long
+Attribute ColComboButtonWidth.VB_Description = "Returns/sets the combo button width in twips for the specified column. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ColComboButtonWidth.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If VBFlexGridColsInfo(Index).ComboButtonWidth = -1 Then
+    ColComboButtonWidth = UserControl.ScaleX(VBFlexGridPixelMetrics.ComboButtonWidth, vbPixels, vbTwips)
+Else
+    ColComboButtonWidth = UserControl.ScaleX(VBFlexGridColsInfo(Index).ComboButtonWidth, vbPixels, vbTwips)
+End If
+End Property
+
+Public Property Let ColComboButtonWidth(ByVal Index As Long, ByVal Value As Long)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Value < -1 Then Err.Raise Number:=30014, Description:="Invalid Col Width value"
+If Index > -1 Then
+    If Value > -1 Then
+        VBFlexGridColsInfo(Index).ComboButtonWidth = UserControl.ScaleX(Value, vbTwips, vbPixels)
+    Else
+        VBFlexGridColsInfo(Index).ComboButtonWidth = -1
+    End If
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        If Value > -1 Then
+            VBFlexGridColsInfo(i).ComboButtonWidth = UserControl.ScaleX(Value, vbTwips, vbPixels)
+        Else
+            VBFlexGridColsInfo(i).ComboButtonWidth = -1
+        End If
+    Next i
+End If
+End Property
+
 Public Property Get ColComboItems(ByVal Index As Long) As String
 Attribute ColComboItems.VB_Description = "Returns/sets the items to be used for the drop-down list when editing a cell for the specified column."
 Attribute ColComboItems.VB_MemberFlags = "400"
@@ -6554,6 +7088,60 @@ Else
         VBFlexGridColsInfo(i).ComboItems = Value
     Next i
 End If
+End Property
+
+Public Property Get ColCheckBoxAlignment(ByVal Index As Long) As FlexCheckBoxAlignmentConstants
+Attribute ColCheckBoxAlignment.VB_Description = "Returns/sets the check box alignment in a column."
+Attribute ColCheckBoxAlignment.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30004, Description:="Invalid Col value for alignment"
+ColCheckBoxAlignment = VBFlexGridColsInfo(Index).CheckBoxAlignment
+End Property
+
+Public Property Let ColCheckBoxAlignment(ByVal Index As Long, ByVal Value As FlexCheckBoxAlignmentConstants)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30004, Description:="Invalid Col value for alignment"
+Select Case Value
+    Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentCenterTop, FlexCheckBoxAlignmentCenterCenter, FlexCheckBoxAlignmentCenterBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom, FlexCheckBoxAlignmentUsePictureAlignment
+    Case Else
+        Err.Raise Number:=30005, Description:="Invalid Alignment value"
+End Select
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).CheckBoxAlignment = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).CheckBoxAlignment = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get FixedCheckBoxAlignment(ByVal Index As Long) As FlexCheckBoxAlignmentConstants
+Attribute FixedCheckBoxAlignment.VB_Description = "Returns/sets the check box alignment in the fixed cells of a column."
+Attribute FixedCheckBoxAlignment.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30004, Description:="Invalid Col value for alignment"
+If VBFlexGridColsInfo(Index).FixedCheckBoxAlignment = -1 Then
+    FixedCheckBoxAlignment = VBFlexGridColsInfo(Index).CheckBoxAlignment
+Else
+    FixedCheckBoxAlignment = VBFlexGridColsInfo(Index).FixedCheckBoxAlignment
+End If
+End Property
+
+Public Property Let FixedCheckBoxAlignment(ByVal Index As Long, ByVal Value As FlexCheckBoxAlignmentConstants)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30004, Description:="Invalid Col value for alignment"
+Select Case Value
+    Case -1, FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentCenterTop, FlexCheckBoxAlignmentCenterCenter, FlexCheckBoxAlignmentCenterBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom, FlexCheckBoxAlignmentUsePictureAlignment
+    Case Else
+        Err.Raise Number:=30005, Description:="Invalid Alignment value"
+End Select
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).FixedCheckBoxAlignment = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).FixedCheckBoxAlignment = Value
+    Next i
+End If
+Call RedrawGrid
 End Property
 
 Public Property Get ColFormat(ByVal Index As Long) As String
@@ -6576,6 +7164,30 @@ End If
 Call RedrawGrid
 End Property
 
+Public Property Get FixedFormat(ByVal Index As Long) As String
+Attribute FixedFormat.VB_Description = "Returns/sets the format used to display numeric values."
+Attribute FixedFormat.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If StrPtr(VBFlexGridColsInfo(Index).FixedFormat) = 0 Then
+    FixedFormat = VBFlexGridColsInfo(Index).Format
+Else
+    FixedFormat = VBFlexGridColsInfo(Index).FixedFormat
+End If
+End Property
+
+Public Property Let FixedFormat(ByVal Index As Long, ByVal Value As String)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).FixedFormat = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).FixedFormat = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
 Public Property Get ColDataType(ByVal Index As Long) As Integer
 Attribute ColDataType.VB_Description = "Returns/sets the data type for the specified column."
 Attribute ColDataType.VB_MemberFlags = "400"
@@ -6592,6 +7204,156 @@ Else
     For i = 0 To (PropCols - 1)
         VBFlexGridColsInfo(i).DataType = Value
     Next i
+End If
+End Property
+
+Public Property Get ColNullable(ByVal Index As Long) As Boolean
+Attribute ColNullable.VB_Description = "Returns/sets a value that determines whether null values are allowed at the data source for the specified column."
+Attribute ColNullable.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColNullable = CBool((VBFlexGridColsInfo(Index).State And CLIS_NULLABLE) = CLIS_NULLABLE)
+End Property
+
+Public Property Let ColNullable(ByVal Index As Long, ByVal Value As Boolean)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    With VBFlexGridColsInfo(Index)
+    If Value = True Then
+        If (.State And CLIS_NULLABLE) = 0 Then .State = .State Or CLIS_NULLABLE
+    Else
+        If (.State And CLIS_NULLABLE) = CLIS_NULLABLE Then .State = .State And Not CLIS_NULLABLE
+    End If
+    End With
+Else
+    Dim i As Long
+    If Value = True Then
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_NULLABLE) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_NULLABLE
+        Next i
+    Else
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_NULLABLE) = CLIS_NULLABLE Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_NULLABLE
+        Next i
+    End If
+End If
+End Property
+
+Public Property Get ColNumericPrecision(ByVal Index As Long) As Byte
+Attribute ColNumericPrecision.VB_Description = "Returns/sets the numeric precision of the data for the specified column."
+Attribute ColNumericPrecision.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColNumericPrecision = VBFlexGridColsInfo(Index).NumericPrecision
+End Property
+
+Public Property Let ColNumericPrecision(ByVal Index As Long, ByVal Value As Byte)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).NumericPrecision = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).NumericPrecision = Value
+    Next i
+End If
+End Property
+
+Public Property Get ColNumericScale(ByVal Index As Long) As Byte
+Attribute ColNumericScale.VB_Description = "Returns/sets the numeric scale of the data for the specified column."
+Attribute ColNumericScale.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColNumericScale = VBFlexGridColsInfo(Index).NumericScale
+End Property
+
+Public Property Let ColNumericScale(ByVal Index As Long, ByVal Value As Byte)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).NumericScale = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).NumericScale = Value
+    Next i
+End If
+End Property
+
+Public Property Get ColDataCapacity(ByVal Index As Long) As Long
+Attribute ColDataCapacity.VB_Description = "Returns/sets the data capacity for the specified column."
+Attribute ColDataCapacity.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColDataCapacity = VBFlexGridColsInfo(Index).DataCapacity
+End Property
+
+Public Property Let ColDataCapacity(ByVal Index As Long, ByVal Value As Long)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).DataCapacity = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).DataCapacity = Value
+    Next i
+End If
+End Property
+
+Public Property Get ColResizable(ByVal Index As Long) As Boolean
+Attribute ColResizable.VB_Description = "Returns/sets a value that determines whether the user can resize the specified column."
+Attribute ColResizable.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColResizable = CBool((VBFlexGridColsInfo(Index).State And CLIS_NOSIZING) = 0)
+End Property
+
+Public Property Let ColResizable(ByVal Index As Long, ByVal Value As Boolean)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    With VBFlexGridColsInfo(Index)
+    If Value = True Then
+        If (.State And CLIS_NOSIZING) = CLIS_NOSIZING Then .State = .State And Not CLIS_NOSIZING
+    Else
+        If (.State And CLIS_NOSIZING) = 0 Then .State = .State Or CLIS_NOSIZING
+    End If
+    End With
+Else
+    Dim i As Long
+    If Value = True Then
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_NOSIZING) = CLIS_NOSIZING Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_NOSIZING
+        Next i
+    Else
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_NOSIZING) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_NOSIZING
+        Next i
+    End If
+End If
+End Property
+
+Public Property Get ColCheckBoxes(ByVal Index As Long) As Boolean
+Attribute ColCheckBoxes.VB_Description = "Returns/sets a value that determines whether check boxes are predefined for the specified column."
+Attribute ColCheckBoxes.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColCheckBoxes = CBool((VBFlexGridColsInfo(Index).State And CLIS_CHECKBOXES) = CLIS_CHECKBOXES)
+End Property
+
+Public Property Let ColCheckBoxes(ByVal Index As Long, ByVal Value As Boolean)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    With VBFlexGridColsInfo(Index)
+    If Value = True Then
+        If (.State And CLIS_CHECKBOXES) = 0 Then .State = .State Or CLIS_CHECKBOXES
+    Else
+        If (.State And CLIS_CHECKBOXES) = CLIS_CHECKBOXES Then .State = .State And Not CLIS_CHECKBOXES
+    End If
+    End With
+Else
+    Dim i As Long
+    If Value = True Then
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXES) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_CHECKBOXES
+        Next i
+    Else
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXES) = CLIS_CHECKBOXES Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_CHECKBOXES
+        Next i
+    End If
 End If
 End Property
 
@@ -6668,6 +7430,12 @@ Select Case Setting
         Cell = Me.CellToolTipText
     Case FlexCellComboCue
         Cell = Me.CellComboCue
+    Case FlexCellChecked
+        Cell = Me.CellChecked
+    Case FlexCellFloodPercent
+        Cell = Me.CellFloodPercent
+    Case FlexCellFloodColor
+        Cell = Me.CellFloodColor
     Case FlexCellFontName
         Cell = Me.CellFontName
     Case FlexCellFontSize
@@ -6692,6 +7460,8 @@ Select Case Setting
         Cell = Me.CellHeight
     Case FlexCellSort
         Err.Raise Number:=394, Description:="Property is write-only"
+    Case FlexCellTextDisplay
+        Cell = CellTextDisplay()
     Case Else
         Err.Raise 380
 End Select
@@ -6740,6 +7510,12 @@ Select Case Setting
         Me.CellToolTipText = Value
     Case FlexCellComboCue
         Me.CellComboCue = Value
+    Case FlexCellChecked
+        Me.CellChecked = Value
+    Case FlexCellFloodPercent
+        Me.CellFloodPercent = Value
+    Case FlexCellFloodColor
+        Me.CellFloodColor = Value
     Case FlexCellFontName
         Me.CellFontName = Value
     Case FlexCellFontSize
@@ -6764,6 +7540,8 @@ Select Case Setting
         Err.Raise Number:=383, Description:="Property is read-only"
     Case FlexCellSort
         Me.Sort = Value
+    Case FlexCellTextDisplay
+        Err.Raise Number:=383, Description:="Property is read-only"
     Case Else
         Err.Raise 380
 End Select
@@ -6885,11 +7663,20 @@ If VBFlexGridRow < 0 Or VBFlexGridCol < 0 Then Err.Raise 7
 Dim iRow As Long, iCol As Long, SelRange As TCELLRANGE, Buffer As String
 Dim UBoundRows As Long, UBoundCols As Long
 Dim StrArr() As String, StrSize As Long
-Dim ColSeparator As String, RowSeparator As String
+Dim CSCol As String, CSColLen As Long, CSRow As String, CSRowLen As Long
 Call GetSelRangeStruct(SelRange)
 If PropClipMode = FlexClipModeNormal Then
     UBoundRows = (SelRange.BottomRow - SelRange.TopRow)
     UBoundCols = (SelRange.RightCol - SelRange.LeftCol)
+    Select Case PropClipCopyMode
+        Case FlexClipCopyModeIncludeFixedRows
+            UBoundRows = UBoundRows + PropFixedRows
+        Case FlexClipCopyModeIncludeFixedColumns
+            UBoundCols = UBoundCols + PropFixedCols
+        Case FlexClipCopyModeIncludeFixedAll
+            UBoundRows = UBoundRows + PropFixedRows
+            UBoundCols = UBoundCols + PropFixedCols
+    End Select
 ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     UBoundRows = -1
     UBoundCols = -1
@@ -6899,24 +7686,146 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     For iCol = SelRange.LeftCol To SelRange.RightCol
         If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then UBoundCols = UBoundCols + 1
     Next iCol
+    Select Case PropClipCopyMode
+        Case FlexClipCopyModeIncludeFixedRows
+            For iRow = 0 To PropFixedRows - 1
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then UBoundRows = UBoundRows + 1
+            Next iRow
+        Case FlexClipCopyModeIncludeFixedColumns
+            For iCol = 0 To PropFixedCols - 1
+                If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then UBoundCols = UBoundCols + 1
+            Next iCol
+        Case FlexClipCopyModeIncludeFixedAll
+            For iRow = 0 To PropFixedRows - 1
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then UBoundRows = UBoundRows + 1
+            Next iRow
+            For iCol = 0 To PropFixedCols - 1
+                If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then UBoundCols = UBoundCols + 1
+            Next iCol
+    End Select
 End If
 If UBoundRows > -1 And UBoundCols > -1 Then ReDim StrArr(0 To UBoundRows, 0 To UBoundCols) As String
-ColSeparator = GetColSeparator()
-RowSeparator = GetRowSeparator()
+CSCol = GetClipSeparatorCol()
+CSColLen = Len(CSCol)
+CSRow = GetClipSeparatorRow()
+CSRowLen = Len(CSRow)
 If PropClipMode = FlexClipModeNormal Then
-    For iRow = SelRange.TopRow To SelRange.BottomRow
-        For iCol = SelRange.LeftCol To SelRange.RightCol
-            Call GetCellText(iRow, iCol, Buffer)
-            If iCol < SelRange.RightCol Then
-                StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & ColSeparator
-            ElseIf iRow < SelRange.BottomRow Then
-                StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & RowSeparator
-            Else
-                StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer
-            End If
-        Next iCol
-    Next iRow
+    Select Case PropClipCopyMode
+        Case FlexClipCopyModeNormal
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                For iCol = SelRange.LeftCol To SelRange.RightCol
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & CSRow
+                    Else
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer
+                    End If
+                Next iCol
+            Next iRow
+        Case FlexClipCopyModeIncludeFixedRows
+            For iCol = SelRange.LeftCol To SelRange.RightCol
+                For iRow = 0 To PropFixedRows - 1
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer & CSRow
+                    Else
+                        StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer
+                    End If
+                Next iRow
+            Next iCol
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                For iCol = SelRange.LeftCol To SelRange.RightCol
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & CSRow
+                    Else
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer
+                    End If
+                Next iCol
+            Next iRow
+        Case FlexClipCopyModeIncludeFixedColumns
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                For iCol = 0 To PropFixedCols - 1
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol) = Buffer & CSRow
+                    Else
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol) = Buffer
+                    End If
+                Next iCol
+                For iCol = SelRange.LeftCol To SelRange.RightCol
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSRow
+                    Else
+                        StrArr(iRow + (0 - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer
+                    End If
+                Next iCol
+            Next iRow
+        Case FlexClipCopyModeIncludeFixedAll
+            For iRow = 0 To PropFixedRows - 1
+                For iCol = 0 To PropFixedCols - 1
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow, iCol) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow, iCol) = Buffer & CSRow
+                    Else
+                        StrArr(iRow, iCol) = Buffer
+                    End If
+                Next iCol
+                For iCol = SelRange.LeftCol To SelRange.RightCol
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSRow
+                    Else
+                        StrArr(iRow, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer
+                    End If
+                Next iCol
+            Next iRow
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                For iCol = 0 To PropFixedCols - 1
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol) = Buffer & CSRow
+                    Else
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol) = Buffer
+                    End If
+                Next iCol
+                For iCol = SelRange.LeftCol To SelRange.RightCol
+                    Call GetCellText(iRow, iCol, Buffer)
+                    If iCol < SelRange.RightCol Then
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
+                    ElseIf iRow < SelRange.BottomRow Then
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSRow
+                    Else
+                        StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer
+                    End If
+                Next iCol
+            Next iRow
+    End Select
 ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+    Dim FixedRowsAdj As Long, FixedColsAdj As Long
+    For iRow = 0 To PropFixedRows - 1
+        If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then FixedRowsAdj = FixedRowsAdj + 1
+    Next iRow
+    For iCol = 0 To PropFixedCols - 1
+        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then FixedColsAdj = FixedColsAdj + 1
+    Next iCol
     ' Adjust bottom row and right col so the separators are placed correctly.
     For iRow = SelRange.BottomRow To SelRange.TopRow Step -1
         If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN Then SelRange.BottomRow = SelRange.BottomRow - 1 Else Exit For
@@ -6925,27 +7834,187 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
         If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN Then SelRange.RightCol = SelRange.RightCol - 1 Else Exit For
     Next iCol
     Dim ArrRowAdj As Long, ArrColAdj As Long
-    For iRow = SelRange.TopRow To SelRange.BottomRow
-        If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+    Select Case PropClipCopyMode
+        Case FlexClipCopyModeNormal
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                    For iCol = SelRange.LeftCol To SelRange.RightCol
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                Else
+                    ArrRowAdj = ArrRowAdj + 1
+                End If
+                ArrColAdj = 0
+            Next iRow
+        Case FlexClipCopyModeIncludeFixedRows
             For iCol = SelRange.LeftCol To SelRange.RightCol
                 If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
-                    Call GetCellText(iRow, iCol, Buffer)
-                    If iCol < SelRange.RightCol Then
-                        StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & ColSeparator
-                    ElseIf iRow < SelRange.BottomRow Then
-                        StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & RowSeparator
-                    Else
-                        StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer
-                    End If
+                    For iRow = 0 To PropFixedRows - 1
+                        If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrRowAdj = ArrRowAdj + 1
+                        End If
+                    Next iRow
                 Else
                     ArrColAdj = ArrColAdj + 1
                 End If
+                ArrRowAdj = 0
             Next iCol
-        Else
-            ArrRowAdj = ArrRowAdj + 1
-        End If
-        ArrColAdj = 0
-    Next iRow
+            ArrRowAdj = 0
+            ArrColAdj = 0
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                    For iCol = SelRange.LeftCol To SelRange.RightCol
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                Else
+                    ArrRowAdj = ArrRowAdj + 1
+                End If
+                ArrColAdj = 0
+            Next iRow
+        Case FlexClipCopyModeIncludeFixedColumns
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                    For iCol = 0 To PropFixedCols - 1
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                    ArrColAdj = 0
+                    For iCol = SelRange.LeftCol To SelRange.RightCol
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                Else
+                    ArrRowAdj = ArrRowAdj + 1
+                End If
+                ArrColAdj = 0
+            Next iRow
+        Case FlexClipCopyModeIncludeFixedAll
+            For iRow = 0 To PropFixedRows - 1
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                    For iCol = 0 To PropFixedCols - 1
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow - ArrRowAdj, iCol - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                    ArrColAdj = 0
+                    For iCol = SelRange.LeftCol To SelRange.RightCol
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                Else
+                    ArrRowAdj = ArrRowAdj + 1
+                End If
+                ArrColAdj = 0
+            Next iRow
+            ArrRowAdj = 0
+            ArrColAdj = 0
+            For iRow = SelRange.TopRow To SelRange.BottomRow
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                    For iCol = 0 To PropFixedCols - 1
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                    ArrColAdj = 0
+                    For iCol = SelRange.LeftCol To SelRange.RightCol
+                        If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                            Call GetCellText(iRow, iCol, Buffer)
+                            If iCol < SelRange.RightCol Then
+                                StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
+                            ElseIf iRow < SelRange.BottomRow Then
+                                StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
+                            Else
+                                StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer
+                            End If
+                        Else
+                            ArrColAdj = ArrColAdj + 1
+                        End If
+                    Next iCol
+                Else
+                    ArrRowAdj = ArrRowAdj + 1
+                End If
+                ArrColAdj = 0
+            Next iRow
+    End Select
 End If
 For iRow = 0 To UBoundRows
     For iCol = 0 To UBoundCols
@@ -6972,20 +8041,34 @@ ElseIf VBFlexGridCol < 0 Then
 End If
 Dim SelRange As TCELLRANGE, Temp As String, iRow As Long, iCol As Long
 Dim Pos1 As Long, Pos2 As Long, Pos3 As Long, Pos4 As Long
-Dim ColSeparator As String, RowSeparator As String
+Dim CSCol As String, CSColLen As Long, CSRow As String, CSRowLen As Long
 Call GetSelRangeStruct(SelRange)
-ColSeparator = GetColSeparator()
-RowSeparator = GetRowSeparator()
+If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+    SelRange.RightCol = SelRange.LeftCol
+    SelRange.BottomRow = SelRange.TopRow
+End If
+CSCol = GetClipSeparatorCol()
+CSColLen = Len(CSCol)
+CSRow = GetClipSeparatorRow()
+CSRowLen = Len(CSRow)
 With VBFlexGridCells
 If PropClipMode = FlexClipModeNormal Then
     Do
-        Pos1 = InStr(Pos1 + 1, Value, RowSeparator)
+        Pos1 = InStr(Pos1 + 1, Value, CSRow)
+        If Pos1 > 0 Then Pos1 = Pos1 + CSRowLen - 1
+        If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+            If (SelRange.TopRow + iRow) <= (PropRows - 1) And (SelRange.TopRow + iRow) > SelRange.BottomRow Then SelRange.BottomRow = SelRange.TopRow + iRow
+        End If
         If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
-            If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1) Else Temp = Mid$(Value, Pos2 + 1)
+            If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - CSRowLen) Else Temp = Mid$(Value, Pos2 + 1)
             Do
-                Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
+                Pos3 = InStr(Pos3 + 1, Temp, CSCol)
+                If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+                    If (SelRange.LeftCol + iCol) <= (PropCols - 1) And (SelRange.LeftCol + iCol) > SelRange.RightCol Then SelRange.RightCol = SelRange.LeftCol + iCol
+                End If
                 If Pos3 > 0 Then
-                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1))
+                    Pos3 = Pos3 + CSColLen - 1
+                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
                 Else
                     If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
                 End If
@@ -7002,14 +8085,22 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     Dim RowLoop As Boolean, ColLoop As Boolean
     Do
         If (.Rows(SelRange.TopRow + iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
-            Pos1 = InStr(Pos1 + 1, Value, RowSeparator)
+            Pos1 = InStr(Pos1 + 1, Value, CSRow)
+            If Pos1 > 0 Then Pos1 = Pos1 + CSRowLen - 1
+            If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+                If (SelRange.TopRow + iRow) <= (PropRows - 1) And (SelRange.TopRow + iRow) > SelRange.BottomRow Then SelRange.BottomRow = SelRange.TopRow + iRow
+            End If
             If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
-                If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1) Else Temp = Mid$(Value, Pos2 + 1)
+                If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - CSRowLen) Else Temp = Mid$(Value, Pos2 + 1)
                 Do
                     If (VBFlexGridColsInfo(SelRange.LeftCol + iCol).State And CLIS_HIDDEN) = 0 Then
-                        Pos3 = InStr(Pos3 + 1, Temp, ColSeparator)
+                        Pos3 = InStr(Pos3 + 1, Temp, CSCol)
+                        If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+                            If (SelRange.LeftCol + iCol) <= (PropCols - 1) And (SelRange.LeftCol + iCol) > SelRange.RightCol Then SelRange.RightCol = SelRange.LeftCol + iCol
+                        End If
                         If Pos3 > 0 Then
-                            If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1))
+                            Pos3 = Pos3 + CSColLen - 1
+                            If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
                         Else
                             If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
                         End If
@@ -7035,7 +8126,53 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     Loop Until RowLoop = False
 End If
 End With
+If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+    Dim RCP As TROWCOLPARAMS
+    With RCP
+    .Mask = RCPM_ROW Or RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL
+    .Row = SelRange.TopRow
+    .Col = SelRange.LeftCol
+    .RowSel = SelRange.BottomRow
+    .ColSel = SelRange.RightCol
+    End With
+    If VBFlexGridIndirectCellRef.InProc = False Then
+        Call SetRowColParams(RCP)
+    Else
+        ' The clip command was called for an arbitrary cell or range of cells.
+        ' Thus the current selection was already ignored and it is not necessary to select the new range.
+    End If
+End If
 Call RedrawGrid
+End Property
+
+Public Property Get ClipSeparatorCol() As String
+Attribute ClipSeparatorCol.VB_Description = "Returns/sets the default column separator in clip strings. The initial value is vbTab."
+Attribute ClipSeparatorCol.VB_MemberFlags = "400"
+ClipSeparatorCol = VBFlexGridClipSeparatorCol
+End Property
+
+Public Property Let ClipSeparatorCol(ByVal Value As String)
+If Len(Value) = 0 Then
+    Err.Raise 380
+ElseIf StrComp(Value, VBFlexGridClipSeparatorRow) = 0 Then
+    Err.Raise 380
+End If
+VBFlexGridClipSeparatorCol = Value
+End Property
+
+Public Property Get ClipSeparatorRow() As String
+Attribute ClipSeparatorRow.VB_Description = "Returns/sets the default row separator in clip strings. The initial value is vbCr."
+Attribute ClipSeparatorRow.VB_MemberFlags = "400"
+ClipSeparatorRow = VBFlexGridClipSeparatorRow
+End Property
+
+Public Property Let ClipSeparatorRow(ByVal Value As String)
+If Len(Value) = 0 Then
+    Err.Raise 380
+ElseIf StrComp(VBFlexGridClipSeparatorCol, Value) = 0 Then
+    Err.Raise 380
+End If
+VBFlexGridClipSeparatorRow = Value
 End Property
 
 Public Property Get CellTextStyle() As FlexTextStyleConstants
@@ -7300,7 +8437,7 @@ End Property
 Public Property Get CellToolTipText() As String
 Attribute CellToolTipText.VB_Description = "Returns/sets the tool tip text in a cell or in a range of selected cells. Requires that the show tips property is set to true."
 Attribute CellToolTipText.VB_MemberFlags = "400"
-If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then CellToolTipText = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).ToolTipText
+If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then Call GetCellToolTipText(VBFlexGridRow, VBFlexGridCol, CellToolTipText)
 End Property
 
 Public Property Let CellToolTipText(ByVal Value As String)
@@ -7310,14 +8447,14 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 If PropFillStyle = FlexFillStyleSingle Then
-    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).ToolTipText = Value
+    Call SetCellToolTipText(VBFlexGridRow, VBFlexGridCol, Value)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
         With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            .Cols(j).ToolTipText = Value
+            Call SetCellToolTipText(i, j, Value)
         Next j
         End With
     Next i
@@ -7355,6 +8492,115 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
         With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
             .Cols(j).ComboCue = Value
+        Next j
+        End With
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get CellChecked() As FlexCheckBoxConstants
+Attribute CellChecked.VB_Description = "Returns/sets the check mark in a cell or range of selected cells."
+Attribute CellChecked.VB_MemberFlags = "400"
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+CellChecked = GetCellChecked(VBFlexGridRow, VBFlexGridCol)
+End Property
+
+Public Property Let CellChecked(ByVal Value As FlexCheckBoxConstants)
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+Select Case Value
+    Case FlexNoCheckBoxEver, FlexNoCheckBox, FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox, FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
+    Case Else
+        Err.Raise 380
+End Select
+If PropFillStyle = FlexFillStyleSingle Then
+    Call SetCellChecked(VBFlexGridRow, VBFlexGridCol, Value)
+ElseIf PropFillStyle = FlexFillStyleRepeat Then
+    Dim i As Long, j As Long, SelRange As TCELLRANGE
+    Call GetSelRangeStruct(SelRange)
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i)
+        For j = SelRange.LeftCol To SelRange.RightCol
+            Call SetCellChecked(i, j, Value)
+        Next j
+        End With
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get CellFloodPercent() As Integer
+Attribute CellFloodPercent.VB_Description = "Returns/sets the percentage of flooding in a cell or range of selected cells."
+Attribute CellFloodPercent.VB_MemberFlags = "400"
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+CellFloodPercent = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FloodPercent
+End Property
+
+Public Property Let CellFloodPercent(ByVal Value As Integer)
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+Select Case Value
+    Case -100 To 100
+    Case Else
+        Err.Raise 380
+End Select
+If PropFillStyle = FlexFillStyleSingle Then
+    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FloodPercent = Value
+ElseIf PropFillStyle = FlexFillStyleRepeat Then
+    Dim i As Long, j As Long, SelRange As TCELLRANGE
+    Call GetSelRangeStruct(SelRange)
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i)
+        For j = SelRange.LeftCol To SelRange.RightCol
+            .Cols(j).FloodPercent = Value
+        Next j
+        End With
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get CellFloodColor() As Long
+Attribute CellFloodColor.VB_Description = "Returns/sets the color to be used for flooding in a cell or range of selected cells."
+Attribute CellFloodColor.VB_MemberFlags = "400"
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+CellFloodColor = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FloodColor
+End Property
+
+Public Property Let CellFloodColor(ByVal Value As Long)
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+If PropFillStyle = FlexFillStyleSingle Then
+    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FloodColor = Value
+ElseIf PropFillStyle = FlexFillStyleRepeat Then
+    Dim i As Long, j As Long, SelRange As TCELLRANGE
+    Call GetSelRangeStruct(SelRange)
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i)
+        For j = SelRange.LeftCol To SelRange.RightCol
+            .Cols(j).FloodColor = Value
         Next j
         End With
     Next i
@@ -8098,6 +9344,7 @@ End Function
 
 Public Sub AutoSize(ByVal RowOrCol1 As Long, Optional ByVal RowOrCol2 As Long = -1, Optional ByVal Mode As FlexAutoSizeModeConstants, Optional ByVal Scope As FlexAutoSizeScopeConstants, Optional ByVal Equal As Boolean, Optional ByVal ExtraSpace As Long, Optional ByVal ExcludeHidden As Boolean)
 Attribute AutoSize.VB_Description = "Automatically sizes column widths or row heights to fit cell contents."
+If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
 If RowOrCol2 < -1 Then Err.Raise 380
 If RowOrCol2 = -1 Then RowOrCol2 = RowOrCol1
 Select Case Mode
@@ -8115,107 +9362,49 @@ If Mode = FlexAutoSizeModeColWidth Then
 ElseIf Mode = FlexAutoSizeModeRowHeight Then
     If (RowOrCol1 < 0 Or RowOrCol1 > (PropRows - 1)) Or (RowOrCol2 < 0 Or RowOrCol2 > (PropRows - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
 End If
+Dim hDC As Long
+hDC = GetDC(VBFlexGridHandle)
 Dim iRow As Long, iCol As Long, Text As String, Spacing As Long, Size As SIZEAPI, EqualSize As SIZEAPI
+Dim RowOrColScope1 As Long, RowOrColScope2 As Long
 If Mode = FlexAutoSizeModeColWidth Then
-    Spacing = (COLINFO_WIDTH_SPACING_DIP * PixelsPerDIP_X()) + CLng(UserControl.ScaleX(ExtraSpace, vbTwips, vbPixels))
+    Spacing = VBFlexGridPixelMetrics.ColInfoWidthSpacing + CLng(UserControl.ScaleX(ExtraSpace, vbTwips, vbPixels))
     EqualSize.CX = -1
     Select Case Scope
         Case FlexAutoSizeScopeAll
-            For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
-                With VBFlexGridColsInfo(iCol)
-                If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    .Width = -1
-                    For iRow = 0 To (PropRows - 1)
-                        If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                            Call GetCellText(iRow, iCol, Text)
-                            Size.CX = GetTextSize(iRow, iCol, Text).CX
-                            If Size.CX > 0 Then
-                                Size.CX = Size.CX + Spacing
-                                If Size.CX > .Width Then .Width = Size.CX
-                                If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
-                            End If
-                        End If
-                    Next iRow
-                End If
-                End With
-            Next iCol
+            RowOrColScope1 = 0
+            RowOrColScope2 = PropRows - 1
         Case FlexAutoSizeScopeFixed
-            For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
-                With VBFlexGridColsInfo(iCol)
-                If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    .Width = -1
-                    For iRow = 0 To (PropFixedRows - 1)
-                        If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                            Call GetCellText(iRow, iCol, Text)
-                            Size.CX = GetTextSize(iRow, iCol, Text).CX
-                            If Size.CX > 0 Then
-                                Size.CX = Size.CX + Spacing
-                                If Size.CX > .Width Then .Width = Size.CX
-                                If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
-                            End If
-                        End If
-                    Next iRow
-                End If
-                End With
-            Next iCol
+            RowOrColScope1 = 0
+            RowOrColScope2 = PropFixedRows - 1
         Case FlexAutoSizeScopeScrollable
-            For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
-                With VBFlexGridColsInfo(iCol)
-                If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    .Width = -1
-                    For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
-                        If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                            Call GetCellText(iRow, iCol, Text)
-                            Size.CX = GetTextSize(iRow, iCol, Text).CX
-                            If Size.CX > 0 Then
-                                Size.CX = Size.CX + Spacing
-                                If Size.CX > .Width Then .Width = Size.CX
-                                If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
-                            End If
-                        End If
-                    Next iRow
-                End If
-                End With
-            Next iCol
+            RowOrColScope1 = PropFixedRows + PropFrozenRows
+            RowOrColScope2 = PropRows - 1
         Case FlexAutoSizeScopeMovable
-            For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
-                With VBFlexGridColsInfo(iCol)
-                If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    .Width = -1
-                    For iRow = PropFixedRows To (PropRows - 1)
-                        If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                            Call GetCellText(iRow, iCol, Text)
-                            Size.CX = GetTextSize(iRow, iCol, Text).CX
-                            If Size.CX > 0 Then
-                                Size.CX = Size.CX + Spacing
-                                If Size.CX > .Width Then .Width = Size.CX
-                                If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
-                            End If
-                        End If
-                    Next iRow
-                End If
-                End With
-            Next iCol
+            RowOrColScope1 = PropFixedRows
+            RowOrColScope2 = PropRows - 1
         Case FlexAutoSizeScopeFrozen
-            For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
-                With VBFlexGridColsInfo(iCol)
-                If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    .Width = -1
-                    For iRow = PropFixedRows To ((PropFixedRows + PropFrozenRows) - 1)
-                        If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                            Call GetCellText(iRow, iCol, Text)
-                            Size.CX = GetTextSize(iRow, iCol, Text).CX
-                            If Size.CX > 0 Then
-                                Size.CX = Size.CX + Spacing
-                                If Size.CX > .Width Then .Width = Size.CX
-                                If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
-                            End If
-                        End If
-                    Next iRow
-                End If
-                End With
-            Next iCol
+            RowOrColScope1 = PropFixedRows
+            RowOrColScope2 = (PropFixedRows + PropFrozenRows) - 1
     End Select
+    For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+        With VBFlexGridColsInfo(iCol)
+        If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+            .Width = -1
+            For iRow = RowOrColScope1 To RowOrColScope2
+                If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    Call GetCellText(iRow, iCol, Text)
+                    Call GetTextDisplay(iRow, iCol, Text)
+                    Size.CX = GetBestWidth(iRow, iCol, Text, hDC)
+                    If Size.CX > 0 Then
+                        Size.CX = Size.CX + Spacing
+                        If Size.CX > .Width Then .Width = Size.CX
+                        If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
+                    End If
+                End If
+            Next iRow
+        End If
+        End With
+    Next iCol
     If Equal = True Then
         For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
             With VBFlexGridColsInfo(iCol)
@@ -8224,105 +9413,44 @@ If Mode = FlexAutoSizeModeColWidth Then
         Next iCol
     End If
 ElseIf Mode = FlexAutoSizeModeRowHeight Then
-    Spacing = (ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()) + CLng(UserControl.ScaleY(ExtraSpace, vbTwips, vbPixels))
+    Spacing = VBFlexGridPixelMetrics.RowInfoHeightSpacing + CLng(UserControl.ScaleY(ExtraSpace, vbTwips, vbPixels))
     EqualSize.CY = -1
     Select Case Scope
         Case FlexAutoSizeScopeAll
-            For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
-                With VBFlexGridCells.Rows(iRow).RowInfo
-                If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    .Height = -1
-                    For iCol = 0 To (PropCols - 1)
-                        If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                            Call GetCellText(iRow, iCol, Text)
-                            Size.CY = GetTextHeight(iRow, iCol, Text)
-                            If Size.CY > 0 Then
-                                Size.CY = Size.CY + Spacing
-                                If Size.CY > .Height Then .Height = Size.CY
-                                If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
-                            End If
-                        End If
-                    Next iCol
-                End If
-                End With
-            Next iRow
+            RowOrColScope1 = 0
+            RowOrColScope2 = PropCols - 1
         Case FlexAutoSizeScopeFixed
-            For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
-                With VBFlexGridCells.Rows(iRow).RowInfo
-                If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    .Height = -1
-                    For iCol = 0 To (PropFixedCols - 1)
-                        If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                            Call GetCellText(iRow, iCol, Text)
-                            Size.CY = GetTextHeight(iRow, iCol, Text)
-                            If Size.CY > 0 Then
-                                Size.CY = Size.CY + Spacing
-                                If Size.CY > .Height Then .Height = Size.CY
-                                If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
-                            End If
-                        End If
-                    Next iCol
-                End If
-                End With
-            Next iRow
+            RowOrColScope1 = 0
+            RowOrColScope2 = PropFixedCols - 1
         Case FlexAutoSizeScopeScrollable
-            For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
-                With VBFlexGridCells.Rows(iRow).RowInfo
-                If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    .Height = -1
-                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
-                        If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                            Call GetCellText(iRow, iCol, Text)
-                            Size.CY = GetTextHeight(iRow, iCol, Text)
-                            If Size.CY > 0 Then
-                                Size.CY = Size.CY + Spacing
-                                If Size.CY > .Height Then .Height = Size.CY
-                                If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
-                            End If
-                        End If
-                    Next iCol
-                End If
-                End With
-            Next iRow
+            RowOrColScope1 = PropFixedCols + PropFrozenCols
+            RowOrColScope2 = PropCols - 1
         Case FlexAutoSizeScopeMovable
-            For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
-                With VBFlexGridCells.Rows(iRow).RowInfo
-                If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    .Height = -1
-                    For iCol = PropFixedCols To (PropCols - 1)
-                        If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                            Call GetCellText(iRow, iCol, Text)
-                            Size.CY = GetTextHeight(iRow, iCol, Text)
-                            If Size.CY > 0 Then
-                                Size.CY = Size.CY + Spacing
-                                If Size.CY > .Height Then .Height = Size.CY
-                                If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
-                            End If
-                        End If
-                    Next iCol
-                End If
-                End With
-            Next iRow
+            RowOrColScope1 = PropFixedCols
+            RowOrColScope2 = PropCols - 1
         Case FlexAutoSizeScopeFrozen
-            For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
-                With VBFlexGridCells.Rows(iRow).RowInfo
-                If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    .Height = -1
-                    For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
-                        If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                            Call GetCellText(iRow, iCol, Text)
-                            Size.CY = GetTextHeight(iRow, iCol, Text)
-                            If Size.CY > 0 Then
-                                Size.CY = Size.CY + Spacing
-                                If Size.CY > .Height Then .Height = Size.CY
-                                If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
-                            End If
-                        End If
-                    Next iCol
-                End If
-                End With
-            Next iRow
+            RowOrColScope1 = PropFixedCols
+            RowOrColScope2 = (PropFixedCols + PropFrozenCols) - 1
     End Select
+    For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
+        With VBFlexGridCells.Rows(iRow).RowInfo
+        If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+            .Height = -1
+            For iCol = RowOrColScope1 To RowOrColScope2
+                If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    Call GetCellText(iRow, iCol, Text)
+                    Call GetTextDisplay(iRow, iCol, Text)
+                    Size.CY = GetBestHeight(iRow, iCol, Text, hDC)
+                    If Size.CY > 0 Then
+                        Size.CY = Size.CY + Spacing
+                        If Size.CY > .Height Then .Height = Size.CY
+                        If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
+                    End If
+                End If
+            Next iCol
+        End If
+        End With
+    Next iRow
     If Equal = True Then
         For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
             With VBFlexGridCells.Rows(iRow).RowInfo
@@ -8330,6 +9458,10 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
             End With
         Next iRow
     End If
+End If
+If hDC <> 0 Then
+    ReleaseDC VBFlexGridHandle, hDC
+    hDC = 0
 End If
 Dim RCP As TROWCOLPARAMS
 With RCP
@@ -8413,6 +9545,37 @@ If VBFlexGridHandle <> 0 Then
         End If
         ReleaseDC VBFlexGridHandle, hDC
     End If
+End If
+End Property
+
+Public Property Get ScrollTipText() As String
+Attribute ScrollTipText.VB_Description = "Returns/sets the text contained in an object."
+Attribute ScrollTipText.VB_MemberFlags = "400"
+If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
+    Dim TI As TOOLINFO, Buffer As String
+    With TI
+    Buffer = String(INFOTIPSIZE, vbNullChar) & vbNullChar
+    .cbSize = LenB(TI)
+    .hWnd = VBFlexGridHandle
+    .uId = 0
+    .lpszText = StrPtr(Buffer)
+    End With
+    ' wParam is only ignored and limited to a length of 80 by the ANSI version of TTM_GETTEXT.
+    SendMessage VBFlexGridScrollTipHandle, TTM_GETTEXT, INFOTIPSIZE + 1, ByVal VarPtr(TI)
+    ScrollTipText = Left$(Buffer, InStr(Buffer, vbNullChar) - 1)
+End If
+End Property
+
+Public Property Let ScrollTipText(ByVal Value As String)
+If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
+    Dim TI As TOOLINFO
+    With TI
+    .cbSize = LenB(TI)
+    .hWnd = VBFlexGridHandle
+    .uId = 0
+    .lpszText = StrPtr(Value)
+    End With
+    SendMessage VBFlexGridScrollTipHandle, TTM_UPDATETIPTEXT, 0, ByVal VarPtr(TI)
 End If
 End Property
 
@@ -8656,6 +9819,29 @@ If VBFlexGridComboButtonHandle <> 0 Then
 End If
 End Property
 
+Public Property Get ComboButtonPicture() As IPictureDisp
+Attribute ComboButtonPicture.VB_Description = "Returns/sets the combo button picture. Only applicable if the combo button draw mode property is set to 0 - Normal and the combo mode property is set to 3 - Button."
+Attribute ComboButtonPicture.VB_MemberFlags = "400"
+Set ComboButtonPicture = VBFlexGridComboButtonPicture
+End Property
+
+Public Property Let ComboButtonPicture(ByVal Value As IPictureDisp)
+Set Me.ComboButtonPicture = Value
+End Property
+
+Public Property Set ComboButtonPicture(ByVal Value As IPictureDisp)
+If Value Is Nothing Then
+    Set VBFlexGridComboButtonPicture = Nothing
+Else
+    Set UserControl.Picture = Value
+    Set VBFlexGridComboButtonPicture = UserControl.Picture
+    Set UserControl.Picture = Nothing
+End If
+VBFlexGridComboButtonPictureRenderFlag = 0
+If VBFlexGridComboButtonHandle <> 0 Then InvalidateRect VBFlexGridComboButtonHandle, ByVal 0&, 0
+Call RedrawGrid
+End Property
+
 Public Property Get ComboButtonAlignment() As FlexLeftRightAlignmentConstants
 Attribute ComboButtonAlignment.VB_Description = "Returns/sets the combo button alignment. This may be useful for right-to-left reading-order properties."
 Attribute ComboButtonAlignment.VB_MemberFlags = "400"
@@ -8684,6 +9870,55 @@ Select Case Value
     Case Else
         Err.Raise 380
 End Select
+End Property
+
+Public Property Get ComboButtonWidth() As Long
+Attribute ComboButtonWidth.VB_Description = "Returns/sets the combo button width in twips. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ComboButtonWidth.VB_MemberFlags = "400"
+If VBFlexGridComboButtonWidth = -1 Then
+    ComboButtonWidth = UserControl.ScaleX(VBFlexGridPixelMetrics.ComboButtonWidth, vbPixels, vbTwips)
+Else
+    ComboButtonWidth = UserControl.ScaleX(VBFlexGridComboButtonWidth, vbPixels, vbTwips)
+End If
+End Property
+
+Public Property Let ComboButtonWidth(ByVal Value As Long)
+If Value < -1 Then Err.Raise 380
+If Value > -1 Then
+    VBFlexGridComboButtonWidth = UserControl.ScaleX(Value, vbTwips, vbPixels)
+Else
+    VBFlexGridComboButtonWidth = -1
+End If
+End Property
+
+Public Property Get ComboButtonClientWidth() As Long
+Attribute ComboButtonClientWidth.VB_Description = "Returns the combo button client width in twips. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ComboButtonClientWidth.VB_MemberFlags = "400"
+If VBFlexGridHandle <> 0 Then
+    Dim RC As RECT, Theme As Long
+    If VBFlexGridComboButtonWidth = -1 Then
+        RC.Right = VBFlexGridPixelMetrics.ComboButtonWidth
+    Else
+        RC.Right = VBFlexGridComboButtonWidth
+    End If
+    
+    #If ImplementThemedControls = True Then
+    
+    If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
+    If Theme <> 0 Then
+        GetThemeBackgroundContentRect Theme, 0, BP_PUSHBUTTON, PBS_NORMAL, RC, RC
+        CloseThemeData Theme
+    End If
+    
+    #End If
+    
+    If Theme = 0 Then DrawFrameControl 0, RC, DFC_BUTTON, DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
+    ComboButtonClientWidth = UserControl.ScaleX((RC.Right - RC.Left), vbPixels, vbTwips)
+End If
+End Property
+
+Public Property Let ComboButtonClientWidth(ByVal Value As Long)
+Err.Raise Number:=383, Description:="Property is read-only"
 End Property
 
 Public Property Get ComboItems() As String
@@ -8828,6 +10063,21 @@ If VBFlexGridComboCalendarHandle <> 0 Then
 End If
 End Property
 
+Public Property Get CheckBoxDrawMode() As FlexCheckBoxDrawModeConstants
+Attribute CheckBoxDrawMode.VB_Description = "Returns/sets a value indicating whether your code or the flex grid will handle drawing of the check box."
+Attribute CheckBoxDrawMode.VB_MemberFlags = "400"
+CheckBoxDrawMode = VBFlexGridCheckBoxDrawMode
+End Property
+
+Public Property Let CheckBoxDrawMode(ByVal Value As FlexCheckBoxDrawModeConstants)
+Select Case Value
+    Case FlexCheckBoxDrawModeNormal, FlexCheckBoxDrawModeOwnerDraw
+        VBFlexGridCheckBoxDrawMode = Value
+    Case Else
+        Err.Raise 380
+End Select
+End Property
+
 Public Property Get Version() As Integer
 Attribute Version.VB_Description = "Returns the version of the flex grid control currently loaded in memory."
 Attribute Version.VB_MemberFlags = "400"
@@ -8929,8 +10179,6 @@ Dim iRow As Long, iCol As Long, FixedCX As Long, FixedCY As Long, FrozenCX As Lo
 Dim CellRect As RECT, GridRect As RECT
 Dim OldBkMode As Long, hFontOld As Long, Brush As Long
 Call GetSelRangeStruct(VBFlexGridDrawInfo.SelRange)
-VBFlexGridDrawInfo.CellTextWidthPadding = CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()
-VBFlexGridDrawInfo.CellTextHeightPadding = CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()
 For iCol = 0 To (PropFixedCols - 1)
     FixedCX = FixedCX + GetColWidth(iCol)
 Next iCol
@@ -10325,7 +11573,7 @@ With VBFlexGridCells.Rows(iRow).Cols(iCol)
 Dim ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
     If .ComboCue <> FlexComboCueNone Then
-        ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+        ComboCueWidth = GetComboButtonWidth(iCol, .ComboCue)
         If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
         If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
             ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -10339,12 +11587,14 @@ If PropAllowUserEditing = True Then
                 ComboCueCtlType = ODT_BUTTON
         End Select
         Select Case .ComboCue
+            Case FlexComboCueDropDown, FlexComboCueButton
+                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
             Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
                 ComboCueItemState = ODS_DISABLED
         End Select
     ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
         If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
-            ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+            ComboCueWidth = GetComboButtonWidth(iCol, VBFlexGridComboCue)
             If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
             If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
                 ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -10358,18 +11608,20 @@ If PropAllowUserEditing = True Then
                     ComboCueCtlType = ODT_BUTTON
             End Select
             Select Case VBFlexGridComboCue
+                Case FlexComboCueDropDown, FlexComboCueButton
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
                 Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
                     ComboCueItemState = ODS_DISABLED
             End Select
         End If
     End If
 End If
-Dim Text As String, TextRect As RECT
+Dim Text As String, TextRect As RECT, HiddenText As Boolean
 Call GetCellText(iRow, iCol, Text)
 With TextRect
-.Left = CellRect.Left + VBFlexGridDrawInfo.CellTextWidthPadding
-.Top = CellRect.Top + VBFlexGridDrawInfo.CellTextHeightPadding
-.Right = CellRect.Right - VBFlexGridDrawInfo.CellTextWidthPadding
+.Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
+.Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
+.Right = CellRect.Right - VBFlexGridPixelMetrics.CellTextWidthPadding
 If ComboCueWidth > 0 Then
     If ComboCueAlignment = FlexLeftRightAlignmentRight Then
         .Right = .Right - ComboCueWidth
@@ -10377,7 +11629,7 @@ If ComboCueWidth > 0 Then
         .Left = .Left + ComboCueWidth
     End If
 End If
-.Bottom = CellRect.Bottom - VBFlexGridDrawInfo.CellTextHeightPadding
+.Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
 End With
 Dim hFontTemp As Long, hFontOld As Long
 If Not .FontName = vbNullString Then
@@ -10407,6 +11659,10 @@ Else
     Brush = SelectObject(hDC, VBFlexGridBackColorSelBrush)
     PatBlt hDC, CellRect.Left, CellRect.Top, CellRect.Right - CellRect.Left, CellRect.Bottom - CellRect.Top, vbPatCopy
     SelectObject hDC, Brush
+End If
+If .FloodPercent <> 0 Then
+    If .FloodColor = -1 Then Brush = WinColor(PropFloodColor) Else Brush = WinColor(.FloodColor)
+    Call DrawCellFlooding(hDC, CellRect, .FloodPercent, Brush)
 End If
 If Not .Picture Is Nothing Then
     If .Picture.Handle <> 0 Then
@@ -10472,6 +11728,63 @@ If Not .Picture Is Nothing Then
                 TextRect.Right = TextRect.Right - PictureWidth
         End Select
     End If
+End If
+Dim Checked As Integer
+Checked = GetCellChecked(iRow, iCol)
+If Checked > -1 Then
+    Dim CheckBoxRect As RECT, CheckBoxAlignment As FlexCheckBoxAlignmentConstants, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
+    LSet CheckBoxRect = TextRect
+    If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
+        CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+    Else
+        CheckBoxAlignment = VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment
+    End If
+    If CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+        Select Case .PictureAlignment
+            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+            Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+        End Select
+    End If
+    Select Case CheckBoxAlignment
+        Case FlexCheckBoxAlignmentLeftCenter
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+        Case FlexCheckBoxAlignmentLeftBottom
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentCenterTop
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+        Case FlexCheckBoxAlignmentCenterCenter
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+        Case FlexCheckBoxAlignmentCenterBottom
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightTop
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightCenter
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightBottom
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+    End Select
+    If CheckBoxOffsetX > 0 Then CheckBoxRect.Left = CheckBoxRect.Left + CheckBoxOffsetX
+    If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
+    CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
+    CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
+    Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, Checked)
+    Select Case CheckBoxAlignment
+        Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
+            TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
+        Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
+            TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
+    End Select
+    Select Case Checked
+        Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
+            HiddenText = True
+    End Select
 End If
 Dim OldTextColor As Long
 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) = ODS_FOCUS Then
@@ -10638,7 +11951,7 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSor
         TextRect.Left = TextRect.Left + SortArrowClientSize.CX
     End If
 End If
-If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top Then
+If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
     Dim TextStyle As FlexTextStyleConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyleFixed
@@ -10682,7 +11995,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
         Case FlexEllipsisFormatWord
             DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
     End Select
-    If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+    Call GetTextDisplay(iRow, iCol, Text)
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
@@ -10744,7 +12057,7 @@ End With
 If ComboCueWidth > 0 Then
     Dim DIS As DRAWITEMSTRUCT, P As POINTAPI
     DIS.CtlType = ComboCueCtlType
-    DIS.CtlID = 0
+    DIS.CtlID = ID_COMBOBUTTONCHILD
     DIS.ItemID = 0
     DIS.ItemAction = ODA_DRAWENTIRE
     DIS.ItemState = ComboCueItemState
@@ -10760,7 +12073,7 @@ If ComboCueWidth > 0 Then
     ElseIf ComboCueAlignment = FlexLeftRightAlignmentLeft Then
         SetViewportOrgEx DIS.hDC, CellRect.Left + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX, CellRect.Top + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CY, P
     End If
-    Call ComboButtonDraw(DIS)
+    Call ComboButtonDraw(iRow, iCol, DIS)
     SetViewportOrgEx DIS.hDC, P.X, P.Y, P
 End If
 End Sub
@@ -10906,7 +12219,7 @@ With VBFlexGridCells.Rows(iRow).Cols(iCol)
 Dim ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
     If .ComboCue <> FlexComboCueNone Then
-        ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+        ComboCueWidth = GetComboButtonWidth(iCol, .ComboCue)
         If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
         If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
             ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -10920,12 +12233,14 @@ If PropAllowUserEditing = True Then
                 ComboCueCtlType = ODT_BUTTON
         End Select
         Select Case .ComboCue
+            Case FlexComboCueDropDown, FlexComboCueButton
+                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
             Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
                 ComboCueItemState = ODS_DISABLED
         End Select
     ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
         If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
-            ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+            ComboCueWidth = GetComboButtonWidth(iCol, VBFlexGridComboCue)
             If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
             If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
                 ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -10939,18 +12254,20 @@ If PropAllowUserEditing = True Then
                     ComboCueCtlType = ODT_BUTTON
             End Select
             Select Case VBFlexGridComboCue
+                Case FlexComboCueDropDown, FlexComboCueButton
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
                 Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
                     ComboCueItemState = ODS_DISABLED
             End Select
         End If
     End If
 End If
-Dim Text As String, TextRect As RECT
+Dim Text As String, TextRect As RECT, HiddenText As Boolean
 Call GetCellText(iRow, iCol, Text)
 With TextRect
-.Left = CellRect.Left + VBFlexGridDrawInfo.CellTextWidthPadding
-.Top = CellRect.Top + VBFlexGridDrawInfo.CellTextHeightPadding
-.Right = CellRect.Right - VBFlexGridDrawInfo.CellTextWidthPadding
+.Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
+.Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
+.Right = CellRect.Right - VBFlexGridPixelMetrics.CellTextWidthPadding
 If ComboCueWidth > 0 Then
     If ComboCueAlignment = FlexLeftRightAlignmentRight Then
         .Right = .Right - ComboCueWidth
@@ -10958,7 +12275,7 @@ If ComboCueWidth > 0 Then
         .Left = .Left + ComboCueWidth
     End If
 End If
-.Bottom = CellRect.Bottom - VBFlexGridDrawInfo.CellTextHeightPadding
+.Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
 End With
 Dim hFontTemp As Long, hFontOld As Long
 If Not .FontName = vbNullString Then
@@ -10998,6 +12315,10 @@ Else
     Brush = SelectObject(hDC, VBFlexGridBackColorSelBrush)
     PatBlt hDC, CellRect.Left, CellRect.Top, CellRect.Right - CellRect.Left, CellRect.Bottom - CellRect.Top, vbPatCopy
     SelectObject hDC, Brush
+End If
+If .FloodPercent <> 0 Then
+    If .FloodColor = -1 Then Brush = WinColor(PropFloodColor) Else Brush = WinColor(.FloodColor)
+    Call DrawCellFlooding(hDC, CellRect, .FloodPercent, Brush)
 End If
 If Not .Picture Is Nothing Then
     If .Picture.Handle <> 0 Then
@@ -11063,6 +12384,60 @@ If Not .Picture Is Nothing Then
                 TextRect.Right = TextRect.Right - PictureWidth
         End Select
     End If
+End If
+Dim Checked As Integer
+Checked = GetCellChecked(iRow, iCol)
+If Checked > -1 Then
+    Dim CheckBoxRect As RECT, CheckBoxAlignment As FlexCheckBoxAlignmentConstants, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
+    LSet CheckBoxRect = TextRect
+    If VBFlexGridColsInfo(iCol).CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+        Select Case .PictureAlignment
+            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+            Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+        End Select
+    Else
+        CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+    End If
+    Select Case CheckBoxAlignment
+        Case FlexCheckBoxAlignmentLeftCenter
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+        Case FlexCheckBoxAlignmentLeftBottom
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentCenterTop
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+        Case FlexCheckBoxAlignmentCenterCenter
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+        Case FlexCheckBoxAlignmentCenterBottom
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightTop
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightCenter
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+        Case FlexCheckBoxAlignmentRightBottom
+            CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+            CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+    End Select
+    If CheckBoxOffsetX > 0 Then CheckBoxRect.Left = CheckBoxRect.Left + CheckBoxOffsetX
+    If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
+    CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
+    CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
+    Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, Checked)
+    Select Case CheckBoxAlignment
+        Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
+            TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
+        Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
+            TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
+    End Select
+    Select Case Checked
+        Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
+            HiddenText = True
+    End Select
 End If
 Dim OldTextColor As Long
 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) = ODS_FOCUS Then
@@ -11150,7 +12525,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End Select
     End With
 End If
-If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top Then
+If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
     Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyle
@@ -11199,7 +12574,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
         Case FlexEllipsisFormatWord
             DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
     End Select
-    If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+    Call GetTextDisplay(iRow, iCol, Text)
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
@@ -11261,7 +12636,7 @@ End With
 If ComboCueWidth > 0 Then
     Dim DIS As DRAWITEMSTRUCT, P As POINTAPI
     DIS.CtlType = ComboCueCtlType
-    DIS.CtlID = 0
+    DIS.CtlID = ID_COMBOBUTTONCHILD
     DIS.ItemID = 0
     DIS.ItemAction = ODA_DRAWENTIRE
     DIS.ItemState = ComboCueItemState
@@ -11277,7 +12652,7 @@ If ComboCueWidth > 0 Then
     ElseIf ComboCueAlignment = FlexLeftRightAlignmentLeft Then
         SetViewportOrgEx DIS.hDC, CellRect.Left + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX, CellRect.Top + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CY, P
     End If
-    Call ComboButtonDraw(DIS)
+    Call ComboButtonDraw(iRow, iCol, DIS)
     SetViewportOrgEx DIS.hDC, P.X, P.Y, P
 End If
 End Sub
@@ -11556,8 +12931,37 @@ Private Function GetFocusRectWidth() As Integer
 If PropFocusRectWidth = -1 Then GetFocusRectWidth = VBFlexGridFocusBorder.CX Else GetFocusRectWidth = PropFocusRectWidth
 End Function
 
+Private Function GetComboButtonWidth(ByVal iCol As Long, ByVal ComboCue As FlexComboCueConstants)
+Dim CtlType As Long
+Select Case ComboCue
+    Case FlexComboCueNone
+        Select Case VBFlexGridComboActiveMode
+            Case FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeCalendar
+                CtlType = ODT_COMBOBOX
+            Case FlexComboModeButton
+                CtlType = ODT_BUTTON
+        End Select
+    Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
+        CtlType = ODT_COMBOBOX
+    Case FlexComboCueButton, FlexComboCueDisabledButton
+        CtlType = ODT_BUTTON
+End Select
+If CtlType = ODT_COMBOBOX Then
+    GetComboButtonWidth = VBFlexGridPixelMetrics.ComboButtonWidth
+ElseIf CtlType = ODT_BUTTON Then
+    If VBFlexGridColsInfo(iCol).ComboButtonWidth = -1 Then
+        If VBFlexGridComboButtonWidth = -1 Then
+            GetComboButtonWidth = VBFlexGridPixelMetrics.ComboButtonWidth
+        Else
+            GetComboButtonWidth = VBFlexGridComboButtonWidth
+        End If
+    Else
+        GetComboButtonWidth = VBFlexGridColsInfo(iCol).ComboButtonWidth
+    End If
+End If
+End Function
+
 Private Sub GetCellText(ByVal iRow As Long, ByVal iCol As Long, ByRef TextOut As String)
-If PropRows < 1 Or PropCols < 1 Then Exit Sub
 
 ' ByRef parameter is faster than returning the string as the function return value.
 
@@ -11565,12 +12969,22 @@ If PropRows < 1 Or PropCols < 1 Then Exit Sub
 
 If VBFlexGridFlexDataSource Is Nothing Then
     TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
-Else
+ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceNoData) = 0 Then
     If iRow >= PropFixedRows Then
-        TextOut = VBFlexGridFlexDataSource.GetData(iCol, iRow - PropFixedRows)
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            TextOut = VBFlexGridFlexDataSource.GetData(iCol, iRow - PropFixedRows)
+        Else
+            If iCol >= PropFixedCols Then
+                TextOut = VBFlexGridFlexDataSource.GetData(iCol - PropFixedCols, iRow - PropFixedRows)
+            Else
+                TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
+            End If
+        End If
     Else
         TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
     End If
+Else
+    TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
 End If
 
 #Else
@@ -11582,18 +12996,27 @@ TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
 End Sub
 
 Private Sub SetCellText(ByVal iRow As Long, ByVal iCol As Long, ByRef TextIn As String)
-If PropRows < 1 Or PropCols < 1 Then Exit Sub
 
 #If ImplementFlexDataSource = True Then
 
 If VBFlexGridFlexDataSource Is Nothing Then
     VBFlexGridCells.Rows(iRow).Cols(iCol).Text = TextIn
-Else
+ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceNoData) = 0 Then
     If iRow >= PropFixedRows Then
-        VBFlexGridFlexDataSource.SetData iCol, iRow - PropFixedRows, TextIn
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            VBFlexGridFlexDataSource.SetData iCol, iRow - PropFixedRows, TextIn
+        Else
+            If iCol >= PropFixedCols Then
+                VBFlexGridFlexDataSource.SetData iCol - PropFixedCols, iRow - PropFixedRows, TextIn
+            Else
+                VBFlexGridCells.Rows(iRow).Cols(iCol).Text = TextIn
+            End If
+        End If
     Else
         VBFlexGridCells.Rows(iRow).Cols(iCol).Text = TextIn
     End If
+Else
+    VBFlexGridCells.Rows(iRow).Cols(iCol).Text = TextIn
 End If
 
 #Else
@@ -11604,20 +13027,183 @@ VBFlexGridCells.Rows(iRow).Cols(iCol).Text = TextIn
 
 End Sub
 
+Private Sub GetCellToolTipText(ByVal iRow As Long, ByVal iCol As Long, ByRef TextOut As String)
+
+' ByRef parameter is faster than returning the string as the function return value.
+
+#If ImplementFlexDataSource = True Then
+
+If VBFlexGridFlexDataSource2 Is Nothing Then
+    TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText
+ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceToolTipText) <> 0 Then
+    If iRow >= PropFixedRows Then
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            TextOut = VBFlexGridFlexDataSource2.GetToolTipText(iCol, iRow - PropFixedRows)
+        Else
+            If iCol >= PropFixedCols Then
+                TextOut = VBFlexGridFlexDataSource2.GetToolTipText(iCol - PropFixedCols, iRow - PropFixedRows)
+            Else
+                TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText
+            End If
+        End If
+    Else
+        TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText
+    End If
+Else
+    TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText
+End If
+
+#Else
+
+TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText
+
+#End If
+
+End Sub
+
+Private Sub SetCellToolTipText(ByVal iRow As Long, ByVal iCol As Long, ByRef TextIn As String)
+
+#If ImplementFlexDataSource = True Then
+
+If VBFlexGridFlexDataSource2 Is Nothing Then
+    VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText = TextIn
+ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceToolTipText) <> 0 Then
+    If iRow >= PropFixedRows Then
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            VBFlexGridFlexDataSource2.SetToolTipText iCol, iRow - PropFixedRows, TextIn
+        Else
+            If iCol >= PropFixedCols Then
+                VBFlexGridFlexDataSource2.SetToolTipText iCol - PropFixedCols, iRow - PropFixedRows, TextIn
+            Else
+                VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText = TextIn
+            End If
+        End If
+    Else
+        VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText = TextIn
+    End If
+Else
+    VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText = TextIn
+End If
+
+#Else
+
+VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText = TextIn
+
+#End If
+
+End Sub
+
+Private Function GetCellChecked(ByVal iRow As Long, ByVal iCol As Long) As Integer
+If (VBFlexGridColsInfo(iCol).State And CLIS_CHECKBOXES) = 0 Then
+    GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+Else
+    If iRow >= PropFixedRows Then
+        
+        #If ImplementFlexDataSource = True Then
+        
+        If VBFlexGridFlexDataSource2 Is Nothing Then
+            If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+        ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceChecked) <> 0 Then
+            If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+                GetCellChecked = VBFlexGridFlexDataSource2.GetChecked(iCol, iRow - PropFixedRows)
+                If GetCellChecked < -2 Or GetCellChecked > 7 Then GetCellChecked = 0
+            Else
+                If iCol >= PropFixedCols Then
+                    GetCellChecked = VBFlexGridFlexDataSource2.GetChecked(iCol - PropFixedCols, iRow - PropFixedRows)
+                    If GetCellChecked < -2 Or GetCellChecked > 7 Then GetCellChecked = 0
+                Else
+                    If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+                End If
+            End If
+        Else
+            If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+        End If
+        
+        #Else
+        
+        If VBFlexGridCells.Rows(iRow).Cols(iCol).Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+        
+        #End If
+        
+    Else
+        GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
+    End If
+End If
+End Function
+
+Private Sub SetCellChecked(ByVal iRow As Long, ByVal iCol As Long, ByVal NewValue As Integer)
+If (VBFlexGridColsInfo(iCol).State And CLIS_CHECKBOXES) = 0 Then
+    VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+Else
+    If iRow >= PropFixedRows Then
+        
+        #If ImplementFlexDataSource = True Then
+        
+        If VBFlexGridFlexDataSource2 Is Nothing Then
+            VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+        ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceChecked) <> 0 Then
+            If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+                VBFlexGridFlexDataSource2.SetChecked iCol, iRow - PropFixedRows, NewValue
+            Else
+                If iCol >= PropFixedCols Then
+                    VBFlexGridFlexDataSource2.SetChecked iCol - PropFixedCols, iRow - PropFixedRows, NewValue
+                Else
+                    VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+                End If
+            End If
+        Else
+            VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+        End If
+        
+        #Else
+        
+        VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+        
+        #End If
+        
+    Else
+        VBFlexGridCells.Rows(iRow).Cols(iCol).Checked = NewValue
+    End If
+End If
+End Sub
+
+Private Sub GetTextDisplay(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As String)
+If iRow >= PropFixedRows And iCol >= PropFixedCols Then
+    If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+Else
+    If StrPtr(VBFlexGridColsInfo(iCol).FixedFormat) = 0 Then
+        If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
+    Else
+        If Not VBFlexGridColsInfo(iCol).FixedFormat = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).FixedFormat, vbUseSystemDayOfWeek, vbUseSystem)
+    End If
+End If
+End Sub
+
+Private Function CellTextDisplay() As String
+If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+    Call GetCellText(VBFlexGridRow, VBFlexGridCol, CellTextDisplay)
+    Call GetTextDisplay(VBFlexGridRow, VBFlexGridCol, CellTextDisplay)
+End If
+End Function
+
 Private Function GetRowHeight(ByVal iRow As Long) As Long
 If PropRows < 1 Or PropCols < 1 Then Exit Function
 If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
     If VBFlexGridCells.Rows(iRow).RowInfo.Height = -1 Then
-        If (iRow > (PropFixedRows - 1) And PropFixedCols = 0) Or VBFlexGridDefaultFixedRowHeight = -1 Then
-            GetRowHeight = VBFlexGridDefaultRowHeight
-        ElseIf iRow > (PropFixedRows - 1) Then
-            If VBFlexGridDefaultRowHeight > VBFlexGridDefaultFixedRowHeight Then
+        If VBFlexGridUniformRowHeight = -1 Then
+            If (iRow > (PropFixedRows - 1) And PropFixedCols = 0) Or VBFlexGridDefaultFixedRowHeight = -1 Then
                 GetRowHeight = VBFlexGridDefaultRowHeight
+            ElseIf iRow > (PropFixedRows - 1) Then
+                If VBFlexGridDefaultRowHeight > VBFlexGridDefaultFixedRowHeight Then
+                    GetRowHeight = VBFlexGridDefaultRowHeight
+                Else
+                    GetRowHeight = VBFlexGridDefaultFixedRowHeight
+                End If
             Else
                 GetRowHeight = VBFlexGridDefaultFixedRowHeight
             End If
         Else
-            GetRowHeight = VBFlexGridDefaultFixedRowHeight
+            GetRowHeight = VBFlexGridUniformRowHeight
         End If
     Else
         GetRowHeight = VBFlexGridCells.Rows(iRow).RowInfo.Height
@@ -11680,10 +13266,13 @@ If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
 End If
 End Function
 
-Private Function GetTextSize(ByVal iRow As Long, ByVal iCol As Long, ByVal Text As String) As SIZEAPI
+Private Function GetTextSize(ByVal iRow As Long, ByVal iCol As Long, ByVal Text As String, Optional ByVal hDC As Long) As SIZEAPI
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Function
-Dim hDC As Long
-hDC = GetDC(VBFlexGridHandle)
+Dim hDCTemp As Long
+If hDC = 0 Then
+    hDCTemp = GetDC(VBFlexGridHandle)
+    hDC = hDCTemp
+End If
 If hDC <> 0 Then
     Dim hFontTemp As Long, hFontOld As Long
     With VBFlexGridCells.Rows(iRow).Cols(iCol)
@@ -11739,21 +13328,19 @@ If hDC <> 0 Then
         Dim TM As TEXTMETRIC
         If GetTextMetrics(hDC, TM) <> 0 Then GetTextSize.CY = TM.TMHeight
     End If
-    If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
-        Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
-        Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
-        GetTextSize.CX = GetTextSize.CX + SortArrowClientSize.CX
-    End If
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
-    ReleaseDC VBFlexGridHandle, hDC
+    If hDCTemp <> 0 Then ReleaseDC VBFlexGridHandle, hDCTemp
 End If
 End Function
 
-Private Function GetTextHeight(ByVal iRow As Long, ByVal iCol As Long, ByVal Text As String) As Long
+Private Function GetBestHeight(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As String, Optional ByVal hDC As Long) As Long
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Function
-Dim hDC As Long
-hDC = GetDC(VBFlexGridHandle)
+Dim hDCTemp As Long
+If hDC = 0 Then
+    hDCTemp = GetDC(VBFlexGridHandle)
+    hDC = hDCTemp
+End If
 If hDC <> 0 Then
     Dim hFontTemp As Long, hFontOld As Long
     With VBFlexGridCells.Rows(iRow).Cols(iCol)
@@ -11781,6 +13368,7 @@ If hDC <> 0 Then
         hFontOld = SelectObject(hDC, hFontTemp)
         Set TempFont = Nothing
     End If
+    Dim CY As Long
     If Not Text = vbNullString Then
         Dim CellRect As RECT
         With CellRect
@@ -11791,9 +13379,9 @@ If hDC <> 0 Then
         End With
         Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
         If PropAllowUserEditing = True Then
-            If VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue <> FlexComboCueNone Then
+            If .ComboCue <> FlexComboCueNone Then
                 Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
-                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                ComboCueWidth = GetComboButtonWidth(iCol, .ComboCue)
                 If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
                 If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
                     ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -11803,7 +13391,7 @@ If hDC <> 0 Then
             ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
                 If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
                     Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
-                    ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                    ComboCueWidth = GetComboButtonWidth(iCol, VBFlexGridComboCue)
                     If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
                     If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
                         ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -11815,9 +13403,9 @@ If hDC <> 0 Then
         End If
         Dim TextRect As RECT, DrawFlags As Long
         With TextRect
-        .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-        .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
-        .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+        .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
+        .Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
+        .Right = CellRect.Right - VBFlexGridPixelMetrics.CellTextWidthPadding
         If ComboCueWidth > 0 Then
             If ComboCueAlignment = FlexLeftRightAlignmentRight Then
                 .Right = .Right - ComboCueWidth
@@ -11825,7 +13413,7 @@ If hDC <> 0 Then
                 .Left = .Left + ComboCueWidth
             End If
         End If
-        .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+        .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
         End With
         DrawFlags = DT_NOPREFIX
         If VBFlexGridRTLReading = True Then DrawFlags = DrawFlags Or DT_RTLREADING
@@ -11839,6 +13427,36 @@ If hDC <> 0 Then
                         TextRect.Right = TextRect.Right - CHimetricToPixel_X(.Picture.Width)
                 End Select
             End If
+        End If
+        Dim Checked As Integer
+        Checked = GetCellChecked(iRow, iCol)
+        If Checked > -1 Then
+            Dim CheckBoxAlignment As FlexCheckBoxAlignmentConstants
+            If iRow < PropFixedRows Or iCol < PropFixedCols Then
+                If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
+                    CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+                Else
+                    CheckBoxAlignment = VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment
+                End If
+            Else
+                CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+            End If
+            If CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+                Select Case .PictureAlignment
+                    Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                        CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+                    Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                        CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+                    Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                        CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+                End Select
+            End If
+            Select Case CheckBoxAlignment
+                Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
+                    TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
+                Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
+                    TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
+            End Select
         End If
         If PropWordWrap = True Then
             DrawFlags = DrawFlags Or DT_WORDBREAK
@@ -11855,15 +13473,95 @@ If hDC <> 0 Then
                 TextRect.Left = TextRect.Left + SortArrowClientSize.CX
             End If
         End If
-        GetTextHeight = DrawText(hDC, StrPtr(Text), -1, TextRect, DrawFlags Or DT_CALCRECT)
+        CY = DrawText(hDC, StrPtr(Text), -1, TextRect, DrawFlags Or DT_CALCRECT)
     Else
         Dim TM As TEXTMETRIC
-        If GetTextMetrics(hDC, TM) <> 0 Then GetTextHeight = TM.TMHeight
+        If GetTextMetrics(hDC, TM) <> 0 Then CY = TM.TMHeight
     End If
+    If PropBestFitMode <> FlexBestFitModeTextOnly Then
+        ' The height of the sort arrow client size equals to TM.TMHeight.
+        ' No other content currently adjusts the text rect at the height.
+    End If
+    GetBestHeight = CY
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
-    ReleaseDC VBFlexGridHandle, hDC
+    If hDCTemp <> 0 Then ReleaseDC VBFlexGridHandle, hDCTemp
     End With
+End If
+End Function
+
+Private Function GetBestWidth(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As String, Optional ByVal hDC As Long) As Long
+If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Function
+Dim hDCTemp As Long
+If hDC = 0 Then
+    hDCTemp = GetDC(VBFlexGridHandle)
+    hDC = hDCTemp
+End If
+If hDC <> 0 Then
+    Dim CX As Long
+    CX = GetTextSize(iRow, iCol, Text, hDC).CX
+    If PropBestFitMode <> FlexBestFitModeTextOnly Then
+        With VBFlexGridCells.Rows(iRow).Cols(iCol)
+        Select Case PropBestFitMode
+            Case FlexBestFitModeFull, FlexBestFitModeOtherText
+                Dim ComboCueWidth As Long
+                If PropAllowUserEditing = True Then
+                    If .ComboCue <> FlexComboCueNone Then
+                        ComboCueWidth = GetComboButtonWidth(iCol, .ComboCue)
+                    ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
+                        If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then ComboCueWidth = GetComboButtonWidth(iCol, VBFlexGridComboCue)
+                    End If
+                End If
+                If ComboCueWidth > 0 Then CX = CX + ComboCueWidth
+                If Not .Picture Is Nothing Then
+                    If .Picture.Handle <> 0 Then
+                        Select Case .PictureAlignment
+                            Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                                CX = CX + CHimetricToPixel_X(.Picture.Width)
+                        End Select
+                    End If
+                End If
+                Dim Checked As Integer
+                Checked = GetCellChecked(iRow, iCol)
+                If Checked > -1 Then
+                    Dim CheckBoxAlignment As FlexCheckBoxAlignmentConstants
+                    If iRow < PropFixedRows Or iCol < PropFixedCols Then
+                        If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
+                            CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+                        Else
+                            CheckBoxAlignment = VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment
+                        End If
+                    Else
+                        CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+                    End If
+                    If CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+                        Select Case .PictureAlignment
+                            Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                                CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+                            Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                                CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+                            Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                                CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+                        End Select
+                    End If
+                    Select Case CheckBoxAlignment
+                        Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
+                            CX = CX + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
+                    End Select
+                End If
+        End Select
+        Select Case PropBestFitMode
+            Case FlexBestFitModeFull, FlexBestFitModeSortArrowText
+                If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
+                    Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
+                    Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
+                    CX = CX + SortArrowClientSize.CX
+                End If
+        End Select
+        End With
+    End If
+    GetBestWidth = CX
+    If hDCTemp <> 0 Then ReleaseDC VBFlexGridHandle, hDCTemp
 End If
 End Function
 
@@ -12039,12 +13737,12 @@ If HTI.PT.X >= 0 Then
         Next iCol
     End If
 End If
-If PropAllowUserEditing = True Then
-    If iRowHit > -1 And iColHit > -1 Then
-        Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
+If iRowHit > -1 And iColHit > -1 Then
+    Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
+    If PropAllowUserEditing = True Then
         If VBFlexGridCells.Rows(iRowHit).Cols(iColHit).ComboCue <> FlexComboCueNone Then
             Call GetGridLineOffsets(iRowHit, iColHit, GridLineOffsets)
-            ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+            ComboCueWidth = GetComboButtonWidth(iColHit, VBFlexGridCells.Rows(iRowHit).Cols(iColHit).ComboCue)
             If (((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
             If VBFlexGridColsInfo(iColHit).ComboButtonAlignment = -1 Then
                 ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -12070,7 +13768,7 @@ If PropAllowUserEditing = True Then
         ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
             If (iRowHit = GetComboCueRow() And iColHit = GetComboCueCol()) Then
                 Call GetGridLineOffsets(iRowHit, iColHit, GridLineOffsets)
-                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                ComboCueWidth = GetComboButtonWidth(iColHit, VBFlexGridComboCue)
                 If (((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
                 If VBFlexGridColsInfo(iColHit).ComboButtonAlignment = -1 Then
                     ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -12096,8 +13794,91 @@ If PropAllowUserEditing = True Then
             End If
         End If
     End If
-End If
-If iRowHit > -1 And iColHit > -1 Then
+    Dim Checked As Integer
+    Checked = GetCellChecked(iRowHit, iColHit)
+    If Checked > -1 Then
+        Dim CheckBoxRect As RECT, CheckBoxAlignment As FlexCheckBoxAlignmentConstants, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
+        With CheckBoxRect
+        .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
+        .Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
+        .Right = CellRect.Right - VBFlexGridPixelMetrics.CellTextWidthPadding
+        If ComboCueWidth > 0 Then
+            If ComboCueAlignment = FlexLeftRightAlignmentRight Then
+                .Right = .Right - ComboCueWidth
+            ElseIf ComboCueAlignment = FlexLeftRightAlignmentLeft Then
+                .Left = .Left + ComboCueWidth
+            End If
+        End If
+        .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
+        End With
+        With VBFlexGridCells.Rows(iRowHit).Cols(iColHit)
+        If iRowHit < PropFixedRows Or iColHit < PropFixedCols Then
+            If VBFlexGridColsInfo(iColHit).FixedCheckBoxAlignment = -1 Then
+                CheckBoxAlignment = VBFlexGridColsInfo(iColHit).CheckBoxAlignment
+            Else
+                CheckBoxAlignment = VBFlexGridColsInfo(iColHit).FixedCheckBoxAlignment
+            End If
+        Else
+            CheckBoxAlignment = VBFlexGridColsInfo(iColHit).CheckBoxAlignment
+        End If
+        If CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+            Select Case .PictureAlignment
+                Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                    CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+                Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                    CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+                Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                    CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+            End Select
+        End If
+        If Not .Picture Is Nothing Then
+            If .Picture.Handle <> 0 Then
+                Select Case .PictureAlignment
+                    Case FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                        CheckBoxRect.Left = CheckBoxRect.Left + CHimetricToPixel_X(.Picture.Width)
+                    Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                        CheckBoxRect.Right = CheckBoxRect.Right - CHimetricToPixel_X(.Picture.Width)
+                End Select
+            End If
+        End If
+        Select Case CheckBoxAlignment
+            Case FlexCheckBoxAlignmentLeftCenter
+                CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            Case FlexCheckBoxAlignmentLeftBottom
+                CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+            Case FlexCheckBoxAlignmentCenterTop
+                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            Case FlexCheckBoxAlignmentCenterCenter
+                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+                CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            Case FlexCheckBoxAlignmentCenterBottom
+                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+                CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+            Case FlexCheckBoxAlignmentRightTop
+                CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+            Case FlexCheckBoxAlignmentRightCenter
+                CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+            Case FlexCheckBoxAlignmentRightBottom
+                CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+                CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
+        End Select
+        If CheckBoxOffsetX > 0 Then CheckBoxRect.Left = CheckBoxRect.Left + CheckBoxOffsetX
+        If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
+        CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
+        CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
+        End With
+        If PtInRect(CheckBoxRect, HTI.PT.X, HTI.PT.Y) <> 0 Then
+            Select Case Checked
+                Case FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox
+                    HTI.HitResult = FlexHitResultCheckBox
+                Case FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed, FlexDisabledTextAsCheckBox
+                    HTI.HitResult = FlexHitResultCheckBoxDisabled
+            End Select
+            HTI.HitRow = iRowHit
+            HTI.HitCol = iColHit
+            Exit Sub
+        End If
+    End If
     If iRowHit >= VBFlexGridTopRow Then
         If iColHit >= VBFlexGridLeftCol Then
             HTI.HitResult = FlexHitResultCell
@@ -12109,21 +13890,25 @@ If iRowHit > -1 And iColHit > -1 Then
                     HTI.HitResult = FlexHitResultCell
                 Else
                     TempRect.Bottom = .Bottom
-                    iRowDivider = iRowHit
                     If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
+                        iRowDivider = GetRowDividerTop(iRowHit)
                         HTI.HitResult = FlexHitResultDividerRowTop
-                        iRowDivider = iRowDivider - 1
-                        If iRowDivider = (VBFlexGridTopRow - 1) Then
-                            ' Gap adjustment between the topmost row and the non-scrollable rows for divider row top only.
-                            iRowDivider = iRowDivider - (VBFlexGridTopRow - (PropFixedRows + PropFrozenRows))
+                        If iRowDivider = -1 Then
+                            HTI.HitResult = FlexHitResultCell
+                        Else
+                            If (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_NOSIZING) = RWIS_NOSIZING Then
+                                iRowDivider = -1
+                                HTI.HitResult = FlexHitResultCell
+                            End If
                         End If
-                        Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
-                            iRowDivider = iRowDivider - 1
-                            If iRowDivider = -1 Then Exit Do
-                        Loop
-                        If iRowDivider = -1 Then HTI.HitResult = FlexHitResultCell
                     Else
-                        HTI.HitResult = FlexHitResultDividerRowBottom
+                        If (VBFlexGridCells.Rows(iRowHit).RowInfo.State And RWIS_NOSIZING) = 0 Then
+                            iRowDivider = iRowHit
+                            HTI.HitResult = FlexHitResultDividerRowBottom
+                        Else
+                            iRowDivider = -1
+                            HTI.HitResult = FlexHitResultCell
+                        End If
                     End If
                 End If
             Else
@@ -12145,18 +13930,25 @@ If iRowHit > -1 And iColHit > -1 Then
                             HTI.HitResult = FlexHitResultCell
                         Else
                             TempRect.Bottom = .Bottom
-                            iRowDivider = iRowHit
                             If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
+                                iRowDivider = GetRowDividerTop(iRowHit)
                                 HTI.HitResult = FlexHitResultDividerRowTop
-                                iRowDivider = iRowDivider - 1
-                                ' Gap adjustment not needed as row hit is below fixed rows.
-                                Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
-                                    iRowDivider = iRowDivider - 1
-                                    If iRowDivider = -1 Then Exit Do
-                                Loop
-                                If iRowDivider = -1 Then HTI.HitResult = FlexHitResultCell
+                                If iRowDivider = -1 Then
+                                    HTI.HitResult = FlexHitResultCell
+                                Else
+                                    If (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_NOSIZING) = RWIS_NOSIZING Then
+                                        iRowDivider = -1
+                                        HTI.HitResult = FlexHitResultCell
+                                    End If
+                                End If
                             Else
-                                HTI.HitResult = FlexHitResultDividerRowBottom
+                                If (VBFlexGridCells.Rows(iRowHit).RowInfo.State And RWIS_NOSIZING) = 0 Then
+                                    iRowDivider = iRowHit
+                                    HTI.HitResult = FlexHitResultDividerRowBottom
+                                Else
+                                    iRowDivider = -1
+                                    HTI.HitResult = FlexHitResultCell
+                                End If
                             End If
                         End If
                     Else
@@ -12167,22 +13959,26 @@ If iRowHit > -1 And iColHit > -1 Then
                 End If
             ElseIf PropAllowUserResizing <> FlexAllowUserResizingRows Then
                 TempRect.Right = .Right
-                iColDivider = iColHit
                 If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
+                    iColDivider = GetColDividerLeft(iColHit)
                     HTI.HitResult = FlexHitResultDividerColumnLeft
-                    iColDivider = iColDivider - 1
-                    If iColDivider = (VBFlexGridLeftCol - 1) Then
-                        ' Gap adjustment between the leftmost column and the non-scrollable columns for divider column left only.
-                        iColDivider = iColDivider - (VBFlexGridLeftCol - (PropFixedCols + PropFrozenCols))
+                    If iColDivider = -1 Then
+                        HTI.HitResult = FlexHitResultCell
+                    Else
+                        If (VBFlexGridColsInfo(iColDivider).State And CLIS_NOSIZING) = CLIS_NOSIZING Then
+                            iColDivider = -1
+                            HTI.HitResult = FlexHitResultCell
+                        End If
                     End If
-                    Do While (VBFlexGridColsInfo(iColDivider).State And CLIS_HIDDEN) = CLIS_HIDDEN
-                        iColDivider = iColDivider - 1
-                        If iColDivider = -1 Then Exit Do
-                    Loop
-                    If iColDivider = -1 Then HTI.HitResult = FlexHitResultCell
                 Else
-                    If iColDivider <> VBFlexGridExtendLastCol Then
-                        HTI.HitResult = FlexHitResultDividerColumnRight
+                    If iColHit <> VBFlexGridExtendLastCol Then
+                        If (VBFlexGridColsInfo(iColHit).State And CLIS_NOSIZING) = 0 Then
+                            iColDivider = iColHit
+                            HTI.HitResult = FlexHitResultDividerColumnRight
+                        Else
+                            iColDivider = -1
+                            HTI.HitResult = FlexHitResultCell
+                        End If
                     Else
                         ' Avoid divider column right hit test info for the extended last column only.
                         iColDivider = -1
@@ -12206,17 +14002,25 @@ If iRowHit > -1 And iColHit > -1 Then
                     HTI.HitResult = FlexHitResultCell
                 Else
                     TempRect.Bottom = .Bottom
-                    iRowDivider = iRowHit
                     If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
+                        iRowDivider = GetRowDividerTop(iRowHit)
                         HTI.HitResult = FlexHitResultDividerRowTop
-                        iRowDivider = iRowDivider - 1
-                        Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
-                            iRowDivider = iRowDivider - 1
-                            If iRowDivider = -1 Then Exit Do
-                        Loop
-                        If iRowDivider = -1 Then HTI.HitResult = FlexHitResultCell
+                        If iRowDivider = -1 Then
+                            HTI.HitResult = FlexHitResultCell
+                        Else
+                            If (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_NOSIZING) = RWIS_NOSIZING Then
+                                iRowDivider = -1
+                                HTI.HitResult = FlexHitResultCell
+                            End If
+                        End If
                     Else
-                        HTI.HitResult = FlexHitResultDividerRowBottom
+                        If (VBFlexGridCells.Rows(iRowHit).RowInfo.State And RWIS_NOSIZING) = 0 Then
+                            iRowDivider = iRowHit
+                            HTI.HitResult = FlexHitResultDividerRowBottom
+                        Else
+                            iRowDivider = -1
+                            HTI.HitResult = FlexHitResultCell
+                        End If
                     End If
                 End If
             Else
@@ -12247,18 +14051,8 @@ If iRowHit > -1 And iColHit > -1 Then
                         SetRect TempRect, .Left, .Top, .Right, .Bottom
                         Call AdjustRectColDividerFrozenSpacing(TempRect, iColHit, True)
                         If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
-                            iColDivider = iColHit - 1
+                            iColDivider = GetColDividerFrozenLeft(iColHit)
                             HTI.HitResult = FlexHitResultDividerFrozenColumnLeft
-                            If iColDivider = (VBFlexGridLeftCol - 1) Then
-                                ' Gap adjustment between the leftmost column and the non-scrollable columns for divider column left only.
-                                iColDivider = iColDivider - (VBFlexGridLeftCol - (PropFixedCols + PropFrozenCols))
-                            End If
-                            If iColDivider > -1 Then
-                                Do While (VBFlexGridColsInfo(iColDivider).State And CLIS_HIDDEN) = CLIS_HIDDEN
-                                    iColDivider = iColDivider - 1
-                                    If iColDivider = -1 Then Exit Do
-                                Loop
-                            End If
                             If iColDivider = -1 Then
                                 If iColFrozen = -1 Then iColDivider = 0 Else HTI.HitResult = FlexHitResultCell
                             End If
@@ -12278,18 +14072,8 @@ If iRowHit > -1 And iColHit > -1 Then
                             SetRect TempRect, .Left, .Top, .Right, .Bottom
                             Call AdjustRectRowDividerFrozenSpacing(TempRect, iRowHit, True)
                             If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
-                                iRowDivider = iRowHit - 1
+                                iRowDivider = GetRowDividerFrozenTop(iRowHit)
                                 HTI.HitResult = FlexHitResultDividerFrozenRowTop
-                                If iRowDivider = (VBFlexGridTopRow - 1) Then
-                                    ' Gap adjustment between the topmost row and the non-scrollable rows for divider row top only.
-                                    iRowDivider = iRowDivider - (VBFlexGridTopRow - (PropFixedRows + PropFrozenRows))
-                                End If
-                                If iRowDivider > -1 Then
-                                    Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
-                                        iRowDivider = iRowDivider - 1
-                                        If iRowDivider = -1 Then Exit Do
-                                    Loop
-                                End If
                                 If iRowDivider = -1 Then
                                     If iRowFrozen = -1 Then iRowDivider = 0 Else HTI.HitResult = FlexHitResultCell
                                 End If
@@ -12310,18 +14094,8 @@ If iRowHit > -1 And iColHit > -1 Then
                         SetRect TempRect, .Left, .Top, .Right, .Bottom
                         Call AdjustRectRowDividerFrozenSpacing(TempRect, iRowHit, True)
                         If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
-                            iRowDivider = iRowHit - 1
+                            iRowDivider = GetRowDividerFrozenTop(iRowHit)
                             HTI.HitResult = FlexHitResultDividerFrozenRowTop
-                            If iRowDivider = (VBFlexGridTopRow - 1) Then
-                                ' Gap adjustment between the topmost row and the non-scrollable rows for divider row top only.
-                                iRowDivider = iRowDivider - (VBFlexGridTopRow - (PropFixedRows + PropFrozenRows))
-                            End If
-                            If iRowDivider > -1 Then
-                                Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
-                                    iRowDivider = iRowDivider - 1
-                                    If iRowDivider = -1 Then Exit Do
-                                Loop
-                            End If
                             If iRowDivider = -1 Then
                                 If iRowFrozen = -1 Then iRowDivider = 0 Else HTI.HitResult = FlexHitResultCell
                             End If
@@ -12342,18 +14116,8 @@ If iRowHit > -1 And iColHit > -1 Then
                     SetRect TempRect, .Left, .Top, .Right, .Bottom
                     Call AdjustRectColDividerFrozenSpacing(TempRect, iColHit, True)
                     If PtInRect(TempRect, HTI.PT.X, HTI.PT.Y) = 0 Then
-                        iColDivider = iColHit - 1
+                        iColDivider = GetColDividerFrozenLeft(iColHit)
                         HTI.HitResult = FlexHitResultDividerFrozenColumnLeft
-                        If iColDivider = (VBFlexGridLeftCol - 1) Then
-                            ' Gap adjustment between the leftmost column and the non-scrollable columns for divider column left only.
-                            iColDivider = iColDivider - (VBFlexGridLeftCol - (PropFixedCols + PropFrozenCols))
-                        End If
-                        If iColDivider > -1 Then
-                            Do While (VBFlexGridColsInfo(iColDivider).State And CLIS_HIDDEN) = CLIS_HIDDEN
-                                iColDivider = iColDivider - 1
-                                If iColDivider = -1 Then Exit Do
-                            Loop
-                        End If
                         If iColDivider = -1 Then
                             If iColFrozen = -1 Then iColDivider = 0 Else HTI.HitResult = FlexHitResultCell
                         End If
@@ -12373,26 +14137,44 @@ Else
     If PropAllowUserResizing <> FlexAllowUserResizingNone Then
         If iColHit > -1 And PropAllowUserResizing <> FlexAllowUserResizingColumns Then
             If iRowHit = -1 And iColHit < PropFixedCols Then
-                If HTI.PT.Y < (.Bottom + (DIVIDER_SPACING_DIP * PixelsPerDIP_Y())) Then
+                If HTI.PT.Y < (.Bottom + VBFlexGridPixelMetrics.DividerSpacing.CY) Then
                     iRowDivider = (PropRows - 1)
+                    If iRowDivider > -1 Then
+                        Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
+                            iRowDivider = iRowDivider - 1
+                            If iRowDivider = -1 Then Exit Do
+                        Loop
+                    End If
                     HTI.HitResult = FlexHitResultDividerRowBottom
-                    Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
-                        iRowDivider = iRowDivider - 1
-                        If iRowDivider = -1 Then Exit Do
-                    Loop
-                    If iRowDivider = -1 Then HTI.HitResult = FlexHitResultNoWhere
+                    If iRowDivider = -1 Then
+                        HTI.HitResult = FlexHitResultNoWhere
+                    Else
+                        If (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_NOSIZING) = RWIS_NOSIZING Then
+                            iRowDivider = -1
+                            HTI.HitResult = FlexHitResultNoWhere
+                        End If
+                    End If
                 End If
             End If
         ElseIf iRowHit > -1 And PropAllowUserResizing <> FlexAllowUserResizingRows Then
             If iColHit = -1 And iRowHit < PropFixedRows Then
-                If HTI.PT.X < (.Right + (DIVIDER_SPACING_DIP * PixelsPerDIP_X())) Then
+                If HTI.PT.X < (.Right + VBFlexGridPixelMetrics.DividerSpacing.CX) Then
                     iColDivider = (PropCols - 1)
+                    If iColDivider > -1 Then
+                        Do While (VBFlexGridColsInfo(iColDivider).State And CLIS_HIDDEN) = CLIS_HIDDEN
+                            iColDivider = iColDivider - 1
+                            If iColDivider = -1 Then Exit Do
+                        Loop
+                    End If
                     HTI.HitResult = FlexHitResultDividerColumnRight
-                    Do While (VBFlexGridColsInfo(iColDivider).State And CLIS_HIDDEN) = CLIS_HIDDEN
-                        iColDivider = iColDivider - 1
-                        If iColDivider = -1 Then Exit Do
-                    Loop
-                    If iColDivider = -1 Then HTI.HitResult = FlexHitResultNoWhere
+                    If iColDivider = -1 Then
+                        HTI.HitResult = FlexHitResultNoWhere
+                    Else
+                        If (VBFlexGridColsInfo(iColDivider).State And CLIS_NOSIZING) = CLIS_NOSIZING Then
+                            iColDivider = -1
+                            HTI.HitResult = FlexHitResultNoWhere
+                        End If
+                    End If
                 End If
             End If
         End If
@@ -12414,45 +14196,63 @@ End Sub
 
 Private Sub AdjustRectColDividerSpacing(ByRef RC As RECT, ByVal iCol As Long)
 Dim Spacing As Long
-Spacing = DIVIDER_SPACING_DIP * PixelsPerDIP_X()
+Spacing = VBFlexGridPixelMetrics.DividerSpacing.CX
 If iCol > 0 Then
+    Dim iColLeft As Long
+    iColLeft = GetColDividerLeft(iCol)
     If (RC.Right - RC.Left) >= (Spacing * 2) Then
-        RC.Left = RC.Left + Spacing
-        RC.Right = RC.Right - Spacing
+        If (VBFlexGridColsInfo(iColLeft).State And CLIS_NOSIZING) = 0 Then RC.Left = RC.Left + Spacing
+        If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then RC.Right = RC.Right - Spacing
     Else
         ' Rectangle is not wide enough to include the spacing.
-        RC.Left = RC.Left + ((RC.Right - RC.Left) / 2)
-        RC.Right = RC.Left ' Remainder
+        If (VBFlexGridColsInfo(iColLeft).State And CLIS_NOSIZING) = 0 And (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then
+            RC.Left = RC.Left + ((RC.Right - RC.Left) / 2)
+            RC.Right = RC.Left ' Remainder
+        Else
+            If (VBFlexGridColsInfo(iColLeft).State And CLIS_NOSIZING) = 0 Then RC.Left = RC.Left + ((RC.Right - RC.Left) / 2)
+            If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then RC.Right = RC.Right - ((RC.Right - RC.Left) / 2)
+        End If
     End If
 ElseIf iCol > -1 Then
     ' First column need divider spacing to the right only.
-    RC.Right = RC.Right - Spacing
-    If RC.Right < RC.Left Then RC.Right = RC.Left
+    If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then
+        RC.Right = RC.Right - Spacing
+        If RC.Right < RC.Left Then RC.Right = RC.Left
+    End If
 End If
 End Sub
 
 Private Sub AdjustRectRowDividerSpacing(ByRef RC As RECT, ByVal iRow As Long)
 Dim Spacing As Long
-Spacing = DIVIDER_SPACING_DIP * PixelsPerDIP_Y()
+Spacing = VBFlexGridPixelMetrics.DividerSpacing.CY
 If iRow > 0 Then
+    Dim iRowTop As Long
+    iRowTop = GetRowDividerTop(iRow)
     If (RC.Bottom - RC.Top) >= (Spacing * 2) Then
-        RC.Top = RC.Top + Spacing
-        RC.Bottom = RC.Bottom - Spacing
+        If (VBFlexGridCells.Rows(iRowTop).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Top = RC.Top + Spacing
+        If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Bottom = RC.Bottom - Spacing
     Else
         ' Rectangle is not wide enough to include the spacing.
-        RC.Top = RC.Top + ((RC.Bottom - RC.Top) / 2)
-        RC.Bottom = RC.Top ' Remainder
+        If (VBFlexGridCells.Rows(iRowTop).RowInfo.State And RWIS_NOSIZING) = 0 And (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then
+            RC.Top = RC.Top + ((RC.Bottom - RC.Top) / 2)
+            RC.Bottom = RC.Top ' Remainder
+        Else
+            If (VBFlexGridCells.Rows(iRowTop).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Top = RC.Top + ((RC.Bottom - RC.Top) / 2)
+            If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Bottom = RC.Bottom - ((RC.Bottom - RC.Top) / 2)
+        End If
     End If
 ElseIf iRow > -1 Then
     ' First row need divider spacing to the bottom only.
-    RC.Bottom = RC.Bottom - Spacing
-    If RC.Bottom < RC.Top Then RC.Bottom = RC.Top
+    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then
+        RC.Bottom = RC.Bottom - Spacing
+        If RC.Bottom < RC.Top Then RC.Bottom = RC.Top
+    End If
 End If
 End Sub
 
 Private Sub AdjustRectColDividerFrozenSpacing(ByRef RC As RECT, ByVal iCol As Long, ByVal Adjacent As Boolean)
 Dim Spacing As Long
-Spacing = DIVIDER_SPACING_DIP * PixelsPerDIP_X()
+Spacing = VBFlexGridPixelMetrics.DividerSpacing.CX
 If iCol > -1 Then
     If Adjacent = False Then
         RC.Right = RC.Right - Spacing
@@ -12466,7 +14266,7 @@ End Sub
 
 Private Sub AdjustRectRowDividerFrozenSpacing(ByRef RC As RECT, ByVal iRow As Long, ByVal Adjacent As Boolean)
 Dim Spacing As Long
-Spacing = DIVIDER_SPACING_DIP * PixelsPerDIP_Y()
+Spacing = VBFlexGridPixelMetrics.DividerSpacing.CY
 If iRow > -1 Then
     If Adjacent = False Then
         RC.Bottom = RC.Bottom - Spacing
@@ -12478,20 +14278,23 @@ If iRow > -1 Then
 End If
 End Sub
 
-Private Sub GetLabelInfo(ByVal iRow As Long, ByVal iCol As Long, ByRef LBLI As TLABELINFO)
+Private Sub GetLabelInfo(ByVal iRow As Long, ByVal iCol As Long, ByRef LBLI As TLABELINFO, Optional ByVal hDC As Long)
 LBLI.Flags = 0
 If VBFlexGridHandle = 0 Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
 Dim CellRect As RECT
 Call GetCellRect(iRow, iCol, False, CellRect)
 If (CellRect.Bottom - CellRect.Top) <= 0 Or (CellRect.Right - CellRect.Left) <= 0 Then Exit Sub
-Dim hDC As Long
-hDC = GetDC(VBFlexGridHandle)
+Dim hDCTemp As Long
+If hDC = 0 Then
+    hDCTemp = GetDC(VBFlexGridHandle)
+    hDC = hDCTemp
+End If
 If hDC <> 0 Then
     Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
     If PropAllowUserEditing = True Then
         If VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue <> FlexComboCueNone Then
             Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
-            ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+            ComboCueWidth = GetComboButtonWidth(iCol, VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue)
             If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
             If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
                 ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -12501,7 +14304,7 @@ If hDC <> 0 Then
         ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
             If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then
                 Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
-                ComboCueWidth = GetSystemMetrics(SM_CXVSCROLL)
+                ComboCueWidth = GetComboButtonWidth(iCol, VBFlexGridComboCue)
                 If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
                 If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
                     ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -12511,13 +14314,14 @@ If hDC <> 0 Then
             End If
         End If
     End If
-    Dim Text As String, TextRect As RECT
+    Dim Text As String, TextRect As RECT, HiddenText As Boolean
     Call GetCellText(iRow, iCol, Text)
+    Call GetTextDisplay(iRow, iCol, Text)
     If StrPtr(Text) = 0 Then Text = ""
     With TextRect
-    .Left = CellRect.Left + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
-    .Top = CellRect.Top + (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
-    .Right = CellRect.Right - (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+    .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
+    .Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
+    .Right = CellRect.Right - VBFlexGridPixelMetrics.CellTextWidthPadding
     If ComboCueWidth > 0 Then
         If ComboCueAlignment = FlexLeftRightAlignmentRight Then
             .Right = .Right - ComboCueWidth
@@ -12525,7 +14329,7 @@ If hDC <> 0 Then
             .Left = .Left + ComboCueWidth
         End If
     End If
-    .Bottom = CellRect.Bottom - (CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y())
+    .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
     End With
     Dim hFontTemp As Long, hFontOld As Long
     With VBFlexGridCells.Rows(iRow).Cols(iCol)
@@ -12553,7 +14357,7 @@ If hDC <> 0 Then
         hFontOld = SelectObject(hDC, hFontTemp)
         Set TempFont = Nothing
     End If
-    Dim Alignment As FlexAlignmentConstants, Format As Long
+    Dim Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .Alignment = -1 Then
         If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
             Alignment = VBFlexGridColsInfo(iCol).Alignment
@@ -12577,35 +14381,69 @@ If hDC <> 0 Then
             End Select
         End If
     End If
+    Dim Checked As Integer
+    Checked = GetCellChecked(iRow, iCol)
+    If Checked > -1 Then
+        Dim CheckBoxAlignment As FlexCheckBoxAlignmentConstants
+        If iRow < PropFixedRows Or iCol < PropFixedCols Then
+            If VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment = -1 Then
+                CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+            Else
+                CheckBoxAlignment = VBFlexGridColsInfo(iCol).FixedCheckBoxAlignment
+            End If
+        Else
+            CheckBoxAlignment = VBFlexGridColsInfo(iCol).CheckBoxAlignment
+        End If
+        If CheckBoxAlignment = FlexCheckBoxAlignmentUsePictureAlignment Then
+            Select Case .PictureAlignment
+                Case FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap
+                    CheckBoxAlignment = FlexCheckBoxAlignmentLeftCenter
+                Case FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile
+                    CheckBoxAlignment = FlexCheckBoxAlignmentCenterCenter
+                Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
+                    CheckBoxAlignment = FlexCheckBoxAlignmentRightCenter
+            End Select
+        End If
+        Select Case CheckBoxAlignment
+            Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
+                TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
+            Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
+                TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
+        End Select
+        Select Case Checked
+            Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
+                HiddenText = True
+        End Select
+    End If
     End With
-    Format = DT_NOPREFIX
-    If VBFlexGridRTLReading = True Then Format = Format Or DT_RTLREADING
+    DrawFlags = DT_NOPREFIX
+    If VBFlexGridRTLReading = True Then DrawFlags = DrawFlags Or DT_RTLREADING
     Select Case Alignment
         Case FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom
-            Format = Format Or DT_LEFT
+            DrawFlags = DrawFlags Or DT_LEFT
         Case FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom
-            Format = Format Or DT_CENTER
+            DrawFlags = DrawFlags Or DT_CENTER
         Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
-            Format = Format Or DT_RIGHT
+            DrawFlags = DrawFlags Or DT_RIGHT
         Case FlexAlignmentGeneral
             If PropMirrorAlignGeneral = False Then
                 If Not IsNumeric(Text) And Not IsDate(Text) Then
-                    Format = Format Or DT_LEFT
+                    DrawFlags = DrawFlags Or DT_LEFT
                 Else
-                    Format = Format Or DT_RIGHT
+                    DrawFlags = DrawFlags Or DT_RIGHT
                 End If
             Else
                 If Not IsNumeric(Text) And Not IsDate(Text) Then
-                    Format = Format Or DT_RIGHT
+                    DrawFlags = DrawFlags Or DT_RIGHT
                 Else
-                    Format = Format Or DT_LEFT
+                    DrawFlags = DrawFlags Or DT_LEFT
                 End If
             End If
     End Select
     If PropWordWrap = True Then
-        Format = Format Or DT_WORDBREAK
+        DrawFlags = DrawFlags Or DT_WORDBREAK
     ElseIf PropSingleLine = True Then
-        Format = Format Or DT_SINGLELINE
+        DrawFlags = DrawFlags Or DT_SINGLELINE
     End If
     ' Ellipsis format will be ignored.
     If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
@@ -12621,15 +14459,15 @@ If hDC <> 0 Then
     LSet CalcRect = TextRect
     Select Case Alignment
         Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
-            Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
+            Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
             Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
             ' DT_VCENTER not applicable to apply here in case of DT_SINGLELINE.
         Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
-            Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, Format Or DT_CALCRECT)
+            Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
             Result = ((TextRect.Bottom - TextRect.Top) - Height)
             ' DT_BOTTOM not applicable to apply here in case of DT_SINGLELINE.
     End Select
-    If Result > 0 Or (Format And DT_SINGLELINE) = DT_SINGLELINE Then
+    If Result > 0 Or (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         CalcRect.Top = CalcRect.Top + Result
         CalcRect.Bottom = CalcRect.Bottom + Result
     End If
@@ -12638,21 +14476,22 @@ If hDC <> 0 Then
     If CalcRect.Right <= VBFlexGridClientRect.Right And CalcRect.Bottom <= VBFlexGridClientRect.Bottom Then
         If CalcRect.Right <= TextRect.Right And CalcRect.Bottom <= TextRect.Bottom Then .Flags = .Flags Or LBLI_UNFOLDED
     End If
-    If (Format And DT_CENTER) = DT_CENTER Then
+    If HiddenText = True Then .Flags = .Flags Or LBLI_HIDDEN
+    If (DrawFlags And DT_CENTER) = DT_CENTER Then
         Result = (((TextRect.Right - TextRect.Left) - (CalcRect.Right - CalcRect.Left)) / 2)
         CalcRect.Left = CalcRect.Left + Result
         CalcRect.Right = CalcRect.Right + Result
-    ElseIf (Format And DT_RIGHT) = DT_RIGHT Then
+    ElseIf (DrawFlags And DT_RIGHT) = DT_RIGHT Then
         Result = ((TextRect.Right - TextRect.Left) - (CalcRect.Right - CalcRect.Left))
         CalcRect.Left = CalcRect.Left + Result
         CalcRect.Right = CalcRect.Right + Result
     End If
     LSet .RC = CalcRect
-    .DrawFlags = Format
+    .DrawFlags = DrawFlags
     End With
     If hFontOld <> 0 Then SelectObject hDC, hFontOld
     If hFontTemp <> 0 Then DeleteObject hFontTemp
-    ReleaseDC VBFlexGridHandle, hDC
+    If hDCTemp <> 0 Then ReleaseDC VBFlexGridHandle, hDCTemp
 End If
 End Sub
 
@@ -13291,6 +15130,102 @@ Else
     End If
     GetExtendLastCol = i
 End If
+End Function
+
+Private Function GetRowDividerTop(ByVal iRow As Long) As Long
+Dim iRowDivider As Long
+iRowDivider = iRow - 1
+If iRow >= (PropFixedRows + PropFrozenRows) Then
+    Dim iRowTop As Long
+    iRowTop = VBFlexGridTopRow
+    Do While iRowTop < (PropRows - 1)
+        If (VBFlexGridCells.Rows(iRowTop).RowInfo.State And RWIS_HIDDEN) = 0 Then Exit Do
+        iRowTop = iRowTop + 1
+    Loop
+    If iRow = iRowTop Then
+        ' Gap adjustment between the topmost row and the non-scrollable rows for divider row top only.
+        iRowDivider = iRowDivider - (iRowTop - (PropFixedRows + PropFrozenRows))
+    End If
+End If
+If iRowDivider > -1 Then
+    Do While (VBFlexGridCells.Rows(iRowDivider).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN
+        iRowDivider = iRowDivider - 1
+        If iRowDivider = -1 Then Exit Do
+    Loop
+End If
+GetRowDividerTop = iRowDivider
+End Function
+
+Private Function GetColDividerLeft(ByVal iCol As Long) As Long
+Dim iColDivider As Long
+iColDivider = iCol - 1
+If iCol >= (PropFixedCols + PropFrozenCols) Then
+    Dim iColLeft As Long
+    iColLeft = VBFlexGridLeftCol
+    Do While iColLeft < (PropCols - 1)
+        If (VBFlexGridColsInfo(iColLeft).State And CLIS_HIDDEN) = 0 Then Exit Do
+        iColLeft = iColLeft + 1
+    Loop
+    If iCol = iColLeft Then
+        ' Gap adjustment between the leftmost column and the non-scrollable columns for divider column left only.
+        iColDivider = iColDivider - (iColLeft - (PropFixedCols + PropFrozenCols))
+    End If
+End If
+If iColDivider > -1 Then
+    Do While (VBFlexGridColsInfo(iColDivider).State And CLIS_HIDDEN) = CLIS_HIDDEN
+        iColDivider = iColDivider - 1
+        If iColDivider = -1 Then Exit Do
+    Loop
+End If
+GetColDividerLeft = iColDivider
+End Function
+
+Private Function GetRowDividerFrozenTop(ByVal iRow As Long) As Long
+Dim iRowDivider As Long
+iRowDivider = iRow - 1
+If iRow >= (PropFixedRows + PropFrozenRows) Then
+    Dim iRowTop As Long
+    iRowTop = VBFlexGridTopRow
+    Do While iRowTop < (PropRows - 1)
+        If GetRowHeight(iRowTop) > 0 Then Exit Do
+        iRowTop = iRowTop + 1
+    Loop
+    If iRow = iRowTop Then
+        ' Gap adjustment between the topmost row and the non-scrollable rows for divider row top only.
+        iRowDivider = iRowDivider - (iRowTop - (PropFixedRows + PropFrozenRows))
+    End If
+End If
+If iRowDivider > -1 Then
+    Do While GetRowHeight(iRowDivider) = 0
+        iRowDivider = iRowDivider - 1
+        If iRowDivider = -1 Then Exit Do
+    Loop
+End If
+GetRowDividerFrozenTop = iRowDivider
+End Function
+
+Private Function GetColDividerFrozenLeft(ByVal iCol As Long) As Long
+Dim iColDivider As Long
+iColDivider = iCol - 1
+If iCol >= (PropFixedCols + PropFrozenCols) Then
+    Dim iColLeft As Long
+    iColLeft = VBFlexGridLeftCol
+    Do While iColLeft < (PropCols - 1)
+        If GetColWidth(iColLeft) > 0 Then Exit Do
+        iColLeft = iColLeft + 1
+    Loop
+    If iCol = iColLeft Then
+        ' Gap adjustment between the leftmost column and the non-scrollable columns for divider column left only.
+        iColDivider = iColDivider - (iColLeft - (PropFixedCols + PropFrozenCols))
+    End If
+End If
+If iColDivider > -1 Then
+    Do While GetColWidth(iColDivider) = 0
+        iColDivider = iColDivider - 1
+        If iColDivider = -1 Then Exit Do
+    Loop
+End If
+GetColDividerFrozenLeft = iColDivider
 End Function
 
 Private Sub ClearSelectedRows()
@@ -14921,6 +16856,8 @@ VBFlexGridMouseMoveChanged = False
 Select Case HTI.HitResult
     Case FlexHitResultNoWhere, FlexHitResultComboCue, FlexHitResultComboCueDisabled
         Exit Function
+    Case FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
+        If HTI.HitRow <= (PropFixedRows - 1) Or HTI.HitCol <= (PropFixedCols - 1) Then Exit Function
     Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
         VBFlexGridCaptureDividerDrag = True
         Dim iRow As Long, iCol As Long, Cancel As Boolean
@@ -14994,10 +16931,10 @@ Select Case HTI.HitResult
             VBFlexGridDividerDragDirty = True
             Call SetDividerDragSplitterRect(P.X, P.Y)
             Call DrawDividerDragSplitter
-            ProcessLButtonDown = True
         Else
             ReleaseCapture
         End If
+        ProcessLButtonDown = True
         Exit Function
 End Select
 Dim RCP As TROWCOLPARAMS
@@ -15192,12 +17129,18 @@ If VBFlexGridCaptureDividerDrag = True Then
                 End If
                 RaiseEvent AfterUserResize(iRow, iCol, NewSize)
                 If NewSize > 0 Then .CY = UserControl.ScaleY(NewSize, vbTwips, vbPixels) Else .CY = 0
-                VBFlexGridCells.Rows(iRow).RowInfo.Height = .CY
-                If PropRowSizingMode = FlexRowSizingModeAll Then
-                    For i = 0 To PropRows - 1
-                        VBFlexGridCells.Rows(i).RowInfo.Height = .CY
-                    Next i
-                End If
+                Select Case PropRowSizingMode
+                    Case FlexRowSizingModeIndividual
+                        VBFlexGridCells.Rows(iRow).RowInfo.Height = .CY
+                    Case FlexRowSizingModeAll
+                        VBFlexGridCells.Rows(iRow).RowInfo.Height = .CY
+                        For i = 0 To PropRows - 1
+                            VBFlexGridCells.Rows(i).RowInfo.Height = .CY
+                        Next i
+                    Case FlexRowSizingModeUniform
+                        VBFlexGridUniformRowHeight = .CY
+                        VBFlexGridCells.Rows(iRow).RowInfo.Height = -1
+                End Select
             ElseIf iCol > -1 Then
                 For i = 0 To iCol - 1
                     If i >= VBFlexGridLeftCol Then
@@ -15469,6 +17412,8 @@ End If
 Select Case VBFlexGridCaptureHitResult
     Case FlexHitResultNoWhere, FlexHitResultComboCue, FlexHitResultComboCueDisabled
         Exit Sub
+    Case FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
+        If VBFlexGridCaptureRow <= (PropFixedRows - 1) Or VBFlexGridCaptureCol <= (PropFixedCols - 1) Then Exit Sub
     Case Else
         If VBFlexGridCaptureRow = -1 Or VBFlexGridCaptureCol = -1 Then Exit Sub
 End Select
@@ -15645,7 +17590,7 @@ If GetTextMetrics(hDC, TM) <> 0 Then
     CalcSize.CY = CalcSize.CX / 2
     DrawSize.CX = CalcSize.CX + 1
     DrawSize.CY = CalcSize.CY + 1
-    ClientSize.CX = DrawSize.CX + (CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X())
+    ClientSize.CX = DrawSize.CX + VBFlexGridPixelMetrics.CellTextWidthPadding
     ClientSize.CY = TM.TMHeight
 Else
     CalcSize.CX = 0
@@ -15707,19 +17652,183 @@ If hRgn <> 0 Then
 End If
 End Sub
 
-Private Function GetColSeparator() As String
+Private Sub DrawCellCheckBox(ByVal hDC As Long, ByRef RC As RECT, ByRef Text As String, ByVal iRow As Long, ByVal iCol As Long, ByVal Checked As Integer)
+If hDC = 0 Then Exit Sub
+Select Case Checked
+    Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
+        If Not Text = vbNullString Then
+            On Error Resume Next
+            If CBool(Text) = False Then
+                If Checked = FlexTextAsCheckBox Then Checked = FlexUnchecked Else Checked = FlexDisabledUnchecked
+            Else
+                If Checked = FlexTextAsCheckBox Then Checked = FlexChecked Else Checked = FlexDisabledChecked
+            End If
+            On Error GoTo 0
+        Else
+            If Checked = FlexTextAsCheckBox Then Checked = FlexGrayed Else Checked = FlexDisabledGrayed
+        End If
+End Select
+Dim Handled As Boolean
+If VBFlexGridCheckBoxDrawMode <> FlexCheckBoxDrawModeNormal Then
+    Dim Cancel As Boolean, ItemState As Long, RCItem As RECT, P As POINTAPI
+    Select Case Checked
+        Case FlexChecked, FlexDisabledChecked
+            ItemState = ItemState Or ODS_CHECKED
+        Case FlexGrayed, FlexDisabledGrayed
+            ItemState = ItemState Or ODS_GRAYED
+    End Select
+    Select Case Checked
+        Case FlexUnchecked, FlexChecked, FlexGrayed
+            If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then ItemState = ItemState Or ODS_HOTLIGHT
+        Case FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
+            ItemState = ItemState Or ODS_DISABLED
+    End Select
+    RCItem.Left = 0
+    RCItem.Top = 0
+    RCItem.Right = RC.Right - RC.Left
+    RCItem.Bottom = RC.Bottom - RC.Top
+    SetViewportOrgEx hDC, RC.Left, RC.Top, P
+    RaiseEvent CheckBoxOwnerDraw(iRow, iCol, Cancel, ItemState, hDC, RCItem.Left, RCItem.Top, RCItem.Right, RCItem.Bottom)
+    SetViewportOrgEx hDC, P.X, P.Y, P
+    Handled = Not Cancel
+End If
+If Handled = False Then
+    Dim Theme As Long
+    
+    #If ImplementThemedControls = True Then
+    
+    If VBFlexGridHandle <> 0 Then
+        If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
+        If Theme <> 0 Then
+            Dim CheckState As Long
+            Select Case Checked
+                Case FlexUnchecked
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
+                        CheckState = CBS_UNCHECKEDHOT
+                    Else
+                        CheckState = CBS_UNCHECKEDNORMAL
+                    End If
+                Case FlexChecked
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
+                        CheckState = CBS_CHECKEDHOT
+                    Else
+                        CheckState = CBS_CHECKEDNORMAL
+                    End If
+                Case FlexGrayed
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then
+                        CheckState = CBS_MIXEDHOT
+                    Else
+                        CheckState = CBS_MIXEDNORMAL
+                    End If
+                Case FlexDisabledUnchecked
+                    CheckState = CBS_UNCHECKEDDISABLED
+                Case FlexDisabledChecked
+                    CheckState = CBS_CHECKEDDISABLED
+                Case FlexDisabledGrayed
+                    CheckState = CBS_MIXEDDISABLED
+            End Select
+            If IsThemeBackgroundPartiallyTransparent(Theme, BP_CHECKBOX, CheckState) <> 0 Then DrawThemeParentBackground VBFlexGridHandle, hDC, RC
+            DrawThemeBackground Theme, hDC, BP_CHECKBOX, CheckState, RC, RC
+            CloseThemeData Theme
+        End If
+    End If
+    
+    #End If
+    
+    If Theme = 0 Then
+        Dim Flags As Long
+        Flags = DFCS_BUTTONCHECK Or DFCS_FLAT
+        Select Case Checked
+            Case FlexChecked, FlexDisabledChecked
+                Flags = Flags Or DFCS_CHECKED
+        End Select
+        Select Case Checked
+            Case FlexUnchecked, FlexChecked, FlexGrayed
+                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultCheckBox Then Flags = Flags Or DFCS_HOT
+            Case FlexDisabledUnchecked, FlexDisabledChecked, FlexDisabledGrayed
+                Flags = Flags Or DFCS_INACTIVE
+        End Select
+        DrawFrameControl hDC, RC, DFC_BUTTON, Flags
+        Select Case Checked
+            Case FlexGrayed, FlexDisabledGrayed
+                ' DrawFrameControl does not support indeterminate checkboxes.
+                ' We fill a rectangle inside the checkbox like IE10 does.
+                Dim Padding As Long, Brush As Long
+                Padding = (RC.Right - RC.Left) * 4 / 13
+                RC.Left = RC.Left + Padding
+                RC.Top = RC.Top + Padding
+                RC.Right = RC.Right - Padding
+                RC.Bottom = RC.Bottom - Padding
+                If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
+                    If Not (Flags And DFCS_HOT) = DFCS_HOT Then
+                        Brush = GetSysColorBrush(COLOR_WINDOWTEXT)
+                    Else
+                        Brush = GetSysColorBrush(COLOR_HOTLIGHT)
+                    End If
+                Else
+                    Brush = GetSysColorBrush(COLOR_GRAYTEXT)
+                End If
+                FillRect hDC, RC, Brush
+        End Select
+    End If
+End If
+End Sub
+
+Private Sub SetCellCheck(ByVal iRow As Long, ByVal iCol As Long, ByVal Reason As FlexCellCheckReasonConstants)
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
+Dim Checked As Integer
+Checked = GetCellChecked(iRow, iCol)
+If Checked > -1 Then
+    Select Case Checked
+        Case FlexUnchecked, FlexChecked, FlexGrayed, FlexTextAsCheckBox
+            Dim Cancel As Boolean
+            RaiseEvent CellBeforeCheck(iRow, iCol, Reason, Cancel)
+            If Cancel = False Then
+                Select Case Checked
+                    Case FlexUnchecked
+                        Call SetCellChecked(iRow, iCol, FlexChecked)
+                        Call RedrawGrid
+                    Case FlexChecked, FlexGrayed
+                        Call SetCellChecked(iRow, iCol, FlexUnchecked)
+                        Call RedrawGrid
+                End Select
+                RaiseEvent CellCheck(iRow, iCol)
+            End If
+    End Select
+End If
+End Sub
+
+Private Sub DrawCellFlooding(ByVal hDC As Long, ByRef CellRect As RECT, ByVal Percent As Integer, ByVal Color As Long)
+If hDC = 0 Then Exit Sub
+Dim RC As RECT, OldColor As Long
+RC.Top = CellRect.Top
+RC.Bottom = CellRect.Bottom
+OldColor = SetBkColor(hDC, Color)
+If Percent > 0 Then
+    RC.Left = CellRect.Left
+    RC.Right = CellRect.Left + ((CellRect.Right - CellRect.Left) * (Percent / 100#))
+    ExtTextOut hDC, 0, 0, ETO_OPAQUE, RC, 0, 0, 0
+ElseIf Percent < 0 Then
+    RC.Left = CellRect.Right - ((CellRect.Right - CellRect.Left) * (-Percent / 100#))
+    RC.Right = CellRect.Right
+    ExtTextOut hDC, 0, 0, ETO_OPAQUE, RC, 0, 0, 0
+End If
+SetBkColor hDC, OldColor
+End Sub
+
+Private Function GetClipSeparatorCol() As String
 If PropClipSeparators = vbNullString Then
-    GetColSeparator = vbTab
+    GetClipSeparatorCol = VBFlexGridClipSeparatorCol
 Else
-    GetColSeparator = Left$(PropClipSeparators, 1)
+    GetClipSeparatorCol = Left$(PropClipSeparators, 1)
 End If
 End Function
 
-Private Function GetRowSeparator() As String
+Private Function GetClipSeparatorRow() As String
 If PropClipSeparators = vbNullString Then
-    GetRowSeparator = vbCr
+    GetClipSeparatorRow = VBFlexGridClipSeparatorRow
 Else
-    GetRowSeparator = Right$(PropClipSeparators, 1)
+    GetClipSeparatorRow = Right$(PropClipSeparators, 1)
 End If
 End Function
 
@@ -15730,6 +17839,18 @@ If VBFlexGridHandle <> 0 Then
             ActivateVisualStyles VBFlexGridToolTipHandle
         Else
             RemoveVisualStyles VBFlexGridToolTipHandle
+        End If
+    End If
+End If
+End Sub
+
+Private Sub SetVisualStylesScrollTip()
+If VBFlexGridHandle <> 0 Then
+    If VBFlexGridScrollTipHandle <> 0 And VBFlexGridEnabledVisualStyles = True Then
+        If PropVisualStyles = True Then
+            ActivateVisualStyles VBFlexGridScrollTipHandle
+        Else
+            RemoveVisualStyles VBFlexGridScrollTipHandle
         End If
     End If
 End If
@@ -15836,13 +17957,59 @@ If VBFlexGridHandle <> 0 And VBFlexGridToolTipHandle <> 0 Then
 End If
 End Sub
 
+Private Sub UpdateScrollTip(ByVal wBar As Long, ByVal TrackPos As Long, ByVal X As Long, ByVal Y As Long)
+If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
+    Dim TI As TOOLINFO
+    With TI
+    .cbSize = LenB(TI)
+    .hWnd = VBFlexGridHandle
+    .uId = 0
+    End With
+    If wBar = SB_HORZ Then
+        RaiseEvent ScrollTip(-1, (PropFixedCols + PropFrozenCols) + TrackPos)
+    ElseIf wBar = SB_VERT Then
+        RaiseEvent ScrollTip((PropFixedRows + PropFrozenRows) + TrackPos, -1)
+    End If
+    If VBFlexGridScrollTipTrack = False Or PropScrollTipFollowThumb = True Then
+        Dim RC As RECT
+        GetWindowRect VBFlexGridHandle, RC
+        If wBar = SB_HORZ Then
+            SendMessage VBFlexGridScrollTipHandle, TTM_TRACKPOSITION, 0, ByVal MakeDWord(X, RC.Bottom)
+        ElseIf wBar = SB_VERT Then
+            SendMessage VBFlexGridScrollTipHandle, TTM_TRACKPOSITION, 0, ByVal MakeDWord(RC.Right, Y)
+        End If
+    End If
+    If VBFlexGridScrollTipTrack = False Then
+        SendMessage VBFlexGridScrollTipHandle, TTM_TRACKACTIVATE, 1, ByVal VarPtr(TI)
+        VBFlexGridScrollTipTrack = True
+    End If
+End If
+End Sub
+
+Private Sub CancelScrollTip()
+If VBFlexGridHandle <> 0 And VBFlexGridScrollTipHandle <> 0 Then
+    If VBFlexGridScrollTipTrack = True Then
+        Dim TI As TOOLINFO
+        With TI
+        .cbSize = LenB(TI)
+        .hWnd = VBFlexGridHandle
+        .uId = 0
+        .lpszText = 0
+        End With
+        SendMessage VBFlexGridScrollTipHandle, TTM_TRACKACTIVATE, 0, ByVal VarPtr(TI)
+        SendMessage VBFlexGridScrollTipHandle, TTM_UPDATETIPTEXT, 0, ByVal VarPtr(TI)
+        VBFlexGridScrollTipTrack = False
+    End If
+End If
+End Sub
+
 Private Sub UpdateEditRect()
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
-    With VBFlexGridEditMergedRange
-    If .TopRow < (PropFixedRows + PropFrozenRows) And .LeftCol < (PropFixedCols + PropFrozenCols) Then
+    If VBFlexGridEditMergedRange.TopRow < (PropFixedRows + PropFrozenRows) And VBFlexGridEditMergedRange.LeftCol < (PropFixedCols + PropFrozenCols) Then
         ' Void
     Else
+        With VBFlexGridEditMergedRange
         Dim RC As RECT, i As Long
         If .BottomRow >= VBFlexGridTopRow Then
             For i = 0 To ((PropFixedRows + PropFrozenRows) - 1)
@@ -15898,22 +18065,37 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
                 RC.Left = RC.Left - GetColWidth(i)
             Next i
         End If
+        End With
+        Dim EditRect As RECT
+        With EditRect
+        .Left = RC.Left + VBFlexGridEditGridLineOffsets.LeftTop.CX
+        .Top = RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY
+        .Right = RC.Right - VBFlexGridEditGridLineOffsets.RightBottom.CX
+        .Bottom = RC.Bottom - VBFlexGridEditGridLineOffsets.RightBottom.CY
+        End With
         If VBFlexGridComboButtonHandle = 0 Then
-            SetWindowPos VBFlexGridEditHandle, 0, RC.Left + VBFlexGridEditGridLineOffsets.LeftTop.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
+            SetWindowPos VBFlexGridEditHandle, 0, EditRect.Left, EditRect.Top, (EditRect.Right - EditRect.Left), (EditRect.Bottom - EditRect.Top), SWP_NOOWNERZORDER Or SWP_NOZORDER
         Else
-            Dim EditRect As RECT, ComboButtonAlignment As FlexLeftRightAlignmentConstants
-            GetClientRect VBFlexGridEditHandle, EditRect
+            Dim ComboButtonWidth As Long, ComboButtonAlignment As FlexLeftRightAlignmentConstants
+            ComboButtonWidth = GetComboButtonWidth(VBFlexGridEditCol, FlexComboCueNone)
             If VBFlexGridColsInfo(VBFlexGridEditCol).ComboButtonAlignment = -1 Then
                 ComboButtonAlignment = VBFlexGridComboButtonAlignment
             Else
                 ComboButtonAlignment = VBFlexGridColsInfo(VBFlexGridEditCol).ComboButtonAlignment
             End If
             If ComboButtonAlignment = FlexLeftRightAlignmentRight Then
-                SetWindowPos VBFlexGridEditHandle, 0, RC.Left + VBFlexGridEditGridLineOffsets.LeftTop.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
-                SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + (EditRect.Right - EditRect.Left) + VBFlexGridEditGridLineOffsets.LeftTop.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
+                EditRect.Right = EditRect.Right - ComboButtonWidth
+                If EditRect.Right < EditRect.Left Then EditRect.Right = EditRect.Left
             ElseIf ComboButtonAlignment = FlexLeftRightAlignmentLeft Then
-                SetWindowPos VBFlexGridEditHandle, 0, RC.Right - (EditRect.Right - EditRect.Left) - VBFlexGridEditGridLineOffsets.RightBottom.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER
-                SetWindowPos VBFlexGridComboButtonHandle, 0, RC.Left + VBFlexGridEditGridLineOffsets.LeftTop.CX, RC.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
+                EditRect.Left = EditRect.Left + ComboButtonWidth
+                If EditRect.Left > EditRect.Right Then EditRect.Left = EditRect.Right
+            End If
+            If (((RC.Right - RC.Left) - (VBFlexGridEditGridLineOffsets.LeftTop.CX + VBFlexGridEditGridLineOffsets.RightBottom.CX)) - ComboButtonWidth) < 0 Then ComboButtonWidth = ((RC.Right - RC.Left) - (VBFlexGridEditGridLineOffsets.LeftTop.CX + VBFlexGridEditGridLineOffsets.RightBottom.CX))
+            SetWindowPos VBFlexGridEditHandle, 0, EditRect.Left, EditRect.Top, (EditRect.Right - EditRect.Left), (EditRect.Bottom - EditRect.Top), SWP_NOOWNERZORDER Or SWP_NOZORDER
+            If ComboButtonAlignment = FlexLeftRightAlignmentRight Then
+                SetWindowPos VBFlexGridComboButtonHandle, 0, EditRect.Right, EditRect.Top, ComboButtonWidth, (EditRect.Bottom - EditRect.Top), SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
+            ElseIf ComboButtonAlignment = FlexLeftRightAlignmentLeft Then
+                SetWindowPos VBFlexGridComboButtonHandle, 0, EditRect.Left - ComboButtonWidth, EditRect.Top, ComboButtonWidth, (EditRect.Bottom - EditRect.Top), SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOCOPYBITS
             End If
             Dim WndRect(0 To 1) As RECT
             Dim hMonitor As Long, MI As MONITORINFO
@@ -15955,7 +18137,6 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
         End If
         If VBFlexGridEditRectChangedFrozen = False Then VBFlexGridEditRectChanged = True
     End If
-    End With
 End If
 End Sub
 
@@ -16109,13 +18290,21 @@ If VBFlexGridEditHandle <> 0 And VBFlexGridComboButtonHandle <> 0 And VBFlexGrid
 End If
 End Sub
 
-Private Sub ComboButtonDraw(ByRef DIS As DRAWITEMSTRUCT)
-If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
-    Dim OldTextColor As Long
+Private Sub ComboButtonDraw(ByVal iRow As Long, ByVal iCol As Long, ByRef DIS As DRAWITEMSTRUCT)
+Dim Handled As Boolean
+If VBFlexGridComboButtonDrawMode <> FlexComboButtonDrawModeNormal Then
+    Dim Cancel As Boolean
+    With DIS
+    RaiseEvent ComboButtonOwnerDraw(iRow, iCol, Cancel, .CtlType, .ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
+    End With
+    Handled = Not Cancel
+End If
+If Handled = False Then
+    Dim Theme As Long, OldTextColor As Long
     
-    #If ImplementThemedComboButton = True Then
+    #If ImplementThemedControls = True Then
     
-    Dim Theme As Long, ThemeDropDown As Boolean
+    Dim ThemeDropDown As Boolean
     If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then
         If DIS.CtlType = ODT_STATIC Then
             If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
@@ -16171,16 +18360,28 @@ If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
             If IsThemeBackgroundPartiallyTransparent(Theme, ButtonPart, ButtonState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
             DrawThemeBackground Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
             GetThemeBackgroundContentRect Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
-            If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
-                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+            If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
+                If VBFlexGridComboButtonPicture Is Nothing Then
+                    If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
+                        OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+                    Else
+                        OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+                    End If
+                    Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                    SetTextColor DIS.hDC, OldTextColor
+                Else
+                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
+                End If
             Else
-                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
             End If
-            Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-            SetTextColor DIS.hDC, OldTextColor
         End If
         CloseThemeData Theme
-    Else
+    End If
+    
+    #End If
+    
+    If Theme = 0 Then
         Dim CtlType As Long, Flags As Long
         If DIS.CtlType = ODT_STATIC Then
             If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
@@ -16204,68 +18405,32 @@ If VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal Then
         If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
         DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
         If CtlType = DFC_BUTTON Then
-            If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
-                If Not (Flags And DFCS_HOT) = DFCS_HOT Then
-                    OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+            If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
+                If VBFlexGridComboButtonPicture Is Nothing Then
+                    If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
+                        If Not (Flags And DFCS_HOT) = DFCS_HOT Then
+                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+                        Else
+                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
+                        End If
+                    Else
+                        OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+                    End If
+                    Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                    SetTextColor DIS.hDC, OldTextColor
                 Else
-                    OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
+                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
                 End If
             Else
-                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
             End If
-            Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-            SetTextColor DIS.hDC, OldTextColor
         End If
     End If
-    
-    #Else
-    
-    Dim CtlType As Long, Flags As Long
-    If DIS.CtlType = ODT_STATIC Then
-        If VBFlexGridComboListHandle <> 0 Or VBFlexGridComboCalendarHandle <> 0 Then
-            CtlType = DFC_SCROLL
-            Flags = DFCS_SCROLLCOMBOBOX
-        Else
-            CtlType = DFC_BUTTON
-            Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
-        End If
-    Else
-        If DIS.CtlType = ODT_COMBOBOX Then
-            CtlType = DFC_SCROLL
-            Flags = DFCS_SCROLLCOMBOBOX
-        ElseIf DIS.CtlType = ODT_BUTTON Then
-            CtlType = DFC_BUTTON
-            Flags = DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
-        End If
-    End If
-    If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then Flags = Flags Or DFCS_PUSHED Or DFCS_FLAT
-    If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then Flags = Flags Or DFCS_INACTIVE
-    If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
-    DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
-    If CtlType = DFC_BUTTON Then
-        If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
-            If Not (Flags And DFCS_HOT) = DFCS_HOT Then
-                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
-            Else
-                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
-            End If
-        Else
-            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
-        End If
-        Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-        SetTextColor DIS.hDC, OldTextColor
-    End If
-    
-    #End If
-    
-Else
-    With DIS
-    RaiseEvent ComboButtonOwnerDraw(.ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
-    End With
 End If
 End Sub
 
 Private Sub ComboButtonDrawEllipsis(ByVal hDC As Long, ByRef ContentRect As RECT)
+If hDC = 0 Then Exit Sub
 Dim OldBkMode As Long, OldTextAlign As Long, hFontOld As Long
 Dim X As Long, Y As Long, Size As SIZEAPI, Result As Long, DX(0 To 2) As Long
 OldBkMode = SetBkMode(hDC, 1)
@@ -16287,6 +18452,45 @@ ExtTextOut hDC, X, Y, ETO_CLIPPED, ContentRect, StrPtr("..."), 3, VarPtr(DX(0))
 SetBkMode hDC, OldBkMode
 SetTextAlign hDC, OldTextAlign
 If hFontOld <> 0 Then SelectObject hDC, hFontOld
+End Sub
+
+Private Sub ComboButtonDrawPicture(ByVal hDC As Long, ByRef ContentRect As RECT, ByVal Picture As IPictureDisp, ByRef RenderFlag As Integer)
+If hDC = 0 Then Exit Sub
+If Picture Is Nothing Then Exit Sub
+If Picture.Handle <> 0 Then
+    Dim P As POINTAPI
+    Dim hRgn As Long, hRgnOld As Long
+    If GetViewportOrgEx(hDC, P) <> 0 Then
+        hRgn = CreateRectRgn(P.X + ContentRect.Left, P.Y + ContentRect.Top, P.X + ContentRect.Right, P.Y + ContentRect.Bottom)
+        If hRgn <> 0 Then
+            hRgnOld = CreateRectRgn(0, 0, 0, 0)
+            If hRgnOld <> 0 Then
+                If GetClipRgn(hDC, hRgnOld) = 0 Then
+                    DeleteObject hRgnOld
+                    hRgnOld = 0
+                End If
+            End If
+            ExtSelectClipRgn hDC, hRgn, RGN_COPY
+        End If
+    End If
+    Dim CX As Long, CY As Long, X As Long, Y As Long
+    CX = CHimetricToPixel_X(Picture.Width)
+    CY = CHimetricToPixel_Y(Picture.Height)
+    X = ContentRect.Left + ((ContentRect.Right - ContentRect.Left - CX) / 2)
+    Y = ContentRect.Top + ((ContentRect.Bottom - ContentRect.Top - CY) / 2)
+    Call RenderPicture(Picture, hDC, X, Y, CX, CY, RenderFlag)
+    If hRgnOld <> 0 Then
+        ExtSelectClipRgn hDC, hRgnOld, RGN_COPY
+        DeleteObject hRgnOld
+        hRgnOld = 0
+    Else
+        ExtSelectClipRgn hDC, 0, RGN_COPY
+    End If
+    If hRgn <> 0 Then
+        DeleteObject hRgn
+        hRgn = 0
+    End If
+End If
 End Sub
 
 Private Function ComboButtonGetState(ByVal dwState As Long) As Boolean
@@ -16674,6 +18878,15 @@ Select Case wMsg
                 If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then Call UpdateEditRect
                 RaiseEvent Scroll
             End If
+            If PropShowScrollTips = True Then
+                Select Case LoWord(wParam)
+                    Case SB_THUMBPOSITION
+                        Call CancelScrollTip
+                    Case SB_THUMBTRACK
+                        Pos = GetMessagePos()
+                        Call UpdateScrollTip(wBar, SCI.nTrackPos, Get_X_lParam(Pos), Get_Y_lParam(Pos))
+                End Select
+            End If
             WindowProcControl = 0
             Exit Function
         End If
@@ -16839,7 +19052,15 @@ Select Case wMsg
                         Case vbKeyF2
                             If CreateEdit(FlexEditReasonF2) = True Then Exit Function
                         Case vbKeySpace
-                            If CreateEdit(FlexEditReasonSpace) = True Then Exit Function
+                            If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                                If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then
+                                    Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
+                                ElseIf CreateEdit(FlexEditReasonSpace) = True Then
+                                    Exit Function
+                                End If
+                            Else
+                                If CreateEdit(FlexEditReasonSpace) = True Then Exit Function
+                            End If
                         Case vbKeyBack
                             If CreateEdit(FlexEditReasonBackSpace) = True Then Exit Function
                         Case vbKeyF4
@@ -16859,6 +19080,41 @@ Select Case wMsg
                                 End If
                             End If
                     End Select
+                Else
+                    If KeyCode = vbKeySpace Then
+                        If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                            If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
+                        End If
+                    End If
+                End If
+                If PropAutoClipboard = True Then
+                    If PropAllowUserEditing = False Then
+                        If GetShiftStateFromMsg() = vbCtrlMask And (KeyCode = vbKeyC Or KeyCode = vbKeyInsert) Then Me.Copy
+                    Else
+                        Select Case GetShiftStateFromMsg()
+                            Case vbShiftMask
+                                Select Case KeyCode
+                                    Case vbKeyDelete
+                                        Me.Cut
+                                    Case vbKeyInsert
+                                        Me.Paste
+                                End Select
+                            Case vbCtrlMask
+                                Select Case KeyCode
+                                    Case vbKeyC, vbKeyInsert
+                                        Me.Copy
+                                    Case vbKeyX
+                                        Me.Cut
+                                    Case vbKeyV
+                                        Me.Paste
+                                End Select
+                            Case Else
+                                Select Case KeyCode
+                                    Case vbKeyDelete
+                                        Me.Delete
+                                End Select
+                        End Select
+                    End If
                 End If
             ElseIf wMsg = WM_KEYUP Then
                 RaiseEvent KeyUp(KeyCode, GetShiftStateFromMsg())
@@ -16974,6 +19230,8 @@ Select Case wMsg
                             Case Else
                                 CreateEdit FlexEditReasonComboCueClick, .HitRow, .HitCol
                         End Select
+                    ElseIf .HitResult = FlexHitResultCheckBox Then
+                        Call SetCellCheck(.HitRow, .HitCol, FlexCellCheckReasonMouse)
                     End If
                 End If
             End If
@@ -16981,6 +19239,35 @@ Select Case wMsg
         End If
     Case WM_MOUSEMOVE
         Call ProcessMouseMove(GetMouseStateFromParam(wParam), Get_X_lParam(lParam), Get_Y_lParam(lParam))
+        If PropMouseTrack = True Then
+            With HTI
+            .PT.X = Get_X_lParam(lParam)
+            .PT.Y = Get_Y_lParam(lParam)
+            Call GetHitTestInfo(HTI)
+            If .HitRow > -1 And .HitCol > -1 Then
+                If VBFlexGridHotRow <> .HitRow Or VBFlexGridHotCol <> .HitCol Or VBFlexGridHotHitResult <> .HitResult Then
+                    VBFlexGridHotRow = .HitRow
+                    VBFlexGridHotCol = .HitCol
+                    VBFlexGridHotHitResult = .HitResult
+                    Call RedrawGrid
+                End If
+            Else
+                If VBFlexGridHotRow > -1 And VBFlexGridHotCol > -1 Then
+                    VBFlexGridHotRow = -1
+                    VBFlexGridHotCol = -1
+                    VBFlexGridHotHitResult = FlexHitResultNoWhere
+                    Call RedrawGrid
+                End If
+            End If
+            End With
+        End If
+    Case WM_MOUSELEAVE
+        If VBFlexGridHotRow > -1 And VBFlexGridHotCol > -1 Then
+            VBFlexGridHotRow = -1
+            VBFlexGridHotCol = -1
+            VBFlexGridHotHitResult = FlexHitResultNoWhere
+            Call RedrawGrid
+        End If
     Case WM_LBUTTONUP
         Call ProcessLButtonUp(GetShiftStateFromParam(wParam), Get_X_lParam(lParam), Get_Y_lParam(lParam))
         ReleaseCapture
@@ -17013,7 +19300,6 @@ Select Case wMsg
                     CopyMemory NMTTDI, ByVal lParam, LenB(NMTTDI)
                     ShowInfoTip = False
                     LBLI.Flags = 0
-                    With NMTTDI
                     Dim Text As String
                     With HTI
                     Pos = GetMessagePos()
@@ -17023,19 +19309,21 @@ Select Case wMsg
                     Call GetHitTestInfo(HTI)
                     If .HitRow > -1 And .HitCol > -1 Then
                         If PropShowLabelTips = True Then Call GetLabelInfo(.HitRow, .HitCol, LBLI)
-                        If (LBLI.Flags And LBLI_VALID) = LBLI_VALID And Not (LBLI.Flags And LBLI_UNFOLDED) = LBLI_UNFOLDED Then
+                        If (LBLI.Flags And LBLI_VALID) = LBLI_VALID And Not (LBLI.Flags And LBLI_UNFOLDED) = LBLI_UNFOLDED And Not (LBLI.Flags And LBLI_HIDDEN) = LBLI_HIDDEN Then
                             Call GetCellText(.HitRow, .HitCol, Text)
+                            Call GetTextDisplay(.HitRow, .HitCol, Text)
                             If (LBLI.DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
                                 If InStr(Text, vbCr) Then Text = Replace$(Text, vbCr, vbNullString)
                                 If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbNullString)
                             End If
                         ElseIf PropShowInfoTips = True Then
-                            Text = VBFlexGridCells.Rows(.HitRow).Cols(.HitCol).ToolTipText
+                            Call GetCellToolTipText(.HitRow, .HitCol, Text)
                             ShowInfoTip = True
                         End If
                     End If
                     End With
                     If Not Text = vbNullString Then
+                        With NMTTDI
                         If Len(Text) <= 80 Then
                             Text = Left$(Text & vbNullChar, 80)
                             CopyMemory .szText(0), ByVal StrPtr(Text), LenB(Text)
@@ -17043,11 +19331,11 @@ Select Case wMsg
                             .lpszText = StrPtr(Text)
                         End If
                         .hInst = 0
+                        End With
                         CopyMemory ByVal lParam, NMTTDI, LenB(NMTTDI)
                     Else
                         ShowInfoTip = False
                     End If
-                    End With
                 Case TTN_SHOW
                     If PropShowLabelTips = True And ShowInfoTip = False Then
                         If (LBLI.Flags And LBLI_VALID) = LBLI_VALID Then
@@ -17168,7 +19456,7 @@ Select Case wMsg
                 Brush = GetSysColorBrush(COLOR_WINDOW)
             End If
             FillRect DIS.hDC, DIS.RCItem, Brush
-            Call ComboButtonDraw(DIS)
+            Call ComboButtonDraw(VBFlexGridEditRow, VBFlexGridEditCol, DIS)
             WindowProcControl = 1
             Exit Function
         End If
@@ -17200,6 +19488,8 @@ Select Case wMsg
                     RaiseEvent DividerDblClick(.HitRowDivider, .HitColDivider)
                 Case FlexHitResultCell
                     RaiseEvent CellDblClick(.HitRow, .HitCol, vbLeftButton)
+                Case FlexHitResultCheckBox
+                    Call SetCellCheck(.HitRow, .HitCol, FlexCellCheckReasonMouse)
             End Select
         Else
             If .HitResult = FlexHitResultCell Then
@@ -17393,11 +19683,13 @@ Select Case wMsg
                             End If
                         Case vbKeyUp, vbKeyDown, vbKeyLeft, vbKeyRight, vbKeyPageDown, vbKeyPageUp, vbKeyHome, vbKeyEnd
                             If VBFlexGridComboButtonHandle <> 0 And VBFlexGridComboListHandle <> 0 Then
-                                Select Case KeyCode
-                                    Case vbKeyUp, vbKeyDown, vbKeyPageDown, vbKeyPageUp, vbKeyHome, vbKeyEnd
-                                        SendMessage VBFlexGridComboListHandle, wMsg, wParam, ByVal lParam
-                                        Exit Function
-                                End Select
+                                If IsWindowVisible(VBFlexGridComboListHandle) <> 0 Then
+                                    Select Case KeyCode
+                                        Case vbKeyUp, vbKeyDown, vbKeyPageDown, vbKeyPageUp, vbKeyHome, vbKeyEnd
+                                            SendMessage VBFlexGridComboListHandle, wMsg, wParam, ByVal lParam
+                                            Exit Function
+                                    End Select
+                                End If
                             End If
                             Dim SelStart As Long, SelEnd As Long
                             SendMessage hWnd, EM_GETSEL, VarPtr(SelStart), ByVal VarPtr(SelEnd)
@@ -17538,8 +19830,8 @@ Select Case wMsg
                 ' The NCCALCSIZE_PARAMS struct is not necessary because only the first rectangle is adjusted.
                 ' If wParam is 1 or not, the treatment is the same.
                 CopyMemory RC, ByVal lParam, LenB(RC)
-                RC.Top = RC.Top + ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - VBFlexGridEditGridLineOffsets.LeftTop.CY)
-                RC.Bottom = RC.Bottom - ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - VBFlexGridEditGridLineOffsets.RightBottom.CY)
+                RC.Top = RC.Top + (VBFlexGridPixelMetrics.CellTextHeightPadding - VBFlexGridEditGridLineOffsets.LeftTop.CY)
+                RC.Bottom = RC.Bottom - (VBFlexGridPixelMetrics.CellTextHeightPadding - VBFlexGridEditGridLineOffsets.RightBottom.CY)
                 CopyMemory ByVal lParam, RC, LenB(RC)
                 WindowProcEdit = 0
                 Exit Function
@@ -17572,10 +19864,10 @@ Select Case wMsg
                     RC.Left = 0
                     RC.Right = (WndRect.Right - WndRect.Left)
                     RC.Top = 0
-                    RC.Bottom = RC.Top + ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - VBFlexGridEditGridLineOffsets.LeftTop.CY)
+                    RC.Bottom = RC.Top + (VBFlexGridPixelMetrics.CellTextHeightPadding - VBFlexGridEditGridLineOffsets.LeftTop.CY)
                     FillRect hDC, RC, Brush
                     RC.Bottom = (WndRect.Bottom - WndRect.Top)
-                    RC.Top = RC.Bottom - ((CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()) - VBFlexGridEditGridLineOffsets.RightBottom.CY)
+                    RC.Top = RC.Bottom - (VBFlexGridPixelMetrics.CellTextHeightPadding - VBFlexGridEditGridLineOffsets.RightBottom.CY)
                     FillRect hDC, RC, Brush
                     ReleaseDC hWnd, hDC
                 End If
