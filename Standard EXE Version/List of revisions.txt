@@ -1,5 +1,9 @@
 List of revisions:
 
+11-Jun-2023
+- No crash anymore for a NULL StrPtr() in EM_REPLACESEL. (EditSelText/FlexEditReasonBackSpace)
+  Though, the fix concerns only Windows XP or below.
+
 31-Mar-2023
 - Included ComboButtonClientWidth read-only property.
 - Included ComboButtonWidth/ColComboButtonWidth run-time property.
