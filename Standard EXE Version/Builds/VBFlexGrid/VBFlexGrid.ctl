@@ -5057,7 +5057,7 @@ If VBFlexGridEditHandle <> 0 Then
         If Reason = FlexEditReasonSpace Then
             SendMessage VBFlexGridEditHandle, EM_SETSEL, -1, ByVal -1&
         ElseIf Reason = FlexEditReasonBackSpace Then
-            SendMessage VBFlexGridEditHandle, EM_REPLACESEL, 1, ByVal 0&
+            SendMessage VBFlexGridEditHandle, EM_REPLACESEL, 1, ByVal StrPtr("")
         End If
     End If
     If ComboButtonWidth > 0 Then
@@ -9712,7 +9712,10 @@ End If
 End Property
 
 Public Property Let EditSelText(ByVal Value As String)
-If VBFlexGridEditHandle <> 0 Then SendMessage VBFlexGridEditHandle, EM_REPLACESEL, 1, ByVal StrPtr(Value)
+If VBFlexGridEditHandle <> 0 Then
+    If StrPtr(Value) = 0 Then Value = ""
+    SendMessage VBFlexGridEditHandle, EM_REPLACESEL, 1, ByVal StrPtr(Value)
+End If
 End Property
 
 Public Property Get ComboCue() As FlexComboCueConstants
