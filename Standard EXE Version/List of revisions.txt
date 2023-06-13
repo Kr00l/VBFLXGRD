@@ -1,5 +1,9 @@
 List of revisions:
 
+13-Jun-2023
+- FlexComboModeCalendar now behaves like FlexComboModeDropDown when the edit control has ES_READONLY.
+  It means always immediately popup of the calendar and commit on a date click.
+
 11-Jun-2023
 - No crash anymore for a NULL StrPtr() in EM_REPLACESEL. (EditSelText/FlexEditReasonBackSpace)
   Though, the fix concerns only Windows XP or below.

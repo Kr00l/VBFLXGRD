@@ -8,6 +8,31 @@ Begin VB.Form UserEditingForm
    ScaleHeight     =   6900
    ScaleWidth      =   13830
    StartUpPosition =   3  'Windows Default
+   Begin VB.Frame Frame3 
+      Caption         =   "Calendar input text editable"
+      Height          =   1335
+      Left            =   5520
+      TabIndex        =   9
+      Top             =   5400
+      Width           =   2295
+      Begin VB.OptionButton Option6 
+         Caption         =   "No"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   10
+         Top             =   240
+         Width           =   1695
+      End
+      Begin VB.OptionButton Option7 
+         Caption         =   "Yes"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   11
+         Top             =   600
+         Value           =   -1  'True
+         Width           =   1695
+      End
+   End
    Begin VB.Frame Frame2 
       Caption         =   "Edit on return key (by code)"
       Height          =   1335
@@ -71,7 +96,7 @@ Begin VB.Form UserEditingForm
       Caption         =   "Cancel"
       Height          =   495
       Left            =   11040
-      TabIndex        =   9
+      TabIndex        =   12
       Top             =   4800
       Width           =   2655
    End
@@ -103,7 +128,7 @@ Begin VB.Form UserEditingForm
       Caption         =   "Editing mode OFF"
       Height          =   255
       Left            =   240
-      TabIndex        =   10
+      TabIndex        =   13
       Top             =   120
       Width           =   13455
    End
@@ -126,6 +151,7 @@ lCustData As Long
 lpfnHook As Long
 lpTemplateName As Long
 End Type
+Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
 Private Declare Function ChooseColor Lib "comdlg32" Alias "ChooseColorW" (ByRef lpChooseColor As TCHOOSECOLOR) As Long
 Private Const COL_NORMAL As Long = 1
 Private Const COL_ONLYNUMBERS As Long = 2
@@ -280,6 +306,13 @@ Private Sub VBFlexGrid1_EditSetupWindow(BackColor As stdole.OLE_COLOR, ForeColor
 Select Case VBFlexGrid1.EditCol
     Case COL_REDBKCOLOR
         BackColor = vbRed
+    Case COL_CALENDARVALIDATION
+        If Option6.Value = True Then
+            ' FlexComboModeCalendar now behaves like FlexComboModeDropDown when the edit control has ES_READONLY.
+            ' It means always immediately popup of the calendar and commit on a date click.
+            Const EM_SETREADONLY As Long = &HCF
+            SendMessage VBFlexGrid1.hWndEdit, EM_SETREADONLY, 1, ByVal 0&
+        End If
 End Select
 End Sub
 
@@ -359,4 +392,3 @@ Select Case VBFlexGrid1.EditCol
         End If
 End Select
 End Sub
-
