@@ -5186,6 +5186,10 @@ If VBFlexGridEditHandle <> 0 Then
             Case Else
                 If VBFlexGridComboListHandle <> 0 Then
                     If VBFlexGridComboActiveMode = FlexComboModeDropDown Then Call ComboShowDropDown(True, FlexComboDropDownReasonInitialize)
+                ElseIf VBFlexGridComboCalendarHandle <> 0 Then
+                    If (GetWindowLong(VBFlexGridEditHandle, GWL_STYLE) And ES_READONLY) <> 0 Then
+                        Call ComboShowDropDown(True, FlexComboDropDownReasonInitialize)
+                    End If
                 End If
         End Select
     End If
@@ -19378,6 +19382,9 @@ Select Case wMsg
                     CopyMemory NMSC, ByVal lParam, LenB(NMSC)
                     Call ComboCalendarCommitST(NMSC.STSelStart)
                     Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
+                    If VBFlexGridEditHandle <> 0 Then
+                        If (GetWindowLong(VBFlexGridEditHandle, GWL_STYLE) And ES_READONLY) <> 0 Then DestroyEdit False, FlexEditCloseModeReturn
+                    End If
             End Select
         End If
     Case WM_COMMAND
