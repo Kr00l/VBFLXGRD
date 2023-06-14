@@ -584,6 +584,10 @@ dwItemSpec As Long
 uItemState As Long
 lItemlParam As Long
 End Type
+Private Type NMTOOLTIPSCREATED
+hdr As NMHDR
+hWndToolTips As Long
+End Type
 Private Type NMTTCUSTOMDRAW
 NMCD As NMCUSTOMDRAW
 uDrawFlags As Long
@@ -888,6 +892,7 @@ Private Declare Function PeekMessage Lib "user32" Alias "PeekMessageW" (ByRef lp
 Private Declare Function PostMessage Lib "user32" Alias "PostMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
 Private Declare Function DestroyWindow Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Private Declare Function GetParent Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function SetParent Lib "user32" (ByVal hWndChild As Long, ByVal hWndNewParent As Long) As Long
 Private Declare Function ShowWindow Lib "user32" (ByVal hWnd As Long, ByVal nCmdShow As Long) As Long
 Private Declare Function MoveWindow Lib "user32" (ByVal hWnd As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
@@ -1294,6 +1299,7 @@ Private Const INFOTIPSIZE As Long = 1024
 Private Const H_MAX As Long = (&HFFFF + 1)
 Private Const NM_FIRST As Long = H_MAX
 Private Const NM_CUSTOMDRAW As Long = (NM_FIRST - 12)
+Private Const NM_TOOLTIPSCREATED As Long = (NM_FIRST - 19)
 Private Const TTF_RTLREADING As Long = &H4
 Private Const TTF_SUBCLASS As Long = &H10
 Private Const TTF_TRACK As Long = &H20
@@ -4743,6 +4749,16 @@ If VBFlexGridToolTipHandle <> 0 Then
     SendMessage VBFlexGridToolTipHandle, TTM_ADDTOOL, 0, ByVal VarPtr(TI)
 End If
 Call SetVisualStylesToolTip
+If VBFlexGridToolTipHandle <> 0 Then
+    Dim NMTTC As NMTOOLTIPSCREATED
+    With NMTTC
+    .hdr.hWndFrom = VBFlexGridHandle
+    .hdr.IDFrom = 0
+    .hdr.Code = NM_TOOLTIPSCREATED
+    .hWndToolTips = VBFlexGridToolTipHandle
+    End With
+    SendMessage GetParent(VBFlexGridHandle), WM_NOTIFY, 0, ByVal VarPtr(NMTTC)
+End If
 End Sub
 
 Private Sub CreateScrollTip()
@@ -4770,6 +4786,16 @@ If VBFlexGridScrollTipHandle <> 0 Then
     SendMessage VBFlexGridScrollTipHandle, TTM_ADDTOOL, 0, ByVal VarPtr(TI)
 End If
 Call SetVisualStylesScrollTip
+If VBFlexGridScrollTipHandle <> 0 Then
+    Dim NMTTC As NMTOOLTIPSCREATED
+    With NMTTC
+    .hdr.hWndFrom = VBFlexGridHandle
+    .hdr.IDFrom = 0
+    .hdr.Code = NM_TOOLTIPSCREATED
+    .hWndToolTips = VBFlexGridScrollTipHandle
+    End With
+    SendMessage GetParent(VBFlexGridHandle), WM_NOTIFY, 1, ByVal VarPtr(NMTTC)
+End If
 End Sub
 
 Private Sub DestroyVBFlexGrid()
