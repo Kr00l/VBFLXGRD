@@ -11799,6 +11799,7 @@ If Checked > -1 Then
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
         Case FlexCheckBoxAlignmentRightCenter
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
         Case FlexCheckBoxAlignmentRightBottom
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
             CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
@@ -12452,6 +12453,7 @@ If Checked > -1 Then
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
         Case FlexCheckBoxAlignmentRightCenter
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
         Case FlexCheckBoxAlignmentRightBottom
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
             CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
@@ -13891,6 +13893,7 @@ If iRowHit > -1 And iColHit > -1 Then
                 CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
             Case FlexCheckBoxAlignmentRightCenter
                 CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
+                CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
             Case FlexCheckBoxAlignmentRightBottom
                 CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
                 CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
