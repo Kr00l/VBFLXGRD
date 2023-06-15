@@ -1,5 +1,8 @@
 List of revisions:
 
+15-Jun-2023
+- Bugfix for FlexCheckBoxAlignmentRightCenter.
+
 13-Jun-2023
 - FlexComboModeCalendar now behaves like FlexComboModeDropDown when the edit control has ES_READONLY.
   It means always immediately popup of the calendar and commit on a date click.
