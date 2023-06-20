@@ -677,12 +677,14 @@ Row As TMERGEDRAWROWINFO
 End Type
 Private Const CELL_TEXT_WIDTH_PADDING_DIP As Long = 3
 Private Const CELL_TEXT_HEIGHT_PADDING_DIP As Long = 1
+Private Const FS_BOLD As Integer = &H1, FS_ITALIC As Integer = &H2, FS_UNDERLINE As Integer = &H4, FS_STRIKEOUT As Integer = &H8
 Private Type TCELL
 Text As String
-TextStyle As FlexTextStyleConstants
-Alignment As FlexAlignmentConstants
+TextStyle As Integer ' As FlexTextStyleConstants
+Alignment As Integer ' As FlexAlignmentConstants
 Picture As IPictureDisp
-PictureAlignment As FlexPictureAlignmentConstants
+PictureRenderFlag As Integer
+PictureAlignment As Integer ' As FlexPictureAlignmentConstants
 BackColor As Long
 ForeColor As Long
 ToolTipText As String
@@ -692,12 +694,8 @@ FloodPercent As Integer
 FloodColor As Long
 FontName As String
 FontSize As Single
-FontBold As Boolean
-FontItalic As Boolean
-FontStrikeThrough As Boolean
-FontUnderline As Boolean
+FontStyle As Integer
 FontCharset As Integer
-PictureRenderFlag As Integer
 End Type
 Private Const RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH As Long = 4
 Private Const ROWINFO_HEIGHT_SPACING_DIP As Long = 3
@@ -731,7 +729,7 @@ SortArrowColor As Long
 ComboMode As FlexComboModeConstants
 ComboButtonPicture As IPictureDisp
 ComboButtonPictureRenderFlag As Integer
-ComboButtonAlignment As Integer
+ComboButtonAlignment As Integer ' As FlexLeftRightAlignmentConstants
 ComboButtonWidth As Long
 ComboItems As String
 CheckBoxAlignment As FlexCheckBoxAlignmentConstants
@@ -5041,10 +5039,10 @@ If VBFlexGridEditHandle <> 0 Then
         Set TempFont = New StdFont
         TempFont.Name = .FontName
         TempFont.Size = .FontSize
-        TempFont.Bold = .FontBold
-        TempFont.Italic = .FontItalic
-        TempFont.Strikethrough = .FontStrikeThrough
-        TempFont.Underline = .FontUnderline
+        TempFont.Bold = CBool((.FontStyle And FS_BOLD) = FS_BOLD)
+        TempFont.Italic = CBool((.FontStyle And FS_ITALIC) = FS_ITALIC)
+        TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
+        TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
         TempFont.Charset = .FontCharset
         VBFlexGridEditTempFontHandle = CreateGDIFontFromOLEFont(TempFont)
         hFont = VBFlexGridEditTempFontHandle
@@ -8670,16 +8668,18 @@ If PropFillStyle = FlexFillStyleSingle Then
         If .FontName = vbNullString Then
             If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
                 .FontSize = PropFont.Size
-                .FontBold = PropFont.Bold
-                .FontItalic = PropFont.Italic
-                .FontStrikeThrough = PropFont.Strikethrough
-                .FontUnderline = PropFont.Underline
+                .FontStyle = 0
+                If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
             Else
                 .FontSize = PropFontFixed.Size
-                .FontBold = PropFontFixed.Bold
-                .FontItalic = PropFontFixed.Italic
-                .FontStrikeThrough = PropFontFixed.Strikethrough
-                .FontUnderline = PropFontFixed.Underline
+                .FontStyle = 0
+                If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
             End If
         End If
         Set TempFont = New StdFont
@@ -8701,16 +8701,18 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                 If .FontName = vbNullString Then
                     If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                         .FontSize = PropFont.Size
-                        .FontBold = PropFont.Bold
-                        .FontItalic = PropFont.Italic
-                        .FontStrikeThrough = PropFont.Strikethrough
-                        .FontUnderline = PropFont.Underline
+                        .FontStyle = 0
+                        If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                        If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                        If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                        If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                     Else
                         .FontSize = PropFontFixed.Size
-                        .FontBold = PropFontFixed.Bold
-                        .FontItalic = PropFontFixed.Italic
-                        .FontStrikeThrough = PropFontFixed.Strikethrough
-                        .FontUnderline = PropFontFixed.Underline
+                        .FontStyle = 0
+                        If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                        If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                        If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                        If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                     End If
                 End If
                 Set TempFont = New StdFont
@@ -8758,17 +8760,19 @@ If PropFillStyle = FlexFillStyleSingle Then
     If .FontName = vbNullString Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
-            .FontBold = PropFont.Bold
-            .FontItalic = PropFont.Italic
-            .FontStrikeThrough = PropFont.Strikethrough
-            .FontUnderline = PropFont.Underline
+            .FontStyle = 0
+            If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+            If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+            If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+            If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
             .FontCharset = PropFont.Charset
         Else
             .FontName = PropFontFixed.Name
-            .FontBold = PropFontFixed.Bold
-            .FontItalic = PropFontFixed.Italic
-            .FontStrikeThrough = PropFontFixed.Strikethrough
-            .FontUnderline = PropFontFixed.Underline
+            .FontStyle = 0
+            If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+            If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+            If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+            If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
             .FontCharset = PropFontFixed.Charset
         End If
     End If
@@ -8784,17 +8788,19 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
             If .FontName = vbNullString Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
-                    .FontBold = PropFont.Bold
-                    .FontItalic = PropFont.Italic
-                    .FontStrikeThrough = PropFont.Strikethrough
-                    .FontUnderline = PropFont.Underline
+                    .FontStyle = 0
+                    If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                    If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                    If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                    If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                     .FontCharset = PropFont.Charset
                 Else
                     .FontName = PropFontFixed.Name
-                    .FontBold = PropFontFixed.Bold
-                    .FontItalic = PropFontFixed.Italic
-                    .FontStrikeThrough = PropFontFixed.Strikethrough
-                    .FontUnderline = PropFontFixed.Underline
+                    .FontStyle = 0
+                    If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                    If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                    If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                    If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                     .FontCharset = PropFontFixed.Charset
                 End If
             End If
@@ -8822,7 +8828,7 @@ If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontName = vbNullStri
         CellFontBold = PropFontFixed.Bold
     End If
 Else
-    CellFontBold = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontBold
+    CellFontBold = CBool((VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontStyle And FS_BOLD) = FS_BOLD)
 End If
 End Property
 
@@ -8838,20 +8844,26 @@ If PropFillStyle = FlexFillStyleSingle Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
             .FontSize = PropFont.Size
-            .FontItalic = PropFont.Italic
-            .FontStrikeThrough = PropFont.Strikethrough
-            .FontUnderline = PropFont.Underline
+            .FontStyle = 0
+            If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+            If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+            If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
             .FontCharset = PropFont.Charset
         Else
             .FontName = PropFontFixed.Name
             .FontSize = PropFontFixed.Size
-            .FontItalic = PropFontFixed.Italic
-            .FontStrikeThrough = PropFontFixed.Strikethrough
-            .FontUnderline = PropFontFixed.Underline
+            .FontStyle = 0
+            If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+            If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+            If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
             .FontCharset = PropFontFixed.Charset
         End If
     End If
-    .FontBold = Value
+    If Value = True Then
+        If Not (.FontStyle And FS_BOLD) = FS_BOLD Then .FontStyle = .FontStyle Or FS_BOLD
+    Else
+        If (.FontStyle And FS_BOLD) = FS_BOLD Then .FontStyle = .FontStyle And Not FS_BOLD
+    End If
     End With
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
@@ -8864,20 +8876,26 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
                     .FontSize = PropFont.Size
-                    .FontItalic = PropFont.Italic
-                    .FontStrikeThrough = PropFont.Strikethrough
-                    .FontUnderline = PropFont.Underline
+                    .FontStyle = 0
+                    If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                    If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                    If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                     .FontCharset = PropFont.Charset
                 Else
                     .FontName = PropFontFixed.Name
                     .FontSize = PropFontFixed.Size
-                    .FontItalic = PropFontFixed.Italic
-                    .FontStrikeThrough = PropFontFixed.Strikethrough
-                    .FontUnderline = PropFontFixed.Underline
+                    .FontStyle = 0
+                    If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                    If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                    If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                     .FontCharset = PropFontFixed.Charset
                 End If
             End If
-            .FontBold = Value
+            If Value = True Then
+                If Not (.FontStyle And FS_BOLD) = FS_BOLD Then .FontStyle = .FontStyle Or FS_BOLD
+            Else
+                If (.FontStyle And FS_BOLD) = FS_BOLD Then .FontStyle = .FontStyle And Not FS_BOLD
+            End If
             End With
         Next j
         End With
@@ -8901,7 +8919,7 @@ If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontName = vbNullStri
         CellFontItalic = PropFontFixed.Italic
     End If
 Else
-    CellFontItalic = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontItalic
+    CellFontItalic = CBool((VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontStyle And FS_ITALIC) = FS_ITALIC)
 End If
 End Property
 
@@ -8917,20 +8935,26 @@ If PropFillStyle = FlexFillStyleSingle Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
             .FontSize = PropFont.Size
-            .FontBold = PropFont.Bold
-            .FontStrikeThrough = PropFont.Strikethrough
-            .FontUnderline = PropFont.Underline
+            .FontStyle = 0
+            If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+            If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+            If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
             .FontCharset = PropFont.Charset
         Else
             .FontName = PropFontFixed.Name
             .FontSize = PropFontFixed.Size
-            .FontBold = PropFontFixed.Bold
-            .FontStrikeThrough = PropFontFixed.Strikethrough
-            .FontUnderline = PropFontFixed.Underline
+            .FontStyle = 0
+            If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+            If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+            If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
             .FontCharset = PropFontFixed.Charset
         End If
     End If
-    .FontItalic = Value
+    If Value = True Then
+        If Not (.FontStyle And FS_ITALIC) = FS_ITALIC Then .FontStyle = .FontStyle Or FS_ITALIC
+    Else
+        If (.FontStyle And FS_ITALIC) = FS_ITALIC Then .FontStyle = .FontStyle And Not FS_ITALIC
+    End If
     End With
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
@@ -8943,20 +8967,26 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
                     .FontSize = PropFont.Size
-                    .FontBold = PropFont.Bold
-                    .FontStrikeThrough = PropFont.Strikethrough
-                    .FontUnderline = PropFont.Underline
+                    .FontStyle = 0
+                    If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                    If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                    If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                     .FontCharset = PropFont.Charset
                 Else
                     .FontName = PropFontFixed.Name
                     .FontSize = PropFontFixed.Size
-                    .FontBold = PropFontFixed.Bold
-                    .FontStrikeThrough = PropFontFixed.Strikethrough
-                    .FontUnderline = PropFontFixed.Underline
+                    .FontStyle = 0
+                    If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                    If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                    If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                     .FontCharset = PropFontFixed.Charset
                 End If
             End If
-            .FontItalic = Value
+            If Value = True Then
+                If Not (.FontStyle And FS_ITALIC) = FS_ITALIC Then .FontStyle = .FontStyle Or FS_ITALIC
+            Else
+                If (.FontStyle And FS_ITALIC) = FS_ITALIC Then .FontStyle = .FontStyle And Not FS_ITALIC
+            End If
             End With
         Next j
         End With
@@ -8980,7 +9010,7 @@ If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontName = vbNullStri
         CellFontStrikeThrough = PropFontFixed.Strikethrough
     End If
 Else
-    CellFontStrikeThrough = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontStrikeThrough
+    CellFontStrikeThrough = CBool((VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
 End If
 End Property
 
@@ -8996,20 +9026,26 @@ If PropFillStyle = FlexFillStyleSingle Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
             .FontSize = PropFont.Size
-            .FontBold = PropFont.Bold
-            .FontItalic = PropFont.Italic
-            .FontUnderline = PropFont.Underline
+            .FontStyle = 0
+            If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+            If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+            If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
             .FontCharset = PropFont.Charset
         Else
             .FontName = PropFontFixed.Name
             .FontSize = PropFontFixed.Size
-            .FontBold = PropFontFixed.Bold
-            .FontItalic = PropFontFixed.Italic
-            .FontUnderline = PropFontFixed.Underline
+            .FontStyle = 0
+            If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+            If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+            If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
             .FontCharset = PropFontFixed.Charset
         End If
     End If
-    .FontStrikeThrough = Value
+    If Value = True Then
+        If Not (.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+    Else
+        If (.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT Then .FontStyle = .FontStyle And Not FS_STRIKEOUT
+    End If
     End With
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
@@ -9022,20 +9058,26 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
                     .FontSize = PropFont.Size
-                    .FontBold = PropFont.Bold
-                    .FontItalic = PropFont.Italic
-                    .FontUnderline = PropFont.Underline
+                    .FontStyle = 0
+                    If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                    If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                    If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                     .FontCharset = PropFont.Charset
                 Else
                     .FontName = PropFontFixed.Name
                     .FontSize = PropFontFixed.Size
-                    .FontBold = PropFontFixed.Bold
-                    .FontItalic = PropFontFixed.Italic
-                    .FontUnderline = PropFontFixed.Underline
+                    .FontStyle = 0
+                    If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                    If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                    If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                     .FontCharset = PropFontFixed.Charset
                 End If
             End If
-            .FontStrikeThrough = Value
+            If Value = True Then
+                If Not (.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+            Else
+                If (.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT Then .FontStyle = .FontStyle And Not FS_STRIKEOUT
+            End If
             End With
         Next j
         End With
@@ -9059,7 +9101,7 @@ If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontName = vbNullStri
         CellFontUnderline = PropFontFixed.Underline
     End If
 Else
-    CellFontUnderline = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontUnderline
+    CellFontUnderline = CBool((VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
 End If
 End Property
 
@@ -9075,20 +9117,26 @@ If PropFillStyle = FlexFillStyleSingle Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
             .FontSize = PropFont.Size
-            .FontBold = PropFont.Bold
-            .FontItalic = PropFont.Italic
-            .FontStrikeThrough = PropFont.Strikethrough
+            .FontStyle = 0
+            If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+            If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+            If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
             .FontCharset = PropFont.Charset
         Else
             .FontName = PropFontFixed.Name
             .FontSize = PropFontFixed.Size
-            .FontBold = PropFontFixed.Bold
-            .FontItalic = PropFontFixed.Italic
-            .FontStrikeThrough = PropFontFixed.Strikethrough
+            .FontStyle = 0
+            If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+            If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+            If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
             .FontCharset = PropFontFixed.Charset
         End If
     End If
-    .FontUnderline = Value
+    If Value = True Then
+        If Not (.FontStyle And FS_UNDERLINE) = FS_UNDERLINE Then .FontStyle = .FontStyle Or FS_UNDERLINE
+    Else
+        If (.FontStyle And FS_UNDERLINE) = FS_UNDERLINE Then .FontStyle = .FontStyle And Not FS_UNDERLINE
+    End If
     End With
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
@@ -9101,20 +9149,26 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
                     .FontSize = PropFont.Size
-                    .FontBold = PropFont.Bold
-                    .FontItalic = PropFont.Italic
-                    .FontStrikeThrough = PropFont.Strikethrough
+                    .FontStyle = 0
+                    If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                    If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                    If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
                     .FontCharset = PropFont.Charset
                 Else
                     .FontName = PropFontFixed.Name
                     .FontSize = PropFontFixed.Size
-                    .FontBold = PropFontFixed.Bold
-                    .FontItalic = PropFontFixed.Italic
-                    .FontStrikeThrough = PropFontFixed.Strikethrough
+                    .FontStyle = 0
+                    If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                    If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                    If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
                     .FontCharset = PropFontFixed.Charset
                 End If
             End If
-            .FontUnderline = Value
+            If Value = True Then
+                If Not (.FontStyle And FS_UNDERLINE) = FS_UNDERLINE Then .FontStyle = .FontStyle Or FS_UNDERLINE
+            Else
+                If (.FontStyle And FS_UNDERLINE) = FS_UNDERLINE Then .FontStyle = .FontStyle And Not FS_UNDERLINE
+            End If
             End With
         Next j
         End With
@@ -9154,17 +9208,19 @@ If PropFillStyle = FlexFillStyleSingle Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
             .FontSize = PropFont.Size
-            .FontBold = PropFont.Bold
-            .FontItalic = PropFont.Italic
-            .FontStrikeThrough = PropFont.Strikethrough
-            .FontUnderline = PropFont.Underline
+            .FontStyle = 0
+            If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+            If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+            If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+            If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
         Else
             .FontName = PropFontFixed.Name
             .FontSize = PropFontFixed.Size
-            .FontBold = PropFontFixed.Bold
-            .FontItalic = PropFontFixed.Italic
-            .FontStrikeThrough = PropFontFixed.Strikethrough
-            .FontUnderline = PropFontFixed.Underline
+            .FontStyle = 0
+            If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+            If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+            If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+            If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
         End If
     End If
     .FontCharset = Value
@@ -9180,17 +9236,19 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
                     .FontSize = PropFont.Size
-                    .FontBold = PropFont.Bold
-                    .FontItalic = PropFont.Italic
-                    .FontStrikeThrough = PropFont.Strikethrough
-                    .FontUnderline = PropFont.Underline
+                    .FontStyle = 0
+                    If PropFont.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                    If PropFont.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                    If PropFont.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                    If PropFont.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                 Else
                     .FontName = PropFontFixed.Name
                     .FontSize = PropFontFixed.Size
-                    .FontBold = PropFontFixed.Bold
-                    .FontItalic = PropFontFixed.Italic
-                    .FontStrikeThrough = PropFontFixed.Strikethrough
-                    .FontUnderline = PropFontFixed.Underline
+                    .FontStyle = 0
+                    If PropFontFixed.Bold = True Then .FontStyle = .FontStyle Or FS_BOLD
+                    If PropFontFixed.Italic = True Then .FontStyle = .FontStyle Or FS_ITALIC
+                    If PropFontFixed.Strikethrough = True Then .FontStyle = .FontStyle Or FS_STRIKEOUT
+                    If PropFontFixed.Underline = True Then .FontStyle = .FontStyle Or FS_UNDERLINE
                 End If
             End If
             .FontCharset = Value
@@ -11670,10 +11728,10 @@ If Not .FontName = vbNullString Then
     Set TempFont = New StdFont
     TempFont.Name = .FontName
     TempFont.Size = .FontSize
-    TempFont.Bold = .FontBold
-    TempFont.Italic = .FontItalic
-    TempFont.Strikethrough = .FontStrikeThrough
-    TempFont.Underline = .FontUnderline
+    TempFont.Bold = CBool((.FontStyle And FS_BOLD) = FS_BOLD)
+    TempFont.Italic = CBool((.FontStyle And FS_ITALIC) = FS_ITALIC)
+    TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
+    TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
     TempFont.Charset = .FontCharset
     hFontTemp = CreateGDIFontFromOLEFont(TempFont)
     hFontOld = SelectObject(hDC, hFontTemp)
@@ -12317,10 +12375,10 @@ If Not .FontName = vbNullString Then
     Set TempFont = New StdFont
     TempFont.Name = .FontName
     TempFont.Size = .FontSize
-    TempFont.Bold = .FontBold
-    TempFont.Italic = .FontItalic
-    TempFont.Strikethrough = .FontStrikeThrough
-    TempFont.Underline = .FontUnderline
+    TempFont.Bold = CBool((.FontStyle And FS_BOLD) = FS_BOLD)
+    TempFont.Italic = CBool((.FontStyle And FS_ITALIC) = FS_ITALIC)
+    TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
+    TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
     TempFont.Charset = .FontCharset
     hFontTemp = CreateGDIFontFromOLEFont(TempFont)
     hFontOld = SelectObject(hDC, hFontTemp)
@@ -13326,10 +13384,10 @@ If hDC <> 0 Then
         Set TempFont = New StdFont
         TempFont.Name = .FontName
         TempFont.Size = .FontSize
-        TempFont.Bold = .FontBold
-        TempFont.Italic = .FontItalic
-        TempFont.Strikethrough = .FontStrikeThrough
-        TempFont.Underline = .FontUnderline
+        TempFont.Bold = CBool((.FontStyle And FS_BOLD) = FS_BOLD)
+        TempFont.Italic = CBool((.FontStyle And FS_ITALIC) = FS_ITALIC)
+        TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
+        TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
         TempFont.Charset = .FontCharset
         hFontTemp = CreateGDIFontFromOLEFont(TempFont)
         hFontOld = SelectObject(hDC, hFontTemp)
@@ -13394,10 +13452,10 @@ If hDC <> 0 Then
         Set TempFont = New StdFont
         TempFont.Name = .FontName
         TempFont.Size = .FontSize
-        TempFont.Bold = .FontBold
-        TempFont.Italic = .FontItalic
-        TempFont.Strikethrough = .FontStrikeThrough
-        TempFont.Underline = .FontUnderline
+        TempFont.Bold = CBool((.FontStyle And FS_BOLD) = FS_BOLD)
+        TempFont.Italic = CBool((.FontStyle And FS_ITALIC) = FS_ITALIC)
+        TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
+        TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
         TempFont.Charset = .FontCharset
         hFontTemp = CreateGDIFontFromOLEFont(TempFont)
         hFontOld = SelectObject(hDC, hFontTemp)
@@ -14384,10 +14442,10 @@ If hDC <> 0 Then
         Set TempFont = New StdFont
         TempFont.Name = .FontName
         TempFont.Size = .FontSize
-        TempFont.Bold = .FontBold
-        TempFont.Italic = .FontItalic
-        TempFont.Strikethrough = .FontStrikeThrough
-        TempFont.Underline = .FontUnderline
+        TempFont.Bold = CBool((.FontStyle And FS_BOLD) = FS_BOLD)
+        TempFont.Italic = CBool((.FontStyle And FS_ITALIC) = FS_ITALIC)
+        TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
+        TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
         TempFont.Charset = .FontCharset
         hFontTemp = CreateGDIFontFromOLEFont(TempFont)
         hFontOld = SelectObject(hDC, hFontTemp)
