@@ -1,5 +1,8 @@
 List of revisions:
 
+20-Jun-2023
+- Memory consumption of TCELL struct reduced from 64 bytes to 52 bytes.
+
 15-Jun-2023
 - Bugfix for FlexCheckBoxAlignmentRightCenter.
 
