@@ -15312,6 +15312,7 @@ End If
 End Function
 
 Private Function GetComboCueActive(ByVal iRow As Long, ByVal iCol As Long) As FlexComboCueConstants
+If PropRows < 1 Or PropCols < 1 Then Exit Function
 GetComboCueActive = GetCellComboCue(iRow, iCol)
 If GetComboCueActive = FlexComboCueNone Then
     If VBFlexGridComboCue <> FlexComboCueNone Then
