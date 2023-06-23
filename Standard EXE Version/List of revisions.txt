@@ -1,6 +1,7 @@
 List of revisions:
 
 23-Jun-2023
+- Bugfix in the CellFloodColor property.
 - Included GetComboCue/SetComboCue to the IVBFlexDataSource2 interface.
   Added FlexDataSourceComboCue enum to FlexDataSourceFlags.
 
