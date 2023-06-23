@@ -75,7 +75,7 @@ Private FlexCellCheckReasonMouse, FlexCellCheckReasonKeyboard
 Private FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentCenterTop, FlexCheckBoxAlignmentCenterCenter, FlexCheckBoxAlignmentCenterBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom, FlexCheckBoxAlignmentUsePictureAlignment
 Private FlexCheckBoxDrawModeNormal, FlexCheckBoxDrawModeOwnerDraw
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
-Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoData, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText, FlexDataSourceChecked
+Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoData, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText, FlexDataSourceComboCue, FlexDataSourceChecked
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
@@ -458,7 +458,8 @@ FlexDataSourceUnboundFixedColumns = 1
 FlexDataSourceNoData = 2
 FlexDataSourceNoFieldNames = 4
 FlexDataSourceToolTipText = 8
-FlexDataSourceChecked = 16
+FlexDataSourceComboCue = 16
+FlexDataSourceChecked = 32
 End Enum
 Private Type RECT
 Left As Long
@@ -13139,11 +13140,69 @@ VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText = TextIn
 End Sub
 
 Private Function GetCellComboCue(ByVal iRow As Long, ByVal iCol As Long) As FlexComboCueConstants
+
+#If ImplementFlexDataSource = True Then
+
+If VBFlexGridFlexDataSource2 Is Nothing Then
+    GetCellComboCue = VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue
+ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceComboCue) <> 0 Then
+    If iRow >= PropFixedRows Then
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            GetCellComboCue = VBFlexGridFlexDataSource2.GetComboCue(iCol, iRow - PropFixedRows)
+            If GetCellComboCue < FlexComboCueNone Or GetCellComboCue > FlexComboCueDisabledButton Then GetCellComboCue = FlexComboCueNone
+        Else
+            If iCol >= PropFixedCols Then
+                GetCellComboCue = VBFlexGridFlexDataSource2.GetComboCue(iCol - PropFixedCols, iRow - PropFixedRows)
+                If GetCellComboCue < FlexComboCueNone Or GetCellComboCue > FlexComboCueDisabledButton Then GetCellComboCue = FlexComboCueNone
+            Else
+                GetCellComboCue = VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue
+            End If
+        End If
+    Else
+        GetCellComboCue = VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue
+    End If
+Else
+    GetCellComboCue = VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue
+End If
+
+#Else
+
 GetCellComboCue = VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue
+
+#End If
+
 End Function
 
 Private Sub SetCellComboCue(ByVal iRow As Long, ByVal iCol As Long, ByVal NewValue As FlexComboCueConstants)
+
+#If ImplementFlexDataSource = True Then
+
+If VBFlexGridFlexDataSource2 Is Nothing Then
+    VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue = NewValue
+ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceComboCue) <> 0 Then
+    If iRow >= PropFixedRows Then
+        If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
+            VBFlexGridFlexDataSource2.SetComboCue iCol, iRow - PropFixedRows, NewValue
+        Else
+            If iCol >= PropFixedCols Then
+                VBFlexGridFlexDataSource2.SetComboCue iCol - PropFixedCols, iRow - PropFixedRows, NewValue
+            Else
+                VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue = NewValue
+            End If
+        End If
+    Else
+        VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue = NewValue
+    End If
+Else
+    VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue = NewValue
+End If
+
+#Else
+
 VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue = NewValue
+
+#End If
+
 End Sub
 
 Private Function GetCellChecked(ByVal iRow As Long, ByVal iCol As Long) As Integer
