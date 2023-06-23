@@ -8606,7 +8606,11 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-CellFloodColor = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FloodColor
+If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FloodColor = -1 Then
+    CellFloodColor = PropFloodColor
+Else
+    CellFloodColor = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).FloodColor
+End If
 End Property
 
 Public Property Let CellFloodColor(ByVal Value As Long)
