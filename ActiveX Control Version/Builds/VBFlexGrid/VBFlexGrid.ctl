@@ -8495,7 +8495,7 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-CellComboCue = GetCellComboCue(VBFlexGridRow, VBFlexGridCol)
+CellComboCue = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).ComboCue
 End Property
 
 Public Property Let CellComboCue(ByVal Value As FlexComboCueConstants)
@@ -8510,14 +8510,16 @@ Select Case Value
         Err.Raise 380
 End Select
 If PropFillStyle = FlexFillStyleSingle Then
-    Call SetCellComboCue(VBFlexGridRow, VBFlexGridCol, Value)
+    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).ComboCue = Value
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            Call SetCellComboCue(i, j, Value)
+            .Cols(j).ComboCue = Value
         Next j
+        End With
     Next i
 End If
 Call RedrawGrid
@@ -13142,14 +13144,6 @@ VBFlexGridCells.Rows(iRow).Cols(iCol).ToolTipText = TextIn
 
 End Sub
 
-Private Function GetCellComboCue(ByVal iRow As Long, ByVal iCol As Long) As FlexComboCueConstants
-GetCellComboCue = VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue
-End Function
-
-Private Sub SetCellComboCue(ByVal iRow As Long, ByVal iCol As Long, ByVal NewValue As FlexComboCueConstants)
-VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue = NewValue
-End Sub
-
 Private Function GetCellChecked(ByVal iRow As Long, ByVal iCol As Long) As Integer
 If (VBFlexGridColsInfo(iCol).State And CLIS_CHECKBOXES) = 0 Then
     GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Checked
@@ -15317,7 +15311,7 @@ End Function
 
 Private Function GetComboCueActive(ByVal iRow As Long, ByVal iCol As Long) As FlexComboCueConstants
 If PropRows < 1 Or PropCols < 1 Then Exit Function
-GetComboCueActive = GetCellComboCue(iRow, iCol)
+GetComboCueActive = VBFlexGridCells.Rows(iRow).Cols(iCol).ComboCue
 If GetComboCueActive = FlexComboCueNone Then
     If VBFlexGridComboCue <> FlexComboCueNone Then
         If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then GetComboCueActive = VBFlexGridComboCue
