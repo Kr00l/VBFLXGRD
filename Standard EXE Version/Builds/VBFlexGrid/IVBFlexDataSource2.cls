@@ -25,14 +25,6 @@ Public Sub SetToolTipText(ByVal Field As Long, ByVal Record As Long, ByVal NewVa
 Attribute SetToolTipText.VB_Description = "Interface method for updating the new tool tip text supplied by the consumer."
 End Sub
 
-Public Function GetComboCue(ByVal Field As Long, ByVal Record As Long) As Long
-Attribute GetComboCue.VB_Description = "Interface function for providing combo cue to the consumer."
-End Function
-
-Public Sub SetComboCue(ByVal Field As Long, ByVal Record As Long, ByVal NewValue As Long)
-Attribute SetComboCue.VB_Description = "Interface method for updating the new combo cue supplied by the consumer."
-End Sub
-
 Public Function GetChecked(ByVal Field As Long, ByVal Record As Long) As Integer
 Attribute GetChecked.VB_Description = "Interface function for providing check mark to the consumer."
 End Function
