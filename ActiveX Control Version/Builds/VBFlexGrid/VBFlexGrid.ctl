@@ -882,6 +882,7 @@ Attribute OLESetData.VB_Description = "Occurs at the OLE drag/drop source contro
 Public Event OLEStartDrag(Data As DataObject, AllowedEffects As Long)
 Attribute OLEStartDrag.VB_Description = "Occurs when an OLE drag/drop operation is initiated either manually or automatically."
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
+Private Declare Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
 Private Declare Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As Long, ByVal lpWindowName As Long, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As Long, ByVal hMenu As Long, ByVal hInstance As Long, ByRef lpParam As Any) As Long
 Private Declare Function lstrcmp Lib "kernel32" Alias "lstrcmpW" (ByVal lpString1 As Long, ByVal lpString2 As Long) As Long
 Private Declare Function lstrcmpi Lib "kernel32" Alias "lstrcmpiW" (ByVal lpString1 As Long, ByVal lpString2 As Long) As Long
@@ -6116,19 +6117,21 @@ End Property
 Public Property Let RowPosition(ByVal Index As Long, ByVal Value As Long)
 If (Index < 0 Or Index > (PropRows - 1)) Or (Value < 0 Or Value > (PropRows - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
 If Index = Value Then Exit Property
-Dim iRow As Long, Swap As TCOLS
+Dim iRow As Long, Swap As TCOLS, Length As Long
+Length = LenB(Swap)
 With VBFlexGridCells
-LSet Swap = .Rows(Index)
+CopyMemory ByVal VarPtr(Swap), ByVal VarPtr(.Rows(Index)), Length
 If Index > Value Then
     For iRow = Index To (Value + 1) Step -1
-        LSet .Rows(iRow) = .Rows(iRow - 1)
+        CopyMemory ByVal VarPtr(.Rows(iRow)), ByVal VarPtr(.Rows(iRow - 1)), Length
     Next iRow
 ElseIf Index < Value Then
     For iRow = Index To (Value - 1)
-        LSet .Rows(iRow) = .Rows(iRow + 1)
+        CopyMemory ByVal VarPtr(.Rows(iRow)), ByVal VarPtr(.Rows(iRow + 1)), Length
     Next iRow
 End If
-LSet .Rows(Value) = Swap
+CopyMemory ByVal VarPtr(.Rows(Value)), ByVal VarPtr(Swap), Length
+ZeroMemory ByVal VarPtr(Swap), Length
 End With
 Dim RCP As TROWCOLPARAMS
 With RCP
@@ -18573,13 +18576,14 @@ End If
 End Sub
 
 Private Sub InplaceMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TCOLS, ByVal Sort As FlexSortConstants)
-Dim Temp() As TCOLS, Cmp As Long, Dst As Long
+Dim Blank As TCOLS, Length As Long, Temp() As TCOLS, Cmp As Long, Dst As Long
 Dim i As Long, j As Long, iCol As Long
 Dim Dbl1 As Double, Dbl2 As Double
-ReDim Temp(Middle - Left) As TCOLS
+Length = LenB(Blank)
+ReDim Temp(0 To (Middle - Left)) As TCOLS
 j = 0
 For i = Left To Middle
-    LSet Temp(j) = Data(i)
+    CopyMemory ByVal VarPtr(Temp(j)), ByVal VarPtr(Data(i)), Length
     j = j + 1
 Next i
 j = 0
@@ -18637,28 +18641,21 @@ Do While i <= Right And j <= UBound(Temp)
             Cmp = Sgn(Date1 - Date2)
             If Sort = FlexSortDateDescending Then Cmp = -Cmp
         Case FlexSortCustomText
-            RaiseEvent CompareText(Data(i).Cols(Col).Text, Temp(j).Cols(Col).Text, Col, Cmp)
+            RaiseEvent CompareText(StrPtr(Data(i).Cols(Col).Text), StrPtr(Temp(j).Cols(Col).Text), Col, Cmp)
     End Select
     If Cmp < 0 Then
-        LSet Data(Dst).RowInfo = Data(i).RowInfo
-        For iCol = 0 To (PropCols - 1)
-            LSet Data(Dst).Cols(iCol) = Data(i).Cols(iCol)
-        Next iCol
+        CopyMemory ByVal VarPtr(Data(Dst)), ByVal VarPtr(Data(i)), Length
         i = i + 1
     Else
-        LSet Data(Dst).RowInfo = Temp(j).RowInfo
-        For iCol = 0 To (PropCols - 1)
-            LSet Data(Dst).Cols(iCol) = Temp(j).Cols(iCol)
-        Next iCol
+        CopyMemory ByVal VarPtr(Data(Dst)), ByVal VarPtr(Temp(j)), Length
+        ZeroMemory ByVal VarPtr(Temp(j)), Length
         j = j + 1
     End If
     Dst = Dst + 1
 Loop
 Do While j <= UBound(Temp)
-    LSet Data(Dst).RowInfo = Temp(j).RowInfo
-    For iCol = 0 To (PropCols - 1)
-        LSet Data(Dst).Cols(iCol) = Temp(j).Cols(iCol)
-    Next iCol
+    CopyMemory ByVal VarPtr(Data(Dst)), ByVal VarPtr(Temp(j)), Length
+    ZeroMemory ByVal VarPtr(Temp(j)), Length
     Dst = Dst + 1
     j = j + 1
 Loop
@@ -18675,7 +18672,8 @@ End If
 End Sub
 
 Private Sub BubbleSortIter(ByVal First As Long, ByVal Last As Long, ByVal Col As Long, ByRef Data() As TCOLS)
-Dim SwapRowInfo As TROWINFO, SwapCell As TCELL, Cmp As Long
+Dim Swap As TCOLS, Length As Long, Cmp As Long
+Length = LenB(Swap)
 Dim i As Long, j As Long, iCol As Long
 Do While Last > First
     i = First
@@ -18683,14 +18681,10 @@ Do While Last > First
         Cmp = 0
         RaiseEvent Compare(j, j + 1, Col, Cmp)
         If Cmp > 0 Then
-            LSet SwapRowInfo = Data(j + 1).RowInfo
-            LSet Data(j + 1).RowInfo = Data(j).RowInfo
-            LSet Data(j).RowInfo = SwapRowInfo
-            For iCol = 0 To (PropCols - 1)
-                LSet SwapCell = Data(j + 1).Cols(iCol)
-                LSet Data(j + 1).Cols(iCol) = Data(j).Cols(iCol)
-                LSet Data(j).Cols(iCol) = SwapCell
-            Next iCol
+            CopyMemory ByVal VarPtr(Swap), ByVal VarPtr(Data(j + 1)), Length
+            CopyMemory ByVal VarPtr(Data(j + 1)), ByVal VarPtr(Data(j)), Length
+            CopyMemory ByVal VarPtr(Data(j)), ByVal VarPtr(Swap), Length
+            ZeroMemory ByVal VarPtr(Swap), Length
             i = j
         End If
     Next j
