@@ -1,5 +1,9 @@
 List of revisions:
 
+24-Jun-2023
+- Major performance boost for InplaceMergeSort/BubbleSortIter (.Sort) and .RowPosition property.
+  The TCOL elements are now swapped by the pointers only and not by copying the content over.
+
 23-Jun-2023
 - Bugfix in the CellFloodColor property.
 
