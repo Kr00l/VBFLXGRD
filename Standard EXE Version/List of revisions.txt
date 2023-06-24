@@ -2,8 +2,6 @@ List of revisions:
 
 23-Jun-2023
 - Bugfix in the CellFloodColor property.
-- Included GetComboCue/SetComboCue to the IVBFlexDataSource2 interface.
-  Added FlexDataSourceComboCue enum to FlexDataSourceFlags.
 
 20-Jun-2023
 - Memory consumption of TCELL struct reduced from 64 bytes to 52 bytes.
