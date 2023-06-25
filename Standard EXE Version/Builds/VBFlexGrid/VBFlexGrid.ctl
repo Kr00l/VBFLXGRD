@@ -6525,16 +6525,18 @@ End Property
 Public Property Let ColPosition(ByVal Index As Long, ByVal Value As Long)
 If (Index < 0 Or Index > (PropCols - 1)) Or (Value < 0 Or Value > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
 If Index = Value Then Exit Property
-Dim iRow As Long, iCol As Long, Swap1 As TCELL, Swap2 As TCOLINFO
-LSet Swap2 = VBFlexGridColsInfo(Index)
+Dim iRow As Long, iCol As Long, Swap As TCELL, Length As Long, SwapColInfo As TCOLINFO
+Length = LenB(Swap)
+LSet SwapColInfo = VBFlexGridColsInfo(Index)
 If Index > Value Then
     For iRow = 0 To (PropRows - 1)
         With VBFlexGridCells.Rows(iRow)
-        LSet Swap1 = .Cols(Index)
+        CopyMemory ByVal VarPtr(Swap), ByVal VarPtr(.Cols(Index)), Length
         For iCol = Index To (Value + 1) Step -1
-            LSet .Cols(iCol) = .Cols(iCol - 1)
+            CopyMemory ByVal VarPtr(.Cols(iCol)), ByVal VarPtr(.Cols(iCol - 1)), Length
         Next iCol
-        LSet .Cols(Value) = Swap1
+        CopyMemory ByVal VarPtr(.Cols(Value)), ByVal VarPtr(Swap), Length
+        ZeroMemory ByVal VarPtr(Swap), Length
         End With
     Next iRow
     For iCol = Index To (Value + 1) Step -1
@@ -6543,18 +6545,19 @@ If Index > Value Then
 ElseIf Index < Value Then
     For iRow = 0 To (PropRows - 1)
         With VBFlexGridCells.Rows(iRow)
-        LSet Swap1 = .Cols(Index)
+        CopyMemory ByVal VarPtr(Swap), ByVal VarPtr(.Cols(Index)), Length
         For iCol = Index To (Value - 1)
-            LSet .Cols(iCol) = .Cols(iCol + 1)
+            CopyMemory ByVal VarPtr(.Cols(iCol)), ByVal VarPtr(.Cols(iCol + 1)), Length
         Next iCol
-        LSet .Cols(Value) = Swap1
+        CopyMemory ByVal VarPtr(.Cols(Value)), ByVal VarPtr(Swap), Length
+        ZeroMemory ByVal VarPtr(Swap), Length
         End With
     Next iRow
     For iCol = Index To (Value - 1)
         LSet VBFlexGridColsInfo(iCol) = VBFlexGridColsInfo(iCol + 1)
     Next iCol
 End If
-LSet VBFlexGridColsInfo(Value) = Swap2
+LSet VBFlexGridColsInfo(Value) = SwapColInfo
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_LEFTCOL
@@ -8455,7 +8458,12 @@ End Property
 Public Property Get CellToolTipText() As String
 Attribute CellToolTipText.VB_Description = "Returns/sets the tool tip text in a cell or in a range of selected cells. Requires that the show tips property is set to true."
 Attribute CellToolTipText.VB_MemberFlags = "400"
-If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then Call GetCellToolTipText(VBFlexGridRow, VBFlexGridCol, CellToolTipText)
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+Call GetCellToolTipText(VBFlexGridRow, VBFlexGridCol, CellToolTipText)
 End Property
 
 Public Property Let CellToolTipText(ByVal Value As String)
