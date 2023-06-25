@@ -3232,7 +3232,6 @@ ElseIf Value < 1 And PropRows > 0 Then
     PropFrozenRows = 0
     Call EraseFlexGridCells
 ElseIf Value <> PropRows And PropCols > 0 Then
-    ReDim Preserve VBFlexGridCells.Rows(0 To (Value - 1)) As TCOLS
     If Value > PropRows Then
         Dim i As Long
         ReDim Preserve VBFlexGridCells.Rows(0 To (Value - 1)) As TCOLS
@@ -3241,6 +3240,7 @@ ElseIf Value <> PropRows And PropCols > 0 Then
             LSet VBFlexGridCells.Rows(i) = VBFlexGridDefaultCols
         Next i
     Else
+        ReDim Preserve VBFlexGridCells.Rows(0 To (Value - 1)) As TCOLS
         RowsPerPage = GetRowsPerPageRev(Value - 1)
     End If
     PropRows = Value
