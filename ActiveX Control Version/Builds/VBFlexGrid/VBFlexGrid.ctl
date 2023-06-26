@@ -675,6 +675,19 @@ End Type
 Private Type TMERGEDRAWINFO
 Row As TMERGEDRAWROWINFO
 End Type
+Private Const CFM_TEXTSTYLE As Long = &H1
+Private Const CFM_ALIGNMENT As Long = &H2
+Private Const CFM_PICTURE As Long = &H4
+Private Const CFM_PICTURERENDERFLAG As Long = &H8
+Private Const CFM_PICTUREALIGNMENT As Long = &H10
+Private Const CFM_BACKCOLOR As Long = &H20
+Private Const CFM_FORECOLOR As Long = &H40
+Private Const CFM_TOOLTIPTEXT As Long = &H80
+Private Const CFM_COMBOCUE As Long = &H100
+Private Const CFM_CHECKED As Long = &H200
+Private Const CFM_FLOODPERCENT As Long = &H400
+Private Const CFM_FLOODCOLOR As Long = &H800
+Private Const CFM_FONT As Long = &H1000
 Private Const FS_BOLD As Integer = &H1, FS_ITALIC As Integer = &H2, FS_UNDERLINE As Integer = &H4, FS_STRIKEOUT As Integer = &H8
 Private Type TCELLFMTG
 TextStyle As Integer ' As FlexTextStyleConstants
@@ -685,7 +698,7 @@ PictureAlignment As Integer ' As FlexPictureAlignmentConstants
 BackColor As Long
 ForeColor As Long
 ToolTipText As String
-ComboCue As FlexComboCueConstants
+ComboCue As Long ' As FlexComboCueConstants
 Checked As Integer
 FloodPercent As Integer
 FloodColor As Long
@@ -694,11 +707,29 @@ FontSize As Single
 FontStyle As Integer
 FontCharset As Integer
 End Type
+Private Type TLPCELLFMTG
+TextStyle As Integer ' As FlexTextStyleConstants
+Alignment As Integer ' As FlexAlignmentConstants
+lpPicture As Long
+PictureRenderFlag As Integer
+PictureAlignment As Integer ' As FlexPictureAlignmentConstants
+BackColor As Long
+ForeColor As Long
+lpToolTipText As Long
+ComboCue As Long ' As FlexComboCueConstants
+Checked As Integer
+FloodPercent As Integer
+FloodColor As Long
+lpFontName As Long
+FontSize As Single
+FontStyle As Integer
+FontCharset As Integer
+End Type
 Private Const CELL_TEXT_WIDTH_PADDING_DIP As Long = 3
 Private Const CELL_TEXT_HEIGHT_PADDING_DIP As Long = 1
 Private Type TCELL
 Text As String
-Fmtg As TCELLFMTG
+lpFmtg As Long
 End Type
 Private Const RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH As Long = 4
 Private Const ROWINFO_HEIGHT_SPACING_DIP As Long = 3
@@ -887,6 +918,12 @@ Attribute OLEStartDrag.VB_Description = "Occurs when an OLE drag/drop operation 
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
 Private Declare Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As Long, ByVal lpWindowName As Long, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As Long, ByVal hMenu As Long, ByVal hInstance As Long, ByRef lpParam As Any) As Long
+Private Declare Function HeapAlloc Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal dwBytes As Long) As Long
+Private Declare Function HeapFree Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal lpMem As Long) As Long
+Private Declare Function GetProcessHeap Lib "kernel32" () As Long
+Private Declare Function SysAllocString Lib "oleaut32" (ByVal lpString As Long) As Long
+Private Declare Function SysFreeString Lib "oleaut32" (ByVal lpString As Long) As Long
+Private Declare Function SysReAllocString Lib "oleaut32" (ByVal pbString As Long, ByVal pszStrPtr As Long) As Long
 Private Declare Function lstrcmp Lib "kernel32" Alias "lstrcmpW" (ByVal lpString1 As Long, ByVal lpString2 As Long) As Long
 Private Declare Function lstrcmpi Lib "kernel32" Alias "lstrcmpiW" (ByVal lpString1 As Long, ByVal lpString2 As Long) As Long
 Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
@@ -1046,6 +1083,9 @@ Private Const SWP_NOZORDER As Long = &H4
 Private Const SWP_NOACTIVATE As Long = &H10
 Private Const SWP_SHOWWINDOW As Long = &H40
 Private Const SWP_NOCOPYBITS As Long = &H100
+Private Const PAGE_READWRITE As Long = 4
+Private Const MEM_COMMIT As Long = &H1000
+Private Const MEM_RELEASE As Long = &H8000&
 Private Const HWND_DESKTOP As Long = &H0
 Private Const COLOR_WINDOW As Long = 5
 Private Const COLOR_WINDOWTEXT As Long = 8
@@ -1340,6 +1380,7 @@ Private VBFlexGridPixelMetrics As TPIXELMETRICS
 Private VBFlexGridDrawInfo As TDRAWINFO
 Private VBFlexGridMergeDrawInfo As TMERGEDRAWINFO
 Private VBFlexGridDefaultCell As TCELL
+Private VBFlexGridDefaultCellFmtg As TCELLFMTG, VBFlexGridDefaultLpCellFmtg As TLPCELLFMTG
 Private VBFlexGridDefaultRowInfo As TROWINFO
 Private VBFlexGridDefaultColInfo As TCOLINFO
 Private VBFlexGridDefaultCols As TCOLS
@@ -1637,7 +1678,15 @@ With VBFlexGridPixelMetrics
 .ComboButtonWidth = GetSystemMetrics(SM_CXVSCROLL)
 .CheckBoxSize = (13 * PixelsPerDIP_X())
 End With
-With VBFlexGridDefaultCell.Fmtg
+With VBFlexGridDefaultCellFmtg
+.TextStyle = -1
+.Alignment = -1
+.BackColor = -1
+.ForeColor = -1
+.Checked = -1
+.FloodColor = -1
+End With
+With VBFlexGridDefaultLpCellFmtg
 .TextStyle = -1
 .Alignment = -1
 .BackColor = -1
@@ -3232,14 +3281,19 @@ ElseIf Value < 1 And PropRows > 0 Then
     PropFrozenRows = 0
     Call EraseFlexGridCells
 ElseIf Value <> PropRows And PropCols > 0 Then
+    Dim i As Long, j As Long
     If Value > PropRows Then
-        Dim i As Long
         ReDim Preserve VBFlexGridCells.Rows(0 To (Value - 1)) As TCOLS
         PropRows = PropRows + 1 ' First new row.
         For i = (PropRows - 1) To (Value - 1)
             LSet VBFlexGridCells.Rows(i) = VBFlexGridDefaultCols
         Next i
     Else
+        For i = ((Value - 1) + 1) To (PropRows - 1)
+            For j = 0 To (PropCols - 1)
+                'Call FreeCellFmtg(i, j)
+            Next j
+        Next i
         ReDim Preserve VBFlexGridCells.Rows(0 To (Value - 1)) As TCOLS
         RowsPerPage = GetRowsPerPageRev(Value - 1)
     End If
@@ -3344,7 +3398,12 @@ ElseIf Value <> PropCols And PropRows > 0 Then
         Next j
     Else
         For i = 0 To (PropRows - 1)
-            ReDim Preserve VBFlexGridCells.Rows(i).Cols(0 To (Value - 1)) As TCELL
+            With VBFlexGridCells.Rows(i)
+            For j = ((Value - 1) + 1) To (PropCols - 1)
+                Call FreeCellFmtg(.Cols(j).lpFmtg)
+            Next j
+            ReDim Preserve .Cols(0 To (Value - 1)) As TCELL
+            End With
         Next i
         ReDim Preserve VBFlexGridColsInfo(0 To (Value - 1)) As TCOLINFO
         ReDim Preserve VBFlexGridDefaultCols.Cols(0 To (Value - 1)) As TCELL
@@ -4938,8 +4997,10 @@ Dim dwStyle As Long, dwExStyle As Long
 dwStyle = WS_CHILD
 dwExStyle = 0
 If VBFlexGridRTLReading = True Or VBFlexGridRTLLayout = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING Or WS_EX_LEFTSCROLLBAR
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridEditRow, VBFlexGridEditCol, CFM_ALIGNMENT Or CFM_BACKCOLOR Or CFM_FORECOLOR Or CFM_FONT, CellFmtg)
 Dim Alignment As FlexAlignmentConstants
-With VBFlexGridCells.Rows(VBFlexGridEditRow).Cols(VBFlexGridEditCol).Fmtg
+With CellFmtg
 If .Alignment = -1 Then
     If IsFixedCell = False Then
         Alignment = VBFlexGridColsInfo(VBFlexGridEditCol).Alignment
@@ -5026,7 +5087,7 @@ If VBFlexGridComboModeActive <> FlexComboModeNone Then
 End If
 VBFlexGridEditHandle = CreateWindowEx(dwExStyle, StrPtr("Edit"), 0, dwStyle, EditRect.Left, EditRect.Top, (EditRect.Right - EditRect.Left), (EditRect.Bottom - EditRect.Top), VBFlexGridHandle, ID_EDITCHILD, App.hInstance, ByVal 0&)
 If VBFlexGridEditHandle <> 0 Then
-    With VBFlexGridCells.Rows(VBFlexGridEditRow).Cols(VBFlexGridEditCol).Fmtg
+    With CellFmtg
     Dim hFont As Long
     If .FontName = vbNullString Then
         If IsFixedCell = False Then
@@ -5465,12 +5526,14 @@ Else
     If PropRows > 0 Then
         PropRows = PropRows + 1
         ReDim Preserve VBFlexGridCells.Rows(0 To (PropRows - 1)) As TCOLS
-        Dim iRow As Long
+        Dim iRow As Long, Blank As TCOLS, Length As Long
+        Length = LenB(Blank)
         If IndexLong < (PropRows - 1) Then
             For iRow = ((PropRows - 1) - 1) To IndexLong Step -1
-                LSet VBFlexGridCells.Rows(iRow + 1) = VBFlexGridCells.Rows(iRow)
+                CopyMemory ByVal VarPtr(VBFlexGridCells.Rows(iRow + 1)), ByVal VarPtr(VBFlexGridCells.Rows(iRow)), Length
             Next iRow
         End If
+        ZeroMemory ByVal VarPtr(VBFlexGridCells.Rows(IndexLong)), Length
         LSet VBFlexGridCells.Rows(IndexLong) = VBFlexGridDefaultCols
     Else
         PropRows = PropRows + 1
@@ -5538,12 +5601,17 @@ Else
     Dim RowsPerPage As Long
     RowsPerPage = -1
     If PropCols > 0 Then
-        Dim iRow As Long
+        Dim iRow As Long, iCol As Long, Blank As TCOLS, Length As Long
+        Length = LenB(Blank)
         If Index < ((PropRows - 1) + 1) Then
+            For iCol = 0 To (PropCols - 1)
+                Call FreeCellFmtg(VBFlexGridCells.Rows(Index).Cols(iCol).lpFmtg)
+            Next iCol
             For iRow = Index To (PropRows - 1)
-                LSet VBFlexGridCells.Rows(iRow) = VBFlexGridCells.Rows(iRow + 1)
+                CopyMemory ByVal VarPtr(VBFlexGridCells.Rows(iRow)), ByVal VarPtr(VBFlexGridCells.Rows(iRow + 1)), Length
             Next iRow
         End If
+        ZeroMemory ByVal VarPtr(VBFlexGridCells.Rows(((PropRows - 1) + 1))), Length
         ReDim Preserve VBFlexGridCells.Rows(0 To (PropRows - 1)) As TCOLS
         RowsPerPage = GetRowsPerPageRev(PropRows - 1)
     End If
@@ -5629,9 +5697,13 @@ Select Case Where
     Case FlexClearEverywhere
         Select Case What
             Case FlexClearEverything
-                ' This is the default setting. It is also the fastest and most efficient approach.
                 For iRow = 0 To (PropRows - 1)
-                    VBFlexGridCells.Rows(iRow).Cols() = VBFlexGridDefaultCols.Cols()
+                    With VBFlexGridCells.Rows(iRow)
+                    For iCol = 0 To (PropCols - 1)
+                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                    Next iCol
+                    .Cols() = VBFlexGridDefaultCols.Cols()
+                    End With
                 Next iRow
             Case FlexClearText
                 For iRow = 0 To (PropRows - 1)
@@ -5641,20 +5713,30 @@ Select Case Where
                 Next iRow
             Case FlexClearFormatting
                 For iRow = 0 To (PropRows - 1)
+                    With VBFlexGridCells.Rows(iRow)
                     For iCol = 0 To (PropCols - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg = VBFlexGridDefaultCell.Fmtg
+                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
                     Next iCol
+                    End With
                 Next iRow
         End Select
     Case FlexClearFixed
         Select Case What
             Case FlexClearEverything
                 For iRow = 0 To (PropFixedRows - 1)
-                    VBFlexGridCells.Rows(iRow).Cols() = VBFlexGridDefaultCols.Cols()
+                    With VBFlexGridCells.Rows(iRow)
+                    For iCol = 0 To (PropCols - 1)
+                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                    Next iCol
+                    .Cols() = VBFlexGridDefaultCols.Cols()
+                    End With
                 Next iRow
                 For iCol = 0 To (PropFixedCols - 1)
                     For iRow = PropFixedRows To (PropRows - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                        With VBFlexGridCells.Rows(iRow)
+                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        LSet .Cols(iCol) = VBFlexGridDefaultCell
+                        End With
                     Next iRow
                 Next iCol
             Case FlexClearText
@@ -5670,13 +5752,15 @@ Select Case Where
                 Next iCol
             Case FlexClearFormatting
                 For iRow = 0 To (PropFixedRows - 1)
+                    With VBFlexGridCells.Rows(iRow)
                     For iCol = 0 To (PropCols - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg = VBFlexGridDefaultCell.Fmtg
+                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
                     Next iCol
+                    End With
                 Next iRow
                 For iCol = 0 To (PropFixedCols - 1)
                     For iRow = PropFixedRows To (PropRows - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg = VBFlexGridDefaultCell.Fmtg
+                        Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
                     Next iRow
                 Next iCol
         End Select
@@ -5684,9 +5768,12 @@ Select Case Where
         Select Case What
             Case FlexClearEverything
                 For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
+                    With VBFlexGridCells.Rows(iRow)
                     For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        LSet .Cols(iCol) = VBFlexGridDefaultCell
                     Next iCol
+                    End With
                 Next iRow
             Case FlexClearText
                 For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
@@ -5697,7 +5784,7 @@ Select Case Where
             Case FlexClearFormatting
                 For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
                     For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg = VBFlexGridDefaultCell.Fmtg
+                        Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
                     Next iCol
                 Next iRow
         End Select
@@ -5705,9 +5792,12 @@ Select Case Where
         Select Case What
             Case FlexClearEverything
                 For iRow = PropFixedRows To (PropRows - 1)
+                    With VBFlexGridCells.Rows(iRow)
                     For iCol = PropFixedCols To (PropCols - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        LSet .Cols(iCol) = VBFlexGridDefaultCell
                     Next iCol
+                    End With
                 Next iRow
             Case FlexClearText
                 For iRow = PropFixedRows To (PropRows - 1)
@@ -5718,7 +5808,7 @@ Select Case Where
             Case FlexClearFormatting
                 For iRow = PropFixedRows To (PropRows - 1)
                     For iCol = PropFixedCols To (PropCols - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg = VBFlexGridDefaultCell.Fmtg
+                        Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
                     Next iCol
                 Next iRow
         End Select
@@ -5726,13 +5816,19 @@ Select Case Where
         Select Case What
             Case FlexClearEverything
                 For iRow = PropFixedRows To ((PropFixedRows + PropFrozenRows) - 1)
+                    With VBFlexGridCells.Rows(iRow)
                     For iCol = PropFixedCols To (PropCols - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        LSet .Cols(iCol) = VBFlexGridDefaultCell
                     Next iCol
+                    End With
                 Next iRow
                 For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
                     For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                        With VBFlexGridCells.Rows(iRow)
+                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        LSet .Cols(iCol) = VBFlexGridDefaultCell
+                        End With
                     Next iRow
                 Next iCol
             Case FlexClearText
@@ -5749,12 +5845,12 @@ Select Case Where
             Case FlexClearFormatting
                 For iRow = PropFixedRows To ((PropFixedRows + PropFrozenRows) - 1)
                     For iCol = PropFixedCols To (PropCols - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg = VBFlexGridDefaultCell.Fmtg
+                        Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
                     Next iCol
                 Next iRow
                 For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
                     For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg = VBFlexGridDefaultCell.Fmtg
+                        Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
                     Next iRow
                 Next iCol
         End Select
@@ -5765,7 +5861,10 @@ Select Case Where
             Case FlexClearEverything
                 For iRow = SelRange.TopRow To SelRange.BottomRow
                     For iCol = SelRange.LeftCol To SelRange.RightCol
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol) = VBFlexGridDefaultCell
+                        With VBFlexGridCells.Rows(iRow)
+                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        LSet .Cols(iCol) = VBFlexGridDefaultCell
+                        End With
                     Next iCol
                 Next iRow
             Case FlexClearText
@@ -5777,7 +5876,7 @@ Select Case Where
             Case FlexClearFormatting
                 For iRow = SelRange.TopRow To SelRange.BottomRow
                     For iCol = SelRange.LeftCol To SelRange.RightCol
-                        LSet VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg = VBFlexGridDefaultCell.Fmtg
+                        Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
                     Next iCol
                 Next iRow
         End Select
@@ -8204,14 +8303,16 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.TextStyle = -1 Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_TEXTSTYLE, CellFmtg)
+If CellFmtg.TextStyle = -1 Then
     If VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1) Then
         CellTextStyle = PropTextStyle
     Else
         CellTextStyle = PropTextStyleFixed
     End If
 Else
-    CellTextStyle = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.TextStyle
+    CellTextStyle = CellFmtg.TextStyle
 End If
 End Property
 
@@ -8226,17 +8327,17 @@ Select Case Value
     Case Else
         Err.Raise 380
 End Select
+Dim CellFmtg As TCELLFMTG
+CellFmtg.TextStyle = Value
 If PropFillStyle = FlexFillStyleSingle Then
-    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.TextStyle = Value
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_TEXTSTYLE, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            .Cols(j).Fmtg.TextStyle = Value
+            Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_TEXTSTYLE, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -8250,7 +8351,9 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.Alignment = -1 Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_ALIGNMENT, CellFmtg)
+If CellFmtg.Alignment = -1 Then
     If VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1) Then
         CellAlignment = VBFlexGridColsInfo(VBFlexGridCol).Alignment
     Else
@@ -8261,7 +8364,7 @@ If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.Alignment = -1 T
         End If
     End If
 Else
-    CellAlignment = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.Alignment
+    CellAlignment = CellFmtg.Alignment
 End If
 End Property
 
@@ -8276,17 +8379,17 @@ Select Case Value
     Case Else
         Err.Raise Number:=30005, Description:="Invalid Alignment value"
 End Select
+Dim CellFmtg As TCELLFMTG
+CellFmtg.Alignment = Value
 If PropFillStyle = FlexFillStyleSingle Then
-    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.Alignment = Value
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_ALIGNMENT, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            .Cols(j).Fmtg.Alignment = Value
+            Call SetCellFmtg(i, j, CFM_ALIGNMENT, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -8300,7 +8403,9 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-Set CellPicture = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.Picture
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_PICTURE, CellFmtg)
+Set CellPicture = CellFmtg.Picture
 End Property
 
 Public Property Let CellPicture(ByVal Value As IPictureDisp)
@@ -8313,25 +8418,22 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
+Dim CellFmtg As TCELLFMTG
 Set UserControl.Picture = Value
+Set CellFmtg.Picture = UserControl.Picture
+Set UserControl.Picture = Nothing
+CellFmtg.PictureRenderFlag = 0
 If PropFillStyle = FlexFillStyleSingle Then
-    With VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg
-    Set .Picture = UserControl.Picture
-    .PictureRenderFlag = 0
-    End With
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_PICTURE Or CFM_PICTURERENDERFLAG, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            Set .Cols(j).Fmtg.Picture = UserControl.Picture
-            .Cols(j).Fmtg.PictureRenderFlag = 0
+            Call SetCellFmtg(i, j, CFM_PICTURE Or CFM_PICTURERENDERFLAG, CellFmtg)
         Next j
-        End With
     Next i
 End If
-Set UserControl.Picture = Nothing
 Call RedrawGrid
 End Property
 
@@ -8343,7 +8445,9 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-CellPictureAlignment = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.PictureAlignment
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_PICTUREALIGNMENT, CellFmtg)
+CellPictureAlignment = CellFmtg.PictureAlignment
 End Property
 
 Public Property Let CellPictureAlignment(ByVal Value As FlexPictureAlignmentConstants)
@@ -8357,17 +8461,17 @@ Select Case Value
     Case Else
         Err.Raise Number:=30005, Description:="Invalid Alignment value"
 End Select
+Dim CellFmtg As TCELLFMTG
+CellFmtg.PictureAlignment = Value
 If PropFillStyle = FlexFillStyleSingle Then
-    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.PictureAlignment = Value
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_PICTUREALIGNMENT, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            .Cols(j).Fmtg.PictureAlignment = Value
+            Call SetCellFmtg(i, j, CFM_PICTUREALIGNMENT, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -8381,14 +8485,16 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.BackColor = -1 Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_BACKCOLOR, CellFmtg)
+If CellFmtg.BackColor = -1 Then
     If VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1) Then
         CellBackColor = PropBackColor
     Else
         CellBackColor = PropBackColorFixed
     End If
 Else
-    CellBackColor = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.BackColor
+    CellBackColor = CellFmtg.BackColor
 End If
 End Property
 
@@ -8398,17 +8504,17 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
+Dim CellFmtg As TCELLFMTG
+CellFmtg.BackColor = Value
 If PropFillStyle = FlexFillStyleSingle Then
-    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.BackColor = Value
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_BACKCOLOR, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            .Cols(j).Fmtg.BackColor = Value
+            Call SetCellFmtg(i, j, CFM_BACKCOLOR, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -8422,14 +8528,16 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.ForeColor = -1 Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FORECOLOR, CellFmtg)
+If CellFmtg.ForeColor = -1 Then
     If VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1) Then
         CellForeColor = PropForeColor
     Else
         CellForeColor = PropForeColorFixed
     End If
 Else
-    CellForeColor = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.ForeColor
+    CellForeColor = CellFmtg.ForeColor
 End If
 End Property
 
@@ -8439,17 +8547,17 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
+Dim CellFmtg As TCELLFMTG
+CellFmtg.ForeColor = Value
 If PropFillStyle = FlexFillStyleSingle Then
-    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.ForeColor = Value
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FORECOLOR, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            .Cols(j).Fmtg.ForeColor = Value
+            Call SetCellFmtg(i, j, CFM_FORECOLOR, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -8493,7 +8601,9 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-CellComboCue = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.ComboCue
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_COMBOCUE, CellFmtg)
+CellComboCue = CellFmtg.ComboCue
 End Property
 
 Public Property Let CellComboCue(ByVal Value As FlexComboCueConstants)
@@ -8507,17 +8617,17 @@ Select Case Value
     Case Else
         Err.Raise 380
 End Select
+Dim CellFmtg As TCELLFMTG
+CellFmtg.ComboCue = Value
 If PropFillStyle = FlexFillStyleSingle Then
-    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.ComboCue = Value
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_COMBOCUE, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            .Cols(j).Fmtg.ComboCue = Value
+            Call SetCellFmtg(i, j, CFM_COMBOCUE, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -8567,7 +8677,9 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-CellFloodPercent = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FloodPercent
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FLOODPERCENT, CellFmtg)
+CellFloodPercent = CellFmtg.FloodPercent
 End Property
 
 Public Property Let CellFloodPercent(ByVal Value As Integer)
@@ -8581,17 +8693,17 @@ Select Case Value
     Case Else
         Err.Raise 380
 End Select
+Dim CellFmtg As TCELLFMTG
+CellFmtg.FloodPercent = Value
 If PropFillStyle = FlexFillStyleSingle Then
-    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FloodPercent = Value
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FLOODPERCENT, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            .Cols(j).Fmtg.FloodPercent = Value
+            Call SetCellFmtg(i, j, CFM_FLOODPERCENT, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -8605,10 +8717,12 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FloodColor = -1 Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FLOODCOLOR, CellFmtg)
+If CellFmtg.FloodColor = -1 Then
     CellFloodColor = PropFloodColor
 Else
-    CellFloodColor = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FloodColor
+    CellFloodColor = CellFmtg.FloodColor
 End If
 End Property
 
@@ -8618,17 +8732,17 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
+Dim CellFmtg As TCELLFMTG
+CellFmtg.FloodColor = Value
 If PropFillStyle = FlexFillStyleSingle Then
-    VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FloodColor = Value
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FLOODCOLOR, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            .Cols(j).Fmtg.FloodColor = Value
+            Call SetCellFmtg(i, j, CFM_FLOODCOLOR, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -8642,14 +8756,16 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontName = vbNullString Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+If CellFmtg.FontName = vbNullString Then
     If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
         CellFontName = PropFont.Name
     Else
         CellFontName = PropFontFixed.Name
     End If
 Else
-    CellFontName = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontName
+    CellFontName = CellFmtg.FontName
 End If
 End Property
 
@@ -8659,9 +8775,10 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-Dim TempFont As StdFont
+Dim CellFmtg As TCELLFMTG, TempFont As StdFont
 If PropFillStyle = FlexFillStyleSingle Then
-    With VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg
+    Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+    With CellFmtg
     If Not Value = vbNullString Then
         If .FontName = vbNullString Then
             If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
@@ -8688,13 +8805,14 @@ If PropFillStyle = FlexFillStyleSingle Then
         .FontName = vbNullString
     End If
     End With
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            With .Cols(j).Fmtg
+            Call GetCellFmtg(i, j, CFM_FONT, CellFmtg)
+            With CellFmtg
             If Not Value = vbNullString Then
                 If .FontName = vbNullString Then
                     If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
@@ -8721,8 +8839,8 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                 .FontName = vbNullString
             End If
             End With
+            Call SetCellFmtg(i, j, CFM_FONT, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -8736,14 +8854,16 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontName = vbNullString Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+If CellFmtg.FontName = vbNullString Then
     If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
         CellFontSize = PropFont.Size
     Else
         CellFontSize = PropFontFixed.Size
     End If
 Else
-    CellFontSize = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontSize
+    CellFontSize = CellFmtg.FontSize
 End If
 End Property
 
@@ -8753,8 +8873,10 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
+Dim CellFmtg As TCELLFMTG
 If PropFillStyle = FlexFillStyleSingle Then
-    With VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg
+    Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+    With CellFmtg
     If .FontName = vbNullString Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
@@ -8776,13 +8898,14 @@ If PropFillStyle = FlexFillStyleSingle Then
     End If
     .FontSize = Value
     End With
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            With .Cols(j).Fmtg
+            Call GetCellFmtg(i, j, CFM_FONT, CellFmtg)
+            With CellFmtg
             If .FontName = vbNullString Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
@@ -8804,8 +8927,8 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
             End If
             .FontSize = Value
             End With
+            Call SetCellFmtg(i, j, CFM_FONT, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -8819,14 +8942,16 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontName = vbNullString Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+If CellFmtg.FontName = vbNullString Then
     If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
         CellFontBold = PropFont.Bold
     Else
         CellFontBold = PropFontFixed.Bold
     End If
 Else
-    CellFontBold = CBool((VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontStyle And FS_BOLD) = FS_BOLD)
+    CellFontBold = CBool((CellFmtg.FontStyle And FS_BOLD) = FS_BOLD)
 End If
 End Property
 
@@ -8836,8 +8961,10 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise 30010, Description:="Invalid Col value"
 End If
+Dim CellFmtg As TCELLFMTG
 If PropFillStyle = FlexFillStyleSingle Then
-    With VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg
+    Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+    With CellFmtg
     If .FontName = vbNullString Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
@@ -8863,13 +8990,14 @@ If PropFillStyle = FlexFillStyleSingle Then
         If (.FontStyle And FS_BOLD) = FS_BOLD Then .FontStyle = .FontStyle And Not FS_BOLD
     End If
     End With
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            With .Cols(j).Fmtg
+            Call GetCellFmtg(i, j, CFM_FONT, CellFmtg)
+            With CellFmtg
             If .FontName = vbNullString Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
@@ -8895,8 +9023,8 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                 If (.FontStyle And FS_BOLD) = FS_BOLD Then .FontStyle = .FontStyle And Not FS_BOLD
             End If
             End With
+            Call SetCellFmtg(i, j, CFM_FONT, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -8910,14 +9038,16 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontName = vbNullString Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+If CellFmtg.FontName = vbNullString Then
     If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
         CellFontItalic = PropFont.Italic
     Else
         CellFontItalic = PropFontFixed.Italic
     End If
 Else
-    CellFontItalic = CBool((VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontStyle And FS_ITALIC) = FS_ITALIC)
+    CellFontItalic = CBool((CellFmtg.FontStyle And FS_ITALIC) = FS_ITALIC)
 End If
 End Property
 
@@ -8927,8 +9057,10 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise 30010, Description:="Invalid Col value"
 End If
+Dim CellFmtg As TCELLFMTG
 If PropFillStyle = FlexFillStyleSingle Then
-    With VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg
+    Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+    With CellFmtg
     If .FontName = vbNullString Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
@@ -8954,13 +9086,14 @@ If PropFillStyle = FlexFillStyleSingle Then
         If (.FontStyle And FS_ITALIC) = FS_ITALIC Then .FontStyle = .FontStyle And Not FS_ITALIC
     End If
     End With
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            With .Cols(j).Fmtg
+            Call GetCellFmtg(i, j, CFM_FONT, CellFmtg)
+            With CellFmtg
             If .FontName = vbNullString Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
@@ -8986,8 +9119,8 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                 If (.FontStyle And FS_ITALIC) = FS_ITALIC Then .FontStyle = .FontStyle And Not FS_ITALIC
             End If
             End With
+            Call SetCellFmtg(i, j, CFM_FONT, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -9001,14 +9134,16 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontName = vbNullString Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+If CellFmtg.FontName = vbNullString Then
     If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
         CellFontStrikeThrough = PropFont.Strikethrough
     Else
         CellFontStrikeThrough = PropFontFixed.Strikethrough
     End If
 Else
-    CellFontStrikeThrough = CBool((VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
+    CellFontStrikeThrough = CBool((CellFmtg.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
 End If
 End Property
 
@@ -9018,8 +9153,10 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
+Dim CellFmtg As TCELLFMTG
 If PropFillStyle = FlexFillStyleSingle Then
-    With VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg
+    Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+    With CellFmtg
     If .FontName = vbNullString Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
@@ -9045,13 +9182,14 @@ If PropFillStyle = FlexFillStyleSingle Then
         If (.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT Then .FontStyle = .FontStyle And Not FS_STRIKEOUT
     End If
     End With
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            With .Cols(j).Fmtg
+            Call GetCellFmtg(i, j, CFM_FONT, CellFmtg)
+            With CellFmtg
             If .FontName = vbNullString Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
@@ -9077,8 +9215,8 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                 If (.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT Then .FontStyle = .FontStyle And Not FS_STRIKEOUT
             End If
             End With
+            Call SetCellFmtg(i, j, CFM_FONT, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -9092,14 +9230,16 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontName = vbNullString Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+If CellFmtg.FontName = vbNullString Then
     If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
         CellFontUnderline = PropFont.Underline
     Else
         CellFontUnderline = PropFontFixed.Underline
     End If
 Else
-    CellFontUnderline = CBool((VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
+    CellFontUnderline = CBool((CellFmtg.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
 End If
 End Property
 
@@ -9109,8 +9249,10 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise 30010, Description:="Invalid Col value"
 End If
+Dim CellFmtg As TCELLFMTG
 If PropFillStyle = FlexFillStyleSingle Then
-    With VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg
+    Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+    With CellFmtg
     If .FontName = vbNullString Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
@@ -9136,13 +9278,14 @@ If PropFillStyle = FlexFillStyleSingle Then
         If (.FontStyle And FS_UNDERLINE) = FS_UNDERLINE Then .FontStyle = .FontStyle And Not FS_UNDERLINE
     End If
     End With
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            With .Cols(j).Fmtg
+            Call GetCellFmtg(i, j, CFM_FONT, CellFmtg)
+            With CellFmtg
             If .FontName = vbNullString Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
@@ -9168,8 +9311,8 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
                 If (.FontStyle And FS_UNDERLINE) = FS_UNDERLINE Then .FontStyle = .FontStyle And Not FS_UNDERLINE
             End If
             End With
+            Call SetCellFmtg(i, j, CFM_FONT, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -9183,14 +9326,16 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontName = vbNullString Then
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+If CellFmtg.FontName = vbNullString Then
     If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
         CellFontCharset = PropFont.Charset
     Else
         CellFontCharset = PropFontFixed.Charset
     End If
 Else
-    CellFontCharset = VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg.FontCharset
+    CellFontCharset = CellFmtg.FontCharset
 End If
 End Property
 
@@ -9200,8 +9345,10 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
+Dim CellFmtg As TCELLFMTG
 If PropFillStyle = FlexFillStyleSingle Then
-    With VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).Fmtg
+    Call GetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
+    With CellFmtg
     If .FontName = vbNullString Then
         If PropFontFixed Is Nothing Or (VBFlexGridRow > (PropFixedRows - 1) And VBFlexGridCol > (PropFixedCols - 1)) Then
             .FontName = PropFont.Name
@@ -9223,13 +9370,14 @@ If PropFillStyle = FlexFillStyleSingle Then
     End If
     .FontCharset = Value
     End With
+    Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_FONT, CellFmtg)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
-        With VBFlexGridCells.Rows(i)
         For j = SelRange.LeftCol To SelRange.RightCol
-            With .Cols(j).Fmtg
+            Call GetCellFmtg(i, j, CFM_FONT, CellFmtg)
+            With CellFmtg
             If .FontName = vbNullString Then
                 If PropFontFixed Is Nothing Or (i > (PropFixedRows - 1) And j > (PropFixedCols - 1)) Then
                     .FontName = PropFont.Name
@@ -9251,8 +9399,8 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
             End If
             .FontCharset = Value
             End With
+            Call SetCellFmtg(i, j, CFM_FONT, CellFmtg)
         Next j
-        End With
     Next i
 End If
 Call RedrawGrid
@@ -10231,6 +10379,12 @@ End Sub
 
 Private Sub EraseFlexGridCells()
 If VBFlexGridCellsInit = False Then Exit Sub
+Dim i As Long, j As Long
+For i = 0 To (PropRows - 1)
+    For j = 0 To (PropCols - 1)
+        'Call FreeCellFmtg(i, j)
+    Next j
+Next i
 Erase VBFlexGridCells.Rows(): VBFlexGridCellsInit = False
 Erase VBFlexGridColsInfo()
 Erase VBFlexGridDefaultCols.Cols()
@@ -11658,7 +11812,9 @@ If PropFocusRect <> FlexFocusRectNone Then
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 Call GetGridLineOffsets(iRow, iCol, VBFlexGridDrawInfo.GridLineOffsets)
-With VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(iRow, iCol, CFM_TEXTSTYLE Or CFM_ALIGNMENT Or CFM_PICTURE Or CFM_PICTURERENDERFLAG Or CFM_PICTUREALIGNMENT Or CFM_BACKCOLOR Or CFM_FORECOLOR Or CFM_FLOODPERCENT Or CFM_FLOODCOLOR Or CFM_FONT, CellFmtg)
+With CellFmtg
 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
     ComboCue = GetComboCueActive(iRow, iCol)
@@ -11778,11 +11934,21 @@ If Not .Picture Is Nothing Then
         If PictureOffsetX > 0 Then PictureLeft = PictureLeft + PictureOffsetX
         If PictureOffsetY > 0 Then PictureTop = PictureTop + PictureOffsetY
         If .PictureAlignment <> FlexPictureAlignmentTile Then
-            Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+            If .PictureRenderFlag = 0 Then
+                Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+                Call SetCellFmtg(iRow, iCol, CFM_PICTURERENDERFLAG, CellFmtg)
+            Else
+                Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+            End If
         Else
             Do
                 Do
-                    Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+                    If .PictureRenderFlag = 0 Then
+                        Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+                    Else
+                        Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+                        Call SetCellFmtg(iRow, iCol, CFM_PICTURERENDERFLAG, CellFmtg)
+                    End If
                     PictureTop = PictureTop + PictureHeight
                 Loop While PictureTop < PictureRect.Bottom
                 PictureLeft = PictureLeft + PictureWidth
@@ -12284,7 +12450,9 @@ If PropFocusRect <> FlexFocusRectNone Then
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 Call GetGridLineOffsets(iRow, iCol, VBFlexGridDrawInfo.GridLineOffsets)
-With VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(iRow, iCol, CFM_TEXTSTYLE Or CFM_ALIGNMENT Or CFM_PICTURE Or CFM_PICTURERENDERFLAG Or CFM_PICTUREALIGNMENT Or CFM_BACKCOLOR Or CFM_FORECOLOR Or CFM_FLOODPERCENT Or CFM_FLOODCOLOR Or CFM_FONT, CellFmtg)
+With CellFmtg
 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
     ComboCue = GetComboCueActive(iRow, iCol)
@@ -12414,11 +12582,21 @@ If Not .Picture Is Nothing Then
         If PictureOffsetX > 0 Then PictureLeft = PictureLeft + PictureOffsetX
         If PictureOffsetY > 0 Then PictureTop = PictureTop + PictureOffsetY
         If .PictureAlignment <> FlexPictureAlignmentTile Then
-            Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+            If .PictureRenderFlag = 0 Then
+                Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+                Call SetCellFmtg(iRow, iCol, CFM_PICTURERENDERFLAG, CellFmtg)
+            Else
+                Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+            End If
         Else
             Do
                 Do
-                    Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+                    If .PictureRenderFlag = 0 Then
+                        Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+                    Else
+                        Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+                        Call SetCellFmtg(iRow, iCol, CFM_PICTURERENDERFLAG, CellFmtg)
+                    End If
                     PictureTop = PictureTop + PictureHeight
                 Loop While PictureTop < PictureRect.Bottom
                 PictureLeft = PictureLeft + PictureWidth
@@ -13083,7 +13261,7 @@ Private Sub GetCellToolTipText(ByVal iRow As Long, ByVal iCol As Long, ByRef Tex
 #If ImplementFlexDataSource = True Then
 
 If VBFlexGridFlexDataSource2 Is Nothing Then
-    TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.ToolTipText
+    Call GetCellFmtgToolTipText(iRow, iCol, TextOut)
 ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceToolTipText) <> 0 Then
     If iRow >= PropFixedRows Then
         If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
@@ -13092,19 +13270,19 @@ ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceToolTipText) <> 0 Then
             If iCol >= PropFixedCols Then
                 TextOut = VBFlexGridFlexDataSource2.GetToolTipText(iCol - PropFixedCols, iRow - PropFixedRows)
             Else
-                TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.ToolTipText
+                Call GetCellFmtgToolTipText(iRow, iCol, TextOut)
             End If
         End If
     Else
-        TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.ToolTipText
+        Call GetCellFmtgToolTipText(iRow, iCol, TextOut)
     End If
 Else
-    TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.ToolTipText
+    Call GetCellFmtgToolTipText(iRow, iCol, TextOut)
 End If
 
 #Else
 
-TextOut = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.ToolTipText
+Call GetCellFmtgToolTipText(iRow, iCol, TextOut)
 
 #End If
 
@@ -13115,7 +13293,7 @@ Private Sub SetCellToolTipText(ByVal iRow As Long, ByVal iCol As Long, ByRef Tex
 #If ImplementFlexDataSource = True Then
 
 If VBFlexGridFlexDataSource2 Is Nothing Then
-    VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.ToolTipText = TextIn
+    Call SetCellFmtgToolTipText(iRow, iCol, TextIn)
 ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceToolTipText) <> 0 Then
     If iRow >= PropFixedRows Then
         If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
@@ -13124,19 +13302,19 @@ ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceToolTipText) <> 0 Then
             If iCol >= PropFixedCols Then
                 VBFlexGridFlexDataSource2.SetToolTipText iCol - PropFixedCols, iRow - PropFixedRows, TextIn
             Else
-                VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.ToolTipText = TextIn
+                Call SetCellFmtgToolTipText(iRow, iCol, TextIn)
             End If
         End If
     Else
-        VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.ToolTipText = TextIn
+        Call SetCellFmtgToolTipText(iRow, iCol, TextIn)
     End If
 Else
-    VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.ToolTipText = TextIn
+    Call SetCellFmtgToolTipText(iRow, iCol, TextIn)
 End If
 
 #Else
 
-VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.ToolTipText = TextIn
+Call SetCellFmtgToolTipText(iRow, iCol, TextIn)
 
 #End If
 
@@ -13144,52 +13322,57 @@ End Sub
 
 Private Function GetCellChecked(ByVal iRow As Long, ByVal iCol As Long) As Integer
 If (VBFlexGridColsInfo(iCol).State And CLIS_CHECKBOXES) = 0 Then
-    GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked
+    GetCellChecked = GetCellFmtgChecked(iRow, iCol)
 Else
     If iRow >= PropFixedRows Then
+        Dim Checked As Integer
         
         #If ImplementFlexDataSource = True Then
         
         If VBFlexGridFlexDataSource2 Is Nothing Then
-            If VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked
+            Checked = GetCellFmtgChecked(iRow, iCol)
+            If Checked <> -1 Then GetCellChecked = Checked
         ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceChecked) <> 0 Then
             If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
-                GetCellChecked = VBFlexGridFlexDataSource2.GetChecked(iCol, iRow - PropFixedRows)
-                If GetCellChecked < -2 Or GetCellChecked > 7 Then GetCellChecked = 0
+                Checked = VBFlexGridFlexDataSource2.GetChecked(iCol, iRow - PropFixedRows)
+                If GetCellChecked >= -2 And GetCellChecked <= 7 Then GetCellChecked = Checked
             Else
                 If iCol >= PropFixedCols Then
-                    GetCellChecked = VBFlexGridFlexDataSource2.GetChecked(iCol - PropFixedCols, iRow - PropFixedRows)
-                    If GetCellChecked < -2 Or GetCellChecked > 7 Then GetCellChecked = 0
+                    Checked = VBFlexGridFlexDataSource2.GetChecked(iCol - PropFixedCols, iRow - PropFixedRows)
+                    If GetCellChecked >= -2 And GetCellChecked <= 7 Then GetCellChecked = Checked
                 Else
-                    If VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked
+                    Checked = GetCellFmtgChecked(iRow, iCol)
+                    If Checked <> -1 Then GetCellChecked = Checked
                 End If
             End If
         Else
-            If VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked
+            Checked = GetCellFmtgChecked(iRow, iCol)
+            If Checked <> -1 Then GetCellChecked = Checked
         End If
         
         #Else
         
-        If VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked <> -1 Then GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked
+        Checked = GetCellFmtgChecked(iRow, iCol)
+        If Checked <> -1 Then GetCellChecked = Checked
         
         #End If
         
     Else
-        GetCellChecked = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked
+        GetCellChecked = GetCellFmtgChecked(iRow, iCol)
     End If
 End If
 End Function
 
 Private Sub SetCellChecked(ByVal iRow As Long, ByVal iCol As Long, ByVal NewValue As Integer)
 If (VBFlexGridColsInfo(iCol).State And CLIS_CHECKBOXES) = 0 Then
-    VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked = NewValue
+    Call SetCellFmtgChecked(iRow, iCol, NewValue)
 Else
     If iRow >= PropFixedRows Then
         
         #If ImplementFlexDataSource = True Then
         
         If VBFlexGridFlexDataSource2 Is Nothing Then
-            VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked = NewValue
+            Call SetCellFmtgChecked(iRow, iCol, NewValue)
         ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceChecked) <> 0 Then
             If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
                 VBFlexGridFlexDataSource2.SetChecked iCol, iRow - PropFixedRows, NewValue
@@ -13197,23 +13380,211 @@ Else
                 If iCol >= PropFixedCols Then
                     VBFlexGridFlexDataSource2.SetChecked iCol - PropFixedCols, iRow - PropFixedRows, NewValue
                 Else
-                    VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked = NewValue
+                    Call SetCellFmtgChecked(iRow, iCol, NewValue)
                 End If
             End If
         Else
-            VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked = NewValue
+            Call SetCellFmtgChecked(iRow, iCol, NewValue)
         End If
         
         #Else
         
-        VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked = NewValue
+        Call SetCellFmtgChecked(iRow, iCol, NewValue)
         
         #End If
         
     Else
-        VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.Checked = NewValue
+        Call SetCellFmtgChecked(iRow, iCol, NewValue)
     End If
 End If
+End Sub
+
+Private Sub FreeCellFmtg(ByRef lpFmtg As Long)
+If lpFmtg <> 0 Then
+    Dim lpCellFmtg As TLPCELLFMTG
+    CopyMemory ByVal VarPtr(lpCellFmtg), ByVal lpFmtg, LenB(lpCellFmtg)
+    If lpCellFmtg.lpPicture <> 0 Then FlexPtrToShadowObj Nothing, lpCellFmtg.lpPicture
+    If lpCellFmtg.lpToolTipText <> 0 Then SysFreeString lpCellFmtg.lpToolTipText
+    If lpCellFmtg.lpFontName <> 0 Then SysFreeString lpCellFmtg.lpFontName
+    HeapFree GetProcessHeap(), 0, lpFmtg
+    lpFmtg = 0
+End If
+End Sub
+
+Private Sub AllocCellFmtg(ByRef lpFmtg As Long)
+If lpFmtg = 0 Then
+    lpFmtg = HeapAlloc(GetProcessHeap(), 0, LenB(VBFlexGridDefaultLpCellFmtg))
+    If lpFmtg <> 0 Then CopyMemory ByVal lpFmtg, ByVal VarPtr(VBFlexGridDefaultLpCellFmtg), LenB(VBFlexGridDefaultLpCellFmtg)
+End If
+End Sub
+
+Private Sub GetCellFmtg(ByVal iRow As Long, ByVal iCol As Long, ByVal Mask As Long, ByRef CellFmtg As TCELLFMTG)
+With VBFlexGridCells.Rows(iRow).Cols(iCol)
+If .lpFmtg = 0 Then
+    If (Mask And CFM_TEXTSTYLE) = CFM_TEXTSTYLE Then CellFmtg.TextStyle = VBFlexGridDefaultCellFmtg.TextStyle
+    If (Mask And CFM_ALIGNMENT) = CFM_ALIGNMENT Then CellFmtg.Alignment = VBFlexGridDefaultCellFmtg.Alignment
+    If (Mask And CFM_PICTURE) = CFM_PICTURE Then Set CellFmtg.Picture = VBFlexGridDefaultCellFmtg.Picture
+    If (Mask And CFM_PICTURERENDERFLAG) = CFM_PICTURERENDERFLAG Then CellFmtg.PictureRenderFlag = VBFlexGridDefaultCellFmtg.PictureRenderFlag
+    If (Mask And CFM_PICTUREALIGNMENT) = CFM_PICTUREALIGNMENT Then CellFmtg.PictureAlignment = VBFlexGridDefaultCellFmtg.PictureAlignment
+    If (Mask And CFM_BACKCOLOR) = CFM_BACKCOLOR Then CellFmtg.BackColor = VBFlexGridDefaultCellFmtg.BackColor
+    If (Mask And CFM_FORECOLOR) = CFM_FORECOLOR Then CellFmtg.ForeColor = VBFlexGridDefaultCellFmtg.ForeColor
+    If (Mask And CFM_TOOLTIPTEXT) = CFM_TOOLTIPTEXT Then CellFmtg.ToolTipText = VBFlexGridDefaultCellFmtg.ToolTipText
+    If (Mask And CFM_COMBOCUE) = CFM_COMBOCUE Then CellFmtg.ComboCue = VBFlexGridDefaultCellFmtg.ComboCue
+    If (Mask And CFM_CHECKED) = CFM_CHECKED Then CellFmtg.Checked = VBFlexGridDefaultCellFmtg.Checked
+    If (Mask And CFM_FLOODPERCENT) = CFM_FLOODPERCENT Then CellFmtg.FloodPercent = VBFlexGridDefaultCellFmtg.FloodPercent
+    If (Mask And CFM_FLOODCOLOR) = CFM_FLOODCOLOR Then CellFmtg.FloodColor = VBFlexGridDefaultCellFmtg.FloodColor
+    If (Mask And CFM_FONT) = CFM_FONT Then
+        CellFmtg.FontName = VBFlexGridDefaultCellFmtg.FontName
+        CellFmtg.FontSize = VBFlexGridDefaultCellFmtg.FontSize
+        CellFmtg.FontStyle = VBFlexGridDefaultCellFmtg.FontStyle
+        CellFmtg.FontCharset = VBFlexGridDefaultCellFmtg.FontCharset
+    End If
+Else
+    Dim lpCellFmtg As TLPCELLFMTG
+    CopyMemory ByVal VarPtr(lpCellFmtg), ByVal .lpFmtg, LenB(lpCellFmtg)
+    With lpCellFmtg
+    If (Mask And CFM_TEXTSTYLE) = CFM_TEXTSTYLE Then CellFmtg.TextStyle = .TextStyle
+    If (Mask And CFM_ALIGNMENT) = CFM_ALIGNMENT Then CellFmtg.Alignment = .Alignment
+    If (Mask And CFM_PICTURE) = CFM_PICTURE Then
+        If .lpPicture <> 0 Then
+            FlexPtrToShadowObj CellFmtg.Picture, .lpPicture
+        Else
+            Set CellFmtg.Picture = Nothing
+        End If
+    End If
+    If (Mask And CFM_PICTURERENDERFLAG) = CFM_PICTURERENDERFLAG Then CellFmtg.PictureRenderFlag = .PictureRenderFlag
+    If (Mask And CFM_PICTUREALIGNMENT) = CFM_PICTUREALIGNMENT Then CellFmtg.PictureAlignment = .PictureAlignment
+    If (Mask And CFM_BACKCOLOR) = CFM_BACKCOLOR Then CellFmtg.BackColor = .BackColor
+    If (Mask And CFM_FORECOLOR) = CFM_FORECOLOR Then CellFmtg.ForeColor = .ForeColor
+    If (Mask And CFM_TOOLTIPTEXT) = CFM_TOOLTIPTEXT Then
+        If lpCellFmtg.lpToolTipText <> 0 Then
+            SysReAllocString VarPtr(CellFmtg.ToolTipText), lpCellFmtg.lpToolTipText
+        Else
+            CellFmtg.ToolTipText = vbNullString
+        End If
+    End If
+    If (Mask And CFM_COMBOCUE) = CFM_COMBOCUE Then CellFmtg.ComboCue = .ComboCue
+    If (Mask And CFM_CHECKED) = CFM_CHECKED Then CellFmtg.Checked = .Checked
+    If (Mask And CFM_FLOODPERCENT) = CFM_FLOODPERCENT Then CellFmtg.FloodPercent = .FloodPercent
+    If (Mask And CFM_FLOODCOLOR) = CFM_FLOODCOLOR Then CellFmtg.FloodColor = .FloodColor
+    If (Mask And CFM_FONT) = CFM_FONT Then
+        If lpCellFmtg.lpFontName <> 0 Then
+            SysReAllocString VarPtr(CellFmtg.FontName), lpCellFmtg.lpFontName
+        Else
+            CellFmtg.FontName = vbNullString
+        End If
+        CellFmtg.FontSize = .FontSize
+        CellFmtg.FontStyle = .FontStyle
+        CellFmtg.FontCharset = .FontCharset
+    End If
+    End With
+End If
+End With
+End Sub
+
+Private Sub SetCellFmtg(ByVal iRow As Long, ByVal iCol As Long, ByVal Mask As Long, ByRef CellFmtg As TCELLFMTG)
+Dim lpCellFmtg As TLPCELLFMTG
+With VBFlexGridCells.Rows(iRow).Cols(iCol)
+If .lpFmtg = 0 Then Call AllocCellFmtg(.lpFmtg)
+If .lpFmtg <> 0 Then
+    CopyMemory ByVal VarPtr(lpCellFmtg), ByVal .lpFmtg, LenB(lpCellFmtg)
+    With lpCellFmtg
+    If (Mask And CFM_TEXTSTYLE) = CFM_TEXTSTYLE Then .TextStyle = CellFmtg.TextStyle
+    If (Mask And CFM_ALIGNMENT) = CFM_ALIGNMENT Then .Alignment = CellFmtg.Alignment
+    If (Mask And CFM_PICTURE) = CFM_PICTURE Then
+        Dim IUnk As OLEGuids.IUnknownUnrestricted
+        If lpCellFmtg.lpPicture <> 0 Then
+            FlexPtrToShadowObj Nothing, lpCellFmtg.lpPicture
+            lpCellFmtg.lpPicture = 0
+        End If
+        lpCellFmtg.lpPicture = ObjPtr(CellFmtg.Picture)
+        If lpCellFmtg.lpPicture <> 0 Then Call FlexShadowObjPtrAddRef(lpCellFmtg.lpPicture)
+    End If
+    If (Mask And CFM_PICTURERENDERFLAG) = CFM_PICTURERENDERFLAG Then .PictureRenderFlag = CellFmtg.PictureRenderFlag
+    If (Mask And CFM_PICTUREALIGNMENT) = CFM_PICTUREALIGNMENT Then .PictureAlignment = CellFmtg.PictureAlignment
+    If (Mask And CFM_BACKCOLOR) = CFM_BACKCOLOR Then .BackColor = CellFmtg.BackColor
+    If (Mask And CFM_FORECOLOR) = CFM_FORECOLOR Then .ForeColor = CellFmtg.ForeColor
+    If (Mask And CFM_TOOLTIPTEXT) = CFM_TOOLTIPTEXT Then
+        If lpCellFmtg.lpToolTipText <> 0 Then
+            SysFreeString lpCellFmtg.lpToolTipText
+            lpCellFmtg.lpToolTipText = 0
+        End If
+        lpCellFmtg.lpToolTipText = SysAllocString(StrPtr(CellFmtg.ToolTipText))
+    End If
+    If (Mask And CFM_COMBOCUE) = CFM_COMBOCUE Then .ComboCue = CellFmtg.ComboCue
+    If (Mask And CFM_CHECKED) = CFM_CHECKED Then .Checked = CellFmtg.Checked
+    If (Mask And CFM_FLOODPERCENT) = CFM_FLOODPERCENT Then .FloodPercent = CellFmtg.FloodPercent
+    If (Mask And CFM_FLOODCOLOR) = CFM_FLOODCOLOR Then .FloodColor = CellFmtg.FloodColor
+    If (Mask And CFM_FONT) = CFM_FONT Then
+        If lpCellFmtg.lpFontName <> 0 Then
+            SysFreeString lpCellFmtg.lpFontName
+            lpCellFmtg.lpFontName = 0
+        End If
+        lpCellFmtg.lpFontName = SysAllocString(StrPtr(CellFmtg.FontName))
+        .FontSize = CellFmtg.FontSize
+        .FontStyle = CellFmtg.FontStyle
+        .FontCharset = CellFmtg.FontCharset
+    End If
+    End With
+    CopyMemory ByVal .lpFmtg, ByVal VarPtr(lpCellFmtg), LenB(lpCellFmtg)
+End If
+End With
+End Sub
+
+Private Function GetCellFmtgToolTipText(ByVal iRow As Long, ByVal iCol As Long, ByRef TextOut As String)
+Dim lpCellFmtg As TLPCELLFMTG
+With VBFlexGridCells.Rows(iRow).Cols(iCol)
+If .lpFmtg = 0 Then
+    TextOut = VBFlexGridDefaultCellFmtg.ToolTipText
+Else
+    CopyMemory ByVal VarPtr(lpCellFmtg), ByVal .lpFmtg, LenB(lpCellFmtg)
+    If lpCellFmtg.lpToolTipText <> 0 Then
+        SysReAllocString VarPtr(TextOut), lpCellFmtg.lpToolTipText
+    Else
+        TextOut = vbNullString
+    End If
+End If
+End With
+End Function
+
+Private Sub SetCellFmtgToolTipText(ByVal iRow As Long, ByVal iCol As Long, ByRef TextIn As String)
+Dim lpCellFmtg As TLPCELLFMTG
+With VBFlexGridCells.Rows(iRow).Cols(iCol)
+If .lpFmtg = 0 Then Call AllocCellFmtg(.lpFmtg)
+If .lpFmtg <> 0 Then
+    CopyMemory ByVal VarPtr(lpCellFmtg), ByVal .lpFmtg, LenB(lpCellFmtg)
+    If lpCellFmtg.lpToolTipText <> 0 Then
+        SysFreeString lpCellFmtg.lpToolTipText
+        lpCellFmtg.lpToolTipText = 0
+    End If
+    lpCellFmtg.lpToolTipText = SysAllocString(StrPtr(TextIn))
+    CopyMemory ByVal .lpFmtg, ByVal VarPtr(lpCellFmtg), LenB(lpCellFmtg)
+End If
+End With
+End Sub
+
+Private Function GetCellFmtgChecked(ByVal iRow As Long, ByVal iCol As Long) As Integer
+Dim lpCellFmtg As TLPCELLFMTG
+With VBFlexGridCells.Rows(iRow).Cols(iCol)
+If .lpFmtg = 0 Then
+    GetCellFmtgChecked = VBFlexGridDefaultCellFmtg.Checked
+Else
+    CopyMemory ByVal VarPtr(lpCellFmtg), ByVal .lpFmtg, LenB(lpCellFmtg)
+    GetCellFmtgChecked = lpCellFmtg.Checked
+End If
+End With
+End Function
+
+Private Sub SetCellFmtgChecked(ByVal iRow As Long, ByVal iCol As Long, ByVal NewValue As Integer)
+Dim lpCellFmtg As TLPCELLFMTG
+With VBFlexGridCells.Rows(iRow).Cols(iCol)
+If .lpFmtg = 0 Then Call AllocCellFmtg(.lpFmtg)
+If .lpFmtg <> 0 Then
+    CopyMemory ByVal VarPtr(lpCellFmtg), ByVal .lpFmtg, LenB(lpCellFmtg)
+    lpCellFmtg.Checked = NewValue
+    CopyMemory ByVal .lpFmtg, ByVal VarPtr(lpCellFmtg), LenB(lpCellFmtg)
+End If
+End With
 End Sub
 
 Private Sub GetTextDisplay(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As String)
@@ -13323,8 +13694,10 @@ If hDC = 0 Then
     hDC = hDCTemp
 End If
 If hDC <> 0 Then
+    Dim CellFmtg As TCELLFMTG
+    Call GetCellFmtg(iRow, iCol, CFM_FONT, CellFmtg)
+    With CellFmtg
     Dim hFontTemp As Long, hFontOld As Long
-    With VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg
     If .FontName = vbNullString Then
         If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
             hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
@@ -13391,8 +13764,10 @@ If hDC = 0 Then
     hDC = hDCTemp
 End If
 If hDC <> 0 Then
+    Dim CellFmtg As TCELLFMTG
+    Call GetCellFmtg(iRow, iCol, CFM_PICTURE Or CFM_PICTUREALIGNMENT Or CFM_FONT, CellFmtg)
+    With CellFmtg
     Dim hFontTemp As Long, hFontOld As Long
-    With VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg
     If .FontName = vbNullString Then
         If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
             hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
@@ -13540,7 +13915,9 @@ If hDC <> 0 Then
     Dim CX As Long
     CX = GetTextSize(iRow, iCol, Text, hDC).CX
     If PropBestFitMode <> FlexBestFitModeTextOnly Then
-        With VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg
+        Dim CellFmtg As TCELLFMTG
+        Call GetCellFmtg(iRow, iCol, CFM_PICTURE Or CFM_PICTUREALIGNMENT, CellFmtg)
+        With CellFmtg
         Select Case PropBestFitMode
             Case FlexBestFitModeFull, FlexBestFitModeOtherText
                 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long
@@ -13821,7 +14198,9 @@ If iRowHit > -1 And iColHit > -1 Then
         End If
         .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
         End With
-        With VBFlexGridCells.Rows(iRowHit).Cols(iColHit).Fmtg
+        Dim CellFmtg As TCELLFMTG
+        Call GetCellFmtg(iRowHit, iColHit, CFM_PICTURE Or CFM_PICTUREALIGNMENT, CellFmtg)
+        With CellFmtg
         If iRowHit < PropFixedRows Or iColHit < PropFixedCols Then
             If VBFlexGridColsInfo(iColHit).FixedCheckBoxAlignment = -1 Then
                 CheckBoxAlignment = VBFlexGridColsInfo(iColHit).CheckBoxAlignment
@@ -14332,8 +14711,10 @@ If hDC <> 0 Then
     End If
     .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
     End With
+    Dim CellFmtg As TCELLFMTG
+    Call GetCellFmtg(iRow, iCol, CFM_ALIGNMENT Or CFM_PICTURE Or CFM_PICTUREALIGNMENT Or CFM_FONT, CellFmtg)
+    With CellFmtg
     Dim hFontTemp As Long, hFontOld As Long
-    With VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg
     If .FontName = vbNullString Then
         If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
             hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
@@ -15309,7 +15690,9 @@ End Function
 
 Private Function GetComboCueActive(ByVal iRow As Long, ByVal iCol As Long) As FlexComboCueConstants
 If PropRows < 1 Or PropCols < 1 Then Exit Function
-GetComboCueActive = VBFlexGridCells.Rows(iRow).Cols(iCol).Fmtg.ComboCue
+Dim CellFmtg As TCELLFMTG
+Call GetCellFmtg(iRow, iCol, CFM_COMBOCUE, CellFmtg)
+GetComboCueActive = CellFmtg.ComboCue
 If GetComboCueActive = FlexComboCueNone Then
     If VBFlexGridComboCue <> FlexComboCueNone Then
         If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then GetComboCueActive = VBFlexGridComboCue
