@@ -1,5 +1,12 @@
 List of revisions:
 
+26-Jun-2023
+- Major memory reduction for default formatted cells.
+  Once a cell gets custom formatted additional memory will be allocated.
+  It can only be freed by removing those cells or call .Clear method with FlexClearFormatting or FlexClearEverything.
+- Major performance boost for AddItem/RemoveItem method.
+  The TCOL elements are now moved by the pointers only and not by copying the content over.
+
 24-Jun-2023
 - Major performance boost for InplaceMergeSort/BubbleSortIter (.Sort) and .RowPosition property.
   The TCOL elements are now swapped by the pointers only and not by copying the content over.
