@@ -10381,9 +10381,11 @@ Private Sub EraseFlexGridCells()
 If VBFlexGridCellsInit = False Then Exit Sub
 Dim i As Long, j As Long
 For i = 0 To (PropRows - 1)
+    With VBFlexGridCells.Rows(i)
     For j = 0 To (PropCols - 1)
-        'Call FreeCellFmtg(i, j)
+        Call FreeCellFmtg(.Cols(j).lpFmtg)
     Next j
+    End With
 Next i
 Erase VBFlexGridCells.Rows(): VBFlexGridCellsInit = False
 Erase VBFlexGridColsInfo()
