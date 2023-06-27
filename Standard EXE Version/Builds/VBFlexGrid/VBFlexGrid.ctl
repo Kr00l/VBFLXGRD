@@ -3290,9 +3290,11 @@ ElseIf Value <> PropRows And PropCols > 0 Then
         Next i
     Else
         For i = ((Value - 1) + 1) To (PropRows - 1)
+            With VBFlexGridCells.Rows(i)
             For j = 0 To (PropCols - 1)
-                'Call FreeCellFmtg(i, j)
+                Call FreeCellFmtg(.Cols(j).lpFmtg)
             Next j
+            End With
         Next i
         ReDim Preserve VBFlexGridCells.Rows(0 To (Value - 1)) As TCOLS
         RowsPerPage = GetRowsPerPageRev(Value - 1)
