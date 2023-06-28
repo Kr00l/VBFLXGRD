@@ -1,5 +1,8 @@
 List of revisions:
 
+28-Jun-2023
+- Bugfix in the drawing of the text styles.
+
 26-Jun-2023
 - Major memory reduction for default formatted cells.
   Once a cell gets custom formatted additional memory will be allocated.
