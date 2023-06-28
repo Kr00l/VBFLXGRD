@@ -12256,37 +12256,39 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
                 DrawFlags = DrawFlags Or DT_BOTTOM
         End Select
     End If
-    Dim Offset As Long, TempTextColor As Long
+    Dim TempTextColor As Long
     Select Case TextStyle
         Case FlexTextStyleRaised
             TempTextColor = SetTextColor(hDC, &H808080)
-            Offset = 1
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, vbWhite
+            SetRect TextRect, TextRect.Left - 2, TextRect.Top - 2, TextRect.Right - 2, TextRect.Bottom - 2
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, TempTextColor
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
+        Case FlexTextStyleInset
+            TempTextColor = SetTextColor(hDC, vbWhite)
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, &H808080
+            SetRect TextRect, TextRect.Left - 2, TextRect.Top - 2, TextRect.Right - 2, TextRect.Bottom - 2
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, TempTextColor
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
         Case FlexTextStyleRaisedLight
             TempTextColor = SetTextColor(hDC, vbWhite)
-            Offset = 1
-        Case FlexTextStyleInset
-            TempTextColor = SetTextColor(hDC, &H808080)
-            Offset = -1
+            SetRect TextRect, TextRect.Left - 1, TextRect.Top - 1, TextRect.Right - 1, TextRect.Bottom - 1
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, TempTextColor
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
         Case FlexTextStyleInsetLight
             TempTextColor = SetTextColor(hDC, vbWhite)
-            Offset = -1
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, TempTextColor
+            SetRect TextRect, TextRect.Left - 1, TextRect.Top - 1, TextRect.Right - 1, TextRect.Bottom - 1
     End Select
-    If Offset <> 0 Then
-        With TextRect
-        .Top = .Top + Offset
-        .Left = .Left + Offset
-        .Bottom = .Bottom + Offset
-        .Right = .Right + Offset
-        End With
-        DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
-        SetTextColor hDC, TempTextColor
-        With TextRect
-        .Top = .Top - Offset
-        .Left = .Left - Offset
-        .Bottom = .Bottom - Offset
-        .Right = .Right - Offset
-        End With
-    End If
     DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
 End If
 SetTextColor hDC, OldTextColor
@@ -12827,37 +12829,39 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
                 DrawFlags = DrawFlags Or DT_BOTTOM
         End Select
     End If
-    Dim Offset As Long, TempTextColor As Long
+    Dim TempTextColor As Long
     Select Case TextStyle
         Case FlexTextStyleRaised
             TempTextColor = SetTextColor(hDC, &H808080)
-            Offset = 1
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, vbWhite
+            SetRect TextRect, TextRect.Left - 2, TextRect.Top - 2, TextRect.Right - 2, TextRect.Bottom - 2
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, TempTextColor
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
+        Case FlexTextStyleInset
+            TempTextColor = SetTextColor(hDC, vbWhite)
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, &H808080
+            SetRect TextRect, TextRect.Left - 2, TextRect.Top - 2, TextRect.Right - 2, TextRect.Bottom - 2
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, TempTextColor
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
         Case FlexTextStyleRaisedLight
             TempTextColor = SetTextColor(hDC, vbWhite)
-            Offset = 1
-        Case FlexTextStyleInset
-            TempTextColor = SetTextColor(hDC, &H808080)
-            Offset = -1
+            SetRect TextRect, TextRect.Left - 1, TextRect.Top - 1, TextRect.Right - 1, TextRect.Bottom - 1
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, TempTextColor
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
         Case FlexTextStyleInsetLight
             TempTextColor = SetTextColor(hDC, vbWhite)
-            Offset = -1
+            SetRect TextRect, TextRect.Left + 1, TextRect.Top + 1, TextRect.Right + 1, TextRect.Bottom + 1
+            DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+            SetTextColor hDC, TempTextColor
+            SetRect TextRect, TextRect.Left - 1, TextRect.Top - 1, TextRect.Right - 1, TextRect.Bottom - 1
     End Select
-    If Offset <> 0 Then
-        With TextRect
-        .Top = .Top + Offset
-        .Left = .Left + Offset
-        .Bottom = .Bottom + Offset
-        .Right = .Right + Offset
-        End With
-        DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
-        SetTextColor hDC, TempTextColor
-        With TextRect
-        .Top = .Top - Offset
-        .Left = .Left - Offset
-        .Bottom = .Bottom - Offset
-        .Right = .Right - Offset
-        End With
-    End If
     DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
 End If
 SetTextColor hDC, OldTextColor
