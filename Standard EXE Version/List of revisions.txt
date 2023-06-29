@@ -1,5 +1,9 @@
 List of revisions:
 
+29-Jun-2023
+- Memory leak fixed in the CellPicture property.
+  This is related to 26-Jun-2023 update.
+
 28-Jun-2023
 - Bugfix in the drawing of the text styles.
 
