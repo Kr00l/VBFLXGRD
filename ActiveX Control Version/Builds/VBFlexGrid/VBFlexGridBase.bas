@@ -30,8 +30,9 @@ BMPlanes As Integer
 BMBitsPixel As Integer
 BMBits As Long
 End Type
-Public Declare Function FlexPtrToShadowObj Lib "msvbvm60.dll" Alias "__vbaObjSetAddref" (ByRef Destination As Any, ByVal lpObject As Long) As Long
-Public Declare Function FlexShadowObjPtrAddRef Lib "msvbvm60.dll" Alias "__vbaObjAddref" (ByVal lpObject As Long) As Long
+Public Declare Function FlexObjAddRef Lib "msvbvm60.dll" Alias "__vbaObjAddref" (ByVal lpObject As Long) As Long
+Public Declare Function FlexObjSet Lib "msvbvm60.dll" Alias "__vbaObjSet" (ByRef Destination As Any, ByVal lpObject As Long) As Long
+Public Declare Function FlexObjSetAddRef Lib "msvbvm60.dll" Alias "__vbaObjSetAddref" (ByRef Destination As Any, ByVal lpObject As Long) As Long
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare Function InitCommonControlsEx Lib "comctl32" (ByRef ICCEX As TINITCOMMONCONTROLSEX) As Long
 Private Declare Function GetClassInfoEx Lib "user32" Alias "GetClassInfoExW" (ByVal hInstance As Long, ByVal lpClassName As Long, ByRef lpWndClassEx As WNDCLASSEX) As Long
@@ -182,7 +183,7 @@ Select Case wMsg
 End Select
 On Error Resume Next
 Dim This As VBFlexGrid
-FlexPtrToShadowObj This, uIdSubclass
+FlexObjSetAddRef This, uIdSubclass
 If Err.Number = 0 Then
     FlexSubclassProc = This.FSubclass_Message(hWnd, wMsg, wParam, lParam, dwRefData)
 Else
@@ -287,7 +288,7 @@ lCustData = GetWindowLong(hWnd, 0)
 If lCustData <> 0 Then
     On Error Resume Next
     Dim This As VBFlexGrid
-    FlexPtrToShadowObj This, lCustData
+    FlexObjSetAddRef This, lCustData
     If Err.Number = 0 Then
         FlexWindowProc = This.FSubclass_Message(hWnd, wMsg, wParam, lParam, 1)
     Else

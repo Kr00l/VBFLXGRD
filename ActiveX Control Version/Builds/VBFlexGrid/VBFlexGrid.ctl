@@ -13411,7 +13411,7 @@ Private Sub FreeCellFmtg(ByRef lpFmtg As Long)
 If lpFmtg <> 0 Then
     Dim lpCellFmtg As TLPCELLFMTG
     CopyMemory ByVal VarPtr(lpCellFmtg), ByVal lpFmtg, LenB(lpCellFmtg)
-    If lpCellFmtg.lpPicture <> 0 Then FlexPtrToShadowObj Nothing, lpCellFmtg.lpPicture
+    If lpCellFmtg.lpPicture <> 0 Then FlexObjSet Nothing, lpCellFmtg.lpPicture
     If lpCellFmtg.lpToolTipText <> 0 Then SysFreeString lpCellFmtg.lpToolTipText
     If lpCellFmtg.lpFontName <> 0 Then SysFreeString lpCellFmtg.lpFontName
     HeapFree GetProcessHeap(), 0, lpFmtg
@@ -13455,7 +13455,7 @@ Else
     If (Mask And CFM_ALIGNMENT) = CFM_ALIGNMENT Then CellFmtg.Alignment = .Alignment
     If (Mask And CFM_PICTURE) = CFM_PICTURE Then
         If .lpPicture <> 0 Then
-            FlexPtrToShadowObj CellFmtg.Picture, .lpPicture
+            FlexObjSetAddRef CellFmtg.Picture, .lpPicture
         Else
             Set CellFmtg.Picture = Nothing
         End If
@@ -13502,11 +13502,11 @@ If .lpFmtg <> 0 Then
     If (Mask And CFM_PICTURE) = CFM_PICTURE Then
         Dim IUnk As OLEGuids.IUnknownUnrestricted
         If lpCellFmtg.lpPicture <> 0 Then
-            FlexPtrToShadowObj Nothing, lpCellFmtg.lpPicture
+            FlexObjSet Nothing, lpCellFmtg.lpPicture
             lpCellFmtg.lpPicture = 0
         End If
         lpCellFmtg.lpPicture = ObjPtr(CellFmtg.Picture)
-        If lpCellFmtg.lpPicture <> 0 Then Call FlexShadowObjPtrAddRef(lpCellFmtg.lpPicture)
+        If lpCellFmtg.lpPicture <> 0 Then FlexObjAddRef lpCellFmtg.lpPicture
     End If
     If (Mask And CFM_PICTURERENDERFLAG) = CFM_PICTURERENDERFLAG Then .PictureRenderFlag = CellFmtg.PictureRenderFlag
     If (Mask And CFM_PICTUREALIGNMENT) = CFM_PICTUREALIGNMENT Then .PictureAlignment = CellFmtg.PictureAlignment
