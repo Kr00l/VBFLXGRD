@@ -1,5 +1,8 @@
 List of revisions:
 
+30-Jun-2023
+- Missing invalidation fixed in the ColCheckBoxes property.
+
 29-Jun-2023
 - Memory leak fixed in the CellPicture property.
   This is related to 26-Jun-2023 update.
