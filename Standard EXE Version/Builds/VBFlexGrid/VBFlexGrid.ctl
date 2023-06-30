@@ -4114,15 +4114,8 @@ WordWrap = PropWordWrap
 End Property
 
 Public Property Let WordWrap(ByVal Value As Boolean)
-If PropSingleLine = True And Value = True Then
-    If VBFlexGridDesignMode = True Then
-        MsgBox "WordWrap must be False when SingleLine is True", vbCritical + vbOKOnly
-        Exit Property
-    Else
-        Err.Raise Number:=383, Description:="WordWrap must be False when SingleLine is True"
-    End If
-End If
 PropWordWrap = Value
+If PropWordWrap = True Then PropSingleLine = False
 Call RedrawGrid
 UserControl.PropertyChanged "WordWrap"
 End Property
@@ -4133,8 +4126,15 @@ SingleLine = PropSingleLine
 End Property
 
 Public Property Let SingleLine(ByVal Value As Boolean)
+If PropWordWrap = True And Value = True Then
+    If VBFlexGridDesignMode = True Then
+        MsgBox "SingleLine must be False when WordWrap is True", vbCritical + vbOKOnly
+        Exit Property
+    Else
+        Err.Raise Number:=383, Description:="SingleLine must be False when WordWrap is True"
+    End If
+End If
 PropSingleLine = Value
-If PropSingleLine = True Then PropWordWrap = False
 Call RedrawGrid
 UserControl.PropertyChanged "SingleLine"
 End Property

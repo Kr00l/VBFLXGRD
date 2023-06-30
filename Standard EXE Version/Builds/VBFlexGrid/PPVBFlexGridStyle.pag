@@ -419,16 +419,13 @@ On Error Resume Next
 PropertyPage.ValidateControls
 If Err.Number = 380 Then Exit Sub
 On Error GoTo 0
-If CheckSingleLine.Value = vbChecked Then
-    If CheckWordWrap.Value = vbChecked Then
-        MsgBox "WordWrap must be False when SingleLine is True", vbExclamation + vbOKOnly
-        CheckWordWrap.SetFocus
-        PropertyPage.Changed = True
-        Exit Sub
-    End If
+If CheckWordWrap.Value = vbChecked And CheckSingleLine.Value = vbChecked Then
+    MsgBox "SingeLine must be False when WordWrap is True", vbExclamation + vbOKOnly
+    CheckSingleLine.SetFocus
+    PropertyPage.Changed = True
+    Exit Sub
 End If
 With PropertyPage.SelectedControls(0)
-.SingleLine = CBool(CheckSingleLine.Value = vbChecked)
 .GridLines = ComboGridLines.ItemData(ComboGridLines.ListIndex)
 .GridLinesFixed = ComboGridLinesFixed.ItemData(ComboGridLinesFixed.ListIndex)
 .GridLinesFrozen = ComboGridLinesFrozen.ItemData(ComboGridLinesFrozen.ListIndex)
@@ -446,6 +443,7 @@ With PropertyPage.SelectedControls(0)
 .FixGridLineOffsets = CBool(CheckFixGridLineOffsets.Value = vbChecked)
 .MirrorAlignGeneral = CBool(CheckMirrorAlignGeneral.Value = vbChecked)
 .WordWrap = CBool(CheckWordWrap.Value = vbChecked)
+.SingleLine = CBool(CheckSingleLine.Value = vbChecked)
 .FormatString = TextFormatString.Text
 End With
 Call PropertyPage_SelectionChanged
