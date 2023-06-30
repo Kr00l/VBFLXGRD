@@ -7477,6 +7477,7 @@ Else
         Next i
     End If
 End If
+Call RedrawGrid
 End Property
 
 Public Property Get MergeRow(ByVal Index As Long) As Boolean
@@ -11949,9 +11950,9 @@ If Not .Picture Is Nothing Then
                 Do
                     If .PictureRenderFlag = 0 Then
                         Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+                        Call SetCellFmtg(iRow, iCol, CFM_PICTURERENDERFLAG, CellFmtg)
                     Else
                         Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
-                        Call SetCellFmtg(iRow, iCol, CFM_PICTURERENDERFLAG, CellFmtg)
                     End If
                     PictureTop = PictureTop + PictureHeight
                 Loop While PictureTop < PictureRect.Bottom
@@ -12191,6 +12192,7 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSor
     End If
 End If
 If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
+    Call GetTextDisplay(iRow, iCol, Text)
     Dim TextStyle As FlexTextStyleConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyleFixed
@@ -12234,7 +12236,6 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
         Case FlexEllipsisFormatWord
             DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
     End Select
-    Call GetTextDisplay(iRow, iCol, Text)
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
@@ -12599,9 +12600,9 @@ If Not .Picture Is Nothing Then
                 Do
                     If .PictureRenderFlag = 0 Then
                         Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
+                        Call SetCellFmtg(iRow, iCol, CFM_PICTURERENDERFLAG, CellFmtg)
                     Else
                         Call RenderPicture(.Picture, hDC, PictureLeft, PictureTop, PictureWidth, PictureHeight, .PictureRenderFlag)
-                        Call SetCellFmtg(iRow, iCol, CFM_PICTURERENDERFLAG, CellFmtg)
                     End If
                     PictureTop = PictureTop + PictureHeight
                 Loop While PictureTop < PictureRect.Bottom
@@ -12759,6 +12760,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End With
 End If
 If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
+    Call GetTextDisplay(iRow, iCol, Text)
     Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyle
@@ -12807,7 +12809,6 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
         Case FlexEllipsisFormatWord
             DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
     End Select
-    Call GetTextDisplay(iRow, iCol, Text)
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
