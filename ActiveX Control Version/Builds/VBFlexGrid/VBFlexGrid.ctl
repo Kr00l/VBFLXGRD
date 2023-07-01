@@ -940,7 +940,7 @@ Private Declare Function IsWindowEnabled Lib "user32" (ByVal hWnd As Long) As Lo
 Private Declare Function IsWindowVisible Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function MonitorFromWindow Lib "user32" (ByVal hWnd As Long, ByVal dwFlags As Long) As Long
 Private Declare Function GetMonitorInfo Lib "user32" Alias "GetMonitorInfoW" (ByVal hMonitor As Long, ByRef lpMI As MONITORINFO) As Long
-Private Declare Function LBItemFromPt Lib "comctl32" (ByVal hLB As Long, ByVal PX As Long, ByVal PY As Long, ByVal bAutoScroll As Long) As Long
+Private Declare Function LBItemFromPt Lib "comctl32" (ByVal hLB As Long, ByVal XY As Currency, ByVal bAutoScroll As Long) As Long
 Private Declare Function SetFocusAPI Lib "user32" Alias "SetFocus" (ByVal hWnd As Long) As Long
 Private Declare Function GetFocus Lib "user32" () As Long
 Private Declare Function BeginPaint Lib "user32" (ByVal hWnd As Long, ByRef lpPaint As PAINTSTRUCT) As Long
@@ -1014,8 +1014,7 @@ Private Declare Function ScreenToClient Lib "user32" (ByVal hWnd As Long, ByRef 
 Private Declare Function ClientToScreen Lib "user32" (ByVal hWnd As Long, ByRef lpPoint As POINTAPI) As Long
 Private Declare Function SetScrollInfo Lib "user32" (ByVal hWnd As Long, ByVal wBar As Long, ByRef lpScrollInfo As SCROLLINFO, ByVal fRedraw As Long) As Long
 Private Declare Function GetScrollInfo Lib "user32" (ByVal hWnd As Long, ByVal wBar As Long, ByRef lpScrollInfo As SCROLLINFO) As Long
-Private Declare Function ChildWindowFromPoint Lib "user32" (ByVal hWndParent As Long, ByVal X As Long, ByVal Y As Long) As Long
-Private Declare Function PtInRect Lib "user32" (ByRef lpRect As RECT, ByVal X As Long, ByVal Y As Long) As Long
+Private Declare Function ChildWindowFromPoint Lib "user32" (ByVal hWndParent As Long, ByVal XY As Currency) As Long
 Private Declare Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hInstance As Long, ByVal lpCursorName As Any) As Long
 Private Declare Function SetCursor Lib "user32" (ByVal hCursor As Long) As Long
 Private Declare Function GetCursorPos Lib "user32" (ByRef lpPoint As POINTAPI) As Long
@@ -18551,12 +18550,13 @@ If VBFlexGridHandle <> 0 And VBFlexGridEditHandle <> 0 Then
                 If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then
                     ' If the combo button window is disabled the mouse message will go trough it and could trigger ending of the editing.
                     ' To avoid this a check is needed and return MA_ACTIVATEANDEAT, if necessary.
-                    Dim Pos As Long, P As POINTAPI
+                    Dim Pos As Long, P As POINTAPI, XY As Currency
                     Pos = GetMessagePos()
                     P.X = Get_X_lParam(Pos)
                     P.Y = Get_Y_lParam(Pos)
                     ScreenToClient VBFlexGridHandle, P
-                    If ChildWindowFromPoint(VBFlexGridHandle, P.X, P.Y) = VBFlexGridComboButtonHandle Then
+                    CopyMemory ByVal VarPtr(XY), ByVal VarPtr(P), 8
+                    If ChildWindowFromPoint(VBFlexGridHandle, XY) = VBFlexGridComboButtonHandle Then
                         RetVal = MA_ACTIVATEANDEAT
                         ValidateEditOnMouseActivateMsg = True
                         Exit Function
@@ -18921,11 +18921,12 @@ End Sub
 Private Function ComboListSelFromPt(ByVal X As Long, ByVal Y As Long) As Long
 ComboListSelFromPt = LB_ERR
 If VBFlexGridComboListHandle <> 0 Then
-    Dim P As POINTAPI, Index As Long
+    Dim P As POINTAPI, XY As Currency, Index As Long
     P.X = X
     P.Y = Y
     ClientToScreen VBFlexGridComboListHandle, P
-    Index = LBItemFromPt(VBFlexGridComboListHandle, P.X, P.Y, 0)
+    CopyMemory ByVal VarPtr(XY), ByVal VarPtr(P), 8
+    Index = LBItemFromPt(VBFlexGridComboListHandle, XY, 0)
     If Not Index = LB_ERR Then
         If Index <> SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&) Then SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, Index, ByVal 0&
     End If
@@ -19078,6 +19079,13 @@ Do While Last > First
     Last = i
 Loop
 End Sub
+
+Private Function PtInRect(ByRef lpRect As RECT, ByVal X As Long, ByVal Y As Long) As Long
+' Avoid API declare since x64 calling convention aligns 8 bytes per argument.
+' So the handling of a ByVal PT being split into two 4-byte arguments will crash.
+PtInRect = 0
+If X >= lpRect.Left And X < lpRect.Right And Y >= lpRect.Top And Y < lpRect.Bottom Then PtInRect = 1
+End Function
 
 #If ImplementPreTranslateMsg = True Then
 
