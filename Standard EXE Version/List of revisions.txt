@@ -1,5 +1,8 @@
 List of revisions:
 
+01-Jul-2023
+- PtInRect/LBItemFromPt/ChildWindowFromPoint API and code adaptions so it can be migrated to x64 more easily.
+
 30-Jun-2023
 - Missing invalidation fixed in the ColCheckBoxes property.
 
