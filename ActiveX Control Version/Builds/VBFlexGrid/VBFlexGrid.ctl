@@ -13166,7 +13166,7 @@ Private Function GetFocusRectWidth() As Integer
 If PropFocusRectWidth = -1 Then GetFocusRectWidth = VBFlexGridFocusBorder.CX Else GetFocusRectWidth = PropFocusRectWidth
 End Function
 
-Private Function GetComboButtonWidth(ByVal iCol As Long, ByVal ComboCue As FlexComboCueConstants)
+Private Function GetComboButtonWidth(ByVal iCol As Long, ByVal ComboCue As FlexComboCueConstants) As Long
 Dim CtlType As Long
 Select Case ComboCue
     Case FlexComboCueNone
@@ -13539,7 +13539,7 @@ End If
 End With
 End Sub
 
-Private Function GetCellFmtgToolTipText(ByVal iRow As Long, ByVal iCol As Long, ByRef TextOut As String)
+Private Sub GetCellFmtgToolTipText(ByVal iRow As Long, ByVal iCol As Long, ByRef TextOut As String)
 Dim lpCellFmtg As TLPCELLFMTG
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
 If .lpFmtg = 0 Then
@@ -13553,7 +13553,7 @@ Else
     End If
 End If
 End With
-End Function
+End Sub
 
 Private Sub SetCellFmtgToolTipText(ByVal iRow As Long, ByVal iCol As Long, ByRef TextIn As String)
 Dim lpCellFmtg As TLPCELLFMTG
