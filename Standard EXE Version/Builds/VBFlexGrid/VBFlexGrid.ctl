@@ -5175,18 +5175,20 @@ If VBFlexGridEditHandle <> 0 Then
                     VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), 0, dwStyle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, 0, App.hInstance, ByVal 0&)
                     If VBFlexGridComboListHandle <> 0 Then
                         SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
-                        Dim Pos1 As Long, Pos2 As Long, Temp As String, i As Long
-                        Do
-                            Pos1 = InStr(Pos1 + 1, ComboItems, "|")
-                            If Pos1 > 0 Then
-                                Temp = Mid$(ComboItems, Pos2 + 1, Pos1 - Pos2 - 1)
-                            Else
-                                Temp = Mid$(ComboItems, Pos2 + 1)
-                            End If
-                            SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, i, ByVal StrPtr(Temp)
-                            Pos2 = Pos1
-                            i = i + 1
-                        Loop Until Pos1 = 0
+                        If StrPtr(ComboItems) <> 0 Then
+                            Dim Pos1 As Long, Pos2 As Long, Temp As String, i As Long
+                            Do
+                                Pos1 = InStr(Pos1 + 1, ComboItems, "|")
+                                If Pos1 > 0 Then
+                                    Temp = Mid$(ComboItems, Pos2 + 1, Pos1 - Pos2 - 1)
+                                Else
+                                    Temp = Mid$(ComboItems, Pos2 + 1)
+                                End If
+                                SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, i, ByVal StrPtr(Temp)
+                                Pos2 = Pos1
+                                i = i + 1
+                            Loop Until Pos1 = 0
+                        End If
                         Const EDIT_MAXDROPDOWNITEMS As Integer = 9
                         Dim Count As Long, Height As Long
                         Count = SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&)
