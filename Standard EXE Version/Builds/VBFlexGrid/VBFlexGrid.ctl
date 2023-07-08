@@ -974,8 +974,8 @@ Private Declare PtrSafe Function ImmReleaseContext Lib "imm32" (ByVal hWnd As Lo
 Private Declare PtrSafe Function ImmGetOpenStatus Lib "imm32" (ByVal hIMC As LongPtr) As Long
 Private Declare PtrSafe Function ImmSetOpenStatus Lib "imm32" (ByVal hIMC As LongPtr, ByVal fOpen As Long) As Long
 Private Declare PtrSafe Function ImmAssociateContext Lib "imm32" (ByVal hWnd As LongPtr, ByVal hIMC As LongPtr) As LongPtr
-Private Declare PtrSafe Function ImmGetConversionStatus Lib "imm32" (ByVal hIMC As LongPtr, ByRef lpfdwConversion As LongPtr, ByRef lpfdwSentence As LongPtr) As Long
-Private Declare PtrSafe Function ImmSetConversionStatus Lib "imm32" (ByVal hIMC As LongPtr, ByVal lpfdwConversion As LongPtr, ByVal lpfdwSentence As LongPtr) As Long
+Private Declare PtrSafe Function ImmGetConversionStatus Lib "imm32" (ByVal hIMC As LongPtr, ByVal lpfdwConversion As LongPtr, ByVal lpfdwSentence As LongPtr) As Long
+Private Declare PtrSafe Function ImmSetConversionStatus Lib "imm32" (ByVal hIMC As LongPtr, ByVal fdwConversion As Long, ByVal fdwSentence As Long) As Long
 Private Declare PtrSafe Function GetSystemDefaultLangID Lib "kernel32" () As Integer
 Private Declare PtrSafe Function GetUserDefaultLangID Lib "kernel32" () As Integer
 Private Declare PtrSafe Function GetUserDefaultUILanguage Lib "kernel32" () As Integer
@@ -1088,8 +1088,8 @@ Private Declare Function ImmReleaseContext Lib "imm32" (ByVal hWnd As Long, ByVa
 Private Declare Function ImmGetOpenStatus Lib "imm32" (ByVal hIMC As Long) As Long
 Private Declare Function ImmSetOpenStatus Lib "imm32" (ByVal hIMC As Long, ByVal fOpen As Long) As Long
 Private Declare Function ImmAssociateContext Lib "imm32" (ByVal hWnd As Long, ByVal hIMC As Long) As Long
-Private Declare Function ImmGetConversionStatus Lib "imm32" (ByVal hIMC As Long, ByRef lpfdwConversion As Long, ByRef lpfdwSentence As Long) As Long
-Private Declare Function ImmSetConversionStatus Lib "imm32" (ByVal hIMC As Long, ByVal lpfdwConversion As Long, ByVal lpfdwSentence As Long) As Long
+Private Declare Function ImmGetConversionStatus Lib "imm32" (ByVal hIMC As Long, ByVal lpfdwConversion As Long, ByVal lpfdwSentence As Long) As Long
+Private Declare Function ImmSetConversionStatus Lib "imm32" (ByVal hIMC As Long, ByVal fdwConversion As Long, ByVal fdwSentence As Long) As Long
 Private Declare Function GetSystemDefaultLangID Lib "kernel32" () As Integer
 Private Declare Function GetUserDefaultLangID Lib "kernel32" () As Integer
 Private Declare Function GetUserDefaultUILanguage Lib "kernel32" () As Integer
@@ -1498,7 +1498,7 @@ Private VBFlexGridEditHandle As Long, VBFlexGridComboButtonHandle As Long, VBFle
 Private VBFlexGridDoubleBufferDC As Long, VBFlexGridDoubleBufferBmp As Long, VBFlexGridDoubleBufferBmpOld As Long
 Private VBFlexGridFontHandle As Long, VBFlexGridFontFixedHandle As Long
 Private VBFlexGridClientRect As RECT
-Private VBFlexGridIMCHandle As Long
+Private VBFlexGridIMCHandle As LongPtr
 Private VBFlexGridBackColorBrush As Long
 Private VBFlexGridBackColorAltBrush As Long
 Private VBFlexGridBackColorBkgBrush As Long
@@ -4838,9 +4838,9 @@ If VBFlexGridDesignMode = False Then
     VBFlexGridHandle = CreateWindowEx(dwExStyle, StrPtr("VBFlexGridWndClass"), 0, dwStyle, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight, UserControl.hWnd, 0, App.hInstance, ByVal ObjPtr(Me))
     If VBFlexGridHandle <> 0 Then
         SetWindowLong VBFlexGridHandle, 0, ObjPtr(Me)
-        If VBFlexGridIMCHandle = 0 Then
+        If VBFlexGridIMCHandle = NULL_PTR Then
             VBFlexGridIMCHandle = ImmCreateContext()
-            If VBFlexGridIMCHandle <> 0 Then ImmAssociateContext VBFlexGridHandle, VBFlexGridIMCHandle
+            If VBFlexGridIMCHandle <> NULL_PTR Then ImmAssociateContext VBFlexGridHandle, VBFlexGridIMCHandle
         End If
     End If
     If PropShowInfoTips = True Or PropShowLabelTips = True Then Call CreateToolTip
@@ -5011,10 +5011,10 @@ If VBFlexGridDesignMode = False Then
     #End If
     
     SetWindowLong VBFlexGridHandle, 0, 0
-    If VBFlexGridIMCHandle <> 0 Then
-        ImmAssociateContext VBFlexGridHandle, 0
+    If VBFlexGridIMCHandle <> NULL_PTR Then
+        ImmAssociateContext VBFlexGridHandle, NULL_PTR
         ImmDestroyContext VBFlexGridIMCHandle
-        VBFlexGridIMCHandle = 0
+        VBFlexGridIMCHandle = NULL_PTR
     End If
     ShowWindow VBFlexGridHandle, SW_HIDE
     SetParent VBFlexGridHandle, 0
@@ -18397,26 +18397,26 @@ If VBFlexGridHandle <> 0 Then
 End If
 End Sub
 
-Private Sub SetIMEMode(ByVal hWnd As Long, ByVal hIMCOrig As Long, ByVal Value As FlexIMEModeConstants)
+Private Sub SetIMEMode(ByVal hWnd As LongPtr, ByVal hIMCOrig As LongPtr, ByVal Value As FlexIMEModeConstants)
 Const IME_CMODE_ALPHANUMERIC As Long = &H0, IME_CMODE_NATIVE As Long = &H1, IME_CMODE_KATAKANA As Long = &H2, IME_CMODE_FULLSHAPE As Long = &H8
-Dim hKL As Long
+Dim hKL As LongPtr
 hKL = GetKeyboardLayout(0)
-If ImmIsIME(hKL) = 0 Or hIMCOrig = 0 Then Exit Sub
-Dim hIMC As Long
+If ImmIsIME(hKL) = NULL_PTR Or hIMCOrig = NULL_PTR Then Exit Sub
+Dim hIMC As LongPtr
 hIMC = ImmGetContext(hWnd)
 If Value = FlexIMEModeDisable Then
-    If hIMC <> 0 Then
+    If hIMC <> NULL_PTR Then
         ImmReleaseContext hWnd, hIMC
-        ImmAssociateContext hWnd, 0
+        ImmAssociateContext hWnd, NULL_PTR
     End If
 Else
-    If hIMC = 0 Then
+    If hIMC = NULL_PTR Then
         ImmAssociateContext hWnd, hIMCOrig
         hIMC = ImmGetContext(hWnd)
     End If
-    If hIMC <> 0 And Value <> FlexIMEModeNoControl Then
+    If hIMC <> NULL_PTR And Value <> FlexIMEModeNoControl Then
         Dim dwConversion As Long, dwSentence As Long
-        ImmGetConversionStatus hIMC, dwConversion, dwSentence
+        ImmGetConversionStatus hIMC, VarPtr(dwConversion), VarPtr(dwSentence)
         Select Case Value
             Case FlexIMEModeOn
                 ImmSetOpenStatus hIMC, 1
