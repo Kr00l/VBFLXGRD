@@ -489,14 +489,14 @@ End Type
 Private Type TRACKMOUSEEVENTSTRUCT
 cbSize As Long
 dwFlags As Long
-hWndTrack As Long
+hWndTrack As LongPtr
 dwHoverTime As Long
 End Type
 Private Type TMSG
-hWnd As Long
+hWnd As LongPtr
 Message As Long
-wParam As Long
-lParam As Long
+wParam As LongPtr
+lParam As LongPtr
 Time As Long
 PT As POINTAPI
 End Type
@@ -523,7 +523,7 @@ TMPitchAndFamily As Byte
 TMCharset As Byte
 End Type
 Private Type PAINTSTRUCT
-hDC As Long
+hDC As LongPtr
 fErase As Long
 RCPaint As RECT
 fRestore As Long
@@ -536,10 +536,10 @@ CtlID As Long
 ItemID As Long
 ItemAction As Long
 ItemState As Long
-hWndItem As Long
-hDC As Long
+hWndItem As LongPtr
+hDC As LongPtr
 RCItem As RECT
-ItemData As Long
+ItemData As LongPtr
 End Type
 Private Type SCROLLINFO
 cbSize As Long
@@ -574,31 +574,31 @@ End Type
 Private Type TOOLINFO
 cbSize As Long
 uFlags As Long
-hWnd As Long
-uId As Long
+hWnd As LongPtr
+uId As LongPtr
 RC As RECT
-hInst As Long
-lpszText As Long
-lParam As Long
+hInst As LongPtr
+lpszText As LongPtr
+lParam As LongPtr
 End Type
 Private Type NMHDR
-hWndFrom As Long
-IDFrom As Long
+hWndFrom As LongPtr
+IDFrom As LongPtr
 Code As Long
 End Type
 Private Const CDDS_PREPAINT As Long = &H1
 Private Type NMCUSTOMDRAW
 hdr As NMHDR
 dwDrawStage As Long
-hDC As Long
+hDC As LongPtr
 RC As RECT
-dwItemSpec As Long
+dwItemSpec As LongPtr
 uItemState As Long
-lItemlParam As Long
+lItemlParam As LongPtr
 End Type
 Private Type NMTOOLTIPSCREATED
 hdr As NMHDR
-hWndToolTips As Long
+hWndToolTips As LongPtr
 End Type
 Private Type NMTTCUSTOMDRAW
 NMCD As NMCUSTOMDRAW
@@ -606,11 +606,11 @@ uDrawFlags As Long
 End Type
 Private Type NMTTDISPINFO
 hdr As NMHDR
-lpszText As Long
+lpszText As LongPtr
 szText(0 To ((80 * 2) - 1)) As Byte
-hInst As Long
+hInst As LongPtr
 uFlags As Long
-lParam As Long
+lParam As LongPtr
 End Type
 Private Type NMSELCHANGE
 hdr As NMHDR
@@ -722,17 +722,17 @@ End Type
 Private Type TLPCELLFMTG
 TextStyle As Integer ' As FlexTextStyleConstants
 Alignment As Integer ' As FlexAlignmentConstants
-lpPicture As Long
+lpPicture As LongPtr
 PictureRenderFlag As Integer
 PictureAlignment As Integer ' As FlexPictureAlignmentConstants
 BackColor As Long
 ForeColor As Long
-lpToolTipText As Long
+lpToolTipText As LongPtr
 ComboCue As Long ' As FlexComboCueConstants
 Checked As Integer
 FloodPercent As Integer
 FloodColor As Long
-lpFontName As Long
+lpFontName As LongPtr
 FontSize As Single
 FontStyle As Integer
 FontCharset As Integer
@@ -741,7 +741,7 @@ Private Const CELL_TEXT_WIDTH_PADDING_DIP As Long = 3
 Private Const CELL_TEXT_HEIGHT_PADDING_DIP As Long = 1
 Private Type TCELL
 Text As String
-lpFmtg As Long
+lpFmtg As LongPtr
 End Type
 Private Const RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH As Long = 4
 Private Const ROWINFO_HEIGHT_SPACING_DIP As Long = 3
@@ -1019,7 +1019,7 @@ Private Declare PtrSafe Function GetSystemMetrics Lib "user32" (ByVal nIndex As 
 Private Declare PtrSafe Function GetSysColorBrush Lib "user32" (ByVal nIndex As Long) As LongPtr
 Private Declare PtrSafe Function GetSysColor Lib "user32" (ByVal nIndex As Long) As Long
 Private Declare PtrSafe Function GetStockObject Lib "gdi32" (ByVal nIndex As Long) As LongPtr
-Private Declare PtrSafe Function SystemParametersInfo Lib "user32" Alias "SystemParametersInfoW" (ByVal uAction As Long, ByVal uiParam As Long, ByRef lpvParam As LongPtr, ByVal fWinIni As Long) As Long
+Private Declare PtrSafe Function SystemParametersInfo Lib "user32" Alias "SystemParametersInfoW" (ByVal uAction As Long, ByVal uiParam As Long, ByVal lpvParam As LongPtr, ByVal fWinIni As Long) As Long
 Private Declare PtrSafe Function SetBkMode Lib "gdi32" (ByVal hDC As LongPtr, ByVal nBkMode As Long) As Long
 Private Declare PtrSafe Function SetTextAlign Lib "gdi32" (ByVal hDC As LongPtr, ByVal fMode As Long) As Long
 Private Declare PtrSafe Function SetLayout Lib "gdi32" (ByVal hDC As LongPtr, ByVal dwLayout As Long) As Long
@@ -1128,7 +1128,7 @@ Private Declare Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As
 Private Declare Function GetSysColorBrush Lib "user32" (ByVal nIndex As Long) As Long
 Private Declare Function GetSysColor Lib "user32" (ByVal nIndex As Long) As Long
 Private Declare Function GetStockObject Lib "gdi32" (ByVal nIndex As Long) As Long
-Private Declare Function SystemParametersInfo Lib "user32" Alias "SystemParametersInfoW" (ByVal uAction As Long, ByVal uiParam As Long, ByRef lpvParam As Long, ByVal fWinIni As Long) As Long
+Private Declare Function SystemParametersInfo Lib "user32" Alias "SystemParametersInfoW" (ByVal uAction As Long, ByVal uiParam As Long, ByVal lpvParam As Long, ByVal fWinIni As Long) As Long
 Private Declare Function SetBkMode Lib "gdi32" (ByVal hDC As Long, ByVal nBkMode As Long) As Long
 Private Declare Function SetTextAlign Lib "gdi32" (ByVal hDC As Long, ByVal fMode As Long) As Long
 Private Declare Function SetLayout Lib "gdi32" (ByVal hDC As Long, ByVal dwLayout As Long) As Long
@@ -1187,12 +1187,21 @@ CBS_MIXEDHOT = 10
 CBS_MIXEDPRESSED = 11
 CBS_MIXEDDISABLED = 12
 End Enum
-Private Declare Function IsThemeBackgroundPartiallyTransparent Lib "uxtheme" (ByVal Theme As Long, iPartId As Long, iStateId As Long) As Long
+#If VBA7 Then
+Private Declare PtrSafe Function IsThemeBackgroundPartiallyTransparent Lib "uxtheme" (ByVal Theme As LongPtr, ByVal iPartId As Long, ByVal iStateId As Long) As Long
+Private Declare PtrSafe Function DrawThemeParentBackground Lib "uxtheme" (ByVal hWnd As LongPtr, ByVal hDC As LongPtr, ByRef pRect As RECT) As Long
+Private Declare PtrSafe Function DrawThemeBackground Lib "uxtheme" (ByVal Theme As LongPtr, ByVal hDC As LongPtr, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pRect As RECT, ByRef pClipRect As RECT) As Long
+Private Declare PtrSafe Function GetThemeBackgroundContentRect Lib "uxtheme" (ByVal Theme As LongPtr, ByVal hDC As LongPtr, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pBoundingRect As RECT, ByRef pContentRect As RECT) As Long
+Private Declare PtrSafe Function OpenThemeData Lib "uxtheme" (ByVal hWnd As LongPtr, ByVal lpszClassList As LongPtr) As LongPtr
+Private Declare PtrSafe Function CloseThemeData Lib "uxtheme" (ByVal Theme As LongPtr) As Long
+#Else
+Private Declare Function IsThemeBackgroundPartiallyTransparent Lib "uxtheme" (ByVal Theme As Long, ByVal iPartId As Long, ByVal iStateId As Long) As Long
 Private Declare Function DrawThemeParentBackground Lib "uxtheme" (ByVal hWnd As Long, ByVal hDC As Long, ByRef pRect As RECT) As Long
 Private Declare Function DrawThemeBackground Lib "uxtheme" (ByVal Theme As Long, ByVal hDC As Long, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pRect As RECT, ByRef pClipRect As RECT) As Long
 Private Declare Function GetThemeBackgroundContentRect Lib "uxtheme" (ByVal Theme As Long, ByVal hDC As Long, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pBoundingRect As RECT, ByRef pContentRect As RECT) As Long
-Private Declare Function OpenThemeData Lib "uxtheme" (ByVal hWnd As Long, ByVal pszClassList As Long) As Long
+Private Declare Function OpenThemeData Lib "uxtheme" (ByVal hWnd As Long, ByVal lpszClassList As Long) As Long
 Private Declare Function CloseThemeData Lib "uxtheme" (ByVal Theme As Long) As Long
+#End If
 
 #End If
 
@@ -1868,9 +1877,9 @@ VBFlexGridComboButtonAlignment = FlexLeftRightAlignmentRight
 VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal
 VBFlexGridComboButtonWidth = -1
 VBFlexGridCheckBoxDrawMode = FlexCheckBoxDrawModeNormal
-SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VBFlexGridWheelScrollLines, 0
-If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VBFlexGridFocusBorder.CX, 0) = 0 Then VBFlexGridFocusBorder.CX = 1
-If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VBFlexGridFocusBorder.CY, 0) = 0 Then VBFlexGridFocusBorder.CY = 1
+SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VarPtr(VBFlexGridWheelScrollLines), 0
+If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VarPtr(VBFlexGridFocusBorder.CX), 0) = 0 Then VBFlexGridFocusBorder.CX = 1
+If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VarPtr(VBFlexGridFocusBorder.CY), 0) = 0 Then VBFlexGridFocusBorder.CY = 1
 VBFlexGridExtendLastCol = -1
 VBFlexGridClipSeparatorCol = vbTab
 VBFlexGridClipSeparatorRow = vbCr
@@ -19532,9 +19541,9 @@ Select Case wMsg
             End If
         End If
     Case WM_SETTINGCHANGE
-        SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VBFlexGridWheelScrollLines, 0
-        If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VBFlexGridFocusBorder.CX, 0) = 0 Then VBFlexGridFocusBorder.CX = 1
-        If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VBFlexGridFocusBorder.CY, 0) = 0 Then VBFlexGridFocusBorder.CY = 1
+        SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VarPtr(VBFlexGridWheelScrollLines), 0
+        If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VarPtr(VBFlexGridFocusBorder.CX), 0) = 0 Then VBFlexGridFocusBorder.CX = 1
+        If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VarPtr(VBFlexGridFocusBorder.CY), 0) = 0 Then VBFlexGridFocusBorder.CY = 1
         If VBFlexGridFocusRectPen <> 0 Then
             DeleteObject VBFlexGridFocusRectPen
             VBFlexGridFocusRectPen = 0
