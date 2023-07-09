@@ -19289,7 +19289,7 @@ If lParam <> NULL_PTR Then
         PreTranslateMsg = 1
     ElseIf PropWantReturn = True Then
         If Msg.Message = WM_KEYDOWN Or Msg.Message = WM_KEYUP Then
-            If (Msg.wParam And &HFF&) = vbKeyReturn Then
+            If (CLng(Msg.wParam) And &HFF&) = vbKeyReturn Then
                 SendMessage Msg.hWnd, Msg.Message, Msg.wParam, ByVal Msg.lParam
                 PreTranslateMsg = 1
             End If
@@ -19395,7 +19395,7 @@ Select Case wMsg
             End If
             GetScrollInfo hWnd, wBar, SCI
             PrevPos = SCI.nPos
-            Select Case LoWord(wParam)
+            Select Case LoWord(CLng(wParam))
                 Case SB_LINELEFT, SB_LINEUP
                     If wMsg = WM_HSCROLL Then
                         SCI.nPos = VBFlexGridLeftCol
@@ -19475,7 +19475,7 @@ Select Case wMsg
                 RaiseEvent Scroll
             End If
             If PropShowScrollTips = True Then
-                Select Case LoWord(wParam)
+                Select Case LoWord(CLng(wParam))
                     Case SB_THUMBPOSITION
                         Call CancelScrollTip
                     Case SB_THUMBTRACK
