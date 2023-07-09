@@ -2235,9 +2235,9 @@ If PropDoubleBuffer = True Then
                 PatBlt VBFlexGridDoubleBufferDC, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight, vbPatCopy
                 SelectObject VBFlexGridDoubleBufferDC, Brush
             End If
-            Call DrawGrid(VBFlexGridDoubleBufferDC, -1)
+            Call DrawGrid(VBFlexGridDoubleBufferDC, NULL_PTR, True)
         Else
-            Call DrawGrid(VBFlexGridDoubleBufferDC, hRgn)
+            Call DrawGrid(VBFlexGridDoubleBufferDC, hRgn, False)
             If hRgn <> NULL_PTR Then ExtSelectClipRgn UserControl.hDC, hRgn, RGN_COPY
         End If
         BitBlt UserControl.hDC, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight, VBFlexGridDoubleBufferDC, 0, 0, vbSrcCopy
@@ -2247,7 +2247,7 @@ If PropDoubleBuffer = True Then
         End If
     End If
 Else
-    Call DrawGrid(UserControl.hDC, -1)
+    Call DrawGrid(UserControl.hDC, NULL_PTR, True)
 End If
 If PropRightToLeft = True And PropRightToLeftLayout = True Then SetLayout UserControl.hDC, OldLayout
 End Sub
@@ -3181,7 +3181,7 @@ For j = 1 To 2
         .cbSize = LenB(TI)
         Buffer = String(80, vbNullChar)
         .lpszText = StrPtr(Buffer)
-        For i = 1 To SendMessage(hToolTip, TTM_GETTOOLCOUNT, 0, ByVal 0&)
+        For i = 1 To CLng(SendMessage(hToolTip, TTM_GETTOOLCOUNT, 0, ByVal 0&))
             If SendMessage(hToolTip, TTM_ENUMTOOLS, i - 1, ByVal VarPtr(TI)) <> 0 Then
                 If (dwMask And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL Or (dwMask And WS_EX_RTLREADING) = 0 Then
                     If (.uFlags And TTF_RTLREADING) = TTF_RTLREADING Then .uFlags = .uFlags And Not TTF_RTLREADING
@@ -5379,14 +5379,14 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                         End If
                         Const EDIT_MAXDROPDOWNITEMS As Integer = 9
                         Dim Count As Long, Height As Long
-                        Count = SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&)
+                        Count = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&))
                         Select Case Count
                             Case 0
                                 Count = 1
                             Case Is > EDIT_MAXDROPDOWNITEMS
                                 Count = EDIT_MAXDROPDOWNITEMS
                         End Select
-                        Height = SendMessage(VBFlexGridComboListHandle, LB_GETITEMHEIGHT, 0, ByVal 0&) * Count
+                        Height = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETITEMHEIGHT, 0, ByVal 0&)) * Count
                         MoveWindow VBFlexGridComboListHandle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, Height + 2, 0
                         SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, SendMessage(VBFlexGridComboListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Text)), ByVal 0&
                     End If
@@ -5435,7 +5435,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
         Dim ReqRect As RECT
         SendMessage VBFlexGridComboCalendarHandle, MCM_GETMINREQRECT, 0, ByVal VarPtr(ReqRect)
         Dim TodayWidth As Long
-        TodayWidth = SendMessage(VBFlexGridComboCalendarHandle, MCM_GETMAXTODAYWIDTH, 0, ByVal 0&)
+        TodayWidth = CLng(SendMessage(VBFlexGridComboCalendarHandle, MCM_GETMAXTODAYWIDTH, 0, ByVal 0&))
         If TodayWidth > (ReqRect.Right - ReqRect.Left) Then ReqRect.Right = ReqRect.Left + TodayWidth
         LSet WndRect = VBFlexGridComboBoxRect
         MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
@@ -9963,7 +9963,7 @@ If VBFlexGridHandle <> NULL_PTR Then
             End If
             If hBmp <> NULL_PTR Then
                 hBmpOld = SelectObject(hDCBmp, hBmp)
-                Call DrawGrid(hDCBmp, -1, True)
+                Call DrawGrid(hDCBmp, NULL_PTR, True, True)
                 Set Picture = PictureFromHandle(hBmp, vbPicTypeBitmap)
                 SelectObject hDCBmp, hBmpOld
             End If
@@ -10053,7 +10053,7 @@ Public Property Get EditText() As String
 Attribute EditText.VB_Description = "Returns/sets the text contained in an object."
 Attribute EditText.VB_MemberFlags = "400"
 If VBFlexGridEditHandle <> NULL_PTR Then
-    EditText = String(SendMessage(VBFlexGridEditHandle, WM_GETTEXTLENGTH, 0, ByVal 0&), vbNullChar)
+    EditText = String(CLng(SendMessage(VBFlexGridEditHandle, WM_GETTEXTLENGTH, 0, ByVal 0&)), vbNullChar)
     SendMessage VBFlexGridEditHandle, WM_GETTEXT, Len(EditText) + 1, ByVal StrPtr(EditText)
 End If
 End Property
@@ -10079,7 +10079,7 @@ End Property
 Public Property Get EditMaxLength() As Long
 Attribute EditMaxLength.VB_Description = "Returns/sets the maximum number of characters that can be entered in a control."
 Attribute EditMaxLength.VB_MemberFlags = "400"
-If VBFlexGridEditHandle <> NULL_PTR Then EditMaxLength = SendMessage(VBFlexGridEditHandle, EM_GETLIMITTEXT, 0, ByVal 0&)
+If VBFlexGridEditHandle <> NULL_PTR Then EditMaxLength = CLng(SendMessage(VBFlexGridEditHandle, EM_GETLIMITTEXT, 0, ByVal 0&))
 End Property
 
 Public Property Let EditMaxLength(ByVal Value As Long)
@@ -10365,7 +10365,7 @@ Attribute ComboList.VB_Description = "Returns the items contained in a drop-down
 Attribute ComboList.VB_MemberFlags = "400"
 If VBFlexGridComboListHandle <> NULL_PTR Then
     Dim Length As Long
-    Length = SendMessage(VBFlexGridComboListHandle, LB_GETTEXTLEN, Index, ByVal 0&)
+    Length = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETTEXTLEN, Index, ByVal 0&))
     If Not Length = LB_ERR Then
         ComboList = String(Length, vbNullChar)
         SendMessage VBFlexGridComboListHandle, LB_GETTEXT, Index, ByVal StrPtr(ComboList)
@@ -10378,13 +10378,13 @@ End Property
 Public Property Get ComboListCount() As Long
 Attribute ComboListCount.VB_Description = "Returns the number of items in the drop-down list."
 Attribute ComboListCount.VB_MemberFlags = "400"
-If VBFlexGridComboListHandle <> NULL_PTR Then ComboListCount = SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&)
+If VBFlexGridComboListHandle <> NULL_PTR Then ComboListCount = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&))
 End Property
 
 Public Property Get ComboListIndex() As Long
 Attribute ComboListIndex.VB_Description = "Returns/sets the index of the currently selected item in the drop-down list."
 Attribute ComboListIndex.VB_MemberFlags = "400"
-If VBFlexGridComboListHandle <> NULL_PTR Then ComboListIndex = SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&)
+If VBFlexGridComboListHandle <> NULL_PTR Then ComboListIndex = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&))
 End Property
 
 Public Property Let ComboListIndex(ByVal Value As Long)
@@ -10604,9 +10604,9 @@ If VBFlexGridHandle <> NULL_PTR And VBFlexGridNoRedraw = False Then
 End If
 End Sub
 
-Private Sub DrawGrid(ByVal hDC As LongPtr, ByRef hRgn As LongPtr, Optional ByVal NoClip As Boolean)
+Private Sub DrawGrid(ByVal hDC As LongPtr, ByRef hRgn As LongPtr, ByVal NoRgn As Boolean, Optional ByVal NoClip As Boolean)
 If VBFlexGridNoRedraw = True And hDC <> NULL_PTR Then
-    If hRgn <> -1 Then hRgn = CreateRectRgn(0, 0, 0, 0)
+    If NoRgn = False Then hRgn = CreateRectRgn(0, 0, 0, 0)
     Exit Sub
 ElseIf hDC = NULL_PTR Then
     Exit Sub
@@ -11926,7 +11926,7 @@ If hPenOld <> NULL_PTR Then
     SelectObject hDC, hPenOld
     hPenOld = NULL_PTR
 End If
-If hRgn <> -1 Then hRgn = CreateRectRgn(.Left, .Top, .Right, .Bottom)
+If NoRgn = False Then hRgn = CreateRectRgn(.Left, .Top, .Right, .Bottom)
 End With
 SetBkMode hDC, OldBkMode
 End Sub
@@ -13886,7 +13886,7 @@ End Function
 
 Private Function GetTextSize(ByVal iRow As Long, ByVal iCol As Long, ByVal Text As String, Optional ByVal hDC As LongPtr) As SIZEAPI
 If VBFlexGridHandle = NULL_PTR Or (PropRows < 1 Or PropCols < 1) Then Exit Function
-Dim hDCTemp As Long
+Dim hDCTemp As LongPtr
 If hDC = NULL_PTR Then
     hDCTemp = GetDC(VBFlexGridHandle)
     hDC = hDCTemp
@@ -19127,8 +19127,8 @@ End Function
 Private Sub ComboListCommitSel()
 If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboListHandle <> NULL_PTR Then
     Dim Index As Long, Length As Long
-    Index = SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&)
-    Length = SendMessage(VBFlexGridComboListHandle, LB_GETTEXTLEN, Index, ByVal 0&)
+    Index = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&))
+    Length = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETTEXTLEN, Index, ByVal 0&))
     If Not Length = LB_ERR Then
         Dim Text As String
         Text = String(Length, vbNullChar)
@@ -19502,9 +19502,9 @@ Select Case wMsg
                 If VBFlexGridDoubleBufferDC <> NULL_PTR And VBFlexGridDoubleBufferBmp <> NULL_PTR Then
                     If .fErase <> 0 Then
                         If VBFlexGridBackColorBkgBrush <> NULL_PTR Then FillRect VBFlexGridDoubleBufferDC, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
-                        Call DrawGrid(VBFlexGridDoubleBufferDC, -1)
+                        Call DrawGrid(VBFlexGridDoubleBufferDC, NULL_PTR, True)
                     Else
-                        Call DrawGrid(VBFlexGridDoubleBufferDC, hRgn)
+                        Call DrawGrid(VBFlexGridDoubleBufferDC, hRgn, False)
                         If hRgn <> NULL_PTR Then ExtSelectClipRgn hDC, hRgn, RGN_COPY
                     End If
                     With PS.RCPaint
@@ -19517,11 +19517,11 @@ Select Case wMsg
                 End If
             Else
                 If .fErase <> 0 Then
-                    Call DrawGrid(hDC, hRgn)
+                    Call DrawGrid(hDC, hRgn, False)
                     If hRgn <> 0 Then ExtSelectClipRgn hDC, hRgn, RGN_DIFF
                     If VBFlexGridBackColorBkgBrush <> NULL_PTR Then FillRect hDC, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
                 Else
-                    Call DrawGrid(hDC, -1)
+                    Call DrawGrid(hDC, NULL_PTR, True)
                 End If
                 If hRgn <> NULL_PTR Then
                     ExtSelectClipRgn hDC, NULL_PTR, RGN_COPY
@@ -19540,7 +19540,7 @@ Select Case wMsg
                     If SendMessage(hWnd, WM_ERASEBKGND, hDCBmp, ByVal 0&) = 0 Then
                         If VBFlexGridBackColorBkgBrush <> NULL_PTR Then FillRect hDCBmp, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
                     End If
-                    Call DrawGrid(hDCBmp, -1)
+                    Call DrawGrid(hDCBmp, NULL_PTR, True)
                     BitBlt wParam, 0, 0, VBFlexGridClientRect.Right - VBFlexGridClientRect.Left, VBFlexGridClientRect.Bottom - VBFlexGridClientRect.Top, hDCBmp, 0, 0, vbSrcCopy
                     SelectObject hDCBmp, hBmpOld
                     DeleteObject hBmp
@@ -19708,7 +19708,7 @@ Select Case wMsg
             End If
             Dim Msg As TMSG
             Const PM_NOREMOVE As Long = &H0
-            If PeekMessage(Msg, hWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE) <> 0 Then VBFlexGridCharCodeCache = Msg.wParam
+            If PeekMessage(Msg, hWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE) <> 0 Then VBFlexGridCharCodeCache = CLng(Msg.wParam)
             If wMsg = WM_KEYDOWN Then Call ProcessKeyDown(KeyCode, GetShiftStateFromMsg())
         ElseIf wMsg = WM_SYSKEYDOWN Then
             RaiseEvent KeyDown(KeyCode, GetShiftStateFromMsg())
@@ -19732,7 +19732,7 @@ Select Case wMsg
             KeyChar = CUIntToInt(VBFlexGridCharCodeCache And &HFFFF&)
             VBFlexGridCharCodeCache = 0
         Else
-            KeyChar = CUIntToInt(wParam And &HFFFF&)
+            KeyChar = CUIntToInt(CLng(wParam) And &HFFFF&)
         End If
         RaiseEvent KeyPress(KeyChar)
         wParam = CIntToUInt(KeyChar)
@@ -19749,7 +19749,7 @@ Select Case wMsg
             WindowProcControl = 1
         Else
             Dim UTF16 As String
-            UTF16 = UTF32CodePoint_To_UTF16(wParam)
+            UTF16 = UTF32CodePoint_To_UTF16(CLng(wParam))
             If Len(UTF16) = 1 Then
                 SendMessage hWnd, WM_CHAR, CIntToUInt(AscW(UTF16)), ByVal lParam
             ElseIf Len(UTF16) = 2 Then
@@ -19966,7 +19966,7 @@ Select Case wMsg
                         If VBFlexGridEditChangeFrozen = False Then
                             If VBFlexGridComboModeActive = FlexComboModeEditable And VBFlexGridComboListHandle <> NULL_PTR Then
                                 Dim Index As Long
-                                Index = SendMessage(VBFlexGridComboListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Me.EditText))
+                                Index = CLng(SendMessage(VBFlexGridComboListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Me.EditText)))
                                 If Not Index = LB_ERR Then
                                     SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, Index, ByVal 0&
                                     Call ComboListCommitSel
@@ -20289,8 +20289,8 @@ Select Case wMsg
                                         End Select
                                     Case vbKeyUp, vbKeyDown, vbKeyHome, vbKeyEnd
                                         Dim FirstCharPos As Long, LineFromChar As Long
-                                        FirstCharPos = SendMessage(hWnd, EM_LINEINDEX, -1, ByVal 0&)
-                                        LineFromChar = SendMessage(hWnd, EM_LINEFROMCHAR, FirstCharPos, ByVal 0&)
+                                        FirstCharPos = CLng(SendMessage(hWnd, EM_LINEINDEX, -1, ByVal 0&))
+                                        LineFromChar = CLng(SendMessage(hWnd, EM_LINEFROMCHAR, FirstCharPos, ByVal 0&))
                                         Select Case KeyCode
                                             Case vbKeyUp
                                                 If LineFromChar = 0 Then CloseMode = FlexEditCloseModeNavigationKey
@@ -20315,7 +20315,7 @@ Select Case wMsg
             End If
             Dim Msg As TMSG
             Const PM_NOREMOVE As Long = &H0
-            If PeekMessage(Msg, hWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE) <> 0 Then VBFlexGridCharCodeCache = Msg.wParam
+            If PeekMessage(Msg, hWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE) <> 0 Then VBFlexGridCharCodeCache = CLng(Msg.wParam)
         ElseIf wMsg = WM_SYSKEYDOWN Then
             If VBFlexGridEditRectChanged = True Then
                 VBFlexGridEditRectChanged = False
@@ -20343,10 +20343,10 @@ Select Case wMsg
             KeyChar = CUIntToInt(VBFlexGridCharCodeCache And &HFFFF&)
             VBFlexGridCharCodeCache = 0
         Else
-            KeyChar = CUIntToInt(wParam And &HFFFF&)
+            KeyChar = CUIntToInt(CLng(wParam) And &HFFFF&)
         End If
         RaiseEvent EditKeyPress(KeyChar)
-        If (wParam And &HFFFF&) <> 0 And KeyChar = 0 Then
+        If (CLng(wParam) And &HFFFF&) <> 0 And KeyChar = 0 Then
             Exit Function
         Else
             wParam = CIntToUInt(KeyChar)
@@ -20360,7 +20360,7 @@ Select Case wMsg
             WindowProcEdit = 1
         Else
             Dim UTF16 As String
-            UTF16 = UTF32CodePoint_To_UTF16(wParam)
+            UTF16 = UTF32CodePoint_To_UTF16(CLng(wParam))
             If Len(UTF16) = 1 Then
                 SendMessage hWnd, WM_CHAR, CIntToUInt(AscW(UTF16)), ByVal lParam
             ElseIf Len(UTF16) = 2 Then
