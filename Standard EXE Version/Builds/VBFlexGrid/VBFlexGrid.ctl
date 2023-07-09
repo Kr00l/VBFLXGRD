@@ -18280,7 +18280,13 @@ If VBFlexGridCheckBoxDrawMode <> FlexCheckBoxDrawModeNormal Then
     RCItem.Right = RC.Right - RC.Left
     RCItem.Bottom = RC.Bottom - RC.Top
     SetViewportOrgEx hDC, RC.Left, RC.Top, P
+    #If Win64 Then
+    Dim hDC32 As Long
+    CopyMemory ByVal VarPtr(hDC32), ByVal VarPtr(hDC), 4
+    RaiseEvent CheckBoxOwnerDraw(iRow, iCol, Cancel, ItemState, hDC32, RCItem.Left, RCItem.Top, RCItem.Right, RCItem.Bottom)
+    #Else
     RaiseEvent CheckBoxOwnerDraw(iRow, iCol, Cancel, ItemState, hDC, RCItem.Left, RCItem.Top, RCItem.Right, RCItem.Bottom)
+    #End If
     SetViewportOrgEx hDC, P.X, P.Y, P
     Handled = Not Cancel
 End If
@@ -18734,7 +18740,7 @@ End Sub
 
 Private Function ValidateEditOnMouseActivateMsg(ByVal lParam As LongPtr, ByRef RetVal As LongPtr) As Boolean
 If VBFlexGridHandle <> NULL_PTR And VBFlexGridEditHandle <> NULL_PTR Then
-    Select Case HiWord(lParam)
+    Select Case HiWord(CLng(lParam))
         Case WM_LBUTTONDOWN
             If VBFlexGridComboButtonHandle <> NULL_PTR Then
                 If IsWindowEnabled(VBFlexGridComboButtonHandle) = 0 Then
@@ -18753,7 +18759,7 @@ If VBFlexGridHandle <> NULL_PTR And VBFlexGridEditHandle <> NULL_PTR Then
                     End If
                 End If
             End If
-            If LoWord(lParam) = HTCLIENT And VBFlexGridEditTextChanged = True Then
+            If LoWord(CLng(lParam)) = HTCLIENT And VBFlexGridEditTextChanged = True Then
                 Dim Cancel As Boolean
                 VBFlexGridEditOnValidate = True
                 RaiseEvent ValidateEdit(Cancel)
@@ -18887,9 +18893,13 @@ Private Sub ComboButtonDraw(ByVal iRow As Long, ByVal iCol As Long, ByRef DIS As
 Dim Handled As Boolean
 If VBFlexGridComboButtonDrawMode <> FlexComboButtonDrawModeNormal Then
     Dim Cancel As Boolean
-    With DIS
-    RaiseEvent ComboButtonOwnerDraw(iRow, iCol, Cancel, .CtlType, .ItemAction, .ItemState, .hDC, .RCItem.Left, .RCItem.Top, .RCItem.Right, .RCItem.Bottom)
-    End With
+    #If Win64 Then
+    Dim hDC32 As Long
+    CopyMemory ByVal VarPtr(hDC32), ByVal VarPtr(DIS.hDC), 4
+    RaiseEvent ComboButtonOwnerDraw(iRow, iCol, Cancel, DIS.CtlType, DIS.ItemAction, DIS.ItemState, hDC32, DIS.RCItem.Left, DIS.RCItem.Top, DIS.RCItem.Right, DIS.RCItem.Bottom)
+    #Else
+    RaiseEvent ComboButtonOwnerDraw(iRow, iCol, Cancel, DIS.CtlType, DIS.ItemAction, DIS.ItemState, DIS.hDC, DIS.RCItem.Left, DIS.RCItem.Top, DIS.RCItem.Right, DIS.RCItem.Bottom)
+    #End If
     Handled = Not Cancel
 End If
 If Handled = False Then
@@ -19565,7 +19575,7 @@ Select Case wMsg
             End If
         End If
     Case WM_SETCURSOR
-        If LoWord(lParam) = HTCLIENT Then
+        If LoWord(CLng(lParam)) = HTCLIENT Then
             With HTI
             Pos = GetMessagePos()
             .PT.X = Get_X_lParam(Pos)
@@ -19615,8 +19625,8 @@ Select Case wMsg
     Case WM_MOUSEWHEEL
         If VBFlexGridWheelScrollLines > 0 Then
             Static WheelDelta As Long, LastWheelDelta As Long
-            If Sgn(HiWord(wParam)) <> Sgn(LastWheelDelta) Then WheelDelta = 0
-            WheelDelta = WheelDelta + HiWord(wParam)
+            If Sgn(HiWord(CLng(wParam))) <> Sgn(LastWheelDelta) Then WheelDelta = 0
+            WheelDelta = WheelDelta + HiWord(CLng(wParam))
             If Abs(WheelDelta) >= 120 Then
                 Dim WheelDeltaPerLine As Long
                 WheelDeltaPerLine = (WheelDelta / VBFlexGridWheelScrollLines)
@@ -19633,7 +19643,7 @@ Select Case wMsg
                 End If
                 WheelDelta = 0
             End If
-            LastWheelDelta = HiWord(wParam)
+            LastWheelDelta = HiWord(CLng(wParam))
             WindowProcControl = 0
             Exit Function
         End If
@@ -19960,9 +19970,9 @@ Select Case wMsg
         End If
     Case WM_COMMAND
         If lParam <> 0 Then
-            Select Case HiWord(wParam)
+            Select Case HiWord(CLng(wParam))
                 Case EN_CHANGE
-                    If LoWord(wParam) = ID_EDITCHILD And lParam = VBFlexGridEditHandle And VBFlexGridEditHandle <> NULL_PTR Then
+                    If LoWord(CLng(wParam)) = ID_EDITCHILD And lParam = VBFlexGridEditHandle And VBFlexGridEditHandle <> NULL_PTR Then
                         If VBFlexGridEditChangeFrozen = False Then
                             If VBFlexGridComboModeActive = FlexComboModeEditable And VBFlexGridComboListHandle <> NULL_PTR Then
                                 Dim Index As Long
@@ -19987,7 +19997,7 @@ Select Case wMsg
                         End If
                     End If
                 Case STN_CLICKED, STN_DBLCLK
-                    If LoWord(wParam) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> NULL_PTR Then
+                    If LoWord(CLng(wParam)) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> NULL_PTR Then
                         If VBFlexGridComboListHandle <> NULL_PTR Or VBFlexGridComboCalendarHandle <> NULL_PTR Then
                             Call ComboShowDropDown(True, FlexComboDropDownReasonMouse)
                         Else
@@ -19995,11 +20005,11 @@ Select Case wMsg
                         End If
                     End If
                 Case STN_ENABLE
-                    If LoWord(wParam) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> NULL_PTR Then Call ComboButtonSetState(ODS_DISABLED, False)
+                    If LoWord(CLng(wParam)) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> NULL_PTR Then Call ComboButtonSetState(ODS_DISABLED, False)
                 Case STN_DISABLE
-                    If LoWord(wParam) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> NULL_PTR Then Call ComboButtonSetState(ODS_DISABLED, True)
+                    If LoWord(CLng(wParam)) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> NULL_PTR Then Call ComboButtonSetState(ODS_DISABLED, True)
                 Case LBN_SELCHANGE
-                    If LoWord(wParam) = 0 And lParam = VBFlexGridComboListHandle And VBFlexGridComboListHandle <> NULL_PTR Then Call ComboListCommitSel
+                    If LoWord(CLng(wParam)) = 0 And lParam = VBFlexGridComboListHandle And VBFlexGridComboListHandle <> NULL_PTR Then Call ComboListCommitSel
             End Select
         End If
     Case WM_NOTIFYFORMAT
