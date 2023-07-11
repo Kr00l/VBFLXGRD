@@ -179,14 +179,14 @@ Public Sub FlexSetSubclass(ByVal hWnd As Long, ByVal This As VBFlexGrid, ByVal d
 If hWnd = NULL_PTR Then Exit Sub
 If Name = vbNullString Then Name = "Flex"
 If GetProp(hWnd, StrPtr(Name & "SubclassInit")) = 0 Then
-    If FlexSubclassProcPtr = 0 Then FlexSubclassProcPtr = ProcPtr(AddressOf FlexSubclassProc)
+    If FlexSubclassProcPtr = NULL_PTR Then FlexSubclassProcPtr = ProcPtr(AddressOf FlexSubclassProc)
     #If VBA7 Then
     SetWindowSubclass hWnd, FlexSubclassProcPtr, ObjPtr(This), dwRefData
     #Else
     If FlexSubclassW2K = 0 Then
         Dim hLib As LongPtr
         hLib = LoadLibrary(StrPtr("comctl32.dll"))
-        If hLib <> 0 Then
+        If hLib <> NULL_PTR Then
             If GetProcAddress(hLib, "SetWindowSubclass") <> NULL_PTR Then
                 FlexSubclassW2K = 1
             ElseIf GetProcAddress(hLib, 410&) <> NULL_PTR Then
@@ -399,7 +399,7 @@ Public Sub FlexPreTranslateMsgAddHook(ByVal hWnd As LongPtr)
 #Else
 Public Sub FlexPreTranslateMsgAddHook(ByVal hWnd As Long)
 #End If
-If (FlexPreTranslateMsgHookHandle Or FlexPreTranslateMsgCount) = 0 Then
+If FlexPreTranslateMsgHookHandle = NULL_PTR And FlexPreTranslateMsgCount = 0 Then
     Const WH_GETMESSAGE As Long = 3
     FlexPreTranslateMsgHookHandle = SetWindowsHookEx(WH_GETMESSAGE, AddressOf FlexPreTranslateMsgHookProc, 0, App.ThreadID)
     ReDim FlexPreTranslateMsgHwnd(0) ' As LongPtr
@@ -417,7 +417,7 @@ Public Sub FlexPreTranslateMsgReleaseHook(ByVal hWnd As LongPtr)
 Public Sub FlexPreTranslateMsgReleaseHook(ByVal hWnd As Long)
 #End If
 FlexPreTranslateMsgCount = FlexPreTranslateMsgCount - 1
-If FlexPreTranslateMsgCount = 0 And FlexPreTranslateMsgHookHandle <> NULL_PTR Then
+If FlexPreTranslateMsgHookHandle <> NULL_PTR And FlexPreTranslateMsgCount = 0 Then
     UnhookWindowsHookEx FlexPreTranslateMsgHookHandle
     FlexPreTranslateMsgHookHandle = NULL_PTR
     Erase FlexPreTranslateMsgHwnd()
