@@ -794,6 +794,10 @@ End Type
 Private Type TROWS
 Rows() As TCOLS
 End Type
+Private Type TINDIRECTMERGESORTDATA
+Row As Long
+Swap As TCOLS
+End Type
 Private Type TPIXELMETRICS
 DividerSpacing As SIZEAPI
 CellTextWidthPadding As Long
@@ -4425,12 +4429,53 @@ Select Case Value
                     Call MergeSortRec(SelRange.TopRow, SelRange.BottomRow, iCol, VBFlexGridCells.Rows(), Sort)
                 End If
             Else
+                #If False Then
                 ' BubbleSort is used for custom sorting as row1/row2 for text matrix must be meaningful in the 'Compare' event.
                 If VBFlexGridRow = VBFlexGridRowSel Then
                     Call BubbleSortIter(PropFixedRows, PropRows - 1, iCol, VBFlexGridCells.Rows())
                 Else
                     Call BubbleSortIter(SelRange.TopRow, SelRange.BottomRow, iCol, VBFlexGridCells.Rows())
                 End If
+                #Else
+                ' Indirect MergeSort can be used as row1/row2 will be changed only after the sorting.
+                Dim Data() As TINDIRECTMERGESORTDATA, Swap As TCOLS, Length As Long, iRow As Long
+                Length = LenB(Swap)
+                If VBFlexGridRow = VBFlexGridRowSel Then
+                    ReDim Data(PropFixedRows To (PropRows - 1)) As TINDIRECTMERGESORTDATA
+                    With VBFlexGridCells
+                    For iRow = PropFixedRows To (PropRows - 1)
+                        Data(iRow).Row = iRow
+                        CopyMemory ByVal VarPtr(Data(iRow).Swap), ByVal VarPtr(.Rows(iRow)), Length
+                    Next iRow
+                    End With
+                    Call MergeSortRecInd(PropFixedRows, PropRows - 1, iCol, Data())
+                    With VBFlexGridCells
+                    For iRow = PropFixedRows To (PropRows - 1)
+                        CopyMemory ByVal VarPtr(.Rows(iRow)), ByVal VarPtr(Data(iRow).Swap), Length
+                    Next iRow
+                    For iRow = PropFixedRows To (PropRows - 1)
+                        ZeroMemory ByVal VarPtr(Data(iRow).Swap), Length
+                    Next iRow
+                    End With
+                Else
+                    ReDim Data(SelRange.TopRow To SelRange.BottomRow) As TINDIRECTMERGESORTDATA
+                    With VBFlexGridCells
+                    For iRow = SelRange.TopRow To SelRange.BottomRow
+                        Data(iRow).Row = iRow
+                        CopyMemory ByVal VarPtr(Data(iRow).Swap), ByVal VarPtr(.Rows(iRow)), Length
+                    Next iRow
+                    End With
+                    Call MergeSortRecInd(SelRange.TopRow, SelRange.BottomRow, iCol, Data())
+                    With VBFlexGridCells
+                    For iRow = SelRange.TopRow To SelRange.BottomRow
+                        CopyMemory ByVal VarPtr(.Rows(iRow)), ByVal VarPtr(Data(iRow).Swap), Length
+                    Next iRow
+                    For iRow = SelRange.TopRow To SelRange.BottomRow
+                        ZeroMemory ByVal VarPtr(Data(iRow).Swap), Length
+                    Next iRow
+                    End With
+                End If
+                #End If
             End If
         Next iCol
         Dim RCP As TROWCOLPARAMS
@@ -19256,6 +19301,49 @@ If Left < Right Then
     Call MergeSortRec(Left, Middle, Col, Data(), Sort)
     Call MergeSortRec(Middle + 1, Right, Col, Data(), Sort)
     Call InplaceMergeSort(Left, Middle, Right, Col, Data(), Sort)
+End If
+End Sub
+
+Private Sub InplaceMergeSortInd(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
+Dim Blank As TINDIRECTMERGESORTDATA, Length As Long, Temp() As TINDIRECTMERGESORTDATA, Cmp As Long, Dst As Long
+Dim i As Long, j As Long, iCol As Long
+Length = LenB(Blank)
+ReDim Temp(0 To (Middle - Left)) As TINDIRECTMERGESORTDATA
+j = 0
+For i = Left To Middle
+    CopyMemory ByVal VarPtr(Temp(j)), ByVal VarPtr(Data(i)), Length
+    j = j + 1
+Next i
+j = 0
+Dst = Left
+Do While i <= Right And j <= UBound(Temp)
+    Cmp = 0
+    RaiseEvent Compare(Data(i).Row, Temp(j).Row, Col, Cmp)
+    If Cmp < 0 Then
+        CopyMemory ByVal VarPtr(Data(Dst)), ByVal VarPtr(Data(i)), Length
+        i = i + 1
+    Else
+        CopyMemory ByVal VarPtr(Data(Dst)), ByVal VarPtr(Temp(j)), Length
+        ZeroMemory ByVal VarPtr(Temp(j)), Length
+        j = j + 1
+    End If
+    Dst = Dst + 1
+Loop
+Do While j <= UBound(Temp)
+    CopyMemory ByVal VarPtr(Data(Dst)), ByVal VarPtr(Temp(j)), Length
+    ZeroMemory ByVal VarPtr(Temp(j)), Length
+    Dst = Dst + 1
+    j = j + 1
+Loop
+End Sub
+
+Private Sub MergeSortRecInd(ByVal Left As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
+Dim Middle As Long
+Middle = (Left + Right) \ 2
+If Left < Right Then
+    Call MergeSortRecInd(Left, Middle, Col, Data())
+    Call MergeSortRecInd(Middle + 1, Right, Col, Data())
+    Call InplaceMergeSortInd(Left, Middle, Right, Col, Data())
 End If
 End Sub
 
