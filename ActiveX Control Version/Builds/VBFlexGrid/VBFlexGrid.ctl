@@ -34,7 +34,6 @@ Private Const PTR_SIZE As Long = 4
 #End If
 
 #Const ImplementThemedControls = True
-#Const ImplementIndirectMergeSort = True
 #Const ImplementDataSource = True ' True = Required: msdatsrc.tlb
 #Const ImplementFlexDataSource = True ' True = Required: IVBFlexDataSource.cls
 #Const ImplementPreTranslateMsg = (VBFLXGRD_OCX <> 0)
@@ -4414,30 +4413,28 @@ Select Case Value
             ' Error shall not be raised. Do nothing in this case.
             Exit Property
         End If
-        Dim SelRange As TCELLRANGE, iRow As Long, iCol As Long, Sort As FlexSortConstants, Row1 As Long, Row2 As Long
+        Dim SelRange As TCELLRANGE, Row1 As Long, Row2 As Long, Sort As FlexSortConstants, iRow As Long, iCol As Long
         Dim Data() As TINDIRECTMERGESORTDATA, Blank As TCOLS, Length As Long
         Call GetSelRangeStruct(SelRange)
+        If VBFlexGridRow = VBFlexGridRowSel Then
+            Row1 = PropFixedRows
+            Row2 = PropRows - 1
+        Else
+            Row1 = SelRange.TopRow
+            Row2 = SelRange.BottomRow
+        End If
         ' The keys used for sorting are determined by the Col and ColSel properties.
         ' To specify the range to be sorted, set the Row and RowSel properties.
         ' Sorting is always done in a left-to-right direction. (Technically the sorting is performed from right-to-left)
         For iCol = SelRange.RightCol To SelRange.LeftCol Step -1
             If VBFlexGridSort <> FlexSortUseColSort Then Sort = VBFlexGridSort Else Sort = VBFlexGridColsInfo(iCol).Sort
-            If VBFlexGridRow = VBFlexGridRowSel Then
-                Row1 = PropFixedRows
-                Row2 = PropRows - 1
-            Else
-                Row1 = SelRange.TopRow
-                Row2 = SelRange.BottomRow
-            End If
             ' MergeSort/BubbleSort are used as they are 'stable sort' algorithms.
             If Sort <> FlexSortCustom Then
                 ' MergeSort is used for automatic sorting as it is fast and reliable.
                 Call MergeSortRec(Row1, Row2, iCol, VBFlexGridCells.Rows(), Sort)
             Else
                 ' IndirectMergeSort/BubbleSort is used for custom sorting as row1/row2 must be meaningful in the 'Compare' event.
-                
-                #If ImplementIndirectMergeSort = True Then
-                
+                ' Call BubbleSortIter(Row1, Row2, iCol, VBFlexGridCells.Rows())
                 Length = LenB(Blank)
                 ReDim Data(Row1 To Row2) As TINDIRECTMERGESORTDATA
                 For iRow = Row1 To Row2
@@ -4451,13 +4448,6 @@ Select Case Value
                 For iRow = Row1 To Row2
                     ZeroMemory ByVal VarPtr(Data(iRow).Swap), Length
                 Next iRow
-                
-                #Else
-                
-                Call BubbleSortIter(Row1, Row2, iCol, VBFlexGridCells.Rows())
-                
-                #End If
-                
             End If
         Next iCol
         Dim RCP As TROWCOLPARAMS
@@ -19286,8 +19276,6 @@ If Left < Right Then
 End If
 End Sub
 
-#If ImplementIndirectMergeSort = True Then
-
 Private Sub InplaceIndirectMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
 Dim Blank As TINDIRECTMERGESORTDATA, Length As Long, Temp() As TINDIRECTMERGESORTDATA, Cmp As Long, Dst As Long
 Dim i As Long, j As Long
@@ -19331,8 +19319,6 @@ If Left < Right Then
 End If
 End Sub
 
-#Else
-
 Private Sub BubbleSortIter(ByVal First As Long, ByVal Last As Long, ByVal Col As Long, ByRef Data() As TCOLS)
 Dim Swap As TCOLS, Length As Long, Cmp As Long
 Length = LenB(Swap)
@@ -19353,8 +19339,6 @@ Do While Last > First
     Last = i
 Loop
 End Sub
-
-#End If
 
 Private Function PtInRect(ByRef lpRect As RECT, ByVal X As Long, ByVal Y As Long) As Long
 ' Avoid API declare since x64 calling convention aligns 8 bytes per argument.
