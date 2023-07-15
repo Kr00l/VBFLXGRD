@@ -1,5 +1,9 @@
 List of revisions:
 
+15-Jul-2023
+- FlexSortCustom now uses a indirect MergeSort instead of BubbleSort. (like FlexSortCustomText)
+  It is a bit slower than the normal MergeSort but compared to BubbleSort very fast.
+
 08-Jul-2023
 - CompareText event args fixed.
 
