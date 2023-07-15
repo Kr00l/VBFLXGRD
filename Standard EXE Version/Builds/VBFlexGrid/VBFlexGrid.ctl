@@ -34,6 +34,7 @@ Private Const PTR_SIZE As Long = 4
 #End If
 
 #Const ImplementThemedControls = True
+#Const ImplementIndirectMergeSort = True
 #Const ImplementDataSource = True ' True = Required: msdatsrc.tlb
 #Const ImplementFlexDataSource = True ' True = Required: IVBFlexDataSource.cls
 #Const ImplementPreTranslateMsg = (VBFLXGRD_OCX <> 0)
@@ -4413,69 +4414,50 @@ Select Case Value
             ' Error shall not be raised. Do nothing in this case.
             Exit Property
         End If
-        Dim SelRange As TCELLRANGE, iCol As Long, Sort As FlexSortConstants
+        Dim SelRange As TCELLRANGE, iRow As Long, iCol As Long, Sort As FlexSortConstants, Row1 As Long, Row2 As Long
+        Dim Data() As TINDIRECTMERGESORTDATA, Blank As TCOLS, Length As Long
         Call GetSelRangeStruct(SelRange)
         ' The keys used for sorting are determined by the Col and ColSel properties.
         ' To specify the range to be sorted, set the Row and RowSel properties.
         ' Sorting is always done in a left-to-right direction. (Technically the sorting is performed from right-to-left)
         For iCol = SelRange.RightCol To SelRange.LeftCol Step -1
             If VBFlexGridSort <> FlexSortUseColSort Then Sort = VBFlexGridSort Else Sort = VBFlexGridColsInfo(iCol).Sort
+            If VBFlexGridRow = VBFlexGridRowSel Then
+                Row1 = PropFixedRows
+                Row2 = PropRows - 1
+            Else
+                Row1 = SelRange.TopRow
+                Row2 = SelRange.BottomRow
+            End If
             ' MergeSort/BubbleSort are used as they are 'stable sort' algorithms.
             If Sort <> FlexSortCustom Then
                 ' MergeSort is used for automatic sorting as it is fast and reliable.
-                If VBFlexGridRow = VBFlexGridRowSel Then
-                    Call MergeSortRec(PropFixedRows, PropRows - 1, iCol, VBFlexGridCells.Rows(), Sort)
-                Else
-                    Call MergeSortRec(SelRange.TopRow, SelRange.BottomRow, iCol, VBFlexGridCells.Rows(), Sort)
-                End If
+                Call MergeSortRec(Row1, Row2, iCol, VBFlexGridCells.Rows(), Sort)
             Else
-                #If False Then
-                ' BubbleSort is used for custom sorting as row1/row2 for text matrix must be meaningful in the 'Compare' event.
-                If VBFlexGridRow = VBFlexGridRowSel Then
-                    Call BubbleSortIter(PropFixedRows, PropRows - 1, iCol, VBFlexGridCells.Rows())
-                Else
-                    Call BubbleSortIter(SelRange.TopRow, SelRange.BottomRow, iCol, VBFlexGridCells.Rows())
-                End If
+                ' IndirectMergeSort/BubbleSort is used for custom sorting as row1/row2 must be meaningful in the 'Compare' event.
+                
+                #If ImplementIndirectMergeSort = True Then
+                
+                Length = LenB(Blank)
+                ReDim Data(Row1 To Row2) As TINDIRECTMERGESORTDATA
+                For iRow = Row1 To Row2
+                    Data(iRow).Row = iRow
+                    CopyMemory ByVal VarPtr(Data(iRow).Swap), ByVal VarPtr(VBFlexGridCells.Rows(iRow)), Length
+                Next iRow
+                Call IndirectMergeSortRec(Row1, Row2, iCol, Data())
+                For iRow = Row1 To Row2
+                    CopyMemory ByVal VarPtr(VBFlexGridCells.Rows(iRow)), ByVal VarPtr(Data(iRow).Swap), Length
+                Next iRow
+                For iRow = Row1 To Row2
+                    ZeroMemory ByVal VarPtr(Data(iRow).Swap), Length
+                Next iRow
+                
                 #Else
-                ' Indirect MergeSort can be used as row1/row2 will be changed only after the sorting.
-                Dim Data() As TINDIRECTMERGESORTDATA, Swap As TCOLS, Length As Long, iRow As Long
-                Length = LenB(Swap)
-                If VBFlexGridRow = VBFlexGridRowSel Then
-                    ReDim Data(PropFixedRows To (PropRows - 1)) As TINDIRECTMERGESORTDATA
-                    With VBFlexGridCells
-                    For iRow = PropFixedRows To (PropRows - 1)
-                        Data(iRow).Row = iRow
-                        CopyMemory ByVal VarPtr(Data(iRow).Swap), ByVal VarPtr(.Rows(iRow)), Length
-                    Next iRow
-                    End With
-                    Call MergeSortRecInd(PropFixedRows, PropRows - 1, iCol, Data())
-                    With VBFlexGridCells
-                    For iRow = PropFixedRows To (PropRows - 1)
-                        CopyMemory ByVal VarPtr(.Rows(iRow)), ByVal VarPtr(Data(iRow).Swap), Length
-                    Next iRow
-                    For iRow = PropFixedRows To (PropRows - 1)
-                        ZeroMemory ByVal VarPtr(Data(iRow).Swap), Length
-                    Next iRow
-                    End With
-                Else
-                    ReDim Data(SelRange.TopRow To SelRange.BottomRow) As TINDIRECTMERGESORTDATA
-                    With VBFlexGridCells
-                    For iRow = SelRange.TopRow To SelRange.BottomRow
-                        Data(iRow).Row = iRow
-                        CopyMemory ByVal VarPtr(Data(iRow).Swap), ByVal VarPtr(.Rows(iRow)), Length
-                    Next iRow
-                    End With
-                    Call MergeSortRecInd(SelRange.TopRow, SelRange.BottomRow, iCol, Data())
-                    With VBFlexGridCells
-                    For iRow = SelRange.TopRow To SelRange.BottomRow
-                        CopyMemory ByVal VarPtr(.Rows(iRow)), ByVal VarPtr(Data(iRow).Swap), Length
-                    Next iRow
-                    For iRow = SelRange.TopRow To SelRange.BottomRow
-                        ZeroMemory ByVal VarPtr(Data(iRow).Swap), Length
-                    Next iRow
-                    End With
-                End If
+                
+                Call BubbleSortIter(Row1, Row2, iCol, VBFlexGridCells.Rows())
+                
                 #End If
+                
             End If
         Next iCol
         Dim RCP As TROWCOLPARAMS
@@ -19210,7 +19192,7 @@ End Sub
 
 Private Sub InplaceMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TCOLS, ByVal Sort As FlexSortConstants)
 Dim Blank As TCOLS, Length As Long, Temp() As TCOLS, Cmp As Long, Dst As Long
-Dim i As Long, j As Long, iCol As Long
+Dim i As Long, j As Long
 Dim Dbl1 As Double, Dbl2 As Double
 Length = LenB(Blank)
 ReDim Temp(0 To (Middle - Left)) As TCOLS
@@ -19304,9 +19286,11 @@ If Left < Right Then
 End If
 End Sub
 
-Private Sub InplaceMergeSortInd(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
+#If ImplementIndirectMergeSort = True Then
+
+Private Sub InplaceIndirectMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
 Dim Blank As TINDIRECTMERGESORTDATA, Length As Long, Temp() As TINDIRECTMERGESORTDATA, Cmp As Long, Dst As Long
-Dim i As Long, j As Long, iCol As Long
+Dim i As Long, j As Long
 Length = LenB(Blank)
 ReDim Temp(0 To (Middle - Left)) As TINDIRECTMERGESORTDATA
 j = 0
@@ -19337,15 +19321,17 @@ Do While j <= UBound(Temp)
 Loop
 End Sub
 
-Private Sub MergeSortRecInd(ByVal Left As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
+Private Sub IndirectMergeSortRec(ByVal Left As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
 Dim Middle As Long
 Middle = (Left + Right) \ 2
 If Left < Right Then
-    Call MergeSortRecInd(Left, Middle, Col, Data())
-    Call MergeSortRecInd(Middle + 1, Right, Col, Data())
-    Call InplaceMergeSortInd(Left, Middle, Right, Col, Data())
+    Call IndirectMergeSortRec(Left, Middle, Col, Data())
+    Call IndirectMergeSortRec(Middle + 1, Right, Col, Data())
+    Call InplaceIndirectMergeSort(Left, Middle, Right, Col, Data())
 End If
 End Sub
+
+#Else
 
 Private Sub BubbleSortIter(ByVal First As Long, ByVal Last As Long, ByVal Col As Long, ByRef Data() As TCOLS)
 Dim Swap As TCOLS, Length As Long, Cmp As Long
@@ -19367,6 +19353,8 @@ Do While Last > First
     Last = i
 Loop
 End Sub
+
+#End If
 
 Private Function PtInRect(ByRef lpRect As RECT, ByVal X As Long, ByVal Y As Long) As Long
 ' Avoid API declare since x64 calling convention aligns 8 bytes per argument.
