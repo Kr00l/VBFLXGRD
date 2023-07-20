@@ -19644,17 +19644,17 @@ Select Case wMsg
             Call GetHitTestInfo(HTI)
             Select Case .HitResult
                 Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom
-                    SetCursor LoadCursor(0, MousePointerID(vbSizeNS))
+                    SetCursor LoadCursor(NULL_PTR, MousePointerID(vbSizeNS))
                     WindowProcControl = 1
                     Exit Function
                 Case FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
-                    SetCursor LoadCursor(0, MousePointerID(vbSizeWE))
+                    SetCursor LoadCursor(NULL_PTR, MousePointerID(vbSizeWE))
                     WindowProcControl = 1
                     Exit Function
             End Select
             End With
             If MousePointerID(PropMousePointer) <> 0 Then
-                SetCursor LoadCursor(0, MousePointerID(PropMousePointer))
+                SetCursor LoadCursor(NULL_PTR, MousePointerID(PropMousePointer))
                 WindowProcControl = 1
                 Exit Function
             ElseIf PropMousePointer = 99 Then
