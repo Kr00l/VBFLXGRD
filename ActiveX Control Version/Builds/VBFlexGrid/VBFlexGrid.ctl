@@ -6105,19 +6105,8 @@ Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_ROW Or RCPM_ROWSEL Or RCPM_COLSEL
 .Row = Value
-.RowSel = VBFlexGridRowSel
-.ColSel = VBFlexGridColSel
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        .RowSel = .Row
-        .ColSel = VBFlexGridCol
-    Case FlexSelectionModeByRow
-        .RowSel = .Row
-        .ColSel = (PropCols - 1)
-    Case FlexSelectionModeByColumn
-        .RowSel = (PropRows - 1)
-        .ColSel = .Col
-End Select
+.RowSel = .Row
+.ColSel = VBFlexGridCol
 Call SetRowColParams(RCP)
 End With
 End Property
@@ -6135,19 +6124,8 @@ Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL
 .Col = Value
-.RowSel = VBFlexGridRowSel
-.ColSel = VBFlexGridColSel
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        .RowSel = VBFlexGridRow
-        .ColSel = .Col
-    Case FlexSelectionModeByRow
-        .RowSel = VBFlexGridRow
-        .ColSel = (PropCols - 1)
-    Case FlexSelectionModeByColumn
-        .RowSel = (PropRows - 1)
-        .ColSel = .Col
-End Select
+.RowSel = VBFlexGridRow
+.ColSel = .Col
 Call SetRowColParams(RCP)
 End With
 End Property
@@ -17615,6 +17593,7 @@ Select Case PropSelectionMode
                 .RowSel = HTI.HitRow
                 If PropAllowSelection = False Then .Row = .RowSel
             End If
+            .Col = PropFixedCols
             .ColSel = (PropCols - 1)
         Else
             If PropAllowBigSelection = True Then
@@ -17649,6 +17628,7 @@ Select Case PropSelectionMode
                 .ColSel = HTI.HitCol
                 If PropAllowSelection = False Then .Col = .ColSel
             End If
+            .Row = PropFixedRows
             .RowSel = (PropRows - 1)
         Else
             If PropAllowBigSelection = True Then
