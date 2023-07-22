@@ -17608,6 +17608,7 @@ Select Case PropSelectionMode
                     .Row = PropFixedRows
                     .RowSel = (PropRows - 1)
                 End If
+                .Col = PropFixedCols
                 .ColSel = (PropCols - 1)
             Else
                 If (Shift And vbShiftMask) = 0 Then
@@ -17616,6 +17617,7 @@ Select Case PropSelectionMode
                 Else
                     .RowSel = VBFlexGridTopRow
                 End If
+                .Col = PropFixedCols
                 .ColSel = (PropCols - 1)
             End If
         End If
@@ -17643,6 +17645,7 @@ Select Case PropSelectionMode
                     .Col = PropFixedCols
                     .ColSel = (PropCols - 1)
                 End If
+                .Row = PropFixedRows
                 .RowSel = (PropRows - 1)
             Else
                 If (Shift And vbShiftMask) = 0 Then
@@ -17651,6 +17654,7 @@ Select Case PropSelectionMode
                 Else
                     .ColSel = VBFlexGridLeftCol
                 End If
+                .Row = PropFixedRows
                 .RowSel = (PropRows - 1)
             End If
         End If
