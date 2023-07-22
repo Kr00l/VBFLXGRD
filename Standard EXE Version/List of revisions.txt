@@ -1,5 +1,8 @@
 List of revisions:
 
+22-Jul-2023
+- Minor behavior bugfix for SelectionMode ByRow/ByColumn in relation to MS(H)FlexGrid.
+
 15-Jul-2023
 - FlexSortCustom now uses a indirect MergeSort instead of BubbleSort. (like FlexSortCustomText)
   It is a bit slower than the normal MergeSort but compared to BubbleSort very fast.

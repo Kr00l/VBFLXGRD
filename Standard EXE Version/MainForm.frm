@@ -294,9 +294,27 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
+#If (VBA7 = 0) Then
+Private Enum LongPtr
+[_]
+End Enum
+#End If
+#If Win64 Then
+Private Const NULL_PTR As LongPtr = 0
+Private Const PTR_SIZE As Long = 8
+#Else
+Private Const NULL_PTR As Long = 0
+Private Const PTR_SIZE As Long = 4
+#End If
+#If VBA7 Then
+Private Declare PtrSafe Sub CoTaskMemFree Lib "ole32" (ByVal hMem As LongPtr)
+Private Declare PtrSafe Function OleCreatePropertyFrame Lib "olepro32" (ByVal hWndOwner As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal lpszCaption As LongPtr, ByVal cObjects As Long, ByRef pUnk As IUnknown, ByVal cPages As Long, ByRef pPageCLSID As Any, ByVal LCID As Long, ByVal dwReserved As Long, ByVal pvReserved As LongPtr) As Long
+Private Declare PtrSafe Function CLSIDFromString Lib "ole32" (ByVal lpszProgID As LongPtr, ByRef pCLSID As Any) As Long
+#Else
 Private Declare Sub CoTaskMemFree Lib "ole32" (ByVal hMem As Long)
 Private Declare Function OleCreatePropertyFrame Lib "olepro32" (ByVal hWndOwner As Long, ByVal X As Long, ByVal Y As Long, ByVal lpszCaption As Long, ByVal cObjects As Long, ByRef pUnk As IUnknown, ByVal cPages As Long, ByRef pPageCLSID As Any, ByVal LCID As Long, ByVal dwReserved As Long, ByVal pvReserved As Long) As Long
 Private Declare Function CLSIDFromString Lib "ole32" (ByVal lpszProgID As Long, ByRef pCLSID As Any) As Long
+#End If
 Private Const CLSID_StandardColorPage As String = "{7EBDAAE1-8120-11CF-899F-00AA00688B10}"
 Private Const CLSID_StandardFontPage As String = "{7EBDAAE0-8120-11CF-899F-00AA00688B10}"
 Private PropCellBackColor As OLE_COLOR, PropCellForeColor As OLE_COLOR
@@ -455,7 +473,7 @@ CLSIDFromString StrPtr(CLSID_StandardColorPage), CLSID
 PropCellBackColor = VBFlexGrid1.CellBackColor
 PropCellForeColor = VBFlexGrid1.CellForeColor
 OldColor = PropCellBackColor
-OleCreatePropertyFrame Me.hWnd, 0, 0, StrPtr("VBFlexGrid"), 1, Me, 1, CLSID, 0, 0, 0
+OleCreatePropertyFrame Me.hWnd, 0, 0, StrPtr("VBFlexGrid"), 1, Me, 1, CLSID, 0, 0, NULL_PTR
 If PropCellBackColor <> OldColor Then VBFlexGrid1.CellBackColor = PropCellBackColor
 End Sub
 
@@ -466,7 +484,7 @@ CLSIDFromString StrPtr(CLSID_StandardColorPage), CLSID
 PropCellBackColor = VBFlexGrid1.CellBackColor
 PropCellForeColor = VBFlexGrid1.CellForeColor
 OldColor = PropCellForeColor
-OleCreatePropertyFrame Me.hWnd, 0, 0, StrPtr("VBFlexGrid"), 1, Me, 1, CLSID, 0, 0, 0
+OleCreatePropertyFrame Me.hWnd, 0, 0, StrPtr("VBFlexGrid"), 1, Me, 1, CLSID, 0, 0, NULL_PTR
 If PropCellForeColor <> OldColor Then VBFlexGrid1.CellForeColor = PropCellForeColor
 End Sub
 
@@ -506,7 +524,7 @@ With PropCellFont
 .Underline = VBFlexGrid1.CellFontUnderline
 .Charset = VBFlexGrid1.CellFontCharset
 Set OldFont = CloneOLEFont(PropCellFont)
-OleCreatePropertyFrame Me.hWnd, 0, 0, StrPtr("VBFlexGrid"), 1, Me, 1, CLSID, 0, 0, 0
+OleCreatePropertyFrame Me.hWnd, 0, 0, StrPtr("VBFlexGrid"), 1, Me, 1, CLSID, 0, 0, NULL_PTR
 If .Name <> OldFont.Name Or .Size <> OldFont.Size Or _
 .Bold <> OldFont.Bold Or .Italic <> OldFont.Italic Or _
 .Strikethrough <> OldFont.Strikethrough Or .Underline <> OldFont.Underline Or _
@@ -563,7 +581,7 @@ If InIDE() = False Then MsgBox "OleCreatePropertyFrame works only in IDE or with
 Dim SpecifyPages As OLEGuids.ISpecifyPropertyPages, Pages As OLEGuids.OLECAUUID
 Set SpecifyPages = VBFlexGrid1.Object
 SpecifyPages.GetPages Pages
-OleCreatePropertyFrame Me.hWnd, 0, 0, StrPtr("VBFlexGrid"), 1, VBFlexGrid1.Object, Pages.cElems, ByVal Pages.pElems, 0, 0, 0
+OleCreatePropertyFrame Me.hWnd, 0, 0, StrPtr("VBFlexGrid"), 1, VBFlexGrid1.Object, Pages.cElems, ByVal Pages.pElems, 0, 0, NULL_PTR
 CoTaskMemFree Pages.pElems
 Me.SetFocus
 End Sub

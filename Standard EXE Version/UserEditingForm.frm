@@ -139,20 +139,37 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
+#If (VBA7 = 0) Then
+Private Enum LongPtr
+[_]
+End Enum
+#End If
+#If Win64 Then
+Private Const NULL_PTR As LongPtr = 0
+Private Const PTR_SIZE As Long = 8
+#Else
+Private Const NULL_PTR As Long = 0
+Private Const PTR_SIZE As Long = 4
+#End If
 Private Const CC_RGBINIT As Long = &H1
 Private Type TCHOOSECOLOR
 lStructSize As Long
-hWndOwner As Long
-hInstance As Long
+hWndOwner As LongPtr
+hInstance As LongPtr
 RGBResult As Long
-lpCustColors As Long
+lpCustColors As LongPtr
 Flags As Long
-lCustData As Long
-lpfnHook As Long
-lpTemplateName As Long
+lCustData As LongPtr
+lpfnHook As LongPtr
+lpTemplateName As LongPtr
 End Type
+#If VBA7 Then
+Private Declare PtrSafe Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByRef lParam As Any) As LongPtr
+Private Declare PtrSafe Function ChooseColor Lib "comdlg32" Alias "ChooseColorW" (ByRef lpChooseColor As TCHOOSECOLOR) As Long
+#Else
 Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
 Private Declare Function ChooseColor Lib "comdlg32" Alias "ChooseColorW" (ByRef lpChooseColor As TCHOOSECOLOR) As Long
+#End If
 Private Const COL_NORMAL As Long = 1
 Private Const COL_ONLYNUMBERS As Long = 2
 Private Const COL_CALENDARVALIDATION As Long = 3
