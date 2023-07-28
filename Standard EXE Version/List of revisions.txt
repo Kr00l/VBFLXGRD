@@ -1,5 +1,8 @@
 List of revisions:
 
+28-Jul-2023
+- Bugfix in the ComboListIndex property that the new selection was not commited to the edit control.
+
 22-Jul-2023
 - Minor behavior bugfix for SelectionMode ByRow/ByColumn in relation to MS(H)FlexGrid.
 
