@@ -10389,6 +10389,7 @@ If VBFlexGridComboListHandle <> NULL_PTR Then
     Else
         SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, -1, ByVal 0&
     End If
+    Call ComboListCommitSel
 End If
 End Property
 
