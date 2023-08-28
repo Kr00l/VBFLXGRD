@@ -308,11 +308,11 @@ Private Const PTR_SIZE As Long = 4
 #End If
 #If VBA7 Then
 Private Declare PtrSafe Sub CoTaskMemFree Lib "ole32" (ByVal hMem As LongPtr)
-Private Declare PtrSafe Function OleCreatePropertyFrame Lib "olepro32" (ByVal hWndOwner As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal lpszCaption As LongPtr, ByVal cObjects As Long, ByRef pUnk As IUnknown, ByVal cPages As Long, ByRef pPageCLSID As Any, ByVal LCID As Long, ByVal dwReserved As Long, ByVal pvReserved As LongPtr) As Long
+Private Declare PtrSafe Function OleCreatePropertyFrame Lib "oleaut32" (ByVal hWndOwner As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal lpszCaption As LongPtr, ByVal cObjects As Long, ByRef pUnk As IUnknown, ByVal cPages As Long, ByRef pPageCLSID As Any, ByVal LCID As Long, ByVal dwReserved As Long, ByVal pvReserved As LongPtr) As Long
 Private Declare PtrSafe Function CLSIDFromString Lib "ole32" (ByVal lpszProgID As LongPtr, ByRef pCLSID As Any) As Long
 #Else
 Private Declare Sub CoTaskMemFree Lib "ole32" (ByVal hMem As Long)
-Private Declare Function OleCreatePropertyFrame Lib "olepro32" (ByVal hWndOwner As Long, ByVal X As Long, ByVal Y As Long, ByVal lpszCaption As Long, ByVal cObjects As Long, ByRef pUnk As IUnknown, ByVal cPages As Long, ByRef pPageCLSID As Any, ByVal LCID As Long, ByVal dwReserved As Long, ByVal pvReserved As Long) As Long
+Private Declare Function OleCreatePropertyFrame Lib "oleaut32" (ByVal hWndOwner As Long, ByVal X As Long, ByVal Y As Long, ByVal lpszCaption As Long, ByVal cObjects As Long, ByRef pUnk As IUnknown, ByVal cPages As Long, ByRef pPageCLSID As Any, ByVal LCID As Long, ByVal dwReserved As Long, ByVal pvReserved As Long) As Long
 Private Declare Function CLSIDFromString Lib "ole32" (ByVal lpszProgID As Long, ByRef pCLSID As Any) As Long
 #End If
 Private Const CLSID_StandardColorPage As String = "{7EBDAAE1-8120-11CF-899F-00AA00688B10}"
@@ -458,7 +458,7 @@ End Sub
 
 Private Sub Command1_Click()
 Set VBFlexGrid1.CellPicture = Picture1.Picture
-VBFlexGrid1.CellPictureAlignment = Combo1.ItemData(Combo1.ListIndex)
+VBFlexGrid1.CellPictureAlignment = CLng(Combo1.ItemData(Combo1.ListIndex))
 End Sub
 
 Private Sub Command2_Click()
@@ -493,7 +493,7 @@ With New InputForm
 .Prompt = "ToolTipText for Cell R" & VBFlexGrid1.Row & "C" & VBFlexGrid1.Col
 .DefaultText = VBFlexGrid1.CellToolTipText
 .Show vbModal, Me
-If StrPtr(.Result) <> 0 Then VBFlexGrid1.CellToolTipText = .Result
+If StrPtr(.Result) <> NULL_PTR Then VBFlexGrid1.CellToolTipText = .Result
 End With
 End Sub
 
@@ -502,7 +502,7 @@ With New InputForm
 .Prompt = "Text for Cell R" & VBFlexGrid1.Row & "C" & VBFlexGrid1.Col
 .DefaultText = VBFlexGrid1.Text
 .Show vbModal, Me
-If StrPtr(.Result) <> 0 Then VBFlexGrid1.Text = .Result
+If StrPtr(.Result) <> NULL_PTR Then VBFlexGrid1.Text = .Result
 End With
 End Sub
 
@@ -609,7 +609,7 @@ With New InputForm
 .SearchMode = True
 .Prompt = "Search for cell in scrollable area within column '" & VBFlexGrid1.TextMatrix(0, VBFlexGrid1.Col) & "' (Col = " & VBFlexGrid1.Col & ")"
 .Show vbModal, Me
-If StrPtr(.Result) <> 0 Then
+If StrPtr(.Result) <> NULL_PTR Then
     Dim Row As Long
     Row = VBFlexGrid1.FindItem(.Result, , VBFlexGrid1.Col, CBool(Check1.Value = vbChecked))
     If Row > -1 Then
