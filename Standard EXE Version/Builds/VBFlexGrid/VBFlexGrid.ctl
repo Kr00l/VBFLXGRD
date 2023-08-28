@@ -1230,7 +1230,11 @@ Private Const SWP_NOCOPYBITS As Long = &H100
 Private Const PAGE_READWRITE As Long = 4
 Private Const MEM_COMMIT As Long = &H1000
 Private Const MEM_RELEASE As Long = &H8000&
+#If VBA7 Then
+Private Const HWND_DESKTOP As LongPtr = &H0
+#Else
 Private Const HWND_DESKTOP As Long = &H0
+#End If
 Private Const COLOR_WINDOW As Long = 5
 Private Const COLOR_WINDOWTEXT As Long = 8
 Private Const COLOR_GRAYTEXT As Long = 17
@@ -1486,8 +1490,7 @@ Private Const LPSTR_TEXTCALLBACK As LongPtr = (-1)
 Private Const LPSTR_TEXTCALLBACK As Long = (-1)
 #End If
 Private Const INFOTIPSIZE As Long = 1024
-Private Const H_MAX As Long = (&HFFFF + 1)
-Private Const NM_FIRST As Long = H_MAX
+Private Const NM_FIRST As Long = 0
 Private Const NM_CUSTOMDRAW As Long = (NM_FIRST - 12)
 Private Const NM_TOOLTIPSCREATED As Long = (NM_FIRST - 19)
 Private Const TTF_RTLREADING As Long = &H4
@@ -3162,7 +3165,7 @@ If VBFlexGridHandle <> NULL_PTR Then
     dwMask = 0
     dwExStyle = 0
 End If
-Dim hToolTip As Long, j As Long
+Dim hToolTip As LongPtr, j As Long
 For j = 1 To 2
     hToolTip = VBA.Choose(j, VBFlexGridToolTipHandle, VBFlexGridScrollTipHandle)
     If hToolTip <> NULL_PTR Then
@@ -19573,7 +19576,7 @@ Select Case wMsg
             Else
                 If .fErase <> 0 Then
                     Call DrawGrid(hDC, hRgn, False)
-                    If hRgn <> 0 Then ExtSelectClipRgn hDC, hRgn, RGN_DIFF
+                    If hRgn <> NULL_PTR Then ExtSelectClipRgn hDC, hRgn, RGN_DIFF
                     If VBFlexGridBackColorBkgBrush <> NULL_PTR Then FillRect hDC, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
                 Else
                     Call DrawGrid(hDC, NULL_PTR, True)
@@ -19654,9 +19657,9 @@ Select Case wMsg
         SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VarPtr(VBFlexGridWheelScrollLines), 0
         If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VarPtr(VBFlexGridFocusBorder.CX), 0) = 0 Then VBFlexGridFocusBorder.CX = 1
         If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VarPtr(VBFlexGridFocusBorder.CY), 0) = 0 Then VBFlexGridFocusBorder.CY = 1
-        If VBFlexGridFocusRectPen <> 0 Then
+        If VBFlexGridFocusRectPen <> NULL_PTR Then
             DeleteObject VBFlexGridFocusRectPen
-            VBFlexGridFocusRectPen = 0
+            VBFlexGridFocusRectPen = NULL_PTR
         End If
         If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, GetFocusRectWidth(), WinColor(PropBackColorSel))
     Case WM_STYLECHANGED
@@ -19963,7 +19966,7 @@ Select Case wMsg
                         Else
                             .lpszText = StrPtr(Text)
                         End If
-                        .hInst = 0
+                        .hInst = NULL_PTR
                         End With
                         CopyMemory ByVal lParam, NMTTDI, LenB(NMTTDI)
                     Else
@@ -19976,7 +19979,7 @@ Select Case wMsg
                             LSet RC = LBLI.RC
                             MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, RC, 2
                             SendMessage VBFlexGridToolTipHandle, TTM_ADJUSTRECT, 1, ByVal VarPtr(RC)
-                            SetWindowPos VBFlexGridToolTipHandle, 0, RC.Left, RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                            SetWindowPos VBFlexGridToolTipHandle, NULL_PTR, RC.Left, RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
                             WindowProcControl = 1
                             Exit Function
                         End If
