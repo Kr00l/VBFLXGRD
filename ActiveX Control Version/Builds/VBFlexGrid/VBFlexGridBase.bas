@@ -401,7 +401,7 @@ Public Sub FlexPreTranslateMsgAddHook(ByVal hWnd As Long)
 #End If
 If FlexPreTranslateMsgHookHandle = NULL_PTR And FlexPreTranslateMsgCount = 0 Then
     Const WH_GETMESSAGE As Long = 3
-    FlexPreTranslateMsgHookHandle = SetWindowsHookEx(WH_GETMESSAGE, AddressOf FlexPreTranslateMsgHookProc, 0, App.ThreadID)
+    FlexPreTranslateMsgHookHandle = SetWindowsHookEx(WH_GETMESSAGE, AddressOf FlexPreTranslateMsgHookProc, NULL_PTR, App.ThreadID)
     ReDim FlexPreTranslateMsgHwnd(0) ' As LongPtr
     FlexPreTranslateMsgHwnd(0) = hWnd
 Else
