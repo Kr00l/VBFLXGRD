@@ -5324,7 +5324,15 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     End If
     If .BackColor = -1 Then
         If IsFixedCell = False Then
-            VBFlexGridEditBackColor = PropBackColor
+            If PropBackColor = PropBackColorAlt Then
+                VBFlexGridEditBackColor = PropBackColor
+            Else
+                If (VBFlexGridEditRow - PropFixedRows) Mod 2 = 0 Then
+                    VBFlexGridEditBackColor = PropBackColor
+                Else
+                    VBFlexGridEditBackColor = PropBackColorAlt
+                End If
+            End If
         Else
             VBFlexGridEditBackColor = PropBackColorFixed
         End If
@@ -7477,7 +7485,7 @@ Public Property Get FixedFormat(ByVal Index As Long) As String
 Attribute FixedFormat.VB_Description = "Returns/sets the format used to display numeric, string, or date/time values in the fixed cells of a column."
 Attribute FixedFormat.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
-If StrPtr(VBFlexGridColsInfo(Index).FixedFormat) = 0 Then
+If StrPtr(VBFlexGridColsInfo(Index).FixedFormat) = NULL_PTR Then
     FixedFormat = VBFlexGridColsInfo(Index).Format
 Else
     FixedFormat = VBFlexGridColsInfo(Index).FixedFormat
@@ -9987,6 +9995,8 @@ If VBFlexGridHandle <> NULL_PTR And VBFlexGridScrollTipHandle <> NULL_PTR Then
     ' wParam is only ignored and limited to a length of 80 by the ANSI version of TTM_GETTEXT.
     SendMessage VBFlexGridScrollTipHandle, TTM_GETTEXT, INFOTIPSIZE + 1, ByVal VarPtr(TI)
     ScrollTipText = Left$(Buffer, InStr(Buffer, vbNullChar) - 1)
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10000,6 +10010,8 @@ If VBFlexGridHandle <> NULL_PTR And VBFlexGridScrollTipHandle <> NULL_PTR Then
     .lpszText = StrPtr(Value)
     End With
     SendMessage VBFlexGridScrollTipHandle, TTM_UPDATETIPTEXT, 0, ByVal VarPtr(TI)
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10053,6 +10065,8 @@ Attribute EditText.VB_MemberFlags = "400"
 If VBFlexGridEditHandle <> NULL_PTR Then
     EditText = String(CLng(SendMessage(VBFlexGridEditHandle, WM_GETTEXTLENGTH, 0, ByVal 0&)), vbNullChar)
     SendMessage VBFlexGridEditHandle, WM_GETTEXT, Len(EditText) + 1, ByVal StrPtr(EditText)
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10071,24 +10085,38 @@ If VBFlexGridEditHandle <> NULL_PTR Then
         VBFlexGridEditAlreadyValidated = False
         RaiseEvent EditChange
     End If
+Else
+    Err.Raise 5
 End If
 End Property
 
 Public Property Get EditMaxLength() As Long
 Attribute EditMaxLength.VB_Description = "Returns/sets the maximum number of characters that can be entered in a control."
 Attribute EditMaxLength.VB_MemberFlags = "400"
-If VBFlexGridEditHandle <> NULL_PTR Then EditMaxLength = CLng(SendMessage(VBFlexGridEditHandle, EM_GETLIMITTEXT, 0, ByVal 0&))
+If VBFlexGridEditHandle <> NULL_PTR Then
+    EditMaxLength = CLng(SendMessage(VBFlexGridEditHandle, EM_GETLIMITTEXT, 0, ByVal 0&))
+Else
+    Err.Raise 5
+End If
 End Property
 
 Public Property Let EditMaxLength(ByVal Value As Long)
 If Value < 0 Then Err.Raise 380
-If VBFlexGridEditHandle <> NULL_PTR Then SendMessage VBFlexGridEditHandle, EM_SETLIMITTEXT, Value, ByVal 0&
+If VBFlexGridEditHandle <> NULL_PTR Then
+    SendMessage VBFlexGridEditHandle, EM_SETLIMITTEXT, Value, ByVal 0&
+Else
+    Err.Raise 5
+End If
 End Property
 
 Public Property Get EditSelStart() As Long
 Attribute EditSelStart.VB_Description = "Returns/sets the starting point of text selected; indicates the position of the insertion point if no text is selected."
 Attribute EditSelStart.VB_MemberFlags = "400"
-If VBFlexGridEditHandle <> NULL_PTR Then SendMessage VBFlexGridEditHandle, EM_GETSEL, VarPtr(EditSelStart), ByVal 0&
+If VBFlexGridEditHandle <> NULL_PTR Then
+    SendMessage VBFlexGridEditHandle, EM_GETSEL, VarPtr(EditSelStart), ByVal 0&
+Else
+    Err.Raise 5
+End If
 End Property
 
 Public Property Let EditSelStart(ByVal Value As Long)
@@ -10098,6 +10126,8 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     Else
         Err.Raise 380
     End If
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10108,6 +10138,8 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     Dim SelStart As Long, SelEnd As Long
     SendMessage VBFlexGridEditHandle, EM_GETSEL, VarPtr(SelStart), ByVal VarPtr(SelEnd)
     EditSelLength = SelEnd - SelStart
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10120,6 +10152,8 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     Else
         Err.Raise 380
     End If
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10132,6 +10166,8 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     On Error Resume Next
     EditSelText = Mid$(Me.EditText, SelStart + 1, (SelEnd - SelStart))
     On Error GoTo 0
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10139,6 +10175,8 @@ Public Property Let EditSelText(ByVal Value As String)
 If VBFlexGridEditHandle <> NULL_PTR Then
     If StrPtr(Value) = NULL_PTR Then Value = ""
     SendMessage VBFlexGridEditHandle, EM_REPLACESEL, 1, ByVal StrPtr(Value)
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10210,6 +10248,8 @@ If VBFlexGridComboButtonHandle <> NULL_PTR Then
     Else
         ComboButtonValue = FlexComboButtonValueDisabled
     End If
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10243,6 +10283,8 @@ If VBFlexGridComboButtonHandle <> NULL_PTR Then
             End If
             EnableWindow VBFlexGridComboButtonHandle, 0
     End Select
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10370,19 +10412,29 @@ If VBFlexGridComboListHandle <> NULL_PTR Then
     Else
         Err.Raise 5
     End If
+Else
+    Err.Raise 5
 End If
 End Property
 
 Public Property Get ComboListCount() As Long
 Attribute ComboListCount.VB_Description = "Returns the number of items in the drop-down list."
 Attribute ComboListCount.VB_MemberFlags = "400"
-If VBFlexGridComboListHandle <> NULL_PTR Then ComboListCount = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&))
+If VBFlexGridComboListHandle <> NULL_PTR Then
+    ComboListCount = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&))
+Else
+    Err.Raise 5
+End If
 End Property
 
 Public Property Get ComboListIndex() As Long
 Attribute ComboListIndex.VB_Description = "Returns/sets the index of the currently selected item in the drop-down list."
 Attribute ComboListIndex.VB_MemberFlags = "400"
-If VBFlexGridComboListHandle <> NULL_PTR Then ComboListIndex = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&))
+If VBFlexGridComboListHandle <> NULL_PTR Then
+    ComboListIndex = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&))
+Else
+    Err.Raise 5
+End If
 End Property
 
 Public Property Let ComboListIndex(ByVal Value As Long)
@@ -10393,6 +10445,8 @@ If VBFlexGridComboListHandle <> NULL_PTR Then
         SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, -1, ByVal 0&
     End If
     Call ComboListCommitSel
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10406,6 +10460,8 @@ If VBFlexGridComboCalendarHandle <> NULL_PTR Then
     Else
         ComboCalendarMinDate = DateSerial(1900, 1, 1)
     End If
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10427,6 +10483,8 @@ If VBFlexGridComboCalendarHandle <> NULL_PTR Then
     ST(1).wMonth = VBA.Month(MaxDate)
     ST(1).wDay = VBA.Day(MaxDate)
     SendMessage VBFlexGridComboCalendarHandle, MCM_SETRANGE, GDTR_MIN Or GDTR_MAX, ByVal VarPtr(ST(0))
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10440,6 +10498,8 @@ If VBFlexGridComboCalendarHandle <> NULL_PTR Then
     Else
         ComboCalendarMaxDate = DateSerial(9999, 12, 31)
     End If
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10461,6 +10521,8 @@ If VBFlexGridComboCalendarHandle <> NULL_PTR Then
     ST(1).wMonth = VBA.Month(Value)
     ST(1).wDay = VBA.Day(Value)
     SendMessage VBFlexGridComboCalendarHandle, MCM_SETRANGE, GDTR_MIN Or GDTR_MAX, ByVal VarPtr(ST(0))
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10471,6 +10533,8 @@ If VBFlexGridComboCalendarHandle <> NULL_PTR Then
     Dim ST As SYSTEMTIME
     SendMessage VBFlexGridComboCalendarHandle, MCM_GETCURSEL, 0, ByVal VarPtr(ST)
     ComboCalendarValue = DateSerial(ST.wYear, ST.wMonth, ST.wDay)
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -10488,6 +10552,8 @@ If VBFlexGridComboCalendarHandle <> NULL_PTR Then
     .wMilliseconds = 0
     End With
     SendMessage VBFlexGridComboCalendarHandle, MCM_SETCURSEL, 0, ByVal VarPtr(ST)
+Else
+    Err.Raise 5
 End If
 End Property
 
@@ -13788,7 +13854,7 @@ Private Sub GetTextDisplay(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As
 If iRow >= PropFixedRows And iCol >= PropFixedCols Then
     If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
 Else
-    If StrPtr(VBFlexGridColsInfo(iCol).FixedFormat) = 0 Then
+    If StrPtr(VBFlexGridColsInfo(iCol).FixedFormat) = NULL_PTR Then
         If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
     Else
         If Not VBFlexGridColsInfo(iCol).FixedFormat = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).FixedFormat, vbUseSystemDayOfWeek, vbUseSystem)
@@ -14894,7 +14960,7 @@ If hDC <> NULL_PTR Then
     Dim Text As String, TextRect As RECT, HiddenText As Boolean
     Call GetCellText(iRow, iCol, Text)
     Call GetTextDisplay(iRow, iCol, Text)
-    If StrPtr(Text) = 0 Then Text = ""
+    If StrPtr(Text) = NULL_PTR Then Text = ""
     With TextRect
     .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
     .Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
