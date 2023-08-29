@@ -1,5 +1,9 @@
 List of revisions:
 
+29-Aug-2023
+- Bugfix that the edit control back color did not consider the BackColorAlt property.
+- Certain run-time properties now throw error 5 to avoid mis-use instead of silently doing nothing.
+
 28-Jul-2023
 - Bugfix in the ComboListIndex property that the new selection was not commited to the edit control.
 
