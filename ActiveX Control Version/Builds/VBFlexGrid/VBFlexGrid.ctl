@@ -596,10 +596,6 @@ dwItemSpec As LongPtr
 uItemState As Long
 lItemlParam As LongPtr
 End Type
-Private Type NMTOOLTIPSCREATED
-hdr As NMHDR
-hWndToolTips As LongPtr
-End Type
 Private Type NMTTCUSTOMDRAW
 NMCD As NMCUSTOMDRAW
 uDrawFlags As Long
@@ -948,7 +944,6 @@ Private Declare PtrSafe Function PeekMessage Lib "user32" Alias "PeekMessageW" (
 Private Declare PtrSafe Function PostMessage Lib "user32" Alias "PostMessageW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByRef lParam As Any) As LongPtr
 Private Declare PtrSafe Function DestroyWindow Lib "user32" (ByVal hWnd As LongPtr) As Long
 Private Declare PtrSafe Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
-Private Declare PtrSafe Function GetParent Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
 Private Declare PtrSafe Function SetParent Lib "user32" (ByVal hWndChild As LongPtr, ByVal hWndNewParent As LongPtr) As LongPtr
 Private Declare PtrSafe Function ShowWindow Lib "user32" (ByVal hWnd As LongPtr, ByVal nCmdShow As Long) As Long
 Private Declare PtrSafe Function MoveWindow Lib "user32" (ByVal hWnd As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
@@ -1064,7 +1059,6 @@ Private Declare Function PeekMessage Lib "user32" Alias "PeekMessageW" (ByRef lp
 Private Declare Function PostMessage Lib "user32" Alias "PostMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
 Private Declare Function DestroyWindow Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-Private Declare Function GetParent Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function SetParent Lib "user32" (ByVal hWndChild As Long, ByVal hWndNewParent As Long) As Long
 Private Declare Function ShowWindow Lib "user32" (ByVal hWnd As Long, ByVal nCmdShow As Long) As Long
 Private Declare Function MoveWindow Lib "user32" (ByVal hWnd As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
@@ -1492,7 +1486,6 @@ Private Const LPSTR_TEXTCALLBACK As Long = (-1)
 Private Const INFOTIPSIZE As Long = 1024
 Private Const NM_FIRST As Long = 0
 Private Const NM_CUSTOMDRAW As Long = (NM_FIRST - 12)
-Private Const NM_TOOLTIPSCREATED As Long = (NM_FIRST - 19)
 Private Const TTF_RTLREADING As Long = &H4
 Private Const TTF_SUBCLASS As Long = &H10
 Private Const TTF_TRACK As Long = &H20
@@ -5019,16 +5012,6 @@ If VBFlexGridToolTipHandle <> NULL_PTR Then
     SendMessage VBFlexGridToolTipHandle, TTM_ADDTOOL, 0, ByVal VarPtr(TI)
 End If
 Call SetVisualStylesToolTip
-If VBFlexGridToolTipHandle <> NULL_PTR Then
-    Dim NMTTC As NMTOOLTIPSCREATED
-    With NMTTC
-    .hdr.hWndFrom = VBFlexGridHandle
-    .hdr.IDFrom = 0
-    .hdr.Code = NM_TOOLTIPSCREATED
-    .hWndToolTips = VBFlexGridToolTipHandle
-    End With
-    SendMessage GetParent(VBFlexGridHandle), WM_NOTIFY, 0, ByVal VarPtr(NMTTC)
-End If
 End Sub
 
 Private Sub CreateScrollTip()
@@ -5056,16 +5039,6 @@ If VBFlexGridScrollTipHandle <> NULL_PTR Then
     SendMessage VBFlexGridScrollTipHandle, TTM_ADDTOOL, 0, ByVal VarPtr(TI)
 End If
 Call SetVisualStylesScrollTip
-If VBFlexGridScrollTipHandle <> NULL_PTR Then
-    Dim NMTTC As NMTOOLTIPSCREATED
-    With NMTTC
-    .hdr.hWndFrom = VBFlexGridHandle
-    .hdr.IDFrom = 0
-    .hdr.Code = NM_TOOLTIPSCREATED
-    .hWndToolTips = VBFlexGridScrollTipHandle
-    End With
-    SendMessage GetParent(VBFlexGridHandle), WM_NOTIFY, 1, ByVal VarPtr(NMTTC)
-End If
 End Sub
 
 Private Sub DestroyVBFlexGrid()
@@ -5265,12 +5238,12 @@ With EditRect
 .Right = CellRangeRect.Right - VBFlexGridEditGridLineOffsets.RightBottom.CX
 .Bottom = CellRangeRect.Bottom - VBFlexGridEditGridLineOffsets.RightBottom.CY
 End With
-If VBFlexGridComboMode <> FlexComboModeNone Then
-    VBFlexGridComboModeActive = VBFlexGridComboMode
-    ComboItems = VBFlexGridComboItems
-ElseIf VBFlexGridColsInfo(VBFlexGridEditCol).ComboMode <> FlexComboModeNone Then
+If VBFlexGridColsInfo(VBFlexGridEditCol).ComboMode <> FlexComboModeNone Then
     VBFlexGridComboModeActive = VBFlexGridColsInfo(VBFlexGridEditCol).ComboMode
     ComboItems = VBFlexGridColsInfo(VBFlexGridEditCol).ComboItems
+ElseIf VBFlexGridComboMode <> FlexComboModeNone Then
+    VBFlexGridComboModeActive = VBFlexGridComboMode
+    ComboItems = VBFlexGridComboItems
 End If
 If VBFlexGridComboModeActive <> FlexComboModeNone Then
     ComboButtonWidth = GetComboButtonWidth(VBFlexGridEditCol, FlexComboCueNone)
@@ -12445,8 +12418,8 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSor
         TextRect.Left = TextRect.Left + SortArrowClientSize.CX
     End If
 End If
+Call GetTextDisplay(iRow, iCol, Text)
 If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
-    Call GetTextDisplay(iRow, iCol, Text)
     Dim TextStyle As FlexTextStyleConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyleFixed
@@ -13013,8 +12986,8 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End Select
     End With
 End If
+Call GetTextDisplay(iRow, iCol, Text)
 If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
-    Call GetTextDisplay(iRow, iCol, Text)
     Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyle
