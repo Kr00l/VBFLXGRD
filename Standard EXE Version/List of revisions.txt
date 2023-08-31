@@ -1,5 +1,9 @@
 List of revisions:
 
+31-Aug-2023
+- ColComboMode precede over ComboMode now. (like in vsFlexGrid)
+  This is now in sync as other properties. (e.g. ColComboButtonAlignment over ComboButtonAlignment)
+
 29-Aug-2023
 - Bugfix that the edit control back color did not consider the BackColorAlt property.
 - Certain run-time properties now throw error 5 to avoid mis-use instead of silently doing nothing.
