@@ -1,5 +1,9 @@
 List of revisions:
 
+01-Sep-2023
+- Bugfix that LBN_SELCHANGE handler got misplaced in WM_COMMAND. (regression since 03-Nov-2021)
+  This resulted that arrow keys in the combo box did not update the edit text!
+
 31-Aug-2023
 - ColComboMode precede over ComboMode now. (like in vsFlexGrid)
   This is now in sync as other properties. (e.g. ColComboButtonAlignment over ComboButtonAlignment)
