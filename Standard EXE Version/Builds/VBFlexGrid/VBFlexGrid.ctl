@@ -20057,9 +20057,9 @@ Select Case wMsg
         End If
     Case WM_COMMAND
         If lParam <> 0 Then
-            Select Case HiWord(CLng(wParam))
-                Case EN_CHANGE
-                    If LoWord(CLng(wParam)) = ID_EDITCHILD And lParam = VBFlexGridEditHandle And VBFlexGridEditHandle <> NULL_PTR Then
+            If LoWord(CLng(wParam)) = ID_EDITCHILD And lParam = VBFlexGridEditHandle And VBFlexGridEditHandle <> NULL_PTR Then
+                Select Case HiWord(CLng(wParam))
+                    Case EN_CHANGE
                         If VBFlexGridEditChangeFrozen = False Then
                             If VBFlexGridComboModeActive = FlexComboModeEditable And VBFlexGridComboListHandle <> NULL_PTR Then
                                 Dim Index As Long
@@ -20082,22 +20082,26 @@ Select Case wMsg
                             VBFlexGridEditAlreadyValidated = False
                             RaiseEvent EditChange
                         End If
-                    End If
-                Case STN_CLICKED, STN_DBLCLK
-                    If LoWord(CLng(wParam)) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> NULL_PTR Then
+                End Select
+            ElseIf LoWord(CLng(wParam)) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> NULL_PTR Then
+                Select Case HiWord(CLng(wParam))
+                    Case STN_CLICKED, STN_DBLCLK
                         If VBFlexGridComboListHandle <> NULL_PTR Or VBFlexGridComboCalendarHandle <> NULL_PTR Then
                             Call ComboShowDropDown(True, FlexComboDropDownReasonMouse)
                         Else
                             Call ComboButtonPerformClick
                         End If
-                    End If
-                Case STN_ENABLE
-                    If LoWord(CLng(wParam)) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> NULL_PTR Then Call ComboButtonSetState(ODS_DISABLED, False)
-                Case STN_DISABLE
-                    If LoWord(CLng(wParam)) = ID_COMBOBUTTONCHILD And lParam = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> NULL_PTR Then Call ComboButtonSetState(ODS_DISABLED, True)
-                Case LBN_SELCHANGE
-                    If LoWord(CLng(wParam)) = 0 And lParam = VBFlexGridComboListHandle And VBFlexGridComboListHandle <> NULL_PTR Then Call ComboListCommitSel
-            End Select
+                    Case STN_ENABLE
+                        Call ComboButtonSetState(ODS_DISABLED, False)
+                    Case STN_DISABLE
+                        Call ComboButtonSetState(ODS_DISABLED, True)
+                End Select
+            ElseIf LoWord(CLng(wParam)) = 0 And lParam = VBFlexGridComboListHandle And VBFlexGridComboListHandle <> NULL_PTR Then
+                Select Case HiWord(CLng(wParam))
+                    Case LBN_SELCHANGE
+                        Call ComboListCommitSel
+                End Select
+            End If
         End If
     Case WM_NOTIFYFORMAT
         Const NF_QUERY As Long = 3
