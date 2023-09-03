@@ -1,5 +1,14 @@
 List of revisions:
 
+03-Sep-2023
+- Included the ColLookup property used to map keys to associated values.
+  This is useful for translating database values to user-friendly descriptions.
+  Example: (it can be used also without a combo list)
+  ColLookup(i) = ";NULL|0;|1;Full time|2;Part time|3;Contractor|4;Other"
+  ColComboItems(i) = "|Full time|Part time|Contractor|Other"
+  If a cell text is "3" then .Cell(FlexCellTextDisplay) will return "Contractor".
+  Choosing "Contractor" in the combo drop-down will put a cell text of "3".
+
 01-Sep-2023
 - Bugfix that LBN_SELCHANGE handler got misplaced in WM_COMMAND. (regression since 03-Nov-2021)
   This resulted that arrow keys in the combo box did not update the edit text!
