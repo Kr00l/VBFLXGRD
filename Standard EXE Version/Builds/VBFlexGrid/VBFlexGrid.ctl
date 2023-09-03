@@ -751,6 +751,15 @@ Data As Long
 State As Long
 ID As Long
 End Type
+Private Type TLOOKUPITEM
+Key As String
+Value As String
+End Type
+Private Type TLOOKUP
+Property As String
+Count As Long
+Items() As TLOOKUPITEM
+End Type
 Private Const COLINFO_WIDTH_SPACING_DIP As Long = 6
 Private Const CLIS_HIDDEN As Long = &H1
 Private Const CLIS_MERGE As Long = &H2
@@ -776,6 +785,7 @@ ComboButtonWidth As Long
 ComboItems As String
 CheckBoxAlignment As FlexCheckBoxAlignmentConstants
 FixedCheckBoxAlignment As FlexCheckBoxAlignmentConstants
+Lookup As TLOOKUP
 Format As String
 FixedFormat As String
 DataType As Integer
@@ -5175,6 +5185,15 @@ If VBFlexGridFocused = False Then SetFocusAPI UserControl.hWnd
 Dim IsFixedCell As Boolean, Text As String
 IsFixedCell = CBool(VBFlexGridEditRow < PropFixedRows Or VBFlexGridEditCol < PropFixedCols)
 Call GetCellText(VBFlexGridEditRow, VBFlexGridEditCol, Text)
+If VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Count > 0 Then
+    Dim i As Long
+    For i = 0 To (VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Count - 1)
+        If StrComp(VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Key, Text, vbTextCompare) = 0 Then
+            Text = VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Value
+            Exit For
+        End If
+    Next i
+End If
 Dim dwStyle As Long, dwExStyle As Long
 dwStyle = WS_CHILD
 dwExStyle = 0
@@ -5365,7 +5384,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                     If VBFlexGridComboListHandle <> NULL_PTR Then
                         SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
                         If StrPtr(ComboItems) <> NULL_PTR Then
-                            Dim Pos1 As Long, Pos2 As Long, Temp As String, i As Long
+                            Dim Pos1 As Long, Pos2 As Long, Temp As String, Index As Long
                             Do
                                 Pos1 = InStr(Pos1 + 1, ComboItems, "|")
                                 If Pos1 > 0 Then
@@ -5373,9 +5392,9 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                                 Else
                                     Temp = Mid$(ComboItems, Pos2 + 1)
                                 End If
-                                SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, i, ByVal StrPtr(Temp)
+                                SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, Index, ByVal StrPtr(Temp)
                                 Pos2 = Pos1
-                                i = i + 1
+                                Index = Index + 1
                             Loop Until Pos1 = 0
                         End If
                         Const EDIT_MAXDROPDOWNITEMS As Integer = 9
@@ -5515,6 +5534,15 @@ If Discard = False And VBFlexGridEditTextChanged = True Then
     If Cancel = False Then
         Dim Text As String, iRow As Long, iCol As Long
         Text = Me.EditText
+        If VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Count > 0 Then
+            Dim i As Long
+            For i = 0 To (VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Count - 1)
+                If StrComp(VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Value, Text, vbBinaryCompare) = 0 Then
+                    Text = VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Key
+                    Exit For
+                End If
+            Next i
+        End If
         With VBFlexGridEditMergedRange
         For iRow = .TopRow To .BottomRow
             For iCol = .LeftCol To .RightCol
@@ -7429,6 +7457,79 @@ Else
     Dim i As Long
     For i = 0 To (PropCols - 1)
         VBFlexGridColsInfo(i).FixedCheckBoxAlignment = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get ColLookup(ByVal Index As Long) As String
+Attribute ColLookup.VB_Description = "Returns/sets the lookup used to map keys to associated values in a column."
+Attribute ColLookup.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColLookup = VBFlexGridColsInfo(Index).Lookup.Property
+End Property
+
+Public Property Let ColLookup(ByVal Index As Long, ByVal Value As String)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Dim Pos1 As Long, Pos2 As Long, Pos3 As Long, Temp As String
+If Index > -1 Then
+    With VBFlexGridColsInfo(Index).Lookup
+    .Property = Value
+    .Count = 0
+    Erase .Items()
+    If Not .Property = vbNullString Then
+        Do
+            Pos1 = InStr(Pos1 + 1, .Property, "|")
+            If Pos1 > 0 Then
+                Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1)
+            Else
+                Temp = Mid$(Value, Pos2 + 1)
+            End If
+            Pos3 = InStr(Pos3 + 1, Temp, ";")
+            ReDim Preserve .Items(0 To .Count) As TLOOKUPITEM
+            If Pos3 > 0 Then
+                .Items(.Count).Key = Mid$(Temp, 1, Pos3 - 1)
+                .Items(.Count).Value = Mid$(Temp, Pos3 + 1)
+            Else
+                .Items(.Count).Key = vbNullString
+                .Items(.Count).Value = Temp
+            End If
+            .Count = .Count + 1
+            Pos2 = Pos1
+            Pos3 = 0
+        Loop Until Pos1 = 0
+    End If
+    End With
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        With VBFlexGridColsInfo(i).Lookup
+        .Property = Value
+        .Count = 0
+        Erase .Items()
+        If Not .Property = vbNullString Then
+            Do
+                Pos1 = InStr(Pos1 + 1, .Property, "|")
+                If Pos1 > 0 Then
+                    Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - 1)
+                Else
+                    Temp = Mid$(Value, Pos2 + 1)
+                End If
+                Pos3 = InStr(Pos3 + 1, Temp, ";")
+                ReDim Preserve .Items(0 To .Count) As TLOOKUPITEM
+                If Pos3 > 0 Then
+                    .Items(.Count).Key = Mid$(Temp, 1, Pos3 - 1)
+                    .Items(.Count).Value = Mid$(Temp, Pos3 + 1)
+                Else
+                    .Items(.Count).Key = vbNullString
+                    .Items(.Count).Value = Temp
+                End If
+                .Count = .Count + 1
+                Pos2 = Pos1
+                Pos3 = 0
+            Loop Until Pos1 = 0
+        End If
+        End With
     Next i
 End If
 Call RedrawGrid
@@ -13824,6 +13925,15 @@ End With
 End Sub
 
 Private Sub GetTextDisplay(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As String)
+If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+    Dim i As Long
+    For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Text, vbTextCompare) = 0 Then
+            Text = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+            Exit For
+        End If
+    Next i
+End If
 If iRow >= PropFixedRows And iCol >= PropFixedCols Then
     If Not VBFlexGridColsInfo(iCol).Format = vbNullString Then Text = Format$(Text, VBFlexGridColsInfo(iCol).Format, vbUseSystemDayOfWeek, vbUseSystem)
 Else
