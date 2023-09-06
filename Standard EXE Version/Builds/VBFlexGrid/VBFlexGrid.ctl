@@ -1324,6 +1324,7 @@ Private Const GWL_STYLE As Long = (-16)
 Private Const GWL_EXSTYLE As Long = (-20)
 Private Const GWL_USERDATA As Long = (-21)
 Private Const LAYOUT_RTL As Long = &H1
+Private Const EM_SETREADONLY As Long = &HCF, ES_READONLY As Long = &H800
 Private Const EM_GETSEL As Long = &HB0
 Private Const EM_SETSEL As Long = &HB1
 Private Const EM_REPLACESEL As Long = &HC2
@@ -1343,7 +1344,6 @@ Private Const ES_RIGHT As Long = &H2
 Private Const ES_MULTILINE As Long = &H4
 Private Const ES_AUTOVSCROLL As Long = &H40
 Private Const ES_AUTOHSCROLL As Long = &H80
-Private Const ES_READONLY As Long = &H800
 Private Const EC_LEFTMARGIN As Long = &H1
 Private Const EC_RIGHTMARGIN As Long = &H2
 Private Const SS_OWNERDRAW As Long = &HD
@@ -10159,6 +10159,24 @@ If VBFlexGridEditHandle <> NULL_PTR Then
         VBFlexGridEditAlreadyValidated = False
         RaiseEvent EditChange
     End If
+Else
+    Err.Raise 5
+End If
+End Property
+
+Public Property Get EditLocked() As Boolean
+Attribute EditLocked.VB_Description = "Returns/sets a value indicating whether the contents can be edited."
+Attribute EditLocked.VB_MemberFlags = "400"
+If VBFlexGridEditHandle <> NULL_PTR Then
+    EditLocked = CBool((GetWindowLong(VBFlexGridEditHandle, GWL_STYLE) And ES_READONLY) <> 0)
+Else
+    Err.Raise 5
+End If
+End Property
+
+Public Property Let EditLocked(ByVal Value As Boolean)
+If VBFlexGridEditHandle <> NULL_PTR Then
+    SendMessage VBFlexGridEditHandle, EM_SETREADONLY, IIf(Value = True, 1, 0), ByVal 0&
 Else
     Err.Raise 5
 End If
