@@ -1,5 +1,8 @@
 List of revisions:
 
+06-Sep-2023
+- Included the EditLocked property.
+
 03-Sep-2023
 - Included the ColLookup property used to map keys to associated values.
   This is useful for translating database values to user-friendly descriptions.

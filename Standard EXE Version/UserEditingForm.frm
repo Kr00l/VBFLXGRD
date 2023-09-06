@@ -164,10 +164,8 @@ lpfnHook As LongPtr
 lpTemplateName As LongPtr
 End Type
 #If VBA7 Then
-Private Declare PtrSafe Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByRef lParam As Any) As LongPtr
 Private Declare PtrSafe Function ChooseColor Lib "comdlg32" Alias "ChooseColorW" (ByRef lpChooseColor As TCHOOSECOLOR) As Long
 #Else
-Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
 Private Declare Function ChooseColor Lib "comdlg32" Alias "ChooseColorW" (ByRef lpChooseColor As TCHOOSECOLOR) As Long
 #End If
 Private Const COL_NORMAL As Long = 1
@@ -328,8 +326,7 @@ Select Case VBFlexGrid1.EditCol
         If Option6.Value = True Then
             ' FlexComboModeCalendar now behaves like FlexComboModeDropDown when the edit control has ES_READONLY.
             ' It means always immediately popup of the calendar and commit on a date click.
-            Const EM_SETREADONLY As Long = &HCF
-            SendMessage VBFlexGrid1.hWndEdit, EM_SETREADONLY, 1, ByVal 0&
+            VBFlexGrid1.EditLocked = True
         End If
 End Select
 End Sub
