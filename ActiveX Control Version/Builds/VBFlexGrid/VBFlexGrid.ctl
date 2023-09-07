@@ -1444,7 +1444,7 @@ Private Const WM_ERASEBKGND As Long = &H14
 Private Const WM_PAINT As Long = &HF
 Private Const WM_PRINTCLIENT As Long = &H318
 Private Const WM_NCCALCSIZE As Long = &H83
-Private Const WM_NCHITTEST As Long = &H84, HTCLIENT As Long = 1, HTVSCROLL As Long = 7, HTBORDER As Long = 18
+Private Const WM_NCHITTEST As Long = &H84, HTCLIENT As Long = 1, HTHSCROLL As Long = 6, HTVSCROLL As Long = 7, HTBORDER As Long = 18
 Private Const WM_NCPAINT As Long = &H85
 Private Const WM_NCMOUSEMOVE As Long = &HA0
 Private Const WM_NCMOUSELEAVE As Long = &H2A2
@@ -5353,7 +5353,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
             Dim WndRect As RECT
             Select Case VBFlexGridComboModeActive
                 Case FlexComboModeDropDown, FlexComboModeEditable
-                    dwStyle = WS_POPUP Or WS_BORDER Or WS_VSCROLL Or LBS_NOTIFY Or LBS_SORT
+                    dwStyle = WS_POPUP Or WS_BORDER Or LBS_NOTIFY Or LBS_SORT Or WS_VSCROLL Or WS_HSCROLL
                     dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
                     If ComboButtonAlignment = FlexLeftRightAlignmentLeft Then dwExStyle = dwExStyle Or WS_EX_RIGHT Or WS_EX_LEFTSCROLLBAR
                     If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
@@ -20614,7 +20614,10 @@ Select Case wMsg
     Case WM_SHOWWINDOW
         LastMouseMoveLParam = 0
     Case WM_MOUSEMOVE
-        If SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos()) = HTVSCROLL Then ReleaseCapture
+        Select Case SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos())
+            Case HTHSCROLL, HTVSCROLL
+                ReleaseCapture
+        End Select
         If LastMouseMoveLParam <> lParam Or LastMouseMoveLParam = 0 Then
             ComboListSelFromPt Get_X_lParam(lParam), Get_Y_lParam(lParam)
             LastMouseMoveLParam = lParam
@@ -20645,7 +20648,11 @@ Select Case wMsg
         ReleaseCapture
         Exit Function ' Prevents the popup window from being focused.
     Case WM_CAPTURECHANGED
-        If SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos()) <> HTVSCROLL Then Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
+        Select Case SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos())
+            Case HTHSCROLL, HTVSCROLL
+            Case Else
+                Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
+        End Select
 End Select
 WindowProcComboList = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
 End Function
