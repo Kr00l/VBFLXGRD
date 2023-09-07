@@ -76,7 +76,7 @@ Private FlexFindDirectionDown, FlexFindDirectionUp
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
 Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace, FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4, FlexEditReasonComboCueAltUpDown
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
-Private FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+Private FlexComboCueHidden, FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
 Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton, FlexComboModeCalendar
 Private FlexComboDropDownReasonCode, FlexComboDropDownReasonInitialize, FlexComboDropDownReasonMouse, FlexComboDropDownReasonKeyboard
 Private FlexComboButtonValueUnpressed, FlexComboButtonValuePressed, FlexComboButtonValueDisabled
@@ -394,6 +394,7 @@ FlexEditCloseModeShiftTab = 5
 FlexEditCloseModeNavigationKey = 6
 End Enum
 Public Enum FlexComboCueConstants
+FlexComboCueHidden = -1
 FlexComboCueNone = 0
 FlexComboCueDropDown = 1
 FlexComboCueButton = 2
@@ -777,6 +778,7 @@ Sort As FlexSortConstants
 SortArrow As FlexSortArrowConstants
 SortArrowAlignment As FlexLeftRightAlignmentConstants
 SortArrowColor As Long
+ComboCue As FlexComboCueConstants
 ComboMode As FlexComboModeConstants
 ComboButtonPicture As IPictureDisp
 ComboButtonPictureRenderFlag As Integer
@@ -7263,6 +7265,31 @@ End If
 Call RedrawGrid
 End Property
 
+Public Property Get ColComboCue(ByVal Index As Long) As FlexComboCueConstants
+Attribute ColComboCue.VB_Description = "Returns/sets the combo cue to visually indicate a combo functionality for the specified column."
+Attribute ColComboCue.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColComboCue = VBFlexGridColsInfo(Index).ComboCue
+End Property
+
+Public Property Let ColComboCue(ByVal Index As Long, ByVal Value As FlexComboCueConstants)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Select Case Value
+    Case FlexComboCueHidden, FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+    Case Else
+        Err.Raise 380
+End Select
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).ComboCue = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).ComboCue = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
 Public Property Get ColComboMode(ByVal Index As Long) As FlexComboModeConstants
 Attribute ColComboMode.VB_Description = "Returns/sets the combo functionality mode when editing a cell for the specified column."
 Attribute ColComboMode.VB_MemberFlags = "400"
@@ -8885,7 +8912,7 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Select Case Value
-    Case FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+    Case FlexComboCueHidden, FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
     Case Else
         Err.Raise 380
 End Select
@@ -10280,7 +10307,7 @@ End Property
 
 Public Property Let ComboCue(ByVal Value As FlexComboCueConstants)
 Select Case Value
-    Case FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+    Case FlexComboCueHidden, FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
         VBFlexGridComboCue = Value
     Case Else
         Err.Raise 380
@@ -12169,7 +12196,7 @@ With CellFmtg
 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
     ComboCue = GetComboCueActive(iRow, iCol)
-    If ComboCue <> FlexComboCueNone Then
+    If ComboCue > FlexComboCueNone Then
         ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
         If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
         If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
@@ -12809,7 +12836,7 @@ With CellFmtg
 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
     ComboCue = GetComboCueActive(iRow, iCol)
-    If ComboCue <> FlexComboCueNone Then
+    If ComboCue > FlexComboCueNone Then
         ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
         If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
         If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
@@ -13516,6 +13543,8 @@ End Function
 Private Function GetComboButtonWidth(ByVal iCol As Long, ByVal ComboCue As FlexComboCueConstants) As Long
 Dim CtlType As Long
 Select Case ComboCue
+    Case FlexComboCueHidden
+        Exit Function
     Case FlexComboCueNone
         Select Case VBFlexGridComboModeActive
             Case FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeCalendar
@@ -14168,7 +14197,7 @@ If hDC <> NULL_PTR Then
         Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
         If PropAllowUserEditing = True Then
             ComboCue = GetComboCueActive(iRow, iCol)
-            If ComboCue <> FlexComboCueNone Then
+            If ComboCue > FlexComboCueNone Then
                 Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
                 ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
                 If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
@@ -14287,7 +14316,7 @@ If hDC <> NULL_PTR Then
                 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long
                 If PropAllowUserEditing = True Then
                     ComboCue = GetComboCueActive(iRow, iCol)
-                    If ComboCue <> FlexComboCueNone Then ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
+                    If ComboCue > FlexComboCueNone Then ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
                 End If
                 If ComboCueWidth > 0 Then CX = CX + ComboCueWidth
                 If Not .Picture Is Nothing Then
@@ -14518,7 +14547,7 @@ If iRowHit > -1 And iColHit > -1 Then
     Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
     If PropAllowUserEditing = True Then
         ComboCue = GetComboCueActive(iRowHit, iColHit)
-        If ComboCue <> FlexComboCueNone Then
+        If ComboCue > FlexComboCueNone Then
             Call GetGridLineOffsets(iRowHit, iColHit, GridLineOffsets)
             ComboCueWidth = GetComboButtonWidth(iColHit, ComboCue)
             If (((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
@@ -15047,7 +15076,7 @@ If hDC <> NULL_PTR Then
     Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
     If PropAllowUserEditing = True Then
         ComboCue = GetComboCueActive(iRow, iCol)
-        If ComboCue <> FlexComboCueNone Then
+        If ComboCue > FlexComboCueNone Then
             Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
             ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
             If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
@@ -16058,7 +16087,9 @@ Dim CellFmtg As TCELLFMTG
 Call GetCellFmtg(iRow, iCol, CFM_COMBOCUE, CellFmtg)
 GetComboCueActive = CellFmtg.ComboCue
 If GetComboCueActive = FlexComboCueNone Then
-    If VBFlexGridComboCue <> FlexComboCueNone Then
+    If iRow >= PropFixedRows And VBFlexGridColsInfo(iCol).ComboCue <> FlexComboModeNone Then
+        GetComboCueActive = VBFlexGridColsInfo(iCol).ComboCue
+    ElseIf VBFlexGridComboCue <> FlexComboCueNone Then
         If (iRow = GetComboCueRow() And iCol = GetComboCueCol()) Then GetComboCueActive = VBFlexGridComboCue
     End If
 End If
