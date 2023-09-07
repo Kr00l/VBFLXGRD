@@ -1,5 +1,11 @@
 List of revisions:
 
+07-Sep-2023
+- Included the ColComboCue property. (order is CellComboCue > ColComboCue > ComboCue)
+  ColComboCue excludes for fixed rows. Use the CellComboCue to fill the gap, if necessary.
+- Added enum FlexComboCueHidden.
+  This may be useful to exclude cells in a ColComboCue via CellComboCue. (e.g. frozen row)
+
 06-Sep-2023
 - Included the EditLocked property.
 
