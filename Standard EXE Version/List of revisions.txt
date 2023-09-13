@@ -1,5 +1,8 @@
 List of revisions:
 
+13-Sep-2023
+- Included the WallPaper/WallPaperAlignment property. (like in vsFlexGrid)
+
 07-Sep-2023
 - Included the ColComboCue property. (order is CellComboCue > ColComboCue > ComboCue)
   ColComboCue excludes for fixed rows. Use the CellComboCue to fill the gap, if necessary.

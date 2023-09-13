@@ -279,6 +279,7 @@ Begin VB.Form MainForm
       ShowLabelTips   =   -1  'True
       ShowScrollTips  =   -1  'True
       AllowScrollLock =   -1  'True
+      WallPaper       =   "MainForm.frx":0344
    End
    Begin VB.Label Label3 
       Height          =   315
