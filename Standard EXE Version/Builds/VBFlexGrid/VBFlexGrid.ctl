@@ -87,6 +87,7 @@ Private FlexCellCheckReasonMouse, FlexCellCheckReasonKeyboard
 Private FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentCenterTop, FlexCheckBoxAlignmentCenterCenter, FlexCheckBoxAlignmentCenterBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom, FlexCheckBoxAlignmentUsePictureAlignment
 Private FlexCheckBoxDrawModeNormal, FlexCheckBoxDrawModeOwnerDraw
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
+Private FlexWallPaperAlignmentLeftTop, FlexWallPaperAlignmentLeftCenter, FlexWallPaperAlignmentLeftBottom, FlexWallPaperAlignmentCenterTop, FlexWallPaperAlignmentCenterCenter, FlexWallPaperAlignmentCenterBottom, FlexWallPaperAlignmentRightTop, FlexWallPaperAlignmentRightCenter, FlexWallPaperAlignmentRightBottom, FlexWallPaperAlignmentStretch, FlexWallPaperAlignmentTile
 Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoData, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText, FlexDataSourceChecked
 #End If
 Public Enum FlexOLEDropModeConstants
@@ -466,6 +467,19 @@ FlexBestFitModeFull = 1
 FlexBestFitModeSortArrowText = 2
 FlexBestFitModeOtherText = 3
 End Enum
+Public Enum FlexWallPaperAlignmentConstants
+FlexWallPaperAlignmentLeftTop = 0
+FlexWallPaperAlignmentLeftCenter = 1
+FlexWallPaperAlignmentLeftBottom = 2
+FlexWallPaperAlignmentCenterTop = 3
+FlexWallPaperAlignmentCenterCenter = 4
+FlexWallPaperAlignmentCenterBottom = 5
+FlexWallPaperAlignmentRightTop = 6
+FlexWallPaperAlignmentRightCenter = 7
+FlexWallPaperAlignmentRightBottom = 8
+FlexWallPaperAlignmentStretch = 9
+FlexWallPaperAlignmentTile = 10
+End Enum
 Public Enum FlexDataSourceFlags
 FlexDataSourceUnboundFixedColumns = 1
 FlexDataSourceNoData = 2
@@ -667,10 +681,12 @@ Flags As Long
 RC As RECT
 DrawFlags As Long
 End Type
+Private Const DRAWINFO_FLAG_WALLPAPER As Long = &H1
 Private Type TDRAWINFO
 SelRange As TCELLRANGE
 GridLinePoints(0 To 5) As POINTAPI
 GridLineOffsets As TGRIDLINEOFFSETS
+Flags As Long
 End Type
 Private Type TMERGEDRAWCOLINFO
 RowOffset As Long
@@ -1606,6 +1622,7 @@ Private VBFlexGridInvertSelection As Boolean
 Private VBFlexGridClipSeparatorCol As String, VBFlexGridClipSeparatorRow As String
 Private VBFlexGridHotRow As Long, VBFlexGridHotCol As Long
 Private VBFlexGridHotHitResult As FlexHitResultConstants
+Private VBFlexGridWallPaperRenderFlag As Integer
 
 #If ImplementFlexDataSource = True Then
 
@@ -1712,6 +1729,8 @@ Private PropAllowScrollLock As Boolean
 Private PropSheetBorder As Boolean
 Private PropAutoClipboard As Boolean
 Private PropBestFitMode As FlexBestFitModeConstants
+Private PropWallPaper As IPictureDisp
+Private PropWallPaperAlignment As FlexWallPaperAlignmentConstants
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -2018,6 +2037,8 @@ PropAllowScrollLock = False
 PropSheetBorder = True
 PropAutoClipboard = False
 PropBestFitMode = FlexBestFitModeTextOnly
+Set PropWallPaper = Nothing
+PropWallPaperAlignment = FlexWallPaperAlignmentStretch
 Call CreateVBFlexGrid
 End Sub
 
@@ -2123,6 +2144,8 @@ PropAllowScrollLock = .ReadProperty("AllowScrollLock", False)
 PropSheetBorder = .ReadProperty("SheetBorder", True)
 PropAutoClipboard = .ReadProperty("AutoClipboard", False)
 PropBestFitMode = .ReadProperty("BestFitMode", FlexBestFitModeTextOnly)
+Set PropWallPaper = .ReadProperty("WallPaper", Nothing)
+PropWallPaperAlignment = .ReadProperty("WallPaperAlignment", FlexWallPaperAlignmentStretch)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -2224,6 +2247,8 @@ With PropBag
 .WriteProperty "SheetBorder", PropSheetBorder, True
 .WriteProperty "AutoClipboard", PropAutoClipboard, False
 .WriteProperty "BestFitMode", PropBestFitMode, FlexBestFitModeTextOnly
+.WriteProperty "WallPaper", PropWallPaper, Nothing
+.WriteProperty "WallPaperAlignment", PropWallPaperAlignment, FlexWallPaperAlignmentStretch
 End With
 End Sub
 
@@ -4882,6 +4907,39 @@ Select Case Value
         Err.Raise 380
 End Select
 UserControl.PropertyChanged "BestFitMode"
+End Property
+
+Public Property Get WallPaper() As IPictureDisp
+Attribute WallPaper.VB_Description = "Returns/sets a picture to be used as a background for the non-fixed area of the flex grid control."
+Set WallPaper = PropWallPaper
+End Property
+
+Public Property Let WallPaper(ByVal Value As IPictureDisp)
+Set Me.WallPaper = Value
+End Property
+
+Public Property Set WallPaper(ByVal Value As IPictureDisp)
+Set UserControl.Picture = Value
+Set PropWallPaper = UserControl.Picture
+Set UserControl.Picture = Nothing
+VBFlexGridWallPaperRenderFlag = 0
+Call RedrawGrid
+UserControl.PropertyChanged "WallPaper"
+End Property
+
+Public Property Get WallPaperAlignment() As FlexWallPaperAlignmentConstants
+Attribute WallPaperAlignment.VB_Description = "Returns/sets the alignment of the wall paper background picture."
+WallPaperAlignment = PropWallPaperAlignment
+End Property
+
+Public Property Let WallPaperAlignment(ByVal Value As FlexWallPaperAlignmentConstants)
+Select Case Value
+    Case FlexWallPaperAlignmentLeftTop, FlexWallPaperAlignmentLeftCenter, FlexWallPaperAlignmentLeftBottom, FlexWallPaperAlignmentCenterTop, FlexWallPaperAlignmentCenterCenter, FlexWallPaperAlignmentCenterBottom, FlexWallPaperAlignmentRightTop, FlexWallPaperAlignmentRightCenter, FlexWallPaperAlignmentRightBottom, FlexWallPaperAlignmentStretch, FlexWallPaperAlignmentTile
+        PropWallPaperAlignment = Value
+    Case Else
+        Err.Raise 380
+End Select
+Call RedrawGrid
 End Property
 
 Private Sub CreateVBFlexGrid()
@@ -10800,6 +10858,7 @@ Dim iRow As Long, iCol As Long, FixedCX As Long, FixedCY As Long, FrozenCX As Lo
 Dim CellRect As RECT, GridRect As RECT
 Dim OldBkMode As Long, hFontOld As LongPtr, Brush As LongPtr
 Call GetSelRangeStruct(VBFlexGridDrawInfo.SelRange)
+VBFlexGridDrawInfo.Flags = 0
 For iCol = 0 To (PropFixedCols - 1)
     FixedCX = FixedCX + GetColWidth(iCol)
 Next iCol
@@ -10813,6 +10872,60 @@ For iRow = PropFixedRows To ((PropFixedRows + PropFrozenRows) - 1)
     FrozenCY = FrozenCY + GetRowHeight(iRow)
 Next iRow
 OldBkMode = SetBkMode(hDC, 1)
+If Not PropWallPaper Is Nothing Then
+    If PropWallPaper.Handle <> NULL_PTR Then
+        FillRect hDC, VBFlexGridClientRect, VBFlexGridBackColorBrush
+        Dim WallPaperRect As RECT, WallPaperWidth As Long, WallPaperHeight As Long
+        Dim WallPaperLeft As Long, WallPaperTop As Long, WallPaperOffsetX As Long, WallPaperOffsetY As Long
+        SetRect WallPaperRect, FixedCX, FixedCY, VBFlexGridClientRect.Right, VBFlexGridClientRect.Bottom
+        If PropWallPaperAlignment <> FlexWallPaperAlignmentStretch Then
+            WallPaperWidth = CHimetricToPixel_X(PropWallPaper.Width)
+            WallPaperHeight = CHimetricToPixel_Y(PropWallPaper.Height)
+        Else
+            WallPaperWidth = (WallPaperRect.Right - WallPaperRect.Left)
+            WallPaperHeight = (WallPaperRect.Bottom - WallPaperRect.Top)
+        End If
+        WallPaperLeft = WallPaperRect.Left
+        WallPaperTop = WallPaperRect.Top
+        Select Case PropWallPaperAlignment
+            Case FlexWallPaperAlignmentLeftCenter
+                WallPaperOffsetY = (((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight) / 2)
+            Case FlexWallPaperAlignmentLeftBottom
+                WallPaperOffsetY = ((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight)
+            Case FlexWallPaperAlignmentCenterTop
+                WallPaperOffsetX = (((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth) / 2)
+            Case FlexWallPaperAlignmentCenterCenter
+                WallPaperOffsetX = (((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth) / 2)
+                WallPaperOffsetY = (((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight) / 2)
+            Case FlexWallPaperAlignmentCenterBottom
+                WallPaperOffsetX = (((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth) / 2)
+                WallPaperOffsetY = ((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight)
+            Case FlexWallPaperAlignmentRightTop
+                WallPaperOffsetX = ((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth)
+            Case FlexWallPaperAlignmentRightCenter
+                WallPaperOffsetX = ((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth)
+                WallPaperOffsetY = (((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight) / 2)
+            Case FlexWallPaperAlignmentRightBottom
+                WallPaperOffsetX = ((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth)
+                WallPaperOffsetY = ((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight)
+        End Select
+        If WallPaperOffsetX > 0 Then WallPaperLeft = WallPaperLeft + WallPaperOffsetX
+        If WallPaperOffsetY > 0 Then WallPaperTop = WallPaperTop + WallPaperOffsetY
+        If PropWallPaperAlignment <> FlexWallPaperAlignmentTile Then
+            Call RenderPicture(PropWallPaper, hDC, WallPaperLeft, WallPaperTop, WallPaperWidth, WallPaperHeight, VBFlexGridWallPaperRenderFlag)
+        Else
+            Do
+                Do
+                    Call RenderPicture(PropWallPaper, hDC, WallPaperLeft, WallPaperTop, WallPaperWidth, WallPaperHeight, VBFlexGridWallPaperRenderFlag)
+                    WallPaperTop = WallPaperTop + WallPaperHeight
+                Loop While WallPaperTop < WallPaperRect.Bottom
+                WallPaperLeft = WallPaperLeft + WallPaperWidth
+                WallPaperTop = WallPaperRect.Top
+            Loop While WallPaperLeft < WallPaperRect.Right
+        End If
+        VBFlexGridDrawInfo.Flags = VBFlexGridDrawInfo.Flags Or DRAWINFO_FLAG_WALLPAPER
+    End If
+End If
 With CellRect
 If PropMergeCells = FlexMergeCellsNever Then
     If VBFlexGridFontFixedHandle = NULL_PTR Then
@@ -12110,7 +12223,9 @@ If hPenOld <> NULL_PTR Then
     SelectObject hDC, hPenOld
     hPenOld = NULL_PTR
 End If
-If NoRgn = False Then hRgn = CreateRectRgn(.Left, .Top, .Right, .Bottom)
+If NoRgn = False Then
+    If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_WALLPAPER) = 0 Then hRgn = CreateRectRgn(.Left, .Top, .Right, .Bottom)
+End If
 End With
 SetBkMode hDC, OldBkMode
 End Sub
@@ -12892,10 +13007,10 @@ Dim Brush As LongPtr, Color As Long
 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Or (ItemState And ODS_FOCUS) = ODS_FOCUS Then
     If .BackColor = -1 Then
         If PropBackColor = PropBackColorAlt Then
-            PatBlt hDC, CellRect.Left, CellRect.Top, CellRect.Right - CellRect.Left, CellRect.Bottom - CellRect.Top, vbPatCopy
+            If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_WALLPAPER) = 0 Then PatBlt hDC, CellRect.Left, CellRect.Top, CellRect.Right - CellRect.Left, CellRect.Bottom - CellRect.Top, vbPatCopy
         Else
             If (iRow - PropFixedRows) Mod 2 = 0 Then
-                PatBlt hDC, CellRect.Left, CellRect.Top, CellRect.Right - CellRect.Left, CellRect.Bottom - CellRect.Top, vbPatCopy
+                If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_WALLPAPER) = 0 Then PatBlt hDC, CellRect.Left, CellRect.Top, CellRect.Right - CellRect.Left, CellRect.Bottom - CellRect.Top, vbPatCopy
             Else
                 Brush = SelectObject(hDC, VBFlexGridBackColorAltBrush)
                 PatBlt hDC, CellRect.Left, CellRect.Top, CellRect.Right - CellRect.Left, CellRect.Bottom - CellRect.Top, vbPatCopy
@@ -19774,8 +19889,10 @@ Select Case wMsg
             Else
                 If .fErase <> 0 Then
                     Call DrawGrid(hDC, hRgn, False)
-                    If hRgn <> NULL_PTR Then ExtSelectClipRgn hDC, hRgn, RGN_DIFF
-                    If VBFlexGridBackColorBkgBrush <> NULL_PTR Then FillRect hDC, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
+                    If hRgn <> NULL_PTR Then
+                        ExtSelectClipRgn hDC, hRgn, RGN_DIFF
+                        If VBFlexGridBackColorBkgBrush <> NULL_PTR Then FillRect hDC, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
+                    End If
                 Else
                     Call DrawGrid(hDC, NULL_PTR, True)
                 End If
