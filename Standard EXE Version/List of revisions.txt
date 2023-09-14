@@ -1,5 +1,9 @@
 List of revisions:
 
+14-Sep-2023
+- Usage of hashes for the keys in the ColLookup property.
+  This ensure no more exponential performance decrease when there are more than 10 lookup entries.
+
 13-Sep-2023
 - Included the WallPaper/WallPaperAlignment property. (like in vsFlexGrid)
 
