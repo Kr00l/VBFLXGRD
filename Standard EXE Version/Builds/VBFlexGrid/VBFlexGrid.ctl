@@ -771,6 +771,7 @@ End Type
 Private Type TLOOKUPITEM
 Key As String
 Value As String
+Hash As Long
 End Type
 Private Type TLOOKUP
 Property As String
@@ -965,6 +966,7 @@ Private Declare PtrSafe Function GetProcessHeap Lib "kernel32" () As LongPtr
 Private Declare PtrSafe Function SysAllocString Lib "oleaut32" (ByVal lpString As LongPtr) As LongPtr
 Private Declare PtrSafe Function SysFreeString Lib "oleaut32" (ByVal lpString As LongPtr) As Long
 Private Declare PtrSafe Function SysReAllocString Lib "oleaut32" (ByVal pbString As LongPtr, ByVal pszStrPtr As LongPtr) As Long
+Private Declare PtrSafe Function LCMapString Lib "kernel32" Alias "LCMapStringW" (ByVal LCID As Long, ByVal dwMapFlags As Long, ByVal lpSrcStr As LongPtr, ByVal cchSrcStr As Long, ByVal lpDestStr As LongPtr, ByVal cchDestStr As Long) As Long
 Private Declare PtrSafe Function lstrcmp Lib "kernel32" Alias "lstrcmpW" (ByVal lpString1 As LongPtr, ByVal lpString2 As LongPtr) As Long
 Private Declare PtrSafe Function lstrcmpi Lib "kernel32" Alias "lstrcmpiW" (ByVal lpString1 As LongPtr, ByVal lpString2 As LongPtr) As Long
 Private Declare PtrSafe Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByRef lParam As Any) As LongPtr
@@ -1006,6 +1008,7 @@ Private Declare PtrSafe Function ImmSetConversionStatus Lib "imm32" (ByVal hIMC 
 Private Declare PtrSafe Function GetSystemDefaultLangID Lib "kernel32" () As Integer
 Private Declare PtrSafe Function GetUserDefaultLangID Lib "kernel32" () As Integer
 Private Declare PtrSafe Function GetUserDefaultUILanguage Lib "kernel32" () As Integer
+Private Declare PtrSafe Function GetUserDefaultLCID Lib "kernel32" () As Long
 Private Declare PtrSafe Function GetLocaleInfo Lib "kernel32" Alias "GetLocaleInfoW" (ByVal LCID As Long, ByVal LCType As Long, ByVal lpLCData As LongPtr, ByVal cchData As Long) As Long
 Private Declare PtrSafe Function GetMessagePos Lib "user32" () As Long
 Private Declare PtrSafe Function GetClientRect Lib "user32" (ByVal hWnd As LongPtr, ByRef lpRect As RECT) As Long
@@ -1080,6 +1083,7 @@ Private Declare Function GetProcessHeap Lib "kernel32" () As Long
 Private Declare Function SysAllocString Lib "oleaut32" (ByVal lpString As Long) As Long
 Private Declare Function SysFreeString Lib "oleaut32" (ByVal lpString As Long) As Long
 Private Declare Function SysReAllocString Lib "oleaut32" (ByVal pbString As Long, ByVal pszStrPtr As Long) As Long
+Private Declare Function LCMapString Lib "kernel32" Alias "LCMapStringW" (ByVal LCID As Long, ByVal dwMapFlags As Long, ByVal lpSrcStr As Long, ByVal cchSrcStr As Long, ByVal lpDestStr As Long, ByVal cchDestStr As Long) As Long
 Private Declare Function lstrcmp Lib "kernel32" Alias "lstrcmpW" (ByVal lpString1 As Long, ByVal lpString2 As Long) As Long
 Private Declare Function lstrcmpi Lib "kernel32" Alias "lstrcmpiW" (ByVal lpString1 As Long, ByVal lpString2 As Long) As Long
 Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
@@ -1121,6 +1125,7 @@ Private Declare Function ImmSetConversionStatus Lib "imm32" (ByVal hIMC As Long,
 Private Declare Function GetSystemDefaultLangID Lib "kernel32" () As Integer
 Private Declare Function GetUserDefaultLangID Lib "kernel32" () As Integer
 Private Declare Function GetUserDefaultUILanguage Lib "kernel32" () As Integer
+Private Declare Function GetUserDefaultLCID Lib "kernel32" () As Long
 Private Declare Function GetLocaleInfo Lib "kernel32" Alias "GetLocaleInfoW" (ByVal LCID As Long, ByVal LCType As Long, ByVal lpLCData As Long, ByVal cchData As Long) As Long
 Private Declare Function GetMessagePos Lib "user32" () As Long
 Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As RECT) As Long
@@ -5246,11 +5251,14 @@ Dim IsFixedCell As Boolean, Text As String
 IsFixedCell = CBool(VBFlexGridEditRow < PropFixedRows Or VBFlexGridEditCol < PropFixedCols)
 Call GetCellText(VBFlexGridEditRow, VBFlexGridEditCol, Text)
 If VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Count > 0 Then
-    Dim i As Long
+    Dim Hash As Long, i As Long
+    Hash = CalcHash(Text)
     For i = 0 To (VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Count - 1)
-        If StrComp(VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Key, Text, vbTextCompare) = 0 Then
-            Text = VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Value
-            Exit For
+        If VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Hash = Hash Then
+            If StrComp(VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Key, Text, vbTextCompare) = 0 Then
+                Text = VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Value
+                Exit For
+            End If
         End If
     Next i
 End If
@@ -7575,9 +7583,11 @@ If Index > -1 Then
             If Pos3 > 0 Then
                 .Items(.Count).Key = Mid$(Temp, 1, Pos3 - 1)
                 .Items(.Count).Value = Mid$(Temp, Pos3 + 1)
+                .Items(.Count).Hash = CalcHash(.Items(.Count).Key)
             Else
                 .Items(.Count).Key = vbNullString
                 .Items(.Count).Value = Temp
+                .Items(.Count).Hash = 0
             End If
             .Count = .Count + 1
             Pos2 = Pos1
@@ -7605,9 +7615,11 @@ Else
                 If Pos3 > 0 Then
                     .Items(.Count).Key = Mid$(Temp, 1, Pos3 - 1)
                     .Items(.Count).Value = Mid$(Temp, Pos3 + 1)
+                    .Items(.Count).Hash = CalcHash(.Items(.Count).Key)
                 Else
                     .Items(.Count).Key = vbNullString
                     .Items(.Count).Value = Temp
+                    .Items(.Count).Hash = 0
                 End If
                 .Count = .Count + 1
                 Pos2 = Pos1
@@ -14088,11 +14100,14 @@ End Sub
 
 Private Sub GetTextDisplay(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As String)
 If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
-    Dim i As Long
+    Dim Hash As Long, i As Long
+    Hash = CalcHash(Text)
     For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
-        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Text, vbTextCompare) = 0 Then
-            Text = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
-            Exit For
+        If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+            If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Text, vbTextCompare) = 0 Then
+                Text = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                Exit For
+            End If
         End If
     Next i
 End If
@@ -14112,6 +14127,24 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
     Call GetCellText(VBFlexGridRow, VBFlexGridCol, CellTextDisplay)
     Call GetTextDisplay(VBFlexGridRow, VBFlexGridCol, CellTextDisplay)
 End If
+End Function
+
+Public Function CalcHash(ByRef Key As String, Optional ByVal CaseSensitive As Boolean) As Long
+If Key = vbNullString Then Exit Function
+Dim Length As Long, Buffer() As Integer, i As Long
+Length = Len(Key)
+ReDim Buffer(0 To (Length - 1)) As Integer
+If CaseSensitive = False Then
+    Const LCMAP_LOWERCASE As Long = &H100
+    LCMapString GetUserDefaultLCID(), LCMAP_LOWERCASE, StrPtr(Key), Length, VarPtr(Buffer(0)), Length
+Else
+    CopyMemory ByVal VarPtr(Buffer(0)), ByVal StrPtr(Key), LenB(Key)
+End If
+For i = 0 To (Length - 1)
+    CalcHash = (CalcHash * 37& + Buffer(i) And &HFFFF&)
+Next i
+Const HASH_SIZE As Long = 2999
+CalcHash = (CalcHash And &H7FFFFFFF) Mod HASH_SIZE
 End Function
 
 Private Function GetRowHeight(ByVal iRow As Long) As Long
