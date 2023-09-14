@@ -14129,7 +14129,7 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
 End If
 End Function
 
-Public Function CalcHash(ByRef Key As String, Optional ByVal CaseSensitive As Boolean) As Long
+Private Function CalcHash(ByRef Key As String, Optional ByVal CaseSensitive As Boolean) As Long
 If Key = vbNullString Then Exit Function
 Dim Length As Long, Buffer() As Integer, i As Long
 Length = Len(Key)
