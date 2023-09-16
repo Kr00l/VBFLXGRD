@@ -4,11 +4,11 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    ClientHeight    =   8820
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   6225
+   ClientWidth     =   6450
    LockControls    =   -1  'True
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   8820
-   ScaleWidth      =   6225
+   ScaleWidth      =   6450
    Begin VB.ComboBox ComboWallPaperAlignment 
       Height          =   315
       Left            =   1800
@@ -23,7 +23,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   62
       Top             =   3000
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.CheckBox CheckShowScrollTips 
       Caption         =   "ShowScrollTips"
@@ -31,7 +31,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   66
       Top             =   4440
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.CheckBox CheckAutoClipboard 
       Caption         =   "AutoClipboard"
@@ -39,7 +39,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   71
       Top             =   6240
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.ComboBox ComboClipPasteMode 
       Height          =   315
@@ -63,7 +63,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   70
       Top             =   5880
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.CheckBox CheckAllowMultiSelection 
       Caption         =   "AllowMultiSelection"
@@ -71,7 +71,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   58
       Top             =   1560
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.CheckBox CheckAllowScrollLock 
       Caption         =   "AllowScrollLock"
@@ -79,7 +79,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   69
       Top             =   5520
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.ComboBox ComboAllowUserFreezing 
       Height          =   315
@@ -102,7 +102,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   68
       Top             =   5160
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.TextBox TextFrozenRows 
       Height          =   315
@@ -132,7 +132,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   67
       Top             =   4800
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.CheckBox CheckAllowUserEditing 
       Caption         =   "AllowUserEditing"
@@ -140,7 +140,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   60
       Top             =   2280
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.ComboBox ComboIMEMode 
       Height          =   315
@@ -244,7 +244,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   65
       Top             =   4080
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.CheckBox CheckShowInfoTips 
       Caption         =   "ShowInfoTips"
@@ -252,7 +252,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   64
       Top             =   3720
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.CheckBox CheckDisableNoScroll 
       Caption         =   "DisableNoScroll"
@@ -260,7 +260,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   63
       Top             =   3360
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.CheckBox CheckScrollTrack 
       Caption         =   "ScrollTrack"
@@ -268,7 +268,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   61
       Top             =   2640
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.CheckBox CheckAllowSelection 
       Caption         =   "AllowSelection"
@@ -276,7 +276,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   59
       Top             =   1920
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.CheckBox CheckAllowBigSelection 
       Caption         =   "AllowBigSelection"
@@ -284,7 +284,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   57
       Top             =   1200
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.TextBox TextFixedCols 
       Height          =   315
@@ -320,7 +320,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   4200
       TabIndex        =   56
       Top             =   840
-      Width           =   1920
+      Width           =   2160
    End
    Begin VB.CommandButton CommandFontFixedClear 
       Caption         =   "Clear"
