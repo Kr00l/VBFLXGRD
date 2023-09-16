@@ -1,5 +1,10 @@
 List of revisions:
 
+16-Sep-2023
+- Replaced 'Partial As Boolean' argument to 'Match As FlexFindMatchConstants' in the FindItem function.
+  Enums are FlexFindMatchExact, FlexFindMatchPartial, FlexFindMatchStartsWith, FlexFindMatchEndsWith.
+  vbTrue will be handled as FlexFindMatchPartial for compatibility.
+
 14-Sep-2023
 - Usage of hashes for the keys in the ColLookup property.
   This ensure no more exponential performance decrease when there are more than 10 lookup entries.
