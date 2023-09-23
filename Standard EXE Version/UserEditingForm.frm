@@ -8,6 +8,31 @@ Begin VB.Form UserEditingForm
    ScaleHeight     =   6900
    ScaleWidth      =   13830
    StartUpPosition =   3  'Windows Default
+   Begin VB.Frame Frame4 
+      Caption         =   "Allow incremental search"
+      Height          =   1335
+      Left            =   7920
+      TabIndex        =   12
+      Top             =   5400
+      Width           =   2295
+      Begin VB.OptionButton Option9 
+         Caption         =   "Yes"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   14
+         Top             =   600
+         Width           =   1695
+      End
+      Begin VB.OptionButton Option8 
+         Caption         =   "No"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   13
+         Top             =   240
+         Value           =   -1  'True
+         Width           =   1695
+      End
+   End
    Begin VB.Frame Frame3 
       Caption         =   "Calendar input text editable"
       Height          =   1335
@@ -96,7 +121,7 @@ Begin VB.Form UserEditingForm
       Caption         =   "Cancel"
       Height          =   495
       Left            =   11040
-      TabIndex        =   12
+      TabIndex        =   15
       Top             =   4800
       Width           =   2655
    End
@@ -128,7 +153,7 @@ Begin VB.Form UserEditingForm
       Caption         =   "Editing mode OFF"
       Height          =   255
       Left            =   240
-      TabIndex        =   13
+      TabIndex        =   16
       Top             =   120
       Width           =   13455
    End
@@ -406,4 +431,12 @@ Select Case VBFlexGrid1.EditCol
             VBFlexGrid1.CancelEdit
         End If
 End Select
+End Sub
+
+Private Sub Option8_Click()
+VBFlexGrid1.AllowIncrementalSearch = False
+End Sub
+
+Private Sub Option9_Click()
+VBFlexGrid1.AllowIncrementalSearch = True
 End Sub

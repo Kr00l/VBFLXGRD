@@ -1,5 +1,9 @@
 List of revisions:
 
+23-Sep-2023
+- Included the AllowIncrementalSearch property.
+- Included optional argument TextDisplay in the FindItem function.
+
 16-Sep-2023
 - Replaced 'Partial As Boolean' argument to 'Match As FlexFindMatchConstants' in the FindItem function.
   Enums are FlexFindMatchExact, FlexFindMatchPartial, FlexFindMatchStartsWith, FlexFindMatchEndsWith.
