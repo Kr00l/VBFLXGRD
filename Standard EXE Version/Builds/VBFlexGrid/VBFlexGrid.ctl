@@ -13,6 +13,11 @@ Begin VB.UserControl VBFlexGrid
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   160
    ToolboxBitmap   =   "VBFlexGrid.ctx":005F
+   Begin VB.Timer TimerIncrementalSearch 
+      Enabled         =   0   'False
+      Left            =   0
+      Top             =   0
+   End
 End
 Attribute VB_Name = "VBFlexGrid"
 Attribute VB_GlobalNameSpace = False
@@ -839,6 +844,11 @@ ColInfoWidthSpacing As Long
 ComboButtonWidth As Long
 CheckBoxSize As Long
 End Type
+Private Type TINCREMENTALSEARCH
+SearchString As String
+Row As Long
+Col As Long
+End Type
 Public Event Click()
 Attribute Click.VB_Description = "Occurs when the user presses and then releases a mouse button over an object."
 Attribute Click.VB_UserMemId = -600
@@ -1030,6 +1040,7 @@ Private Declare PtrSafe Function Polyline Lib "gdi32" (ByVal hDC As LongPtr, ByR
 Private Declare PtrSafe Function Polygon Lib "gdi32" (ByVal hDC As LongPtr, ByRef lpPoint As POINTAPI, ByVal nCount As Long) As Long
 Private Declare PtrSafe Function Rectangle Lib "gdi32" (ByVal hDC As LongPtr, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare PtrSafe Function FillRect Lib "user32" (ByVal hDC As LongPtr, ByRef lpRect As RECT, ByVal hBrush As LongPtr) As Long
+Private Declare PtrSafe Function InvertRect Lib "user32" (ByVal hDC As LongPtr, ByRef lpRect As RECT) As Long
 Private Declare PtrSafe Function DrawFocusRect Lib "user32" (ByVal hDC As LongPtr, ByRef lpRect As RECT) As Long
 Private Declare PtrSafe Function DrawFrameControl Lib "user32" (ByVal hDC As LongPtr, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
 Private Declare PtrSafe Function DrawText Lib "user32" Alias "DrawTextW" (ByVal hDC As LongPtr, ByVal lpchText As LongPtr, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long) As Long
@@ -1049,11 +1060,13 @@ Private Declare PtrSafe Function SetWindowPos Lib "user32" (ByVal hWnd As LongPt
 Private Declare PtrSafe Function SetTextColor Lib "gdi32" (ByVal hDC As LongPtr, ByVal crColor As Long) As Long
 Private Declare PtrSafe Function SetBkColor Lib "gdi32" (ByVal hDC As LongPtr, ByVal crColor As Long) As Long
 Private Declare PtrSafe Function GetTextExtentPoint32 Lib "gdi32" Alias "GetTextExtentPoint32W" (ByVal hDC As LongPtr, ByVal lpsz As LongPtr, ByVal cbString As Long, ByRef lpSize As SIZEAPI) As Long
+Private Declare PtrSafe Function GetTextExtentExPoint Lib "gdi32" Alias "GetTextExtentExPointW" (ByVal hDC As LongPtr, ByVal lpsz As LongPtr, ByVal cbString As Long, ByVal nMaxExtent As Long, ByVal lpnFit As LongPtr, ByVal lpnDX As LongPtr, ByRef lpSize As SIZEAPI) As Long
 Private Declare PtrSafe Function GetDC Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
 Private Declare PtrSafe Function GetWindowDC Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
 Private Declare PtrSafe Function GetDCEx Lib "user32" (ByVal hWnd As LongPtr, ByVal hRgnClip As LongPtr, ByVal fdwOptions As Long) As LongPtr
 Private Declare PtrSafe Function ReleaseDC Lib "user32" (ByVal hWnd As LongPtr, ByVal hDC As LongPtr) As Long
 Private Declare PtrSafe Function GetTextMetrics Lib "gdi32" Alias "GetTextMetricsW" (ByVal hDC As LongPtr, ByRef lpMetrics As TEXTMETRIC) As Long
+Private Declare PtrSafe Function GetDoubleClickTime Lib "user32" () As Long
 Private Declare PtrSafe Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As Long
 Private Declare PtrSafe Function GetSysColorBrush Lib "user32" (ByVal nIndex As Long) As LongPtr
 Private Declare PtrSafe Function GetSysColor Lib "user32" (ByVal nIndex As Long) As Long
@@ -1147,6 +1160,7 @@ Private Declare Function Polyline Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint 
 Private Declare Function Polygon Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint As POINTAPI, ByVal nCount As Long) As Long
 Private Declare Function Rectangle Lib "gdi32" (ByVal hDC As Long, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function FillRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal hBrush As Long) As Long
+Private Declare Function InvertRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT) As Long
 Private Declare Function DrawFocusRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT) As Long
 Private Declare Function DrawFrameControl Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
 Private Declare Function DrawText Lib "user32" Alias "DrawTextW" (ByVal hDC As Long, ByVal lpchText As Long, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long) As Long
@@ -1161,11 +1175,13 @@ Private Declare Function SetWindowPos Lib "user32" (ByVal hWnd As Long, ByVal hW
 Private Declare Function SetTextColor Lib "gdi32" (ByVal hDC As Long, ByVal crColor As Long) As Long
 Private Declare Function SetBkColor Lib "gdi32" (ByVal hDC As Long, ByVal crColor As Long) As Long
 Private Declare Function GetTextExtentPoint32 Lib "gdi32" Alias "GetTextExtentPoint32W" (ByVal hDC As Long, ByVal lpsz As Long, ByVal cbString As Long, ByRef lpSize As SIZEAPI) As Long
+Private Declare Function GetTextExtentExPoint Lib "gdi32" Alias "GetTextExtentExPointW" (ByVal hDC As Long, ByVal lpsz As Long, ByVal cbString As Long, ByVal nMaxExtent As Long, ByVal lpnFit As Long, ByVal lpnDX As Long, ByRef lpSize As SIZEAPI) As Long
 Private Declare Function GetDC Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function GetWindowDC Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function GetDCEx Lib "user32" (ByVal hWnd As Long, ByVal hRgnClip As Long, ByVal fdwOptions As Long) As Long
 Private Declare Function ReleaseDC Lib "user32" (ByVal hWnd As Long, ByVal hDC As Long) As Long
 Private Declare Function GetTextMetrics Lib "gdi32" Alias "GetTextMetricsW" (ByVal hDC As Long, ByRef lpMetrics As TEXTMETRIC) As Long
+Private Declare Function GetDoubleClickTime Lib "user32" () As Long
 Private Declare Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As Long
 Private Declare Function GetSysColorBrush Lib "user32" (ByVal nIndex As Long) As Long
 Private Declare Function GetSysColor Lib "user32" (ByVal nIndex As Long) As Long
@@ -1635,6 +1651,7 @@ Private VBFlexGridClipSeparatorCol As String, VBFlexGridClipSeparatorRow As Stri
 Private VBFlexGridHotRow As Long, VBFlexGridHotCol As Long
 Private VBFlexGridHotHitResult As FlexHitResultConstants
 Private VBFlexGridWallPaperRenderFlag As Integer
+Private VBFlexGridIncrementalSearch As TINCREMENTALSEARCH
 
 #If ImplementFlexDataSource = True Then
 
@@ -1743,6 +1760,7 @@ Private PropAutoClipboard As Boolean
 Private PropBestFitMode As FlexBestFitModeConstants
 Private PropWallPaper As IPictureDisp
 Private PropWallPaperAlignment As FlexWallPaperAlignmentConstants
+Private PropAllowIncrementalSearch As Boolean
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -1949,6 +1967,8 @@ VBFlexGridClipSeparatorRow = vbCr
 VBFlexGridHotRow = -1
 VBFlexGridHotCol = -1
 VBFlexGridHotHitResult = FlexHitResultNoWhere
+VBFlexGridIncrementalSearch.Row = -1
+VBFlexGridIncrementalSearch.Col = -1
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -2051,6 +2071,7 @@ PropAutoClipboard = False
 PropBestFitMode = FlexBestFitModeTextOnly
 Set PropWallPaper = Nothing
 PropWallPaperAlignment = FlexWallPaperAlignmentStretch
+PropAllowIncrementalSearch = False
 Call CreateVBFlexGrid
 End Sub
 
@@ -2158,6 +2179,7 @@ PropAutoClipboard = .ReadProperty("AutoClipboard", False)
 PropBestFitMode = .ReadProperty("BestFitMode", FlexBestFitModeTextOnly)
 Set PropWallPaper = .ReadProperty("WallPaper", Nothing)
 PropWallPaperAlignment = .ReadProperty("WallPaperAlignment", FlexWallPaperAlignmentStretch)
+PropAllowIncrementalSearch = .ReadProperty("AllowIncrementalSearch", False)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -2261,6 +2283,7 @@ With PropBag
 .WriteProperty "BestFitMode", PropBestFitMode, FlexBestFitModeTextOnly
 .WriteProperty "WallPaper", PropWallPaper, Nothing
 .WriteProperty "WallPaperAlignment", PropWallPaperAlignment, FlexWallPaperAlignmentStretch
+.WriteProperty "AllowIncrementalSearch", PropAllowIncrementalSearch, False
 End With
 End Sub
 
@@ -2400,6 +2423,10 @@ Call DestroyVBFlexGrid
 Call FlexWndReleaseClass
 If VBFlexGridComboCalendarRegistered = True Then Call FlexComboCalendarReleaseClass
 Call FlexReleaseShellMod
+End Sub
+
+Private Sub TimerIncrementalSearch_Timer()
+Call ClearIncrementalSearch
 End Sub
 
 Public Property Get Name() As String
@@ -4954,6 +4981,17 @@ End Select
 Call RedrawGrid
 End Property
 
+Public Property Get AllowIncrementalSearch() As Boolean
+Attribute AllowIncrementalSearch.VB_Description = "Returns/sets a value that determines whether an incremental search can be performed."
+AllowIncrementalSearch = PropAllowIncrementalSearch
+End Property
+
+Public Property Let AllowIncrementalSearch(ByVal Value As Boolean)
+PropAllowIncrementalSearch = Value
+If PropAllowIncrementalSearch = False Then Call ClearIncrementalSearch
+UserControl.PropertyChanged "AllowIncrementalSearch"
+End Property
+
 Private Sub CreateVBFlexGrid()
 If VBFlexGridHandle <> NULL_PTR Then Exit Sub
 Call InitFlexGridCells
@@ -5612,7 +5650,7 @@ If Discard = False And VBFlexGridEditTextChanged = True Then
         If VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Count > 0 Then
             Dim i As Long
             For i = 0 To (VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Count - 1)
-                If StrComp(VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Value, Text, vbBinaryCompare) = 0 Then
+                If StrComp(VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Value, Text) = 0 Then
                     Text = VBFlexGridColsInfo(VBFlexGridEditCol).Lookup.Items(i).Key
                     Exit For
                 End If
@@ -9888,7 +9926,7 @@ VBFlexGridHitResult = .HitResult
 End With
 End Sub
 
-Public Function FindItem(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal Match As FlexFindMatchConstants, Optional ByVal CaseSensitive As Boolean, Optional ByVal ExcludeHidden As Boolean, Optional ByVal Wrap As Boolean, Optional ByVal Direction As FlexFindDirectionConstants) As Long
+Public Function FindItem(ByVal Text As String, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal Match As FlexFindMatchConstants, Optional ByVal CaseSensitive As Boolean, Optional ByVal ExcludeHidden As Boolean, Optional ByVal Wrap As Boolean, Optional ByVal Direction As FlexFindDirectionConstants, Optional ByVal TextDisplay As Boolean) As Long
 Attribute FindItem.VB_Description = "Finds an item in the flex grid and returns the index of that item."
 If Row < -1 Then Err.Raise 380
 If Col < -1 Then Err.Raise 380
@@ -9918,6 +9956,7 @@ Select Case Match
         For iRow = Row To iRowTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
             If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                 Call GetCellText(iRow, Col, Buffer)
+                If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
                 If StrComp(Buffer, Text, Compare) = 0 Then
                     FindItem = iRow
                     Exit For
@@ -9928,6 +9967,7 @@ Select Case Match
         For iRow = Row To iRowTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
             If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                 Call GetCellText(iRow, Col, Buffer)
+                If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
                 If InStr(1, Buffer, Text, Compare) > 0 Then
                     FindItem = iRow
                     Exit For
@@ -9938,6 +9978,7 @@ Select Case Match
         For iRow = Row To iRowTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
             If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                 Call GetCellText(iRow, Col, Buffer)
+                If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
                 If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
                     FindItem = iRow
                     Exit For
@@ -9948,6 +9989,7 @@ Select Case Match
         For iRow = Row To iRowTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
             If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                 Call GetCellText(iRow, Col, Buffer)
+                If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
                 If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
                     FindItem = iRow
                     Exit For
@@ -9962,6 +10004,7 @@ If Wrap = True And FindItem = -1 Then
             For iRow = iRowTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
                 If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                     Call GetCellText(iRow, Col, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
                     If StrComp(Buffer, Text, Compare) = 0 Then
                         FindItem = iRow
                         Exit For
@@ -9972,6 +10015,7 @@ If Wrap = True And FindItem = -1 Then
             For iRow = iRowTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
                 If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                     Call GetCellText(iRow, Col, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
                     If InStr(1, Buffer, Text, Compare) > 0 Then
                         FindItem = iRow
                         Exit For
@@ -9982,6 +10026,7 @@ If Wrap = True And FindItem = -1 Then
             For iRow = iRowTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
                 If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                     Call GetCellText(iRow, Col, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
                     If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
                         FindItem = iRow
                         Exit For
@@ -9992,6 +10037,7 @@ If Wrap = True And FindItem = -1 Then
             For iRow = iRowTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
                 If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
                     Call GetCellText(iRow, Col, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
                     If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
                         FindItem = iRow
                         Exit For
@@ -12848,6 +12894,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
             SetRect TextRect, TextRect.Left - 1, TextRect.Top - 1, TextRect.Right - 1, TextRect.Bottom - 1
     End Select
     DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+    If (iRow = VBFlexGridIncrementalSearch.Row And iCol = VBFlexGridIncrementalSearch.Col) Then Call DrawIncrementalSearch(hDC, Text, TextRect, DrawFlags)
 End If
 SetTextColor hDC, OldTextColor
 If hFontOld <> NULL_PTR Then SelectObject hDC, hFontOld
@@ -13421,6 +13468,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
             SetRect TextRect, TextRect.Left - 1, TextRect.Top - 1, TextRect.Right - 1, TextRect.Bottom - 1
     End Select
     DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+    If (iRow = VBFlexGridIncrementalSearch.Row And iCol = VBFlexGridIncrementalSearch.Col) Then Call DrawIncrementalSearch(hDC, Text, TextRect, DrawFlags)
 End If
 SetTextColor hDC, OldTextColor
 If hFontOld <> NULL_PTR Then SelectObject hDC, hFontOld
@@ -15887,6 +15935,12 @@ If PropAllowMultiSelection = True And .Message <> WM_MOUSEMOVE Then
             ' Not supported.
     End Select
     NeedRedraw = True
+End If
+If PropAllowIncrementalSearch = True And .Message = WM_KEYDOWN Then
+    If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then
+        Call ClearIncrementalSearch(True)
+        NeedRedraw = True
+    End If
 End If
 If ScrollChanged = True Then
     If (.Mask And RCPM_TOPROW) = RCPM_TOPROW And (.Mask And RCPM_LEFTCOL) = RCPM_LEFTCOL Then
@@ -18543,6 +18597,136 @@ Call SetRowColParams(RCP)
 End With
 End Sub
 
+Private Sub ProcessIncrementalSearch(ByVal CharCode As Long)
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
+Select Case CharCode
+    Case 13 ' Carriage return
+        Call ClearIncrementalSearch
+        Exit Sub
+    Case 0 To 31 ' Non-printable
+        Exit Sub
+    Case 32 ' Space
+        If PropAllowUserEditing = True Then
+            If VBFlexGridIncrementalSearch.SearchString = vbNullString Then Exit Sub
+        End If
+End Select
+If TimerIncrementalSearch.Enabled = True Then
+    TimerIncrementalSearch.Enabled = False
+    TimerIncrementalSearch.Interval = 0
+End If
+If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+    With VBFlexGridIncrementalSearch
+    Dim FoundRow As Long, FoundCol As Long
+    FoundRow = Me.FindItem(.SearchString & ChrW(CharCode), VBFlexGridRow, VBFlexGridCol, FlexFindMatchStartsWith, False, True, True, FlexFindDirectionDown, True)
+    FoundCol = VBFlexGridCol
+    If (FoundRow >= 0 And FoundRow <= (PropRows - 1)) And (FoundCol >= 0 And FoundCol <= (PropCols - 1)) Then
+        .SearchString = .SearchString & ChrW(CharCode)
+        .Row = FoundRow
+        .Col = FoundCol
+        Dim RCP As TROWCOLPARAMS
+        RCP.Mask = RCPM_TOPROW Or RCPM_LEFTCOL
+        RCP.Flags = RCPF_FORCEREDRAW
+        RCP.Message = WM_CHAR
+        If PropSelectionMode <> FlexSelectionModeByColumn Then
+            RCP.Mask = RCP.Mask Or RCPM_ROW Or RCPM_ROWSEL
+            RCP.Row = .Row
+            RCP.RowSel = .Row
+        End If
+        If PropSelectionMode <> FlexSelectionModeByRow Then
+            RCP.Mask = RCP.Mask Or RCPM_COL Or RCPM_COLSEL
+            RCP.Col = .Col
+            RCP.ColSel = .Col
+        End If
+        RCP.TopRow = VBFlexGridTopRow
+        RCP.LeftCol = VBFlexGridLeftCol
+        If RCP.TopRow > .Row Then
+            If .Row >= (PropFixedRows + PropFrozenRows) Then RCP.TopRow = .Row
+        ElseIf .Row > (RCP.TopRow + GetRowsPerPage(RCP.TopRow) - 1) Then
+            RCP.TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+        End If
+        If RCP.LeftCol > .Col Then
+            If .Col >= (PropFixedCols + PropFrozenCols) Then RCP.LeftCol = .Col
+        ElseIf .Col > (RCP.LeftCol + GetColsPerPage(RCP.LeftCol) - 1) Then
+            RCP.LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+        End If
+        Call SetRowColParams(RCP)
+    End If
+    End With
+End If
+If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then
+    TimerIncrementalSearch.Interval = GetDoubleClickTime() * 2
+    TimerIncrementalSearch.Enabled = True
+End If
+End Sub
+
+Private Sub ClearIncrementalSearch(Optional ByVal NoRedraw As Boolean)
+If TimerIncrementalSearch.Enabled = True Then
+    TimerIncrementalSearch.Enabled = False
+    TimerIncrementalSearch.Interval = 0
+End If
+With VBFlexGridIncrementalSearch
+.SearchString = vbNullString
+If .Row > -1 And .Col > -1 Then
+    .Row = -1
+    .Col = -1
+    If NoRedraw = False Then Call RedrawGrid
+End If
+End With
+End Sub
+
+Private Sub DrawIncrementalSearch(ByVal hDC As LongPtr, ByRef Text As String, ByRef TextRect As RECT, ByVal DrawFlags As Long)
+If hDC = NULL_PTR Then Exit Sub
+Dim RCInvert As RECT, RCInvertText As RECT, InvertText As String, InvertResult As Long, InvertOffset As Long
+LSet RCInvert = TextRect
+LSet RCInvertText = TextRect
+Dim Pos As Long
+If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
+    Pos = InStr(1, Text, vbCr)
+    If Pos = 0 Then Pos = InStr(1, Text, vbLf)
+    If Pos > 0 Then InvertText = Left$(Text, Pos) Else InvertText = Text
+    If (DrawFlags And DT_WORDBREAK) = DT_WORDBREAK Then
+        Dim nFit As Long, Size As SIZEAPI
+        GetTextExtentExPoint hDC, StrPtr(InvertText), Len(InvertText), (TextRect.Right - TextRect.Left), VarPtr(nFit), NULL_PTR, Size
+        If Len(InvertText) > nFit Then
+            InvertText = Left$(InvertText, nFit)
+            Pos = InStrRev(InvertText, " ")
+            If Pos > 0 Then InvertText = Left$(InvertText, Pos - 1)
+        End If
+    End If
+Else
+    InvertText = Text
+End If
+For Pos = 0 To (Len(InvertText) - 1)
+    If Pos < Len(VBFlexGridIncrementalSearch.SearchString) Then
+        If StrComp(Mid$(InvertText, Pos + 1, 1), Mid$(VBFlexGridIncrementalSearch.SearchString, Pos + 1, 1), vbTextCompare) <> 0 Then Exit For
+    Else
+        Exit For
+    End If
+Next Pos
+InvertResult = DrawText(hDC, StrPtr(Left$(InvertText, Pos)), -1, RCInvert, DrawFlags Or DT_CALCRECT)
+DrawText hDC, StrPtr(InvertText), -1, RCInvertText, DrawFlags Or DT_CALCRECT
+If (DrawFlags And DT_CENTER) = DT_CENTER Then
+    InvertOffset = (((TextRect.Right - TextRect.Left) - (RCInvertText.Right - RCInvertText.Left)) / 2)
+    RCInvert.Left = RCInvert.Left + InvertOffset
+    RCInvert.Right = RCInvert.Right + InvertOffset
+ElseIf (DrawFlags And DT_RIGHT) = DT_RIGHT Then
+    InvertOffset = ((TextRect.Right - TextRect.Left) - (RCInvertText.Right - RCInvertText.Left))
+    RCInvert.Left = RCInvert.Left + InvertOffset
+    RCInvert.Right = RCInvert.Right + InvertOffset
+End If
+If (DrawFlags And DT_VCENTER) = DT_VCENTER Or (DrawFlags And DT_BOTTOM) = DT_BOTTOM Then
+    InvertOffset = ((TextRect.Bottom - TextRect.Top) - InvertResult)
+    If InvertOffset > 0 Then RCInvert.Top = RCInvert.Top + InvertOffset
+End If
+With RCInvert
+If .Left < TextRect.Left Then .Left = TextRect.Left
+If .Top < TextRect.Top Then .Top = TextRect.Top
+If .Right > TextRect.Right Then .Right = TextRect.Right
+If .Bottom > TextRect.Bottom Then .Bottom = TextRect.Bottom
+If .Right >= .Left And .Bottom >= .Top Then InvertRect hDC, RCInvert
+End With
+End Sub
+
 Private Function MergeCompareFunction(ByVal Row1 As Long, ByVal Col1 As Long, ByVal Row2 As Long, ByVal Col2 As Long) As Boolean
 Dim Text1 As String, Text2 As String
 Call GetCellText(Row1, Col1, Text1)
@@ -20111,14 +20295,16 @@ Select Case wMsg
                         Case vbKeyF2
                             If CreateEdit(FlexEditReasonF2) = True Then Exit Function
                         Case vbKeySpace
-                            If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
-                                If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then
-                                    Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
-                                ElseIf CreateEdit(FlexEditReasonSpace) = True Then
-                                    Exit Function
+                            If VBFlexGridIncrementalSearch.SearchString = vbNullString Then
+                                If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                                    If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then
+                                        Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
+                                    ElseIf CreateEdit(FlexEditReasonSpace) = True Then
+                                        Exit Function
+                                    End If
+                                Else
+                                    If CreateEdit(FlexEditReasonSpace) = True Then Exit Function
                                 End If
-                            Else
-                                If CreateEdit(FlexEditReasonSpace) = True Then Exit Function
                             End If
                         Case vbKeyBack
                             If CreateEdit(FlexEditReasonBackSpace) = True Then Exit Function
@@ -20199,14 +20385,17 @@ Select Case wMsg
         End If
         RaiseEvent KeyPress(KeyChar)
         wParam = CIntToUInt(KeyChar)
-        If PropAllowUserEditing = True Then
-            If wParam >= 33 Then ' 0 to 31 are non-printable and 32 is space char
-                If CreateEdit(FlexEditReasonKeyPress) = True Then
-                    If VBFlexGridEditHandle <> NULL_PTR Then PostMessage VBFlexGridEditHandle, wMsg, wParam, ByVal 0&
-                    Exit Function
+        If PropAllowIncrementalSearch = False Then
+            If PropAllowUserEditing = True Then
+                If wParam >= 33 Then ' 0 to 31 are non-printable and 32 is space char
+                    If CreateEdit(FlexEditReasonKeyPress) = True Then
+                        If VBFlexGridEditHandle <> NULL_PTR Then PostMessage VBFlexGridEditHandle, wMsg, wParam, ByVal 0&
+                        Exit Function
+                    End If
                 End If
             End If
         End If
+        If PropAllowIncrementalSearch = True Then Call ProcessIncrementalSearch(CLng(wParam))
     Case WM_UNICHAR
         If wParam = UNICODE_NOCHAR Then
             WindowProcControl = 1
@@ -20522,6 +20711,9 @@ WindowProcControl = DefWindowProc(hWnd, wMsg, wParam, lParam)
 Select Case wMsg
     Case WM_SETFOCUS, WM_KILLFOCUS
         VBFlexGridFocused = CBool(wMsg = WM_SETFOCUS)
+        If PropAllowIncrementalSearch = True Then
+            If wMsg = WM_KILLFOCUS Then Call ClearIncrementalSearch(True)
+        End If
         Call RedrawGrid
     Case WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK
         With HTI
