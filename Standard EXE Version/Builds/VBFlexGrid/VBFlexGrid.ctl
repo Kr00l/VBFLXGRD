@@ -78,7 +78,7 @@ Private FlexClipModeNormal, FlexClipModeExcludeHidden
 Private FlexClipCopyModeNormal, FlexClipCopyModeIncludeFixedRows, FlexClipCopyModeIncludeFixedColumns, FlexClipCopyModeIncludeFixedAll
 Private FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection
 Private FlexFindMatchExact, FlexFindMatchPartial, FlexFindMatchStartsWith, FlexFindMatchEndsWith
-Private FlexFindDirectionDown, FlexFindDirectionUp
+Private FlexFindDirectionDown, FlexFindDirectionUp, FlexFindDirectionRight, FlexFindDirectionLeft
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
 Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace, FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4, FlexEditReasonComboCueAltUpDown
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
@@ -371,6 +371,8 @@ End Enum
 Public Enum FlexFindDirectionConstants
 FlexFindDirectionDown = 0
 FlexFindDirectionUp = 1
+FlexFindDirectionRight = 2
+FlexFindDirectionLeft = 3
 End Enum
 Public Enum FlexIMEModeConstants
 FlexIMEModeNoControl = 0
@@ -9938,112 +9940,233 @@ Select Case Match
         Err.Raise 380
 End Select
 Select Case Direction
-    Case FlexFindDirectionDown, FlexFindDirectionUp
+    Case FlexFindDirectionDown, FlexFindDirectionUp, FlexFindDirectionRight, FlexFindDirectionLeft
     Case Else
         Err.Raise 380
 End Select
-If Row = -1 Then Row = IIf(Direction = FlexFindDirectionDown, PropFixedRows, (PropRows - 1))
-If Col = -1 Then Col = PropFixedCols
+If Direction <= FlexFindDirectionUp Then
+    If Row = -1 Then Row = IIf(Direction = FlexFindDirectionDown, PropFixedRows, (PropRows - 1))
+    If Col = -1 Then Col = PropFixedCols
+Else
+    If Row = -1 Then Row = PropFixedRows
+    If Col = -1 Then Col = IIf(Direction = FlexFindDirectionRight, PropFixedCols, (PropCols - 1))
+End If
 If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
-If Row < PropFixedRows Then Err.Raise Number:=30003, Description:="Cannot use FindItem on a fixed row"
-Dim iRow As Long, iRowTo As Long, Compare As VbCompareMethod, Length As Long, Buffer As String
+If Direction <= FlexFindDirectionUp Then
+    If Row < PropFixedRows Then Err.Raise Number:=30003, Description:="Cannot use FindItem on a fixed row"
+Else
+    If Col < PropFixedCols Then Err.Raise Number:=30003, Description:="Cannot use FindItem on a fixed column"
+End If
+Dim iRowOrCol As Long, iRowOrColTo As Long, Compare As VbCompareMethod, Length As Long, Buffer As String
 FindItem = -1
-If Direction = FlexFindDirectionDown Then iRowTo = (PropRows - 1) Else iRowTo = PropFixedRows
+If Direction <= FlexFindDirectionUp Then
+    If Direction = FlexFindDirectionDown Then iRowOrColTo = (PropRows - 1) Else iRowOrColTo = PropFixedRows
+Else
+    If Direction = FlexFindDirectionRight Then iRowOrColTo = (PropCols - 1) Else iRowOrColTo = PropFixedCols
+End If
 If CaseSensitive = False Then Compare = vbTextCompare Else Compare = vbBinaryCompare
 Length = Len(Text)
 Select Case Match
     Case FlexFindMatchExact
-        For iRow = Row To iRowTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-            If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                Call GetCellText(iRow, Col, Buffer)
-                If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
-                If StrComp(Buffer, Text, Compare) = 0 Then
-                    FindItem = iRow
-                    Exit For
+        If Direction <= FlexFindDirectionUp Then
+            For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    Call GetCellText(iRowOrCol, Col, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
+                    If StrComp(Buffer, Text, Compare) = 0 Then
+                        FindItem = iRowOrCol
+                        Exit For
+                    End If
                 End If
-            End If
-        Next iRow
+            Next iRowOrCol
+        Else
+            For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    Call GetCellText(Row, iRowOrCol, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
+                    If StrComp(Buffer, Text, Compare) = 0 Then
+                        FindItem = iRowOrCol
+                        Exit For
+                    End If
+                End If
+            Next iRowOrCol
+        End If
     Case FlexFindMatchPartial
-        For iRow = Row To iRowTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-            If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                Call GetCellText(iRow, Col, Buffer)
-                If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
-                If InStr(1, Buffer, Text, Compare) > 0 Then
-                    FindItem = iRow
-                    Exit For
+        If Direction <= FlexFindDirectionUp Then
+            For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    Call GetCellText(iRowOrCol, Col, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
+                    If InStr(1, Buffer, Text, Compare) > 0 Then
+                        FindItem = iRowOrCol
+                        Exit For
+                    End If
                 End If
-            End If
-        Next iRow
+            Next iRowOrCol
+        Else
+            For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    Call GetCellText(Row, iRowOrCol, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
+                    If InStr(1, Buffer, Text, Compare) > 0 Then
+                        FindItem = iRowOrCol
+                        Exit For
+                    End If
+                End If
+            Next iRowOrCol
+        End If
     Case FlexFindMatchStartsWith
-        For iRow = Row To iRowTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-            If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                Call GetCellText(iRow, Col, Buffer)
-                If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
-                If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
-                    FindItem = iRow
-                    Exit For
+        If Direction <= FlexFindDirectionUp Then
+            For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    Call GetCellText(iRowOrCol, Col, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
+                    If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
+                        FindItem = iRowOrCol
+                        Exit For
+                    End If
                 End If
-            End If
-        Next iRow
+            Next iRowOrCol
+        Else
+            For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    Call GetCellText(Row, iRowOrCol, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
+                    If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
+                        FindItem = iRowOrCol
+                        Exit For
+                    End If
+                End If
+            Next iRowOrCol
+        End If
     Case FlexFindMatchEndsWith
-        For iRow = Row To iRowTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-            If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                Call GetCellText(iRow, Col, Buffer)
-                If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
-                If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
-                    FindItem = iRow
-                    Exit For
+        If Direction <= FlexFindDirectionUp Then
+            For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    Call GetCellText(iRowOrCol, Col, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
+                    If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
+                        FindItem = iRowOrCol
+                        Exit For
+                    End If
                 End If
-            End If
-        Next iRow
+            Next iRowOrCol
+        Else
+            For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    Call GetCellText(Row, iRowOrCol, Buffer)
+                    If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
+                    If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
+                        FindItem = iRowOrCol
+                        Exit For
+                    End If
+                End If
+            Next iRowOrCol
+        End If
 End Select
 If Wrap = True And FindItem = -1 Then
-    If Direction = FlexFindDirectionDown Then iRowTo = PropFixedRows Else iRowTo = (PropRows - 1)
+    If Direction <= FlexFindDirectionUp Then
+        If Direction = FlexFindDirectionDown Then iRowOrColTo = PropFixedRows Else iRowOrColTo = (PropRows - 1)
+    Else
+        If Direction = FlexFindDirectionRight Then iRowOrColTo = PropFixedCols Else iRowOrColTo = (PropCols - 1)
+    End If
     Select Case Match
         Case FlexFindMatchExact
-            For iRow = iRowTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    Call GetCellText(iRow, Col, Buffer)
-                    If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
-                    If StrComp(Buffer, Text, Compare) = 0 Then
-                        FindItem = iRow
-                        Exit For
+            If Direction <= FlexFindDirectionUp Then
+                For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                    If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                        Call GetCellText(iRowOrCol, Col, Buffer)
+                        If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
+                        If StrComp(Buffer, Text, Compare) = 0 Then
+                            FindItem = iRowOrCol
+                            Exit For
+                        End If
                     End If
-                End If
-            Next iRow
+                Next iRowOrCol
+            Else
+                For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                    If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                        Call GetCellText(Row, iRowOrCol, Buffer)
+                        If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
+                        If StrComp(Buffer, Text, Compare) = 0 Then
+                            FindItem = iRowOrCol
+                            Exit For
+                        End If
+                    End If
+                Next iRowOrCol
+            End If
         Case FlexFindMatchPartial
-            For iRow = iRowTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    Call GetCellText(iRow, Col, Buffer)
-                    If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
-                    If InStr(1, Buffer, Text, Compare) > 0 Then
-                        FindItem = iRow
-                        Exit For
+            If Direction <= FlexFindDirectionUp Then
+                For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                    If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                        Call GetCellText(iRowOrCol, Col, Buffer)
+                        If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
+                        If InStr(1, Buffer, Text, Compare) > 0 Then
+                            FindItem = iRowOrCol
+                            Exit For
+                        End If
                     End If
-                End If
-            Next iRow
+                Next iRowOrCol
+            Else
+                For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                    If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                        Call GetCellText(Row, iRowOrCol, Buffer)
+                        If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
+                        If InStr(1, Buffer, Text, Compare) > 0 Then
+                            FindItem = iRowOrCol
+                            Exit For
+                        End If
+                    End If
+                Next iRowOrCol
+            End If
         Case FlexFindMatchStartsWith
-            For iRow = iRowTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    Call GetCellText(iRow, Col, Buffer)
-                    If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
-                    If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
-                        FindItem = iRow
-                        Exit For
+            If Direction <= FlexFindDirectionUp Then
+                For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                    If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                        Call GetCellText(iRowOrCol, Col, Buffer)
+                        If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
+                        If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
+                            FindItem = iRowOrCol
+                            Exit For
+                        End If
                     End If
-                End If
-            Next iRow
+                Next iRowOrCol
+            Else
+                For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                    If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                        Call GetCellText(Row, iRowOrCol, Buffer)
+                        If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
+                        If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
+                            FindItem = iRowOrCol
+                            Exit For
+                        End If
+                    End If
+                Next iRowOrCol
+            End If
         Case FlexFindMatchEndsWith
-            For iRow = iRowTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
-                    Call GetCellText(iRow, Col, Buffer)
-                    If TextDisplay = True Then Call GetTextDisplay(iRow, Col, Buffer)
-                    If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
-                        FindItem = iRow
-                        Exit For
+            If Direction <= FlexFindDirectionUp Then
+                For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                    If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                        Call GetCellText(iRowOrCol, Col, Buffer)
+                        If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
+                        If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
+                            FindItem = iRowOrCol
+                            Exit For
+                        End If
                     End If
-                End If
-            Next iRow
+                Next iRowOrCol
+            Else
+                For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                    If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                        Call GetCellText(Row, iRowOrCol, Buffer)
+                        If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
+                        If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
+                            FindItem = iRowOrCol
+                            Exit For
+                        End If
+                    End If
+                Next iRowOrCol
+            End If
     End Select
 End If
 End Function
@@ -18616,9 +18739,18 @@ If TimerIncrementalSearch.Enabled = True Then
 End If
 If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
     With VBFlexGridIncrementalSearch
-    Dim FoundRow As Long, FoundCol As Long
-    FoundRow = Me.FindItem(.SearchString & ChrW(CharCode), VBFlexGridRow, VBFlexGridCol, FlexFindMatchStartsWith, False, True, True, FlexFindDirectionDown, True)
-    FoundCol = VBFlexGridCol
+    Dim StartRow As Long, StartCol As Long, FoundRow As Long, FoundCol As Long
+    StartRow = VBFlexGridRow
+    StartCol = VBFlexGridCol
+    If PropSelectionMode <> FlexSelectionModeByColumn Then
+        If StartRow < PropFixedRows Then StartRow = PropFixedRows
+        FoundRow = Me.FindItem(.SearchString & ChrW(CharCode), StartRow, StartCol, FlexFindMatchStartsWith, False, True, True, FlexFindDirectionDown, True)
+        FoundCol = VBFlexGridCol
+    Else
+        If StartCol < PropFixedCols Then StartCol = PropFixedCols
+        FoundRow = VBFlexGridRow
+        FoundCol = Me.FindItem(.SearchString & ChrW(CharCode), StartRow, StartCol, FlexFindMatchStartsWith, False, True, True, FlexFindDirectionRight, True)
+    End If
     If (FoundRow >= 0 And FoundRow <= (PropRows - 1)) And (FoundCol >= 0 And FoundCol <= (PropCols - 1)) Then
         .SearchString = .SearchString & ChrW(CharCode)
         .Row = FoundRow
