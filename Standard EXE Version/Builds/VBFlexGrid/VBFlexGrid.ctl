@@ -863,6 +863,10 @@ Public Event ScrollTip(ByVal Row As Long, ByVal Col As Long)
 Attribute ScrollTip.VB_Description = "Occurs when the control is about to display a scroll tip."
 Public Event ContextMenu(ByVal X As Single, ByVal Y As Single)
 Attribute ContextMenu.VB_Description = "Occurs when the user clicked the right mouse button or types SHIFT + F10."
+Public Event BeforePaste(ByRef Text As String, ByRef Cancel As Boolean)
+Attribute BeforePaste.VB_Description = "Occurs before the current content of the clipboard will be pasted."
+Public Event AfterPaste()
+Attribute AfterPaste.VB_Description = "Occurs after the current content of the clipboard was pasted."
 Public Event AfterUserFreeze()
 Attribute AfterUserFreeze.VB_Description = "Occurs after the user freezes a row or a column."
 Public Event BeforeUserResize(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean)
@@ -6000,8 +6004,14 @@ End Sub
 
 Public Sub Paste()
 Attribute Paste.VB_Description = "Pastes the current content of the clipboard at the current selection of the flex grid."
-Me.Clip = GetClipboardText()
-Me.CellEnsureVisible
+Dim Text As String, Cancel As Boolean
+Text = GetClipboardText()
+RaiseEvent BeforePaste(Text, Cancel)
+If Cancel = False Then
+    Me.Clip = Text
+    Me.CellEnsureVisible
+    RaiseEvent AfterPaste
+End If
 End Sub
 
 Public Sub Delete()
@@ -8729,6 +8739,146 @@ ElseIf StrComp(VBFlexGridClipSeparatorCol, Value) = 0 Then
 End If
 VBFlexGridClipSeparatorRow = Value
 End Property
+
+Public Function ParseClip(ByRef Text As String, Optional ByVal Rows As Long = -1, Optional ByVal Cols As Long = -1) As Variant
+Attribute ParseClip.VB_Description = "Parses a clip string into an two-dimensional array indexed by row/col subscripts."
+Dim StrArr() As String, UBoundRows As Long, UBoundCols As Long
+Dim Temp As String, iRow As Long, iCol As Long, Twice As Long
+Dim Pos1 As Long, Pos2 As Long, Pos3 As Long, Pos4 As Long
+Dim CSCol As String, CSColLen As Long, CSRow As String, CSRowLen As Long
+UBoundRows = -1
+UBoundCols = -1
+CSCol = GetClipSeparatorCol()
+CSColLen = Len(CSCol)
+CSRow = GetClipSeparatorRow()
+CSRowLen = Len(CSRow)
+Do
+    Pos1 = InStr(Pos1 + 1, Text, CSRow)
+    If Pos1 > 0 Then
+        Pos1 = Pos1 + CSRowLen - 1
+        Temp = Mid$(Text, Pos2 + 1, Pos1 - Pos2 - CSRowLen)
+    Else
+        Temp = Mid$(Text, Pos2 + 1)
+    End If
+    Do
+        Pos3 = InStr(Pos3 + 1, Temp, CSCol)
+        If Pos3 > 0 Then Pos3 = Pos3 + CSColLen - 1
+        Pos4 = Pos3
+        iCol = iCol + 1
+    Loop Until Pos3 = 0
+    If (iCol - 1) > UBoundCols Then UBoundCols = (iCol - 1)
+    Pos2 = Pos1
+    Pos4 = 0
+    iRow = iRow + 1
+    iCol = 0
+Loop Until Pos1 = 0
+UBoundRows = iRow - 1
+iRow = 0
+iCol = 0
+If Rows > -1 Then
+    If UBoundRows > (Rows - 1) Then UBoundRows = (Rows - 1)
+End If
+If Cols > -1 Then
+    If UBoundCols > (Cols - 1) Then UBoundCols = (Cols - 1)
+End If
+If UBoundRows > -1 And UBoundCols > -1 Then
+    ReDim StrArr(0 To UBoundRows, 0 To UBoundCols) As String
+    Do
+        Pos1 = InStr(Pos1 + 1, Text, CSRow)
+        If Pos1 > 0 Then
+            Pos1 = Pos1 + CSRowLen - 1
+            Temp = Mid$(Text, Pos2 + 1, Pos1 - Pos2 - CSRowLen)
+        Else
+            Temp = Mid$(Text, Pos2 + 1)
+        End If
+        Do
+            Pos3 = InStr(Pos3 + 1, Temp, CSCol)
+            If Pos3 > 0 Then
+                Pos3 = Pos3 + CSColLen - 1
+                StrArr(iRow, iCol) = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen)
+            Else
+                StrArr(iRow, iCol) = Mid$(Temp, Pos4 + 1)
+            End If
+            Pos4 = Pos3
+            iCol = iCol + 1
+            If iCol > UBoundCols Then Pos3 = 0
+        Loop Until Pos3 = 0
+        Pos2 = Pos1
+        Pos4 = 0
+        iRow = iRow + 1
+        iCol = 0
+        If iRow > UBoundRows Then Pos1 = 0
+    Loop Until Pos1 = 0
+    ParseClip = StrArr()
+End If
+End Function
+
+Public Function ConstructClip(ByRef ArrRows As Variant) As String
+Attribute ConstructClip.VB_Description = "Constructs a clip string from an two-dimensional array indexed by row/col subscripts."
+If IsArray(ArrRows) Then
+    Dim Ptr As LongPtr
+    CopyMemory Ptr, ByVal UnsignedAdd(VarPtr(ArrRows), 8), PTR_SIZE
+    Const VT_BYREF As Integer = &H4000
+    Dim VT As Integer
+    CopyMemory VT, ByVal VarPtr(ArrRows), 2
+    If (VT And VT_BYREF) = VT_BYREF Then CopyMemory Ptr, ByVal Ptr, PTR_SIZE
+    If Ptr <> NULL_PTR Then
+        Dim DimensionCount As Integer
+        CopyMemory DimensionCount, ByVal Ptr, 2
+        If DimensionCount = 2 Then
+            If VarType(ArrRows) = vbArray + vbString Then
+                Dim iRow As Long, iCol As Long
+                Dim LBoundRows As Long, UBoundRows As Long, LBoundCols As Long, UBoundCols As Long
+                Dim StrArr() As String, StrSize As Long
+                Dim CSCol As String, CSRow As String
+                LBoundRows = LBound(ArrRows, 1)
+                UBoundRows = UBound(ArrRows, 1)
+                LBoundCols = LBound(ArrRows, 2)
+                UBoundCols = UBound(ArrRows, 2)
+                If (UBoundRows - LBoundRows) > -1 And (UBoundCols - LBoundCols) > -1 Then ReDim StrArr(0 To (UBoundRows - LBoundRows), 0 To (UBoundCols - LBoundCols)) As String
+                CSCol = GetClipSeparatorCol()
+                CSRow = GetClipSeparatorRow()
+                For iRow = LBoundRows To UBoundRows
+                    For iCol = LBoundCols To UBoundCols
+                        If iCol < UBoundCols Then
+                            StrArr(iRow + (0 - LBoundRows), iCol + (0 - LBoundCols)) = ArrRows(iRow, iCol) & CSCol
+                        ElseIf iRow < UBoundRows Then
+                            StrArr(iRow + (0 - LBoundRows), iCol + (0 - LBoundCols)) = ArrRows(iRow, iCol) & CSRow
+                        Else
+                            StrArr(iRow + (0 - LBoundRows), iCol + (0 - LBoundCols)) = ArrRows(iRow, iCol)
+                        End If
+                    Next iCol
+                Next iRow
+                For iRow = 0 To (UBoundRows - LBoundRows)
+                    For iCol = 0 To (UBoundCols - LBoundCols)
+                        StrSize = StrSize + Len(StrArr(iRow, iCol))
+                    Next iCol
+                Next iRow
+                If StrSize > 0 Then
+                    ConstructClip = String$(StrSize, vbNullChar)
+                    StrSize = 1
+                    For iRow = 0 To (UBoundRows - LBoundRows)
+                        For iCol = 0 To (UBoundCols - LBoundCols)
+                            If StrSize <= Len(ConstructClip) Then Mid$(ConstructClip, StrSize, Len(StrArr(iRow, iCol))) = StrArr(iRow, iCol)
+                            StrSize = StrSize + Len(StrArr(iRow, iCol))
+                        Next iCol
+                    Next iRow
+                End If
+            Else
+                Err.Raise 13
+            End If
+        Else
+            Err.Raise Number:=5, Description:="Array must be double dimensioned"
+        End If
+    Else
+        Err.Raise Number:=91, Description:="Array is not allocated"
+    End If
+ElseIf IsEmpty(ArrRows) Then
+    ConstructClip = vbNullString
+Else
+    Err.Raise 380
+End If
+End Function
 
 Public Property Get CellTextStyle() As FlexTextStyleConstants
 Attribute CellTextStyle.VB_Description = "Returns/sets 3D effects for text on a specific cell or range of cells."
