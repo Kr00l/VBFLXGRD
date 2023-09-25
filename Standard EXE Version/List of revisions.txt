@@ -1,8 +1,18 @@
 List of revisions:
 
+25-Sep-2023
+- Included the BeforePaste/AfterPaste event.
+- Included the ParseClip/ConstructClip function.
+  ParseClip will parse a clip string into an two-dimensional array.
+  ConstructClip will construct a clip string from an two-dimensional array.
+- Info and label tips now only shown when hit result is the cell content.
+  Thus a tool tip will not overlap anymore when the mouse is over a combo cue, check box etc.
+- Bugfix in the Clip property when ClipPasteMode = FlexClipPasteModeAutoSelection and ClipMode = FlexClipModeExcludeHidden.
+
 23-Sep-2023
 - Included the AllowIncrementalSearch property.
 - Included optional argument TextDisplay in the FindItem function.
+- Added enum FlexFindDirectionRight/FlexFindDirectionLeft for the FindItem function.
 
 16-Sep-2023
 - Replaced 'Partial As Boolean' argument to 'Match As FlexFindMatchConstants' in the FindItem function.
