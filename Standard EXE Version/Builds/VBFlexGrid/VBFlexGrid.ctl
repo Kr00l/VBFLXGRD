@@ -8743,7 +8743,7 @@ End Property
 Public Function ParseClip(ByRef Text As String, Optional ByVal Rows As Long = -1, Optional ByVal Cols As Long = -1) As Variant
 Attribute ParseClip.VB_Description = "Parses a clip string into an two-dimensional array indexed by row/col subscripts."
 Dim StrArr() As String, UBoundRows As Long, UBoundCols As Long
-Dim Temp As String, iRow As Long, iCol As Long, Twice As Long
+Dim Temp As String, iRow As Long, iCol As Long
 Dim Pos1 As Long, Pos2 As Long, Pos3 As Long, Pos4 As Long
 Dim CSCol As String, CSColLen As Long, CSRow As String, CSRowLen As Long
 UBoundRows = -1
