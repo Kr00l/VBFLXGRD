@@ -1541,6 +1541,7 @@ Private VBFlexGridCaptureHitResult As FlexHitResultConstants
 Private VBFlexGridCaptureDividerRow As Long, VBFlexGridCaptureDividerCol As Long
 Private VBFlexGridCaptureDividerDrag As Boolean
 Private VBFlexGridToolTipRow As Long, VBFlexGridToolTipCol As Long
+Private VBFlexGridToolTipHitResult As FlexHitResultConstants
 Private VBFlexGridScrollTipTrack As Boolean
 Private VBFlexGridMouseMoveRow As Long, VBFlexGridMouseMoveCol As Long
 Private VBFlexGridMouseMoveChanged As Boolean
@@ -1873,6 +1874,7 @@ VBFlexGridCaptureDividerCol = -1
 VBFlexGridCaptureDividerDrag = False
 VBFlexGridToolTipRow = -1
 VBFlexGridToolTipCol = -1
+VBFlexGridToolTipHitResult = FlexHitResultNoWhere
 VBFlexGridMouseMoveRow = -1
 VBFlexGridMouseMoveCol = -1
 VBFlexGridMouseMoveChanged = False
@@ -5138,6 +5140,7 @@ DestroyWindow VBFlexGridToolTipHandle
 VBFlexGridToolTipHandle = NULL_PTR
 VBFlexGridToolTipRow = -1
 VBFlexGridToolTipCol = -1
+VBFlexGridToolTipHitResult = FlexHitResultNoWhere
 End Sub
 
 Private Sub DestroyScrollTip()
@@ -8397,10 +8400,18 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         End If
                         Pos4 = Pos3
                         iCol = iCol + 1
-                        ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                        If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+                            ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= (PropCols - 1))
+                        Else
+                            ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                        End If
                     Else
                         iCol = iCol + 1
-                        ColLoop = CBool((SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                        If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+                            ColLoop = CBool((SelRange.LeftCol + iCol) <= (PropCols - 1))
+                        Else
+                            ColLoop = CBool((SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                        End If
                     End If
                 Loop Until ColLoop = False
             End If
@@ -8408,11 +8419,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
             Pos4 = 0
             iRow = iRow + 1
             iCol = 0
-            RowLoop = CBool(Pos1 <> 0 And (SelRange.TopRow + iRow) <= SelRange.BottomRow)
+            If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+                RowLoop = CBool(Pos1 <> 0 And (SelRange.TopRow + iRow) <= (PropRows - 1))
+            Else
+                RowLoop = CBool(Pos1 <> 0 And (SelRange.TopRow + iRow) <= SelRange.BottomRow)
+            End If
         Else
             iRow = iRow + 1
             iCol = 0
-            RowLoop = CBool((SelRange.TopRow + iRow) <= SelRange.BottomRow)
+            If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+                RowLoop = CBool((SelRange.TopRow + iRow) <= (PropRows - 1))
+            Else
+                RowLoop = CBool((SelRange.TopRow + iRow) <= SelRange.BottomRow)
+            End If
         End If
     Loop Until RowLoop = False
 End If
@@ -18588,11 +18607,16 @@ If VBFlexGridHandle <> NULL_PTR And VBFlexGridToolTipHandle <> NULL_PTR Then
         If VBFlexGridToolTipRow <> .HitRow Or VBFlexGridToolTipCol <> .HitCol Then
             VBFlexGridToolTipRow = .HitRow
             VBFlexGridToolTipCol = .HitCol
+            VBFlexGridToolTipHitResult = .HitResult
+            SendMessage VBFlexGridToolTipHandle, TTM_POP, 0, ByVal 0&
+        ElseIf VBFlexGridToolTipHitResult <> .HitResult Then
+            VBFlexGridToolTipHitResult = .HitResult
             SendMessage VBFlexGridToolTipHandle, TTM_POP, 0, ByVal 0&
         End If
     Else
         VBFlexGridToolTipRow = -1
         VBFlexGridToolTipCol = -1
+        VBFlexGridToolTipHitResult = FlexHitResultNoWhere
         SendMessage VBFlexGridToolTipHandle, TTM_POP, 0, ByVal 0&
     End If
     End With
@@ -19982,7 +20006,7 @@ Select Case wMsg
                     .PT.Y = Get_Y_lParam(Pos)
                     ScreenToClient hWnd, .PT
                     Call GetHitTestInfo(HTI)
-                    If .HitRow > -1 And .HitCol > -1 Then
+                    If .HitRow > -1 And .HitCol > -1 And .HitResult = FlexHitResultCell Then
                         If PropShowLabelTips = True Then Call GetLabelInfo(.HitRow, .HitCol, LBLI)
                         If (LBLI.Flags And LBLI_VALID) = LBLI_VALID And Not (LBLI.Flags And LBLI_UNFOLDED) = LBLI_UNFOLDED And Not (LBLI.Flags And LBLI_HIDDEN) = LBLI_HIDDEN Then
                             Call GetCellText(.HitRow, .HitCol, Text)
