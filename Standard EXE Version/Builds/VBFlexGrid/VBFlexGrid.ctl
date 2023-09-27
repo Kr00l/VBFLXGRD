@@ -11165,6 +11165,24 @@ Select Case Value
 End Select
 End Property
 
+Public Property Get IncrementalSearchString() As String
+Attribute IncrementalSearchString.VB_Description = "Returns the incremental search string, or an empty string if the flex grid is not in incremental search mode."
+Attribute IncrementalSearchString.VB_MemberFlags = "400"
+IncrementalSearchString = VBFlexGridIncrementalSearch.SearchString
+End Property
+
+Public Property Get IncrementalSearchRow() As Long
+Attribute IncrementalSearchRow.VB_Description = "Returns the row where the incremental search highlight is displayed."
+Attribute IncrementalSearchRow.VB_MemberFlags = "400"
+IncrementalSearchRow = VBFlexGridIncrementalSearch.Row
+End Property
+
+Public Property Get IncrementalSearchCol() As Long
+Attribute IncrementalSearchCol.VB_Description = "Returns the column where the incremental search highlight is displayed."
+Attribute IncrementalSearchCol.VB_MemberFlags = "400"
+IncrementalSearchCol = VBFlexGridIncrementalSearch.Col
+End Property
+
 Public Property Get Version() As Integer
 Attribute Version.VB_Description = "Returns the version of the flex grid control currently loaded in memory."
 Attribute Version.VB_MemberFlags = "400"
