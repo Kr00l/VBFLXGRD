@@ -19082,9 +19082,11 @@ If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
 Else
     InvertText = Text
 End If
+Dim Compare As VbCompareMethod
+If VBFlexGridIncrementalSearch.CaseSensitive = False Then Compare = vbTextCompare Else Compare = vbBinaryCompare
 For Pos = 0 To (Len(InvertText) - 1)
     If Pos < Len(VBFlexGridIncrementalSearch.SearchString) Then
-        If StrComp(Mid$(InvertText, Pos + 1, 1), Mid$(VBFlexGridIncrementalSearch.SearchString, Pos + 1, 1), vbTextCompare) <> 0 Then Exit For
+        If StrComp(Mid$(InvertText, Pos + 1, 1), Mid$(VBFlexGridIncrementalSearch.SearchString, Pos + 1, 1), Compare) <> 0 Then Exit For
     Else
         Exit For
     End If
