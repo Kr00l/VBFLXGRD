@@ -6,6 +6,7 @@ List of revisions:
   Or the Cancel parameter can be used to disallow incremental search for a specific row/col.
   EndIncrementalSearch event is fired when the search has elapsed or ended.
   Now BeginIncrementalSearch can be fired again.
+- Included IncrementalSearchString/IncrementalSearchRow/IncrementalSearchCol run-time property.
 
 25-Sep-2023
 - Included the BeforePaste/AfterPaste event.
