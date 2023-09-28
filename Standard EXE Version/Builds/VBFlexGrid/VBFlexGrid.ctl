@@ -879,9 +879,9 @@ Attribute BeginIncrementalSearch.VB_Description = "Occurs when the user is about
 Public Event EndIncrementalSearch(ByVal Row As Long, ByVal Col As Long)
 Attribute EndIncrementalSearch.VB_Description = "Occurs when an incremental search has elapsed or ended."
 Public Event BeforeClipboardAction(ByVal Action As FlexClipboardActionConstants, ByRef Text As String, ByRef Cancel As Boolean)
-Attribute BeforeClipboardAction.VB_Description = "Occurs before a clipboard action will be performed."
+Attribute BeforeClipboardAction.VB_Description = "Occurs when a clipboard action is about to be performed."
 Public Event AfterClipboardAction(ByVal Action As FlexClipboardActionConstants)
-Attribute AfterClipboardAction.VB_Description = "Occurs after a clipboard action was performed."
+Attribute AfterClipboardAction.VB_Description = "Occurs when a clipboard action was performed."
 Public Event AfterUserFreeze()
 Attribute AfterUserFreeze.VB_Description = "Occurs after the user freezes a row or a column."
 Public Event BeforeUserResize(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean)
