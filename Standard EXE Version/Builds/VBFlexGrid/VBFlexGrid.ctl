@@ -77,6 +77,7 @@ Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollabl
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
 Private FlexClipCopyModeNormal, FlexClipCopyModeIncludeFixedRows, FlexClipCopyModeIncludeFixedColumns, FlexClipCopyModeIncludeFixedAll
 Private FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection
+Private FlexClipboardActionCopy, FlexClipboardActionCut, FlexClipboardActionPaste, FlexClipboardActionDelete
 Private FlexFindMatchExact, FlexFindMatchPartial, FlexFindMatchStartsWith, FlexFindMatchEndsWith
 Private FlexFindDirectionDown, FlexFindDirectionUp, FlexFindDirectionRight, FlexFindDirectionLeft
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
@@ -361,6 +362,12 @@ End Enum
 Public Enum FlexClipPasteModeConstants
 FlexClipPasteModeNormal = 0
 FlexClipPasteModeAutoSelection = 1
+End Enum
+Public Enum FlexClipboardActionConstants
+FlexClipboardActionCopy = 0
+FlexClipboardActionCut = 1
+FlexClipboardActionPaste = 2
+FlexClipboardActionDelete = 3
 End Enum
 Public Enum FlexFindMatchConstants
 FlexFindMatchExact = 0
@@ -778,7 +785,7 @@ Private Const RWIS_SELECTED As Long = &H4
 Private Const RWIS_NOSIZING As Long = &H8
 Private Type TROWINFO
 Height As Long
-Data As Long
+Data As LongPtr
 State As Long
 ID As Long
 End Type
@@ -800,7 +807,7 @@ Private Const CLIS_NOSIZING As Long = &H8
 Private Const CLIS_CHECKBOXES As Long = &H10
 Private Type TCOLINFO
 Width As Long
-Data As Long
+Data As LongPtr
 State As Long
 Key As String
 Alignment As FlexAlignmentConstants
@@ -871,10 +878,10 @@ Public Event BeginIncrementalSearch(ByRef Row As Long, ByRef Col As Long, ByRef 
 Attribute BeginIncrementalSearch.VB_Description = "Occurs when the user is about to begin an incremental search."
 Public Event EndIncrementalSearch(ByVal Row As Long, ByVal Col As Long)
 Attribute EndIncrementalSearch.VB_Description = "Occurs when an incremental search has elapsed or ended."
-Public Event BeforePaste(ByRef Text As String, ByRef Cancel As Boolean)
-Attribute BeforePaste.VB_Description = "Occurs before the current content of the clipboard will be pasted."
-Public Event AfterPaste()
-Attribute AfterPaste.VB_Description = "Occurs after the current content of the clipboard was pasted."
+Public Event BeforeClipboardAction(ByVal Action As FlexClipboardActionConstants, ByRef Text As String, ByRef Cancel As Boolean)
+Attribute BeforeClipboardAction.VB_Description = "Occurs before a clipboard action will be performed."
+Public Event AfterClipboardAction(ByVal Action As FlexClipboardActionConstants)
+Attribute AfterClipboardAction.VB_Description = "Occurs after a clipboard action was performed."
 Public Event AfterUserFreeze()
 Attribute AfterUserFreeze.VB_Description = "Occurs after the user freezes a row or a column."
 Public Event BeforeUserResize(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean)
@@ -6001,32 +6008,49 @@ End Sub
 
 Public Sub Copy()
 Attribute Copy.VB_Description = "Copies the current selection of the flex grid to the clipboard."
-Call SetClipboardText(Me.Clip)
+Dim Text As String, Cancel As Boolean
+Text = Me.Clip
+RaiseEvent BeforeClipboardAction(FlexClipboardActionCopy, Text, Cancel)
+If Cancel = False Then
+    Call SetClipboardText(Text)
+    RaiseEvent AfterClipboardAction(FlexClipboardActionCopy)
+End If
 End Sub
 
 Public Sub Cut()
 Attribute Cut.VB_Description = "Deletes (cuts) the current selection of the flex grid and copy the deleted text to the clipboard."
-Me.Copy
-Me.Clear FlexClearSelection, FlexClearText
-Me.CellEnsureVisible
+Dim Text As String, Cancel As Boolean
+Text = Me.Clip
+RaiseEvent BeforeClipboardAction(FlexClipboardActionCut, Text, Cancel)
+If Cancel = False Then
+    Call SetClipboardText(Text)
+    Me.Clear FlexClearSelection, FlexClearText
+    Me.CellEnsureVisible
+    RaiseEvent AfterClipboardAction(FlexClipboardActionCut)
+End If
 End Sub
 
 Public Sub Paste()
 Attribute Paste.VB_Description = "Pastes the current content of the clipboard at the current selection of the flex grid."
 Dim Text As String, Cancel As Boolean
 Text = GetClipboardText()
-RaiseEvent BeforePaste(Text, Cancel)
+RaiseEvent BeforeClipboardAction(FlexClipboardActionPaste, Text, Cancel)
 If Cancel = False Then
     Me.Clip = Text
     Me.CellEnsureVisible
-    RaiseEvent AfterPaste
+    RaiseEvent AfterClipboardAction(FlexClipboardActionPaste)
 End If
 End Sub
 
 Public Sub Delete()
 Attribute Delete.VB_Description = "Deletes the current selection of the flex grid."
-Me.Clear FlexClearSelection, FlexClearText
-Me.CellEnsureVisible
+Dim Cancel As Boolean
+RaiseEvent BeforeClipboardAction(FlexClipboardActionDelete, vbNullString, Cancel)
+If Cancel = False Then
+    Me.Clear FlexClearSelection, FlexClearText
+    Me.CellEnsureVisible
+    RaiseEvent AfterClipboardAction(FlexClipboardActionDelete)
+End If
 End Sub
 
 Public Sub Clear(Optional ByVal Where As FlexClearWhereConstants, Optional ByVal What As FlexClearWhatConstants)
@@ -6624,14 +6648,24 @@ Call SetRowColParams(RCP)
 End With
 End Property
 
+#If VBA7 Then
+Public Property Get RowData(ByVal Index As Long) As LongPtr
+Attribute RowData.VB_Description = "Array of long integer values with one item for each row (RowData) and for each column (ColData) of the flex grid."
+Attribute RowData.VB_MemberFlags = "400"
+#Else
 Public Property Get RowData(ByVal Index As Long) As Long
 Attribute RowData.VB_Description = "Array of long integer values with one item for each row (RowData) and for each column (ColData) of the flex grid."
 Attribute RowData.VB_MemberFlags = "400"
+#End If
 If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
 RowData = VBFlexGridCells.Rows(Index).RowInfo.Data
 End Property
 
+#If VBA7 Then
+Public Property Let RowData(ByVal Index As Long, ByVal Value As LongPtr)
+#Else
 Public Property Let RowData(ByVal Index As Long, ByVal Value As Long)
+#End If
 If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
 VBFlexGridCells.Rows(Index).RowInfo.Data = Value
 End Property
@@ -7041,14 +7075,24 @@ Call SetRowColParams(RCP)
 End With
 End Property
 
+#If VBA7 Then
+Public Property Get ColData(ByVal Index As Long) As LongPtr
+Attribute ColData.VB_Description = "Array of long integer values with one item for each row (RowData) and for each column (ColData) of the flex grid."
+Attribute ColData.VB_MemberFlags = "400"
+#Else
 Public Property Get ColData(ByVal Index As Long) As Long
 Attribute ColData.VB_Description = "Array of long integer values with one item for each row (RowData) and for each column (ColData) of the flex grid."
 Attribute ColData.VB_MemberFlags = "400"
+#End If
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 ColData = VBFlexGridColsInfo(Index).Data
 End Property
 
+#If VBA7 Then
+Public Property Let ColData(ByVal Index As Long, ByVal Value As LongPtr)
+#Else
 Public Property Let ColData(ByVal Index As Long, ByVal Value As Long)
+#End If
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 VBFlexGridColsInfo(Index).Data = Value
 End Property
@@ -18956,13 +19000,9 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
         Select Case PropSelectionMode
             Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
                 Select Case .Direction
-                    Case FlexFindDirectionDown, FlexFindDirectionUp
-                        If Row < PropFixedRows Then Row = PropFixedRows
-                    Case FlexFindDirectionRight, FlexFindDirectionLeft
-                        If Col < PropFixedCols Then Col = PropFixedCols
+                    Case FlexFindDirectionDown, FlexFindDirectionUp, FlexFindDirectionRight, FlexFindDirectionLeft
                     Case Else
                         .Direction = FlexFindDirectionDown
-                        If Row < PropFixedRows Then Row = PropFixedRows
                 End Select
             Case FlexSelectionModeByRow
                 Select Case .Direction
@@ -18974,7 +19014,6 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                     Case Else
                         .Direction = FlexFindDirectionDown
                 End Select
-                If Row < PropFixedRows Then Row = PropFixedRows
             Case FlexSelectionModeByColumn
                 Select Case .Direction
                     Case FlexFindDirectionRight, FlexFindDirectionLeft
@@ -18985,14 +19024,20 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                     Case Else
                         .Direction = FlexFindDirectionRight
                 End Select
-                If Col < PropFixedCols Then Row = PropFixedCols
         End Select
-        If Row > (PropRows - 1) Then Row = (PropRows - 1)
-        If Col > (PropCols - 1) Then Col = (PropCols - 1)
     End If
     If Cancel = False Then
         Dim FoundIndex As Long
-        FoundIndex = Me.FindItem(.SearchString & ChrW(CharCode), Row, Col, FlexFindMatchStartsWith, .CaseSensitive, True, Not .NoWrap, .Direction, True)
+        FoundIndex = -1
+        If (Row >= 0 And Row <= (PropRows - 1)) And (Col >= 0 And Col <= (PropCols - 1)) Then
+            Select Case .Direction
+                Case FlexFindDirectionDown, FlexFindDirectionUp
+                    If Row < PropFixedRows Then Row = PropFixedRows
+                Case FlexFindDirectionRight, FlexFindDirectionLeft
+                    If Col < PropFixedCols Then Col = PropFixedCols
+            End Select
+            FoundIndex = Me.FindItem(.SearchString & ChrW(CharCode), Row, Col, FlexFindMatchStartsWith, .CaseSensitive, True, Not .NoWrap, .Direction, True)
+        End If
         Select Case .Direction
             Case FlexFindDirectionDown, FlexFindDirectionUp
                 Row = FoundIndex
@@ -19030,6 +19075,10 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                 RCP.LeftCol = .Col - GetColsPerPageRev(.Col) + 1
             End If
             Call SetRowColParams(RCP)
+        End If
+    ElseIf PropAllowUserEditing = True Then
+        If CreateEdit(FlexEditReasonKeyPress) = True Then
+            If VBFlexGridEditHandle <> NULL_PTR Then PostMessage VBFlexGridEditHandle, WM_CHAR, CharCode, ByVal 0&
         End If
     End If
     End With
