@@ -1,5 +1,11 @@
 List of revisions:
 
+28-Sep-2023
+- Included the BeforeClipboardAction/AfterClipboardAction event.
+  Enum 'FlexClipboardActionConstants' included to distinguish between Copy, Cut, Paste and Delete.
+  The BeforePaste/AfterPaste event got removed.
+- RowData/ColData property now 'As LongPtr' instead of 'As Long'.
+
 27-Sep-2023
 - Included the BeginIncrementalSearch/EndIncrementalSearch event.
   The BeginIncrementalSearch event is fired initially to customize behavior. (row/col, case sensitive, no wrap etc.)
