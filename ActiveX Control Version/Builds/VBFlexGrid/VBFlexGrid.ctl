@@ -747,7 +747,7 @@ Private Const RWIS_SELECTED As Long = &H4
 Private Const RWIS_NOSIZING As Long = &H8
 Private Type TROWINFO
 Height As Long
-Data As Long
+Data As LongPtr
 State As Long
 ID As Long
 End Type
@@ -759,7 +759,7 @@ Private Const CLIS_NOSIZING As Long = &H8
 Private Const CLIS_CHECKBOXES As Long = &H10
 Private Type TCOLINFO
 Width As Long
-Data As Long
+Data As LongPtr
 State As Long
 Key As String
 Alignment As FlexAlignmentConstants
@@ -6462,14 +6462,24 @@ Call SetRowColParams(RCP)
 End With
 End Property
 
+#If VBA7 Then
+Public Property Get RowData(ByVal Index As Long) As LongPtr
+Attribute RowData.VB_Description = "Array of long integer values with one item for each row (RowData) and for each column (ColData) of the flex grid."
+Attribute RowData.VB_MemberFlags = "400"
+#Else
 Public Property Get RowData(ByVal Index As Long) As Long
 Attribute RowData.VB_Description = "Array of long integer values with one item for each row (RowData) and for each column (ColData) of the flex grid."
 Attribute RowData.VB_MemberFlags = "400"
+#End If
 If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
 RowData = VBFlexGridCells.Rows(Index).RowInfo.Data
 End Property
 
+#If VBA7 Then
+Public Property Let RowData(ByVal Index As Long, ByVal Value As LongPtr)
+#Else
 Public Property Let RowData(ByVal Index As Long, ByVal Value As Long)
+#End If
 If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
 VBFlexGridCells.Rows(Index).RowInfo.Data = Value
 End Property
@@ -6879,14 +6889,24 @@ Call SetRowColParams(RCP)
 End With
 End Property
 
+#If VBA7 Then
+Public Property Get ColData(ByVal Index As Long) As LongPtr
+Attribute ColData.VB_Description = "Array of long integer values with one item for each row (RowData) and for each column (ColData) of the flex grid."
+Attribute ColData.VB_MemberFlags = "400"
+#Else
 Public Property Get ColData(ByVal Index As Long) As Long
 Attribute ColData.VB_Description = "Array of long integer values with one item for each row (RowData) and for each column (ColData) of the flex grid."
 Attribute ColData.VB_MemberFlags = "400"
+#End If
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 ColData = VBFlexGridColsInfo(Index).Data
 End Property
 
+#If VBA7 Then
+Public Property Let ColData(ByVal Index As Long, ByVal Value As LongPtr)
+#Else
 Public Property Let ColData(ByVal Index As Long, ByVal Value As Long)
+#End If
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 VBFlexGridColsInfo(Index).Data = Value
 End Property
