@@ -19141,7 +19141,6 @@ If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
                     InvertText = Left$(InvertText, nFit)
                 End If
             End If
-            
         End If
     End If
 Else
