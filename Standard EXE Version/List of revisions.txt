@@ -1,5 +1,8 @@
 List of revisions:
 
+29-Sep-2023
+- Enhanced the internal DrawIncrementalSearch method so it can highlight multiple lines of word break text. (recursion)
+
 28-Sep-2023
 - Included the BeforeClipboardAction/AfterClipboardAction event.
   Enum 'FlexClipboardActionConstants' included to distinguish between Copy, Cut, Paste and Delete.
