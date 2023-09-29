@@ -19109,7 +19109,7 @@ End If
 End With
 End Sub
 
-Private Sub DrawIncrementalSearch(ByVal hDC As LongPtr, ByRef Text As String, ByRef TextRect As RECT, ByVal DrawFlags As Long)
+Private Sub DrawIncrementalSearch(ByVal hDC As LongPtr, ByRef Text As String, ByRef TextRect As RECT, ByVal DrawFlags As Long, Optional ByRef SearchOffset As Long)
 If hDC = NULL_PTR Then Exit Sub
 Dim RCInvert As RECT, RCInvertText As RECT, InvertText As String, InvertResult As Long, InvertOffset As Long
 LSet RCInvert = TextRect
@@ -19117,15 +19117,33 @@ LSet RCInvertText = TextRect
 Dim Pos As Long
 If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
     Pos = InStr(1, Text, vbCr)
-    If Pos = 0 Then Pos = InStr(1, Text, vbLf)
-    If Pos > 0 Then InvertText = Left$(Text, Pos) Else InvertText = Text
+    If Pos = 0 Then
+        Pos = InStr(1, Text, vbLf)
+    Else
+        Dim TempPos As Long
+        TempPos = InStr(1, Text, vbLf)
+        If TempPos > 0 And TempPos < Pos Then Pos = TempPos
+    End If
+    If Pos > 0 Then InvertText = Left$(Text, Pos - 1) Else InvertText = Text
     If (DrawFlags And DT_WORDBREAK) = DT_WORDBREAK Then
         Dim nFit As Long, Size As SIZEAPI
         GetTextExtentExPoint hDC, StrPtr(InvertText), Len(InvertText), (TextRect.Right - TextRect.Left), VarPtr(nFit), NULL_PTR, Size
         If Len(InvertText) > nFit Then
-            InvertText = Left$(InvertText, nFit)
-            Pos = InStrRev(InvertText, " ")
-            If Pos > 0 Then InvertText = Left$(InvertText, Pos - 1)
+            Pos = InStrRev(Left$(InvertText, nFit + 1), " ")
+            If Pos > 0 Then
+                If Mid$(InvertText, nFit, 1) = " " Then
+                    InvertText = Left$(InvertText, nFit - 1)
+                Else
+                    InvertText = Left$(InvertText, Pos - 1)
+                End If
+            Else
+                Pos = InStr(1, InvertText, " ")
+                If Pos > 0 Then
+                    If (Pos - 1) > nFit Then nFit = (Pos - 1)
+                    InvertText = Left$(InvertText, nFit)
+                End If
+            End If
+            
         End If
     End If
 Else
@@ -19134,33 +19152,66 @@ End If
 Dim Compare As VbCompareMethod
 If VBFlexGridIncrementalSearch.CaseSensitive = False Then Compare = vbTextCompare Else Compare = vbBinaryCompare
 For Pos = 0 To (Len(InvertText) - 1)
-    If Pos < Len(VBFlexGridIncrementalSearch.SearchString) Then
-        If StrComp(Mid$(InvertText, Pos + 1, 1), Mid$(VBFlexGridIncrementalSearch.SearchString, Pos + 1, 1), Compare) <> 0 Then Exit For
+    If (Pos + SearchOffset) < Len(VBFlexGridIncrementalSearch.SearchString) Then
+        If StrComp(Mid$(InvertText, Pos + 1, 1), Mid$(VBFlexGridIncrementalSearch.SearchString, Pos + SearchOffset + 1, 1), Compare) <> 0 Then Exit For
     Else
         Exit For
     End If
 Next Pos
-InvertResult = DrawText(hDC, StrPtr(Left$(InvertText, Pos)), -1, RCInvert, DrawFlags Or DT_CALCRECT)
-DrawText hDC, StrPtr(InvertText), -1, RCInvertText, DrawFlags Or DT_CALCRECT
-If (DrawFlags And DT_CENTER) = DT_CENTER Then
-    InvertOffset = (((TextRect.Right - TextRect.Left) - (RCInvertText.Right - RCInvertText.Left)) / 2)
-    RCInvert.Left = RCInvert.Left + InvertOffset
-    RCInvert.Right = RCInvert.Right + InvertOffset
-ElseIf (DrawFlags And DT_RIGHT) = DT_RIGHT Then
-    InvertOffset = ((TextRect.Right - TextRect.Left) - (RCInvertText.Right - RCInvertText.Left))
-    RCInvert.Left = RCInvert.Left + InvertOffset
-    RCInvert.Right = RCInvert.Right + InvertOffset
+If Not InvertText = vbNullString Then
+    InvertResult = DrawText(hDC, StrPtr(Left$(InvertText, Pos)), -1, RCInvert, DrawFlags Or DT_CALCRECT)
+    DrawText hDC, StrPtr(InvertText), -1, RCInvertText, DrawFlags Or DT_CALCRECT
+    If (DrawFlags And DT_CENTER) = DT_CENTER Then
+        InvertOffset = (((TextRect.Right - TextRect.Left) - (RCInvertText.Right - RCInvertText.Left)) / 2)
+        RCInvert.Left = RCInvert.Left + InvertOffset
+        RCInvert.Right = RCInvert.Right + InvertOffset
+    ElseIf (DrawFlags And DT_RIGHT) = DT_RIGHT Then
+        InvertOffset = ((TextRect.Right - TextRect.Left) - (RCInvertText.Right - RCInvertText.Left))
+        RCInvert.Left = RCInvert.Left + InvertOffset
+        RCInvert.Right = RCInvert.Right + InvertOffset
+    End If
+    If (DrawFlags And DT_VCENTER) = DT_VCENTER Or (DrawFlags And DT_BOTTOM) = DT_BOTTOM Then
+        InvertOffset = ((TextRect.Bottom - TextRect.Top) - InvertResult)
+        If InvertOffset > 0 Then RCInvert.Top = RCInvert.Top + InvertOffset
+    End If
+Else
+    Dim TM As TEXTMETRIC
+    If GetTextMetrics(hDC, TM) <> 0 Then SetRect RCInvert, TextRect.Left, TextRect.Top, TextRect.Right, TextRect.Top + TM.TMHeight
 End If
-If (DrawFlags And DT_VCENTER) = DT_VCENTER Or (DrawFlags And DT_BOTTOM) = DT_BOTTOM Then
-    InvertOffset = ((TextRect.Bottom - TextRect.Top) - InvertResult)
-    If InvertOffset > 0 Then RCInvert.Top = RCInvert.Top + InvertOffset
+If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
+    If (DrawFlags And DT_WORDBREAK) = DT_WORDBREAK Then
+        Text = Mid$(Text, Len(InvertText) + 2)
+        SearchOffset = SearchOffset + Len(InvertText) + 1
+    Else
+        Text = Mid$(Text, Len(InvertText) + 1)
+        SearchOffset = SearchOffset + Len(InvertText)
+    End If
+    If Left$(Text, 2) = vbCrLf Then
+        Text = Mid$(Text, 3)
+        SearchOffset = SearchOffset + 2
+    Else
+        Select Case Left$(Text, 1)
+            Case vbCr, vbLf
+                Text = Mid$(Text, 2)
+                SearchOffset = SearchOffset + 1
+        End Select
+    End If
+Else
+    Text = vbNullString
+    SearchOffset = 0
 End If
 With RCInvert
 If .Left < TextRect.Left Then .Left = TextRect.Left
 If .Top < TextRect.Top Then .Top = TextRect.Top
 If .Right > TextRect.Right Then .Right = TextRect.Right
 If .Bottom > TextRect.Bottom Then .Bottom = TextRect.Bottom
-If .Right >= .Left And .Bottom >= .Top Then InvertRect hDC, RCInvert
+If .Right >= .Left And .Bottom >= .Top Then
+    InvertRect hDC, RCInvert
+    If Not Text = vbNullString Then
+        TextRect.Top = TextRect.Top + (.Bottom - .Top)
+        If TextRect.Bottom >= TextRect.Top Then Call DrawIncrementalSearch(hDC, Text, TextRect, DrawFlags, SearchOffset)
+    End If
+End If
 End With
 End Sub
 
