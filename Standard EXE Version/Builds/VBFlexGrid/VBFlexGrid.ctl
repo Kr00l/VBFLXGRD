@@ -18970,9 +18970,7 @@ Select Case CharCode
     Case 0 To 31 ' Non-printable
         Exit Sub
     Case 32 ' Space
-        If PropAllowUserEditing = True Then
-            If VBFlexGridIncrementalSearch.SearchString = vbNullString Then Exit Sub
-        End If
+        If VBFlexGridIncrementalSearch.SearchString = vbNullString Then Exit Sub
 End Select
 If TimerIncrementalSearch.Enabled = True Then
     TimerIncrementalSearch.Enabled = False
@@ -20811,8 +20809,10 @@ Select Case wMsg
                     End Select
                 Else
                     If KeyCode = vbKeySpace Then
-                        If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
-                            If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
+                        If VBFlexGridIncrementalSearch.SearchString = vbNullString Then
+                            If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                                If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
+                            End If
                         End If
                     End If
                 End If
