@@ -558,6 +558,13 @@ TMStruckOut As Byte
 TMPitchAndFamily As Byte
 TMCharset As Byte
 End Type
+Private Type DRAWTEXTPARAMS
+cbSize As Long
+iTabLength As Long
+iLeftMargin As Long
+iRightMargin As Long
+uiLengthDrawn As Long
+End Type
 Private Type PAINTSTRUCT
 hDC As LongPtr
 fErase As Long
@@ -1065,6 +1072,7 @@ Private Declare PtrSafe Function InvertRect Lib "user32" (ByVal hDC As LongPtr, 
 Private Declare PtrSafe Function DrawFocusRect Lib "user32" (ByVal hDC As LongPtr, ByRef lpRect As RECT) As Long
 Private Declare PtrSafe Function DrawFrameControl Lib "user32" (ByVal hDC As LongPtr, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
 Private Declare PtrSafe Function DrawText Lib "user32" Alias "DrawTextW" (ByVal hDC As LongPtr, ByVal lpchText As LongPtr, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long) As Long
+Private Declare PtrSafe Function DrawTextEx Lib "user32" Alias "DrawTextExW" (ByVal hDC As LongPtr, ByVal lpchText As LongPtr, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long, ByRef lpDrawTextParams As Any) As Long
 Private Declare PtrSafe Function ExtTextOut Lib "gdi32" Alias "ExtTextOutW" (ByVal hDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal wOptions As Long, ByRef lpRect As Any, ByVal lpString As LongPtr, ByVal nCount As Long, ByVal lpDX As LongPtr) As Long
 Private Declare PtrSafe Function DeleteObject Lib "gdi32" (ByVal hObject As LongPtr) As Long
 Private Declare PtrSafe Function SelectObject Lib "gdi32" (ByVal hDC As LongPtr, ByVal hObject As LongPtr) As LongPtr
@@ -1081,7 +1089,6 @@ Private Declare PtrSafe Function SetWindowPos Lib "user32" (ByVal hWnd As LongPt
 Private Declare PtrSafe Function SetTextColor Lib "gdi32" (ByVal hDC As LongPtr, ByVal crColor As Long) As Long
 Private Declare PtrSafe Function SetBkColor Lib "gdi32" (ByVal hDC As LongPtr, ByVal crColor As Long) As Long
 Private Declare PtrSafe Function GetTextExtentPoint32 Lib "gdi32" Alias "GetTextExtentPoint32W" (ByVal hDC As LongPtr, ByVal lpsz As LongPtr, ByVal cbString As Long, ByRef lpSize As SIZEAPI) As Long
-Private Declare PtrSafe Function GetTextExtentExPoint Lib "gdi32" Alias "GetTextExtentExPointW" (ByVal hDC As LongPtr, ByVal lpsz As LongPtr, ByVal cbString As Long, ByVal nMaxExtent As Long, ByVal lpnFit As LongPtr, ByVal lpnDX As LongPtr, ByRef lpSize As SIZEAPI) As Long
 Private Declare PtrSafe Function GetDC Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
 Private Declare PtrSafe Function GetWindowDC Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
 Private Declare PtrSafe Function GetDCEx Lib "user32" (ByVal hWnd As LongPtr, ByVal hRgnClip As LongPtr, ByVal fdwOptions As Long) As LongPtr
@@ -1185,6 +1192,7 @@ Private Declare Function InvertRect Lib "user32" (ByVal hDC As Long, ByRef lpRec
 Private Declare Function DrawFocusRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT) As Long
 Private Declare Function DrawFrameControl Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
 Private Declare Function DrawText Lib "user32" Alias "DrawTextW" (ByVal hDC As Long, ByVal lpchText As Long, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long) As Long
+Private Declare Function DrawTextEx Lib "user32" Alias "DrawTextExW" (ByVal hDC As Long, ByVal lpchText As Long, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long, ByRef lpDrawTextParams As Any) As Long
 Private Declare Function ExtTextOut Lib "gdi32" Alias "ExtTextOutW" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByVal wOptions As Long, ByRef lpRect As Any, ByVal lpString As Long, ByVal nCount As Long, ByVal lpDX As Long) As Long
 Private Declare Function DeleteObject Lib "gdi32" (ByVal hObject As Long) As Long
 Private Declare Function SelectObject Lib "gdi32" (ByVal hDC As Long, ByVal hObject As Long) As Long
@@ -1196,7 +1204,6 @@ Private Declare Function SetWindowPos Lib "user32" (ByVal hWnd As Long, ByVal hW
 Private Declare Function SetTextColor Lib "gdi32" (ByVal hDC As Long, ByVal crColor As Long) As Long
 Private Declare Function SetBkColor Lib "gdi32" (ByVal hDC As Long, ByVal crColor As Long) As Long
 Private Declare Function GetTextExtentPoint32 Lib "gdi32" Alias "GetTextExtentPoint32W" (ByVal hDC As Long, ByVal lpsz As Long, ByVal cbString As Long, ByRef lpSize As SIZEAPI) As Long
-Private Declare Function GetTextExtentExPoint Lib "gdi32" Alias "GetTextExtentExPointW" (ByVal hDC As Long, ByVal lpsz As Long, ByVal cbString As Long, ByVal nMaxExtent As Long, ByVal lpnFit As Long, ByVal lpnDX As Long, ByRef lpSize As SIZEAPI) As Long
 Private Declare Function GetDC Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function GetWindowDC Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function GetDCEx Lib "user32" (ByVal hWnd As Long, ByVal hRgnClip As Long, ByVal fdwOptions As Long) As Long
@@ -19124,24 +19131,16 @@ If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
     End If
     If Pos > 0 Then InvertText = Left$(Text, Pos - 1) Else InvertText = Text
     If (DrawFlags And DT_WORDBREAK) = DT_WORDBREAK Then
-        Dim nFit As Long, Size As SIZEAPI
-        GetTextExtentExPoint hDC, StrPtr(InvertText), Len(InvertText), (TextRect.Right - TextRect.Left), VarPtr(nFit), NULL_PTR, Size
-        If Len(InvertText) > nFit Then
-            Pos = InStrRev(Left$(InvertText, nFit + 1), " ")
-            If Pos > 0 Then
-                If Mid$(InvertText, nFit, 1) = " " Then
-                    InvertText = Left$(InvertText, nFit - 1)
-                Else
-                    InvertText = Left$(InvertText, Pos - 1)
-                End If
-            Else
-                Pos = InStr(1, InvertText, " ")
-                If Pos > 0 Then
-                    If (Pos - 1) > nFit Then nFit = (Pos - 1)
-                    InvertText = Left$(InvertText, nFit)
-                End If
-            End If
+        Dim pDrawTextParams As DRAWTEXTPARAMS, RC As RECT
+        pDrawTextParams.cbSize = LenB(pDrawTextParams)
+        SetRect RC, TextRect.Left, TextRect.Top, TextRect.Right, TextRect.Top + 1
+        DrawTextEx hDC, StrPtr(InvertText), -1, RC, DrawFlags, ByVal VarPtr(pDrawTextParams)
+        With pDrawTextParams
+        If .uiLengthDrawn < Len(InvertText) Then
+            If Mid$(InvertText, .uiLengthDrawn, 1) = " " Then .uiLengthDrawn = .uiLengthDrawn - 1
+            InvertText = Left$(InvertText, .uiLengthDrawn)
         End If
+        End With
     End If
 Else
     InvertText = Text
