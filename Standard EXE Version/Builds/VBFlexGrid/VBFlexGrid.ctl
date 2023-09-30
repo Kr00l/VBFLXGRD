@@ -18971,6 +18971,7 @@ Private Sub StartIncrementalSearch(ByVal CharCode As Long)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 If VBFlexGridIncrementalSearch.CancellationPending = True Then Exit Sub
 Select Case CharCode
+    Case 10 ' Line feed
     Case 13 ' Carriage return
         Call CancelIncrementalSearch
         Exit Sub
