@@ -19120,7 +19120,7 @@ If hDC = NULL_PTR Then Exit Sub
 Dim RCInvert As RECT, RCInvertText As RECT, InvertText As String, InvertResult As Long, InvertOffset As Long
 LSet RCInvert = TextRect
 LSet RCInvertText = TextRect
-Dim Pos As Long
+Dim Pos As Long, SkipBreakChar As Boolean
 If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
     Pos = InStr(1, Text, vbCr)
     If Pos = 0 Then
@@ -19138,7 +19138,10 @@ If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         DrawTextEx hDC, StrPtr(InvertText), -1, RC, DrawFlags, ByVal VarPtr(pDrawTextParams)
         With pDrawTextParams
         If .uiLengthDrawn < Len(InvertText) Then
-            If Mid$(InvertText, .uiLengthDrawn, 1) = " " Then .uiLengthDrawn = .uiLengthDrawn - 1
+            If Mid$(InvertText, .uiLengthDrawn, 1) = " " Then
+                SkipBreakChar = True
+                .uiLengthDrawn = .uiLengthDrawn - 1
+            End If
             InvertText = Left$(InvertText, .uiLengthDrawn)
         End If
         End With
@@ -19175,28 +19178,28 @@ Else
     Dim TM As TEXTMETRIC
     If GetTextMetrics(hDC, TM) <> 0 Then SetRect RCInvert, TextRect.Left, TextRect.Top, TextRect.Right, TextRect.Top + TM.TMHeight
 End If
-If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
-    If (DrawFlags And DT_WORDBREAK) = DT_WORDBREAK Then
-        If Right$(InvertText, 1) = " " Then
-            Text = Mid$(Text, Len(InvertText) + 2)
-            SearchOffset = SearchOffset + Len(InvertText) + 1
+If Mid$(VBFlexGridIncrementalSearch.SearchString, Pos + SearchOffset + 1, 1) = Mid$(Text, Len(InvertText) + 1, 1) Then
+    If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
+        If (DrawFlags And DT_WORDBREAK) = DT_WORDBREAK Then
+            Text = Mid$(Text, Len(InvertText) + 1 + IIf(SkipBreakChar, 1, 0))
+            SearchOffset = SearchOffset + Len(InvertText) + IIf(SkipBreakChar, 1, 0)
         Else
             Text = Mid$(Text, Len(InvertText) + 1)
             SearchOffset = SearchOffset + Len(InvertText)
         End If
+        If Left$(Text, 2) = vbCrLf Then
+            Text = Mid$(Text, 3)
+            SearchOffset = SearchOffset + 2
+        Else
+            Select Case Left$(Text, 1)
+                Case vbCr, vbLf
+                    Text = Mid$(Text, 2)
+                    SearchOffset = SearchOffset + 1
+            End Select
+        End If
     Else
-        Text = Mid$(Text, Len(InvertText) + 1)
-        SearchOffset = SearchOffset + Len(InvertText)
-    End If
-    If Left$(Text, 2) = vbCrLf Then
-        Text = Mid$(Text, 3)
-        SearchOffset = SearchOffset + 2
-    Else
-        Select Case Left$(Text, 1)
-            Case vbCr, vbLf
-                Text = Mid$(Text, 2)
-                SearchOffset = SearchOffset + 1
-        End Select
+        Text = vbNullString
+        SearchOffset = 0
     End If
 Else
     Text = vbNullString
