@@ -1,6 +1,7 @@
 List of revisions:
 
-29-Sep-2023
+30-Sep-2023
+- Line feed character (Ctrl+Enter) now allowed for incremental searches.
 - Enhanced the internal DrawIncrementalSearch method so it can highlight multiple lines of word break text. (recursion)
 
 28-Sep-2023
