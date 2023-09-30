@@ -19133,7 +19133,7 @@ If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
     If (DrawFlags And DT_WORDBREAK) = DT_WORDBREAK Then
         Dim pDrawTextParams As DRAWTEXTPARAMS, RC As RECT
         pDrawTextParams.cbSize = LenB(pDrawTextParams)
-        SetRect RC, TextRect.Left, TextRect.Top, TextRect.Right, TextRect.Top + 1
+        SetRect RC, TextRect.Left, TextRect.Top, TextRect.Right, TextRect.Top
         DrawTextEx hDC, StrPtr(InvertText), -1, RC, DrawFlags, ByVal VarPtr(pDrawTextParams)
         With pDrawTextParams
         If .uiLengthDrawn < Len(InvertText) Then
