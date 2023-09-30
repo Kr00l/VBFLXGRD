@@ -19177,8 +19177,13 @@ Else
 End If
 If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
     If (DrawFlags And DT_WORDBREAK) = DT_WORDBREAK Then
-        Text = Mid$(Text, Len(InvertText) + 2)
-        SearchOffset = SearchOffset + Len(InvertText) + 1
+        If Right$(InvertText, 1) = " " Then
+            Text = Mid$(Text, Len(InvertText) + 2)
+            SearchOffset = SearchOffset + Len(InvertText) + 1
+        Else
+            Text = Mid$(Text, Len(InvertText) + 1)
+            SearchOffset = SearchOffset + Len(InvertText)
+        End If
     Else
         Text = Mid$(Text, Len(InvertText) + 1)
         SearchOffset = SearchOffset + Len(InvertText)
