@@ -18975,7 +18975,7 @@ Select Case CharCode
         If VBFlexGridIncrementalSearch.SearchString = vbNullString Then Exit Sub
     Case 10 ' Linefeed
     Case 13 ' Carriage return
-        Call CancelIncrementalSearch
+        If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then Call CancelIncrementalSearch
         Exit Sub
     Case 0 To 31 ' Non-printable
         Exit Sub
@@ -19035,63 +19035,65 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
         End Select
     End If
     If Cancel = False Then
-        Dim FoundIndex As Long, NewSearchString As String
-        FoundIndex = -1
-        If CharCode <> 8 Then ' Backspace
-            NewSearchString = .SearchString & ChrW(CharCode)
-        Else
+        Dim NewSearchString As String
+        If CharCode = 8 Then ' Backspace
             NewSearchString = Left$(.SearchString, Len(.SearchString) - 1)
-            If NewSearchString = vbNullString Then
-                Call CancelIncrementalSearch
-                Exit Sub
-            End If
+        Else
+            NewSearchString = .SearchString & ChrW(CharCode)
         End If
-        If (Row >= 0 And Row <= (PropRows - 1)) And (Col >= 0 And Col <= (PropCols - 1)) Then
+        If Not NewSearchString = vbNullString Then
+            Dim FoundIndex As Long
+            FoundIndex = -1
+            If (Row >= 0 And Row <= (PropRows - 1)) And (Col >= 0 And Col <= (PropCols - 1)) Then
+                Select Case .Direction
+                    Case FlexFindDirectionDown, FlexFindDirectionUp
+                        If Row < PropFixedRows Then Row = PropFixedRows
+                    Case FlexFindDirectionRight, FlexFindDirectionLeft
+                        If Col < PropFixedCols Then Col = PropFixedCols
+                End Select
+                FoundIndex = Me.FindItem(NewSearchString, Row, Col, FlexFindMatchStartsWith, .CaseSensitive, True, Not .NoWrap, .Direction, True)
+            End If
             Select Case .Direction
                 Case FlexFindDirectionDown, FlexFindDirectionUp
-                    If Row < PropFixedRows Then Row = PropFixedRows
+                    Row = FoundIndex
                 Case FlexFindDirectionRight, FlexFindDirectionLeft
-                    If Col < PropFixedCols Then Col = PropFixedCols
+                    Col = FoundIndex
             End Select
-            FoundIndex = Me.FindItem(NewSearchString, Row, Col, FlexFindMatchStartsWith, .CaseSensitive, True, Not .NoWrap, .Direction, True)
-        End If
-        Select Case .Direction
-            Case FlexFindDirectionDown, FlexFindDirectionUp
-                Row = FoundIndex
-            Case FlexFindDirectionRight, FlexFindDirectionLeft
-                Col = FoundIndex
-        End Select
-        If (Row >= 0 And Row <= (PropRows - 1)) And (Col >= 0 And Col <= (PropCols - 1)) Then
-            .SearchString = NewSearchString
-            .Row = Row
-            .Col = Col
-            Dim RCP As TROWCOLPARAMS
-            RCP.Mask = RCPM_TOPROW Or RCPM_LEFTCOL
-            RCP.Flags = RCPF_FORCEREDRAW
-            RCP.Message = WM_CHAR
-            If PropSelectionMode <> FlexSelectionModeByColumn Then
-                RCP.Mask = RCP.Mask Or RCPM_ROW Or RCPM_ROWSEL
-                RCP.Row = .Row
-                RCP.RowSel = .Row
+            If (Row >= 0 And Row <= (PropRows - 1)) And (Col >= 0 And Col <= (PropCols - 1)) Then
+                .SearchString = NewSearchString
+                .Row = Row
+                .Col = Col
+                Dim RCP As TROWCOLPARAMS
+                RCP.Mask = RCPM_TOPROW Or RCPM_LEFTCOL
+                RCP.Flags = RCPF_FORCEREDRAW
+                RCP.Message = WM_CHAR
+                If PropSelectionMode <> FlexSelectionModeByColumn Then
+                    RCP.Mask = RCP.Mask Or RCPM_ROW Or RCPM_ROWSEL
+                    RCP.Row = .Row
+                    RCP.RowSel = .Row
+                End If
+                If PropSelectionMode <> FlexSelectionModeByRow Then
+                    RCP.Mask = RCP.Mask Or RCPM_COL Or RCPM_COLSEL
+                    RCP.Col = .Col
+                    RCP.ColSel = .Col
+                End If
+                RCP.TopRow = VBFlexGridTopRow
+                RCP.LeftCol = VBFlexGridLeftCol
+                If RCP.TopRow > .Row Then
+                    If .Row >= (PropFixedRows + PropFrozenRows) Then RCP.TopRow = .Row
+                ElseIf .Row > (RCP.TopRow + GetRowsPerPage(RCP.TopRow) - 1) Then
+                    RCP.TopRow = .Row - GetRowsPerPageRev(.Row) + 1
+                End If
+                If RCP.LeftCol > .Col Then
+                    If .Col >= (PropFixedCols + PropFrozenCols) Then RCP.LeftCol = .Col
+                ElseIf .Col > (RCP.LeftCol + GetColsPerPage(RCP.LeftCol) - 1) Then
+                    RCP.LeftCol = .Col - GetColsPerPageRev(.Col) + 1
+                End If
+                Call SetRowColParams(RCP)
             End If
-            If PropSelectionMode <> FlexSelectionModeByRow Then
-                RCP.Mask = RCP.Mask Or RCPM_COL Or RCPM_COLSEL
-                RCP.Col = .Col
-                RCP.ColSel = .Col
-            End If
-            RCP.TopRow = VBFlexGridTopRow
-            RCP.LeftCol = VBFlexGridLeftCol
-            If RCP.TopRow > .Row Then
-                If .Row >= (PropFixedRows + PropFrozenRows) Then RCP.TopRow = .Row
-            ElseIf .Row > (RCP.TopRow + GetRowsPerPage(RCP.TopRow) - 1) Then
-                RCP.TopRow = .Row - GetRowsPerPageRev(.Row) + 1
-            End If
-            If RCP.LeftCol > .Col Then
-                If .Col >= (PropFixedCols + PropFrozenCols) Then RCP.LeftCol = .Col
-            ElseIf .Col > (RCP.LeftCol + GetColsPerPage(RCP.LeftCol) - 1) Then
-                RCP.LeftCol = .Col - GetColsPerPageRev(.Col) + 1
-            End If
-            Call SetRowColParams(RCP)
+        Else
+            Call CancelIncrementalSearch
+            Exit Sub
         End If
     ElseIf PropAllowUserEditing = True Then
         If CreateEdit(FlexEditReasonKeyPress) = True Then
