@@ -18971,6 +18971,8 @@ Private Sub StartIncrementalSearch(ByVal CharCode As Long)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 If VBFlexGridIncrementalSearch.CancellationPending = True Then Exit Sub
 Select Case CharCode
+    Case 8 ' Back space
+        If VBFlexGridIncrementalSearch.SearchString = vbNullString Then Exit Sub
     Case 10 ' Line feed
     Case 13 ' Carriage return
         Call CancelIncrementalSearch
@@ -19033,8 +19035,17 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
         End Select
     End If
     If Cancel = False Then
-        Dim FoundIndex As Long
+        Dim FoundIndex As Long, NewSearchString As String
         FoundIndex = -1
+        If CharCode <> 8 Then ' Back space
+            NewSearchString = .SearchString & ChrW(CharCode)
+        Else
+            NewSearchString = Left$(.SearchString, Len(.SearchString) - 1)
+            If NewSearchString = vbNullString Then
+                Call CancelIncrementalSearch
+                Exit Sub
+            End If
+        End If
         If (Row >= 0 And Row <= (PropRows - 1)) And (Col >= 0 And Col <= (PropCols - 1)) Then
             Select Case .Direction
                 Case FlexFindDirectionDown, FlexFindDirectionUp
@@ -19042,7 +19053,7 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                 Case FlexFindDirectionRight, FlexFindDirectionLeft
                     If Col < PropFixedCols Then Col = PropFixedCols
             End Select
-            FoundIndex = Me.FindItem(.SearchString & ChrW(CharCode), Row, Col, FlexFindMatchStartsWith, .CaseSensitive, True, Not .NoWrap, .Direction, True)
+            FoundIndex = Me.FindItem(NewSearchString, Row, Col, FlexFindMatchStartsWith, .CaseSensitive, True, Not .NoWrap, .Direction, True)
         End If
         Select Case .Direction
             Case FlexFindDirectionDown, FlexFindDirectionUp
@@ -19051,7 +19062,7 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                 Col = FoundIndex
         End Select
         If (Row >= 0 And Row <= (PropRows - 1)) And (Col >= 0 And Col <= (PropCols - 1)) Then
-            .SearchString = .SearchString & ChrW(CharCode)
+            .SearchString = NewSearchString
             .Row = Row
             .Col = Col
             Dim RCP As TROWCOLPARAMS
@@ -20787,7 +20798,9 @@ Select Case wMsg
                                 End If
                             End If
                         Case vbKeyBack
-                            If CreateEdit(FlexEditReasonBackSpace) = True Then Exit Function
+                            If VBFlexGridIncrementalSearch.SearchString = vbNullString Then
+                                If CreateEdit(FlexEditReasonBackSpace) = True Then Exit Function
+                            End If
                         Case vbKeyF4
                             If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                                 Select Case GetComboCueActive(VBFlexGridRow, VBFlexGridCol)
