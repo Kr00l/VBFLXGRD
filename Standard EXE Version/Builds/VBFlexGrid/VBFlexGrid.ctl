@@ -18971,9 +18971,9 @@ Private Sub StartIncrementalSearch(ByVal CharCode As Long)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 If VBFlexGridIncrementalSearch.CancellationPending = True Then Exit Sub
 Select Case CharCode
-    Case 8 ' Back space
+    Case 8 ' Backspace
         If VBFlexGridIncrementalSearch.SearchString = vbNullString Then Exit Sub
-    Case 10 ' Line feed
+    Case 10 ' Linefeed
     Case 13 ' Carriage return
         Call CancelIncrementalSearch
         Exit Sub
@@ -19037,7 +19037,7 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
     If Cancel = False Then
         Dim FoundIndex As Long, NewSearchString As String
         FoundIndex = -1
-        If CharCode <> 8 Then ' Back space
+        If CharCode <> 8 Then ' Backspace
             NewSearchString = .SearchString & ChrW(CharCode)
         Else
             NewSearchString = Left$(.SearchString, Len(.SearchString) - 1)
