@@ -1,7 +1,12 @@
 List of revisions:
 
-30-Sep-2023
-- Line feed character (Ctrl+Enter) now allowed for incremental searches.
+02-Oct-2023
+- Included the ClientLeft/ClientTop and ClientWidth/ClientHeight read-only/run-time property.
+
+01-Oct-2023
+- Linefeed character (Ctrl+Enter) now allowed for incremental searches.
+- Backspace character now allowed for incremental searches.
+  It undoes the last typed letter. Continuing to hit the backspace key takes you back farther.
 - Enhanced the internal DrawIncrementalSearch method so it can highlight multiple lines of word break text. (recursion)
 
 28-Sep-2023
