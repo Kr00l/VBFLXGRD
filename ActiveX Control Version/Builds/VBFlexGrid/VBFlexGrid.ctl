@@ -5234,7 +5234,7 @@ Dim CellRangeRect As RECT, EditRect As RECT, ComboItems As String, ComboButtonWi
 Call GetMergedRangeStruct(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditMergedRange)
 Call GetGridLineOffsets(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditGridLineOffsets)
 Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
-Call GetCellRangeRect(VBFlexGridEditMergedRange, False, CellRangeRect)
+Call GetCellRangeRect(VBFlexGridEditMergedRange, CellRangeRect)
 With EditRect
 .Left = CellRangeRect.Left + VBFlexGridEditGridLineOffsets.LeftTop.CX
 .Top = CellRangeRect.Top + VBFlexGridEditGridLineOffsets.LeftTop.CY
@@ -9660,9 +9660,11 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Me.CellEnsureVisible
-Dim CellRect As RECT
-Call GetCellRect(VBFlexGridRow, VBFlexGridCol, True, CellRect)
-CellLeft = UserControl.ScaleX(CellRect.Left, vbPixels, vbTwips)
+Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
+Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
+Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
+If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.hWnd, CellRect, 2
+CellLeft = UserControl.ScaleX(CellRect.Left + GridLineOffsets.LeftTop.CX, vbPixels, vbTwips)
 End Property
 
 Public Property Get CellTop() As Long
@@ -9674,9 +9676,11 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Me.CellEnsureVisible
-Dim CellRect As RECT
-Call GetCellRect(VBFlexGridRow, VBFlexGridCol, True, CellRect)
-CellTop = UserControl.ScaleY(CellRect.Top, vbPixels, vbTwips)
+Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
+Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
+Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
+If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.hWnd, CellRect, 2
+CellTop = UserControl.ScaleY(CellRect.Top + GridLineOffsets.LeftTop.CY, vbPixels, vbTwips)
 End Property
 
 Public Property Get CellWidth() As Long
@@ -9688,9 +9692,10 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Me.CellEnsureVisible
-Dim CellRect As RECT
-Call GetCellRect(VBFlexGridRow, VBFlexGridCol, True, CellRect)
-CellWidth = UserControl.ScaleX((CellRect.Right - CellRect.Left) - 1, vbPixels, vbTwips)
+Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
+Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
+Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
+CellWidth = UserControl.ScaleX((CellRect.Right - CellRect.Left) - GridLineOffsets.RightBottom.CX, vbPixels, vbTwips)
 End Property
 
 Public Property Get CellHeight() As Long
@@ -9702,9 +9707,10 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Me.CellEnsureVisible
-Dim CellRect As RECT
-Call GetCellRect(VBFlexGridRow, VBFlexGridCol, True, CellRect)
-CellHeight = UserControl.ScaleY((CellRect.Bottom - CellRect.Top) - 1, vbPixels, vbTwips)
+Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
+Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
+Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
+CellHeight = UserControl.ScaleY((CellRect.Bottom - CellRect.Top) - GridLineOffsets.RightBottom.CY, vbPixels, vbTwips)
 End Property
 
 Public Sub HitTest(ByVal X As Single, ByVal Y As Single)
@@ -13357,24 +13363,14 @@ End If
 End With
 End Sub
 
-Private Sub GetCellRect(ByVal iRow As Long, ByVal iCol As Long, ByVal BorderOffset As Boolean, ByRef CellRect As RECT)
+Private Sub GetCellRect(ByVal iRow As Long, ByVal iCol As Long, ByRef CellRect As RECT)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 Dim i As Long
 With CellRect
-If BorderOffset = True Then
-    Select Case PropBorderStyle
-        Case FlexBorderStyleSingle, FlexBorderStyleThin
-            .Top = GetSystemMetrics(SM_CYBORDER)
-            .Left = GetSystemMetrics(SM_CXBORDER)
-        Case FlexBorderStyleSunken, FlexBorderStyleRaised
-            .Top = GetSystemMetrics(SM_CYEDGE)
-            .Left = GetSystemMetrics(SM_CXEDGE)
-    End Select
-    .Bottom = .Top
-    .Right = .Left
-Else
-    SetRect CellRect, 0, 0, 0, 0
-End If
+.Left = 0
+.Top = 0
+.Right = 0
+.Bottom = 0
 For i = 0 To iRow
     If i >= VBFlexGridTopRow Or i < (PropFixedRows + PropFrozenRows) Then
         .Top = .Bottom
@@ -13390,24 +13386,14 @@ Next i
 End With
 End Sub
 
-Private Sub GetCellRangeRect(ByRef CellRange As TCELLRANGE, ByVal BorderOffset As Boolean, ByRef CellRangeRect As RECT)
+Private Sub GetCellRangeRect(ByRef CellRange As TCELLRANGE, ByRef CellRangeRect As RECT)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 Dim i As Long
 With CellRangeRect
-If BorderOffset = True Then
-    Select Case PropBorderStyle
-        Case FlexBorderStyleSingle, FlexBorderStyleThin
-            .Top = GetSystemMetrics(SM_CYBORDER)
-            .Left = GetSystemMetrics(SM_CXBORDER)
-        Case FlexBorderStyleSunken, FlexBorderStyleRaised
-            .Top = GetSystemMetrics(SM_CYEDGE)
-            .Left = GetSystemMetrics(SM_CXEDGE)
-    End Select
-    .Bottom = .Top
-    .Right = .Left
-Else
-    SetRect CellRangeRect, 0, 0, 0, 0
-End If
+.Left = 0
+.Top = 0
+.Right = 0
+.Bottom = 0
 For i = 0 To CellRange.TopRow
     If i >= VBFlexGridTopRow Or i < (PropFixedRows + PropFrozenRows) Then
         .Top = .Bottom
@@ -14947,7 +14933,7 @@ Private Sub GetLabelInfo(ByVal iRow As Long, ByVal iCol As Long, ByRef LBLI As T
 LBLI.Flags = 0
 If VBFlexGridHandle = NULL_PTR Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
 Dim CellRect As RECT
-Call GetCellRect(iRow, iCol, False, CellRect)
+Call GetCellRect(iRow, iCol, CellRect)
 If (CellRect.Bottom - CellRect.Top) <= 0 Or (CellRect.Right - CellRect.Left) <= 0 Then Exit Sub
 Dim hDCTemp As LongPtr
 If hDC = NULL_PTR Then
