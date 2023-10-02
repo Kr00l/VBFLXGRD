@@ -5868,6 +5868,42 @@ End Property
 
 #End If
 
+Public Property Get ClientLeft() As Single
+Attribute ClientLeft.VB_Description = "Returns the left coordinate in twips of the control's client area."
+Attribute ClientLeft.VB_MemberFlags = "400"
+Dim RC As RECT
+LSet RC = VBFlexGridClientRect
+If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.ContainerHwnd, RC, 2
+ClientLeft = UserControl.ScaleX(RC.Left, vbPixels, vbTwips)
+End Property
+
+Public Property Get ClientTop() As Single
+Attribute ClientTop.VB_Description = "Returns the top coordinate in twips of the control's client area."
+Attribute ClientTop.VB_MemberFlags = "400"
+Dim RC As RECT
+LSet RC = VBFlexGridClientRect
+If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.ContainerHwnd, RC, 2
+ClientTop = UserControl.ScaleY(RC.Top, vbPixels, vbTwips)
+End Property
+
+Public Property Get ClientWidth() As Single
+Attribute ClientWidth.VB_Description = "Returns the width in twips of the control's client area."
+Attribute ClientWidth.VB_MemberFlags = "400"
+Dim RC As RECT
+LSet RC = VBFlexGridClientRect
+If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.ContainerHwnd, RC, 2
+ClientWidth = UserControl.ScaleX((RC.Right - RC.Left), vbPixels, vbTwips)
+End Property
+
+Public Property Get ClientHeight() As Single
+Attribute ClientHeight.VB_Description = "Returns the height in twips of the control's client area."
+Attribute ClientHeight.VB_MemberFlags = "400"
+Dim RC As RECT
+LSet RC = VBFlexGridClientRect
+If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.ContainerHwnd, RC, 2
+ClientHeight = UserControl.ScaleY((RC.Bottom - RC.Top), vbPixels, vbTwips)
+End Property
+
 Public Sub AddItem(ByVal Item As String, Optional ByVal Index As Variant)
 Attribute AddItem.VB_Description = "Adds an item to the flex grid."
 Dim IndexLong As Long
@@ -18974,7 +19010,7 @@ Select Case CharCode
     Case 8 ' Backspace
         If VBFlexGridIncrementalSearch.SearchString = vbNullString Then Exit Sub
     Case 10 ' Linefeed
-    Case 13 ' Carriage return
+    Case 13, 27 ' Carriage return, Escape
         If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then Call CancelIncrementalSearch
         Exit Sub
     Case 0 To 31 ' Non-printable
@@ -19133,33 +19169,30 @@ If hDC = NULL_PTR Then Exit Sub
 Dim RCInvert As RECT, RCInvertText As RECT, InvertText As String, InvertResult As Long, InvertOffset As Long
 LSet RCInvert = TextRect
 LSet RCInvertText = TextRect
-Dim Pos As Long
+InvertText = Text
 If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
-    Pos = InStr(1, Text, vbCr)
-    If Pos = 0 Then
-        Pos = InStr(1, Text, vbLf)
-    Else
-        Dim TempPos As Long
-        TempPos = InStr(1, Text, vbLf)
-        If TempPos > 0 And TempPos < Pos Then Pos = TempPos
-    End If
-    If Pos > 0 Then InvertText = Left$(Text, Pos - 1) Else InvertText = Text
-    If (DrawFlags And DT_WORDBREAK) = DT_WORDBREAK Then
-        Dim pDrawTextParams As DRAWTEXTPARAMS, RC As RECT
-        pDrawTextParams.cbSize = LenB(pDrawTextParams)
-        SetRect RC, TextRect.Left, TextRect.Top, TextRect.Right, TextRect.Top
-        DrawTextEx hDC, StrPtr(InvertText), -1, RC, DrawFlags, pDrawTextParams
-        With pDrawTextParams
-        If .uiLengthDrawn < Len(InvertText) Then
-            If Mid$(InvertText, .uiLengthDrawn, 1) = " " Then .uiLengthDrawn = .uiLengthDrawn - 1
-            InvertText = Left$(InvertText, .uiLengthDrawn)
+    Dim pDrawTextParams As DRAWTEXTPARAMS, RC As RECT
+    pDrawTextParams.cbSize = LenB(pDrawTextParams)
+    SetRect RC, TextRect.Left, TextRect.Top, TextRect.Right, TextRect.Top
+    DrawTextEx hDC, StrPtr(InvertText), -1, RC, DrawFlags, pDrawTextParams
+    With pDrawTextParams
+    If .uiLengthDrawn < Len(InvertText) Then
+        If (DrawFlags And DT_WORDBREAK) = DT_WORDBREAK Then
+            Select Case Mid$(InvertText, .uiLengthDrawn, 1)
+                Case " ", vbCr, vbLf
+                    .uiLengthDrawn = .uiLengthDrawn - 1
+            End Select
+        Else
+            Select Case Mid$(InvertText, .uiLengthDrawn, 1)
+                Case vbCr, vbLf
+                    .uiLengthDrawn = .uiLengthDrawn - 1
+            End Select
         End If
-        End With
+        InvertText = Left$(InvertText, .uiLengthDrawn)
     End If
-Else
-    InvertText = Text
+    End With
 End If
-Dim Compare As VbCompareMethod
+Dim Pos As Long, Compare As VbCompareMethod
 If VBFlexGridIncrementalSearch.CaseSensitive = False Then Compare = vbTextCompare Else Compare = vbBinaryCompare
 For Pos = 0 To (Len(InvertText) - 1)
     If (Pos + SearchOffset) < Len(VBFlexGridIncrementalSearch.SearchString) Then
