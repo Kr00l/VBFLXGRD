@@ -10160,7 +10160,7 @@ Me.CellEnsureVisible
 Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
 Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
-CellWidth = UserControl.ScaleX((CellRect.Right - CellRect.Left) - GridLineOffsets.RightBottom.CX, vbPixels, vbTwips)
+CellWidth = UserControl.ScaleX((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX), vbPixels, vbTwips)
 End Property
 
 Public Property Get CellHeight() As Long
@@ -10175,7 +10175,7 @@ Me.CellEnsureVisible
 Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
 Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
-CellHeight = UserControl.ScaleY((CellRect.Bottom - CellRect.Top) - GridLineOffsets.RightBottom.CY, vbPixels, vbTwips)
+CellHeight = UserControl.ScaleY((CellRect.Bottom - CellRect.Top) - (GridLineOffsets.LeftTop.CY + GridLineOffsets.RightBottom.CY), vbPixels, vbTwips)
 End Property
 
 Public Sub HitTest(ByVal X As Single, ByVal Y As Single)
