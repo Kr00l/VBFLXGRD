@@ -1,5 +1,10 @@
 List of revisions:
 
+04-Oct-2023
+- Included the ColWordWrapOption/ColWordWrapOptionFixed run-time property.
+  This allows to change per column of how text is displayed. Like in the MSHFlexGrid.
+  Enum FlexWordWrapOptions: 0 - None (default), 1 - WordBreak, 2 - SingleLine and more..
+
 02-Oct-2023
 - Included the ClientLeft/ClientTop and ClientWidth/ClientHeight read-only/run-time property.
 
