@@ -66,6 +66,7 @@ Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexS
 Private FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
 Private FlexPictureTypeColor, FlexPictureTypeMonochrome
 Private FlexEllipsisFormatNone, FlexEllipsisFormatEnd, FlexEllipsisFormatPath, FlexEllipsisFormatWord
+Private FlexWordWrapNone, FlexWordBreak, FlexSingleLine, FlexEndEllipsis, FlexPathEllipsis, FlexWordEllipsis, FlexWordBreakEndEllipsis, FlexWordBreakPathEllipsis, FlexWordBreakWordEllipsis, FlexSingleLineEndEllipsis, FlexSingleLinePathEllipsis, FlexSingleLineWordEllipsis
 Private FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearMovable, FlexClearFrozen, FlexClearSelection
 Private FlexClearEverything, FlexClearText, FlexClearFormatting
 Private FlexTabControls, FlexTabCells, FlexTabNext
@@ -279,6 +280,20 @@ FlexEllipsisFormatNone = 0
 FlexEllipsisFormatEnd = 1
 FlexEllipsisFormatPath = 2
 FlexEllipsisFormatWord = 3
+End Enum
+Public Enum FlexWordWrapOptions
+FlexWordWrapNone = 0
+FlexWordBreak = 1
+FlexSingleLine = 2
+FlexEndEllipsis = 3
+FlexPathEllipsis = 4
+FlexWordEllipsis = 5
+FlexWordBreakEndEllipsis = 6
+FlexWordBreakPathEllipsis = 7
+FlexWordBreakWordEllipsis = 8
+FlexSingleLineEndEllipsis = 9
+FlexSingleLinePathEllipsis = 10
+FlexSingleLineWordEllipsis = 11
 End Enum
 Public Enum FlexClearWhereConstants
 FlexClearEverywhere = 0
@@ -819,6 +834,8 @@ State As Long
 Key As String
 Alignment As FlexAlignmentConstants
 FixedAlignment As FlexAlignmentConstants
+WordWrapOption As FlexWordWrapOptions
+WordWrapOptionFixed As FlexWordWrapOptions
 Sort As FlexSortConstants
 SortArrow As FlexSortArrowConstants
 SortArrowAlignment As FlexLeftRightAlignmentConstants
@@ -1948,6 +1965,8 @@ With VBFlexGridDefaultColInfo
 .Width = -1
 .Alignment = FlexAlignmentGeneral
 .FixedAlignment = -1
+.WordWrapOption = -1
+.WordWrapOptionFixed = -1
 .SortArrowAlignment = FlexLeftRightAlignmentRight
 .SortArrowColor = -1
 .ComboButtonAlignment = -1
@@ -7378,6 +7397,130 @@ Else
     Dim i As Long
     For i = 0 To (PropCols - 1)
         VBFlexGridColsInfo(i).FixedAlignment = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get ColWordWrapOption(ByVal Index As Long) As FlexWordWrapOptions
+Attribute ColWordWrapOption.VB_Description = "Returns/sets how the text is displayed per column."
+Attribute ColWordWrapOption.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If VBFlexGridColsInfo(Index).WordWrapOption = -1 Then
+    If PropWordWrap = True Then
+        Select Case PropEllipsisFormat
+            Case FlexEllipsisFormatNone
+                ColWordWrapOption = FlexWordBreak
+            Case FlexEllipsisFormatEnd
+                ColWordWrapOption = FlexWordBreakEndEllipsis
+            Case FlexEllipsisFormatPath
+                ColWordWrapOption = FlexWordBreakPathEllipsis
+            Case FlexEllipsisFormatWord
+                ColWordWrapOption = FlexWordBreakWordEllipsis
+        End Select
+    ElseIf PropSingleLine = True Then
+        Select Case PropEllipsisFormat
+            Case FlexEllipsisFormatNone
+                ColWordWrapOption = FlexSingleLine
+            Case FlexEllipsisFormatEnd
+                ColWordWrapOption = FlexSingleLineEndEllipsis
+            Case FlexEllipsisFormatPath
+                ColWordWrapOption = FlexSingleLinePathEllipsis
+            Case FlexEllipsisFormatWord
+                ColWordWrapOption = FlexSingleLineWordEllipsis
+        End Select
+    Else
+        Select Case PropEllipsisFormat
+            Case FlexEllipsisFormatNone
+                ColWordWrapOption = FlexWordWrapNone
+            Case FlexEllipsisFormatEnd
+                ColWordWrapOption = FlexEndEllipsis
+            Case FlexEllipsisFormatPath
+                ColWordWrapOption = FlexPathEllipsis
+            Case FlexEllipsisFormatWord
+                ColWordWrapOption = FlexWordEllipsis
+        End Select
+    End If
+Else
+    ColWordWrapOption = VBFlexGridColsInfo(Index).WordWrapOption
+End If
+End Property
+
+Public Property Let ColWordWrapOption(ByVal Index As Long, ByVal Value As FlexWordWrapOptions)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Select Case Value
+    Case -1, FlexWordWrapNone, FlexWordBreak, FlexSingleLine, FlexEndEllipsis, FlexPathEllipsis, FlexWordEllipsis, FlexWordBreakEndEllipsis, FlexWordBreakPathEllipsis, FlexWordBreakWordEllipsis, FlexSingleLineEndEllipsis, FlexSingleLinePathEllipsis, FlexSingleLineWordEllipsis
+    Case Else
+        Err.Raise 380
+End Select
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).WordWrapOption = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).WordWrapOption = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get ColWordWrapOptionFixed(ByVal Index As Long) As FlexWordWrapOptions
+Attribute ColWordWrapOptionFixed.VB_Description = "Returns/sets how the text is displayed per column."
+Attribute ColWordWrapOptionFixed.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If VBFlexGridColsInfo(Index).WordWrapOptionFixed = -1 Then
+    If PropWordWrap = True Then
+        Select Case PropEllipsisFormatFixed
+            Case FlexEllipsisFormatNone
+                ColWordWrapOptionFixed = FlexWordBreak
+            Case FlexEllipsisFormatEnd
+                ColWordWrapOptionFixed = FlexWordBreakEndEllipsis
+            Case FlexEllipsisFormatPath
+                ColWordWrapOptionFixed = FlexWordBreakPathEllipsis
+            Case FlexEllipsisFormatWord
+                ColWordWrapOptionFixed = FlexWordBreakWordEllipsis
+        End Select
+    ElseIf PropSingleLine = True Then
+        Select Case PropEllipsisFormatFixed
+            Case FlexEllipsisFormatNone
+                ColWordWrapOptionFixed = FlexSingleLine
+            Case FlexEllipsisFormatEnd
+                ColWordWrapOptionFixed = FlexSingleLineEndEllipsis
+            Case FlexEllipsisFormatPath
+                ColWordWrapOptionFixed = FlexSingleLinePathEllipsis
+            Case FlexEllipsisFormatWord
+                ColWordWrapOptionFixed = FlexSingleLineWordEllipsis
+        End Select
+    Else
+        Select Case PropEllipsisFormatFixed
+            Case FlexEllipsisFormatNone
+                ColWordWrapOptionFixed = FlexWordWrapNone
+            Case FlexEllipsisFormatEnd
+                ColWordWrapOptionFixed = FlexEndEllipsis
+            Case FlexEllipsisFormatPath
+                ColWordWrapOptionFixed = FlexPathEllipsis
+            Case FlexEllipsisFormatWord
+                ColWordWrapOptionFixed = FlexWordEllipsis
+        End Select
+    End If
+Else
+    ColWordWrapOptionFixed = VBFlexGridColsInfo(Index).WordWrapOptionFixed
+End If
+End Property
+
+Public Property Let ColWordWrapOptionFixed(ByVal Index As Long, ByVal Value As FlexWordWrapOptions)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Select Case Value
+    Case -1, FlexWordWrapNone, FlexWordBreak, FlexSingleLine, FlexEndEllipsis, FlexPathEllipsis, FlexWordEllipsis, FlexWordBreakEndEllipsis, FlexWordBreakPathEllipsis, FlexWordBreakWordEllipsis, FlexSingleLineEndEllipsis, FlexSingleLinePathEllipsis, FlexSingleLineWordEllipsis
+    Case Else
+        Err.Raise 380
+End Select
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).WordWrapOptionFixed = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).WordWrapOptionFixed = Value
     Next i
 End If
 Call RedrawGrid
@@ -13232,19 +13375,48 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
                 End If
             End If
     End Select
-    If PropWordWrap = True Then
-        DrawFlags = DrawFlags Or DT_WORDBREAK
-    ElseIf PropSingleLine = True Then
-        DrawFlags = DrawFlags Or DT_SINGLELINE
+    If VBFlexGridColsInfo(iCol).WordWrapOptionFixed = -1 Then
+        If PropWordWrap = True Then
+            DrawFlags = DrawFlags Or DT_WORDBREAK
+        ElseIf PropSingleLine = True Then
+            DrawFlags = DrawFlags Or DT_SINGLELINE
+        End If
+        Select Case PropEllipsisFormatFixed
+            Case FlexEllipsisFormatEnd
+                DrawFlags = DrawFlags Or DT_END_ELLIPSIS
+            Case FlexEllipsisFormatPath
+                DrawFlags = DrawFlags Or DT_PATH_ELLIPSIS
+            Case FlexEllipsisFormatWord
+                DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
+        End Select
+    Else
+        Select Case VBFlexGridColsInfo(iCol).WordWrapOptionFixed
+            Case FlexWordWrapNone
+                ' Void
+            Case FlexWordBreak
+                DrawFlags = DrawFlags Or DT_WORDBREAK
+            Case FlexSingleLine
+                DrawFlags = DrawFlags Or DT_SINGLELINE
+            Case FlexEndEllipsis
+                DrawFlags = DrawFlags Or DT_END_ELLIPSIS
+            Case FlexPathEllipsis
+                DrawFlags = DrawFlags Or DT_PATH_ELLIPSIS
+            Case FlexWordEllipsis
+                DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
+            Case FlexWordBreakEndEllipsis
+                DrawFlags = DrawFlags Or DT_WORDBREAK Or DT_END_ELLIPSIS
+            Case FlexWordBreakPathEllipsis
+                DrawFlags = DrawFlags Or DT_WORDBREAK Or DT_PATH_ELLIPSIS
+            Case FlexWordBreakWordEllipsis
+                DrawFlags = DrawFlags Or DT_WORDBREAK Or DT_WORD_ELLIPSIS
+            Case FlexSingleLineEndEllipsis
+                DrawFlags = DrawFlags Or DT_SINGLELINE Or DT_END_ELLIPSIS
+            Case FlexSingleLinePathEllipsis
+                DrawFlags = DrawFlags Or DT_SINGLELINE Or DT_PATH_ELLIPSIS
+            Case FlexSingleLineWordEllipsis
+                DrawFlags = DrawFlags Or DT_SINGLELINE Or DT_WORD_ELLIPSIS
+        End Select
     End If
-    Select Case PropEllipsisFormatFixed
-        Case FlexEllipsisFormatEnd
-            DrawFlags = DrawFlags Or DT_END_ELLIPSIS
-        Case FlexEllipsisFormatPath
-            DrawFlags = DrawFlags Or DT_PATH_ELLIPSIS
-        Case FlexEllipsisFormatWord
-            DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
-    End Select
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
@@ -13806,19 +13978,48 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
                 End If
             End If
     End Select
-    If PropWordWrap = True Then
-        DrawFlags = DrawFlags Or DT_WORDBREAK
-    ElseIf PropSingleLine = True Then
-        DrawFlags = DrawFlags Or DT_SINGLELINE
+    If VBFlexGridColsInfo(iCol).WordWrapOption = -1 Then
+        If PropWordWrap = True Then
+            DrawFlags = DrawFlags Or DT_WORDBREAK
+        ElseIf PropSingleLine = True Then
+            DrawFlags = DrawFlags Or DT_SINGLELINE
+        End If
+        Select Case PropEllipsisFormat
+            Case FlexEllipsisFormatEnd
+                DrawFlags = DrawFlags Or DT_END_ELLIPSIS
+            Case FlexEllipsisFormatPath
+                DrawFlags = DrawFlags Or DT_PATH_ELLIPSIS
+            Case FlexEllipsisFormatWord
+                DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
+        End Select
+    Else
+        Select Case VBFlexGridColsInfo(iCol).WordWrapOption
+            Case FlexWordWrapNone
+                ' Void
+            Case FlexWordBreak
+                DrawFlags = DrawFlags Or DT_WORDBREAK
+            Case FlexSingleLine
+                DrawFlags = DrawFlags Or DT_SINGLELINE
+            Case FlexEndEllipsis
+                DrawFlags = DrawFlags Or DT_END_ELLIPSIS
+            Case FlexPathEllipsis
+                DrawFlags = DrawFlags Or DT_PATH_ELLIPSIS
+            Case FlexWordEllipsis
+                DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
+            Case FlexWordBreakEndEllipsis
+                DrawFlags = DrawFlags Or DT_WORDBREAK Or DT_END_ELLIPSIS
+            Case FlexWordBreakPathEllipsis
+                DrawFlags = DrawFlags Or DT_WORDBREAK Or DT_PATH_ELLIPSIS
+            Case FlexWordBreakWordEllipsis
+                DrawFlags = DrawFlags Or DT_WORDBREAK Or DT_WORD_ELLIPSIS
+            Case FlexSingleLineEndEllipsis
+                DrawFlags = DrawFlags Or DT_SINGLELINE Or DT_END_ELLIPSIS
+            Case FlexSingleLinePathEllipsis
+                DrawFlags = DrawFlags Or DT_SINGLELINE Or DT_PATH_ELLIPSIS
+            Case FlexSingleLineWordEllipsis
+                DrawFlags = DrawFlags Or DT_SINGLELINE Or DT_WORD_ELLIPSIS
+        End Select
     End If
-    Select Case PropEllipsisFormat
-        Case FlexEllipsisFormatEnd
-            DrawFlags = DrawFlags Or DT_END_ELLIPSIS
-        Case FlexEllipsisFormatPath
-            DrawFlags = DrawFlags Or DT_PATH_ELLIPSIS
-        Case FlexEllipsisFormatWord
-            DrawFlags = DrawFlags Or DT_WORD_ELLIPSIS
-    End Select
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
@@ -14904,10 +15105,40 @@ If hDC <> NULL_PTR Then
                     TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
             End Select
         End If
-        If PropWordWrap = True Then
-            DrawFlags = DrawFlags Or DT_WORDBREAK
-        ElseIf PropSingleLine = True Then
-            DrawFlags = DrawFlags Or DT_SINGLELINE
+        If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
+            If VBFlexGridColsInfo(iCol).WordWrapOption = -1 Then
+                If PropWordWrap = True Then
+                    DrawFlags = DrawFlags Or DT_WORDBREAK
+                ElseIf PropSingleLine = True Then
+                    DrawFlags = DrawFlags Or DT_SINGLELINE
+                End If
+            Else
+                Select Case VBFlexGridColsInfo(iCol).WordWrapOption
+                    Case FlexWordWrapNone, FlexEndEllipsis, FlexPathEllipsis, FlexWordEllipsis
+                        ' Void
+                    Case FlexWordBreak, FlexWordBreakEndEllipsis, FlexWordBreakPathEllipsis, FlexWordBreakWordEllipsis
+                        DrawFlags = DrawFlags Or DT_WORDBREAK
+                    Case FlexSingleLine, FlexSingleLineEndEllipsis, FlexSingleLinePathEllipsis, FlexSingleLineWordEllipsis
+                        DrawFlags = DrawFlags Or DT_SINGLELINE
+                End Select
+            End If
+        Else
+            If VBFlexGridColsInfo(iCol).WordWrapOptionFixed = -1 Then
+                If PropWordWrap = True Then
+                    DrawFlags = DrawFlags Or DT_WORDBREAK
+                ElseIf PropSingleLine = True Then
+                    DrawFlags = DrawFlags Or DT_SINGLELINE
+                End If
+            Else
+                Select Case VBFlexGridColsInfo(iCol).WordWrapOptionFixed
+                    Case FlexWordWrapNone, FlexEndEllipsis, FlexPathEllipsis, FlexWordEllipsis
+                        ' Void
+                    Case FlexWordBreak, FlexWordBreakEndEllipsis, FlexWordBreakPathEllipsis, FlexWordBreakWordEllipsis
+                        DrawFlags = DrawFlags Or DT_WORDBREAK
+                    Case FlexSingleLine, FlexSingleLineEndEllipsis, FlexSingleLinePathEllipsis, FlexSingleLineWordEllipsis
+                        DrawFlags = DrawFlags Or DT_SINGLELINE
+                End Select
+            End If
         End If
         ' Ellipsis format will be ignored.
         If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
@@ -15854,10 +16085,40 @@ If hDC <> NULL_PTR Then
                 End If
             End If
     End Select
-    If PropWordWrap = True Then
-        DrawFlags = DrawFlags Or DT_WORDBREAK
-    ElseIf PropSingleLine = True Then
-        DrawFlags = DrawFlags Or DT_SINGLELINE
+    If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
+        If VBFlexGridColsInfo(iCol).WordWrapOption = -1 Then
+            If PropWordWrap = True Then
+                DrawFlags = DrawFlags Or DT_WORDBREAK
+            ElseIf PropSingleLine = True Then
+                DrawFlags = DrawFlags Or DT_SINGLELINE
+            End If
+        Else
+            Select Case VBFlexGridColsInfo(iCol).WordWrapOption
+                Case FlexWordWrapNone, FlexEndEllipsis, FlexPathEllipsis, FlexWordEllipsis
+                    ' Void
+                Case FlexWordBreak, FlexWordBreakEndEllipsis, FlexWordBreakPathEllipsis, FlexWordBreakWordEllipsis
+                    DrawFlags = DrawFlags Or DT_WORDBREAK
+                Case FlexSingleLine, FlexSingleLineEndEllipsis, FlexSingleLinePathEllipsis, FlexSingleLineWordEllipsis
+                    DrawFlags = DrawFlags Or DT_SINGLELINE
+            End Select
+        End If
+    Else
+        If VBFlexGridColsInfo(iCol).WordWrapOptionFixed = -1 Then
+            If PropWordWrap = True Then
+                DrawFlags = DrawFlags Or DT_WORDBREAK
+            ElseIf PropSingleLine = True Then
+                DrawFlags = DrawFlags Or DT_SINGLELINE
+            End If
+        Else
+            Select Case VBFlexGridColsInfo(iCol).WordWrapOptionFixed
+                Case FlexWordWrapNone, FlexEndEllipsis, FlexPathEllipsis, FlexWordEllipsis
+                    ' Void
+                Case FlexWordBreak, FlexWordBreakEndEllipsis, FlexWordBreakPathEllipsis, FlexWordBreakWordEllipsis
+                    DrawFlags = DrawFlags Or DT_WORDBREAK
+                Case FlexSingleLine, FlexSingleLineEndEllipsis, FlexSingleLinePathEllipsis, FlexSingleLineWordEllipsis
+                    DrawFlags = DrawFlags Or DT_SINGLELINE
+            End Select
+        End If
     End If
     ' Ellipsis format will be ignored.
     If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
