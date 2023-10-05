@@ -1,5 +1,10 @@
 List of revisions:
 
+05-Oct-2023
+- Changing TopRow/LeftCol by app code now works even when there are no scrollbars. (like in vsFlexGrid)
+  It can be considered a mis-behavior in the MS(H)FlexGrid that this is not possible.
+  This allows to sync column scroll to a footer style grid that has no scrollbars.
+
 04-Oct-2023
 - Included the ColWordWrapOption/ColWordWrapOptionFixed run-time property.
   This allows to change per column of how text is displayed. Like in the MSHFlexGrid.
