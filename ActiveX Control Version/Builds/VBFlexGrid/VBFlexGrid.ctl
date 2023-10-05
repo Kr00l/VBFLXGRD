@@ -3524,11 +3524,12 @@ End If
 If RowsPerPage > -1 Then
     If VBFlexGridTopRow > (PropRows - 1) - RowsPerPage + 1 Then
         .Mask = .Mask Or RCPM_TOPROW
+        .Flags = .Flags Or RCPF_FORCETOPROWMASK
         .TopRow = (PropRows - 1) - RowsPerPage + 1
     End If
 ElseIf VBFlexGridTopRow > (PropRows - 1) Then
     .Mask = .Mask Or RCPM_TOPROW
-    .Flags = .Flags Or RCPF_CHECKTOPROW
+    .Flags = .Flags Or RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK
     .TopRow = (PropRows - 1)
 End If
 Call SetRowColParams(RCP)
@@ -3637,11 +3638,12 @@ End If
 If ColsPerPage > -1 Then
     If VBFlexGridLeftCol > (PropCols - 1) - ColsPerPage + 1 Then
         .Mask = .Mask Or RCPM_LEFTCOL
+        .Flags = .Flags Or RCPF_FORCELEFTCOLMASK
         .LeftCol = (PropCols - 1) - ColsPerPage + 1
     End If
 ElseIf VBFlexGridLeftCol > (PropCols - 1) Then
     .Mask = .Mask Or RCPM_LEFTCOL
-    .Flags = .Flags Or RCPF_CHECKLEFTCOL
+    .Flags = .Flags Or RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK
     .LeftCol = (PropCols - 1)
 End If
 Call SetRowColParams(RCP)
@@ -4451,7 +4453,7 @@ Select Case Value
         Dim RCP As TROWCOLPARAMS
         With RCP
         .Mask = RCPM_TOPROW
-        .Flags = RCPF_CHECKTOPROW Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+        .Flags = RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
         .TopRow = VBFlexGridTopRow
         End With
         If VBFlexGridIndirectCellRef.InProc = False Then
@@ -5831,11 +5833,12 @@ Else
     If RowsPerPage > -1 Then
         If VBFlexGridTopRow > (PropRows - 1) - RowsPerPage + 1 Then
             .Mask = .Mask Or RCPM_TOPROW
+            .Flags = .Flags Or RCPF_FORCETOPROWMASK
             .TopRow = (PropRows - 1) - RowsPerPage + 1
         End If
     ElseIf VBFlexGridTopRow > (PropRows - 1) Then
         .Mask = .Mask Or RCPM_TOPROW
-        .Flags = .Flags Or RCPF_CHECKTOPROW
+        .Flags = .Flags Or RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK
         .TopRow = (PropRows - 1)
     End If
     Call SetRowColParams(RCP)
@@ -6213,7 +6216,7 @@ If Value < 0 Or Value > (PropRows - 1) Then Err.Raise Number:=30009, Description
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_TOPROW
-.Flags = RCPF_CHECKTOPROW
+.Flags = RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK
 .TopRow = Value
 Call SetRowColParams(RCP)
 End With
@@ -6254,7 +6257,7 @@ If Value < 0 Or Value > (PropCols - 1) Then Err.Raise Number:=30010, Description
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_LEFTCOL
-.Flags = RCPF_CHECKLEFTCOL
+.Flags = RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK
 .LeftCol = Value
 Call SetRowColParams(RCP)
 End With
@@ -6395,7 +6398,7 @@ End With
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_TOPROW
-.Flags = RCPF_CHECKTOPROW Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.Flags = RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 .TopRow = VBFlexGridTopRow
 Call SetRowColParams(RCP)
 End With
@@ -6430,7 +6433,7 @@ End If
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_TOPROW
-.Flags = RCPF_CHECKTOPROW Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.Flags = RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 .TopRow = VBFlexGridTopRow
 Call SetRowColParams(RCP)
 End With
@@ -6456,7 +6459,7 @@ End If
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_TOPROW
-.Flags = RCPF_CHECKTOPROW Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.Flags = RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 .TopRow = VBFlexGridTopRow
 Call SetRowColParams(RCP)
 End With
@@ -6520,7 +6523,7 @@ End If
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_TOPROW
-.Flags = RCPF_CHECKTOPROW Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.Flags = RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 .TopRow = VBFlexGridTopRow
 Call SetRowColParams(RCP)
 End With
@@ -6843,7 +6846,7 @@ LSet VBFlexGridColsInfo(Value) = SwapColInfo
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_LEFTCOL
-.Flags = RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.Flags = RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 .LeftCol = VBFlexGridLeftCol
 Call SetRowColParams(RCP)
 End With
@@ -6883,7 +6886,7 @@ End If
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_LEFTCOL
-.Flags = RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.Flags = RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 .LeftCol = VBFlexGridLeftCol
 Call SetRowColParams(RCP)
 End With
@@ -6952,7 +6955,7 @@ End If
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_LEFTCOL
-.Flags = RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.Flags = RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
 .LeftCol = VBFlexGridLeftCol
 Call SetRowColParams(RCP)
 End With
@@ -9917,11 +9920,11 @@ Dim RCP As TROWCOLPARAMS
 With RCP
 If Mode = FlexAutoSizeModeColWidth Then
     .Mask = RCPM_LEFTCOL
-    .Flags = RCPF_CHECKLEFTCOL
+    .Flags = RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK
     .LeftCol = VBFlexGridLeftCol
 ElseIf Mode = FlexAutoSizeModeRowHeight Then
     .Mask = RCPM_TOPROW
-    .Flags = RCPF_CHECKTOPROW
+    .Flags = RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK
     .TopRow = VBFlexGridTopRow
 End If
 .Flags = .Flags Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
@@ -17830,11 +17833,11 @@ If VBFlexGridCaptureDividerDrag = True Then
             With RCP
             If iRow > -1 Then
                 .Mask = RCPM_TOPROW
-                .Flags = RCPF_CHECKTOPROW
+                .Flags = RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK
                 .TopRow = VBFlexGridTopRow
             ElseIf iCol > -1 Then
                 .Mask = RCPM_LEFTCOL
-                .Flags = RCPF_CHECKLEFTCOL
+                .Flags = RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK
                 .LeftCol = VBFlexGridLeftCol
             End If
             .Flags = .Flags Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
@@ -19501,7 +19504,7 @@ Select Case wMsg
         Dim RCP As TROWCOLPARAMS
         With RCP
         .Mask = RCPM_TOPROW Or RCPM_LEFTCOL
-        .Flags = RCPF_CHECKTOPROW Or RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS
+        .Flags = RCPF_CHECKTOPROW Or RCPF_CHECKLEFTCOL Or RCPF_FORCETOPROWMASK Or RCPF_FORCELEFTCOLMASK Or RCPF_SETSCROLLBARS
         .Message = WM_SIZE
         .TopRow = VBFlexGridTopRow
         .LeftCol = VBFlexGridLeftCol
