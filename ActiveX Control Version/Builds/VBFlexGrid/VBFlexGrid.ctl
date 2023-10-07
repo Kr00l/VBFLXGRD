@@ -15309,14 +15309,14 @@ GetColsPerPageRev = Count
 End With
 End Function
 
-Private Function CheckScrollPos(ByVal wBar As Long, ByVal NewTopRowOrLeftCol As Long) As Boolean
+Private Function DoScroll(ByVal wBar As Long, ByVal TopRowOrLeftCol As Long) As Boolean
 If VBFlexGridHandle = NULL_PTR Or (PropRows < 1 Or PropCols < 1) Then Exit Function
 Dim dwStyle As Long
 dwStyle = GetWindowLong(VBFlexGridHandle, GWL_STYLE)
 If wBar = SB_HORZ Then
-    CheckScrollPos = CBool(VBFlexGridLeftCol <> NewTopRowOrLeftCol)
+    DoScroll = CBool(VBFlexGridLeftCol <> TopRowOrLeftCol)
 ElseIf wBar = SB_VERT Then
-    CheckScrollPos = CBool(VBFlexGridTopRow <> NewTopRowOrLeftCol)
+    DoScroll = CBool(VBFlexGridTopRow <> TopRowOrLeftCol)
 End If
 If (wBar = SB_HORZ And (dwStyle And WS_HSCROLL) = WS_HSCROLL) Or (wBar = SB_VERT And (dwStyle And WS_VSCROLL) = WS_VSCROLL) Then
     Dim SCI As SCROLLINFO, PrevPos As Long
@@ -15325,17 +15325,17 @@ If (wBar = SB_HORZ And (dwStyle And WS_HSCROLL) = WS_HSCROLL) Or (wBar = SB_VERT
     GetScrollInfo VBFlexGridHandle, wBar, SCI
     PrevPos = SCI.nPos
     If wBar = SB_HORZ Then
-        SCI.nPos = NewTopRowOrLeftCol - (PropFixedCols + PropFrozenCols)
+        SCI.nPos = TopRowOrLeftCol - (PropFixedCols + PropFrozenCols)
     ElseIf wBar = SB_VERT Then
-        SCI.nPos = NewTopRowOrLeftCol - (PropFixedRows + PropFrozenRows)
+        SCI.nPos = TopRowOrLeftCol - (PropFixedRows + PropFrozenRows)
     End If
     If PrevPos <> SCI.nPos Then SetScrollInfo VBFlexGridHandle, wBar, SCI, 1
 End If
-If CheckScrollPos = True Then
+If DoScroll = True Then
     If wBar = SB_HORZ Then
-        VBFlexGridLeftCol = NewTopRowOrLeftCol
+        VBFlexGridLeftCol = TopRowOrLeftCol
     ElseIf wBar = SB_VERT Then
-        VBFlexGridTopRow = NewTopRowOrLeftCol
+        VBFlexGridTopRow = TopRowOrLeftCol
     End If
     Call RedrawGrid
     If PropShowInfoTips = True Or PropShowLabelTips = True Then
@@ -15560,11 +15560,11 @@ If PropAllowMultiSelection = True And .Message <> WM_MOUSEMOVE Then
 End If
 If ScrollChanged = True Then
     If (.Mask And RCPM_TOPROW) = RCPM_TOPROW And (.Mask And RCPM_LEFTCOL) = RCPM_LEFTCOL Then
-        NoRedraw = (CheckScrollPos(SB_VERT, .TopRow) Or CheckScrollPos(SB_HORZ, .LeftCol))
+        NoRedraw = (DoScroll(SB_VERT, .TopRow) Or DoScroll(SB_HORZ, .LeftCol))
     ElseIf (.Mask And RCPM_TOPROW) = RCPM_TOPROW Then
-        NoRedraw = CheckScrollPos(SB_VERT, .TopRow)
+        NoRedraw = DoScroll(SB_VERT, .TopRow)
     ElseIf (.Mask And RCPM_LEFTCOL) = RCPM_LEFTCOL Then
-        NoRedraw = CheckScrollPos(SB_HORZ, .LeftCol)
+        NoRedraw = DoScroll(SB_HORZ, .LeftCol)
     End If
 End If
 If NoRedraw = False Then
