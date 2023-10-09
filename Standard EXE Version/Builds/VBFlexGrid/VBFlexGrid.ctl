@@ -5892,10 +5892,14 @@ End Property
 Public Property Get ClientLeft() As Long
 Attribute ClientLeft.VB_Description = "Returns the left coordinate in twips of the control's client area."
 Attribute ClientLeft.VB_MemberFlags = "400"
-Dim RC As RECT
-LSet RC = VBFlexGridClientRect
-If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.hWnd, RC, 2
-ClientLeft = UserControl.ScaleX(RC.Left, vbPixels, vbTwips)
+Dim RC(0 To 1) As RECT
+LSet RC(0) = VBFlexGridClientRect
+SetRect RC(1), 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight
+If VBFlexGridHandle <> NULL_PTR Then
+    MapWindowPoints VBFlexGridHandle, UserControl.ContainerHwnd, RC(0), 2
+    MapWindowPoints UserControl.hWnd, UserControl.ContainerHwnd, RC(1), 2
+End If
+ClientLeft = UserControl.ScaleX(RC(0).Left - RC(1).Left, vbPixels, vbTwips)
 End Property
 
 Public Property Get ClientTop() As Long
@@ -10271,11 +10275,21 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Me.CellEnsureVisible
-Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
+Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS, RC As RECT
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
 Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
-If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.hWnd, CellRect, 2
-CellLeft = UserControl.ScaleX(CellRect.Left + GridLineOffsets.LeftTop.CX, vbPixels, vbTwips)
+SetRect RC, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight
+If VBFlexGridRTLLayout Xor CBool((GetWindowLong(UserControl.ContainerHwnd, GWL_EXSTYLE) And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL) Then
+    Dim Swap As Long
+    Swap = GridLineOffsets.LeftTop.CX
+    GridLineOffsets.LeftTop.CX = GridLineOffsets.RightBottom.CX
+    GridLineOffsets.RightBottom.CX = Swap
+End If
+If VBFlexGridHandle <> NULL_PTR Then
+    MapWindowPoints VBFlexGridHandle, UserControl.ContainerHwnd, CellRect, 2
+    MapWindowPoints UserControl.hWnd, UserControl.ContainerHwnd, RC, 2
+End If
+CellLeft = UserControl.ScaleX((CellRect.Left - RC.Left) + GridLineOffsets.LeftTop.CX, vbPixels, vbTwips)
 End Property
 
 Public Property Get CellTop() As Long
