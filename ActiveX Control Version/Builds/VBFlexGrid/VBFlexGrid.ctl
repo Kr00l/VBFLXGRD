@@ -9663,11 +9663,21 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Me.CellEnsureVisible
-Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
+Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS, RC As RECT
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
 Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
-If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.hWnd, CellRect, 2
-CellLeft = UserControl.ScaleX(CellRect.Left + GridLineOffsets.LeftTop.CX, vbPixels, vbTwips)
+SetRect RC, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight
+If VBFlexGridRTLLayout Xor CBool((GetWindowLong(UserControl.ContainerHwnd, GWL_EXSTYLE) And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL) Then
+    Dim Swap As Long
+    Swap = GridLineOffsets.LeftTop.CX
+    GridLineOffsets.LeftTop.CX = GridLineOffsets.RightBottom.CX
+    GridLineOffsets.RightBottom.CX = Swap
+End If
+If VBFlexGridHandle <> NULL_PTR Then
+    MapWindowPoints VBFlexGridHandle, UserControl.ContainerHwnd, CellRect, 2
+    MapWindowPoints UserControl.hWnd, UserControl.ContainerHwnd, RC, 2
+End If
+CellLeft = UserControl.ScaleX((CellRect.Left - RC.Left) + GridLineOffsets.LeftTop.CX, vbPixels, vbTwips)
 End Property
 
 Public Property Get CellTop() As Long
@@ -9698,7 +9708,7 @@ Me.CellEnsureVisible
 Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
 Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
-CellWidth = UserControl.ScaleX((CellRect.Right - CellRect.Left) - GridLineOffsets.RightBottom.CX, vbPixels, vbTwips)
+CellWidth = UserControl.ScaleX((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX), vbPixels, vbTwips)
 End Property
 
 Public Property Get CellHeight() As Long
@@ -9713,7 +9723,7 @@ Me.CellEnsureVisible
 Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
 Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
-CellHeight = UserControl.ScaleY((CellRect.Bottom - CellRect.Top) - GridLineOffsets.RightBottom.CY, vbPixels, vbTwips)
+CellHeight = UserControl.ScaleY((CellRect.Bottom - CellRect.Top) - (GridLineOffsets.LeftTop.CY + GridLineOffsets.RightBottom.CY), vbPixels, vbTwips)
 End Property
 
 Public Sub HitTest(ByVal X As Single, ByVal Y As Single)
