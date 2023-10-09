@@ -5894,7 +5894,7 @@ Attribute ClientLeft.VB_Description = "Returns the left coordinate in twips of t
 Attribute ClientLeft.VB_MemberFlags = "400"
 Dim RC As RECT
 LSet RC = VBFlexGridClientRect
-If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.ContainerHwnd, RC, 2
+If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.hWnd, RC, 2
 ClientLeft = UserControl.ScaleX(RC.Left, vbPixels, vbTwips)
 End Property
 
@@ -5903,7 +5903,7 @@ Attribute ClientTop.VB_Description = "Returns the top coordinate in twips of the
 Attribute ClientTop.VB_MemberFlags = "400"
 Dim RC As RECT
 LSet RC = VBFlexGridClientRect
-If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.ContainerHwnd, RC, 2
+If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.hWnd, RC, 2
 ClientTop = UserControl.ScaleY(RC.Top, vbPixels, vbTwips)
 End Property
 
