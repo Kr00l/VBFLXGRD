@@ -1,5 +1,8 @@
 List of revisions:
 
+09-Oct-2023
+- Bugfix for CellLeft/ClientLeft and WS_EX_LAYOUTRTL. (Container vs. Control)
+
 05-Oct-2023
 - Changing TopRow/LeftCol by app code now works even when there are no scrollbars. (like in vsFlexGrid)
   It can be considered a mis-behavior in the MS(H)FlexGrid that this is not possible.
