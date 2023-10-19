@@ -1,5 +1,11 @@
 List of revisions:
 
+19-Oct-2023
+- Included the CellTag property which holds a variant to store any extra data.
+  The variant is allocated only when needed to keep memory usage low.
+- Included enum FlexClearTag for the .Clear method.
+- Included enum FlexCellTag for the .Cell property.
+
 09-Oct-2023
 - Bugfix for CellLeft/ClientLeft and WS_EX_LAYOUTRTL. (Container vs. Control)
 
