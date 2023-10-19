@@ -68,11 +68,11 @@ Private FlexPictureTypeColor, FlexPictureTypeMonochrome
 Private FlexEllipsisFormatNone, FlexEllipsisFormatEnd, FlexEllipsisFormatPath, FlexEllipsisFormatWord
 Private FlexWordWrapNone, FlexWordBreak, FlexSingleLine, FlexEndEllipsis, FlexPathEllipsis, FlexWordEllipsis, FlexWordBreakEndEllipsis, FlexWordBreakPathEllipsis, FlexWordBreakWordEllipsis, FlexSingleLineEndEllipsis, FlexSingleLinePathEllipsis, FlexSingleLineWordEllipsis
 Private FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearMovable, FlexClearFrozen, FlexClearSelection
-Private FlexClearEverything, FlexClearText, FlexClearFormatting
+Private FlexClearEverything, FlexClearText, FlexClearFormatting, FlexClearTag
 Private FlexTabControls, FlexTabCells, FlexTabNext
 Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
 Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
-Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellChecked, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort, FlexCellTextDisplay
+Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellChecked, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort, FlexCellTextDisplay, FlexCellTag
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
@@ -307,6 +307,7 @@ Public Enum FlexClearWhatConstants
 FlexClearEverything = 0
 FlexClearText = 1
 FlexClearFormatting = 2
+FlexClearTag = 3
 End Enum
 Public Enum FlexTabBehaviorConstants
 FlexTabControls = 0
@@ -352,6 +353,7 @@ FlexCellWidth = 22
 FlexCellHeight = 23
 FlexCellSort = 24
 FlexCellTextDisplay = 25
+FlexCellTag = 26
 End Enum
 Public Enum FlexAutoSizeModeConstants
 FlexAutoSizeModeColWidth = 0
@@ -798,6 +800,7 @@ Private Const CELL_TEXT_HEIGHT_PADDING_DIP As Long = 1
 Private Type TCELL
 Text As String
 lpFmtg As LongPtr
+lpTag As LongPtr
 End Type
 Private Const RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH As Long = 4
 Private Const ROWINFO_HEIGHT_SPACING_DIP As Long = 3
@@ -1021,6 +1024,9 @@ Attribute OLEStartDrag.VB_Description = "Occurs when an OLE drag/drop operation 
 #If VBA7 Then
 Private Declare PtrSafe Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare PtrSafe Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
+Private Declare PtrSafe Sub VariantInit Lib "oleaut32" (ByVal lpvarg As LongPtr)
+Private Declare PtrSafe Function VariantClear Lib "oleaut32" (ByVal lpvarg As LongPtr) As Long
+Private Declare PtrSafe Function VariantCopy Lib "oleaut32" (ByVal lpvargDest As LongPtr, ByVal lpvargSrc As LongPtr) As Long
 Private Declare PtrSafe Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As LongPtr, ByVal lpWindowName As LongPtr, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As LongPtr, ByVal hMenu As LongPtr, ByVal hInstance As LongPtr, ByRef lpParam As Any) As LongPtr
 Private Declare PtrSafe Function HeapAlloc Lib "kernel32" (ByVal hHeap As LongPtr, ByVal dwFlags As Long, ByVal dwBytes As LongPtr) As LongPtr
 Private Declare PtrSafe Function HeapFree Lib "kernel32" (ByVal hHeap As LongPtr, ByVal dwFlags As Long, ByVal lpMem As LongPtr) As Long
@@ -1141,6 +1147,9 @@ Private Declare PtrSafe Function ReleaseCapture Lib "user32" () As Long
 #Else
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
+Private Declare Sub VariantInit Lib "oleaut32" (ByVal lpvarg As Long)
+Private Declare Function VariantClear Lib "oleaut32" (ByVal lpvarg As Long) As Long
+Private Declare Function VariantCopy Lib "oleaut32" (ByVal lpvargDest As Long, ByVal lpvargSrc As Long) As Long
 Private Declare Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As Long, ByVal lpWindowName As Long, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As Long, ByVal hMenu As Long, ByVal hInstance As Long, ByRef lpParam As Any) As Long
 Private Declare Function HeapAlloc Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal dwBytes As Long) As Long
 Private Declare Function HeapFree Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal lpMem As Long) As Long
@@ -3606,6 +3615,7 @@ ElseIf Value <> PropRows And PropCols > 0 Then
             With VBFlexGridCells.Rows(i)
             For j = 0 To (PropCols - 1)
                 Call FreeCellFmtg(.Cols(j).lpFmtg)
+                Call FreeCellTag(.Cols(j).lpTag)
             Next j
             End With
         Next i
@@ -3717,6 +3727,7 @@ ElseIf Value <> PropCols And PropRows > 0 Then
             With VBFlexGridCells.Rows(i)
             For j = ((Value - 1) + 1) To (PropCols - 1)
                 Call FreeCellFmtg(.Cols(j).lpFmtg)
+                Call FreeCellTag(.Cols(j).lpTag)
             Next j
             ReDim Preserve .Cols(0 To (Value - 1)) As TCELL
             End With
@@ -6026,6 +6037,7 @@ Else
         If Index < ((PropRows - 1) + 1) Then
             For iCol = 0 To (PropCols - 1)
                 Call FreeCellFmtg(VBFlexGridCells.Rows(Index).Cols(iCol).lpFmtg)
+                Call FreeCellTag(VBFlexGridCells.Rows(Index).Cols(iCol).lpTag)
             Next iCol
             For iRow = Index To (PropRows - 1)
                 CopyMemory ByVal VarPtr(VBFlexGridCells.Rows(iRow)), ByVal VarPtr(VBFlexGridCells.Rows(iRow + 1)), Length
@@ -6132,7 +6144,7 @@ Select Case What
         
         #End If
         
-    Case FlexClearFormatting
+    Case FlexClearFormatting, FlexClearTag
     Case Else
         Err.Raise 380
 End Select
@@ -6145,6 +6157,7 @@ Select Case Where
                     With VBFlexGridCells.Rows(iRow)
                     For iCol = 0 To (PropCols - 1)
                         Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        Call FreeCellTag(.Cols(iCol).lpTag)
                     Next iCol
                     .Cols() = VBFlexGridDefaultCols.Cols()
                     End With
@@ -6160,6 +6173,14 @@ Select Case Where
                     With VBFlexGridCells.Rows(iRow)
                     For iCol = 0 To (PropCols - 1)
                         Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                    Next iCol
+                    End With
+                Next iRow
+            Case FlexClearTag
+                For iRow = 0 To (PropRows - 1)
+                    With VBFlexGridCells.Rows(iRow)
+                    For iCol = 0 To (PropCols - 1)
+                        Call FreeCellTag(.Cols(iCol).lpTag)
                     Next iCol
                     End With
                 Next iRow
@@ -6171,6 +6192,7 @@ Select Case Where
                     With VBFlexGridCells.Rows(iRow)
                     For iCol = 0 To (PropCols - 1)
                         Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        Call FreeCellTag(.Cols(iCol).lpTag)
                     Next iCol
                     .Cols() = VBFlexGridDefaultCols.Cols()
                     End With
@@ -6179,6 +6201,7 @@ Select Case Where
                     For iRow = PropFixedRows To (PropRows - 1)
                         With VBFlexGridCells.Rows(iRow)
                         Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        Call FreeCellTag(.Cols(iCol).lpTag)
                         LSet .Cols(iCol) = VBFlexGridDefaultCell
                         End With
                     Next iRow
@@ -6205,6 +6228,19 @@ Select Case Where
                 For iCol = 0 To (PropFixedCols - 1)
                     For iRow = PropFixedRows To (PropRows - 1)
                         Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
+                    Next iRow
+                Next iCol
+            Case FlexClearTag
+                For iRow = 0 To (PropFixedRows - 1)
+                    With VBFlexGridCells.Rows(iRow)
+                    For iCol = 0 To (PropCols - 1)
+                        Call FreeCellTag(.Cols(iCol).lpTag)
+                    Next iCol
+                    End With
+                Next iRow
+                For iCol = 0 To (PropFixedCols - 1)
+                    For iRow = PropFixedRows To (PropRows - 1)
+                        Call FreeCellTag(VBFlexGridCells.Rows(iRow).Cols(iCol).lpTag)
                     Next iRow
                 Next iCol
         End Select
@@ -6215,6 +6251,7 @@ Select Case Where
                     With VBFlexGridCells.Rows(iRow)
                     For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
                         Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        Call FreeCellTag(.Cols(iCol).lpTag)
                         LSet .Cols(iCol) = VBFlexGridDefaultCell
                     Next iCol
                     End With
@@ -6229,6 +6266,12 @@ Select Case Where
                 For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
                     For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
                         Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
+                    Next iCol
+                Next iRow
+            Case FlexClearTag
+                For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
+                    For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
+                        Call FreeCellTag(VBFlexGridCells.Rows(iRow).Cols(iCol).lpTag)
                     Next iCol
                 Next iRow
         End Select
@@ -6239,6 +6282,7 @@ Select Case Where
                     With VBFlexGridCells.Rows(iRow)
                     For iCol = PropFixedCols To (PropCols - 1)
                         Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        Call FreeCellTag(.Cols(iCol).lpTag)
                         LSet .Cols(iCol) = VBFlexGridDefaultCell
                     Next iCol
                     End With
@@ -6255,6 +6299,12 @@ Select Case Where
                         Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
                     Next iCol
                 Next iRow
+            Case FlexClearTag
+                For iRow = PropFixedRows To (PropRows - 1)
+                    For iCol = PropFixedCols To (PropCols - 1)
+                        Call FreeCellTag(VBFlexGridCells.Rows(iRow).Cols(iCol).lpTag)
+                    Next iCol
+                Next iRow
         End Select
     Case FlexClearFrozen
         Select Case What
@@ -6263,6 +6313,7 @@ Select Case Where
                     With VBFlexGridCells.Rows(iRow)
                     For iCol = PropFixedCols To (PropCols - 1)
                         Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        Call FreeCellTag(.Cols(iCol).lpTag)
                         LSet .Cols(iCol) = VBFlexGridDefaultCell
                     Next iCol
                     End With
@@ -6295,6 +6346,17 @@ Select Case Where
                 For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
                     For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
                         Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
+                    Next iRow
+                Next iCol
+            Case FlexClearTag
+                For iRow = PropFixedRows To ((PropFixedRows + PropFrozenRows) - 1)
+                    For iCol = PropFixedCols To (PropCols - 1)
+                        Call FreeCellTag(VBFlexGridCells.Rows(iRow).Cols(iCol).lpTag)
+                    Next iCol
+                Next iRow
+                For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
+                    For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
+                        Call FreeCellTag(VBFlexGridCells.Rows(iRow).Cols(iCol).lpTag)
                     Next iRow
                 Next iCol
         End Select
@@ -6307,6 +6369,7 @@ Select Case Where
                     For iCol = SelRange.LeftCol To SelRange.RightCol
                         With VBFlexGridCells.Rows(iRow)
                         Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                        Call FreeCellTag(.Cols(iCol).lpTag)
                         LSet .Cols(iCol) = VBFlexGridDefaultCell
                         End With
                     Next iCol
@@ -6321,6 +6384,12 @@ Select Case Where
                 For iRow = SelRange.TopRow To SelRange.BottomRow
                     For iCol = SelRange.LeftCol To SelRange.RightCol
                         Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
+                    Next iCol
+                Next iRow
+            Case FlexClearTag
+                For iRow = SelRange.TopRow To SelRange.BottomRow
+                    For iCol = SelRange.LeftCol To SelRange.RightCol
+                        Call FreeCellTag(VBFlexGridCells.Rows(iRow).Cols(iCol).lpTag)
                     Next iCol
                 Next iRow
         End Select
@@ -8251,6 +8320,12 @@ Select Case Setting
         Err.Raise Number:=394, Description:="Property is write-only"
     Case FlexCellTextDisplay
         Cell = CellTextDisplay()
+    Case FlexCellTag
+        If IsObject(Me.CellTag) Then
+            Set Cell = Me.CellTag
+        Else
+            Cell = Me.CellTag
+        End If
     Case Else
         Err.Raise 380
 End Select
@@ -8331,6 +8406,8 @@ Select Case Setting
         Me.Sort = Value
     Case FlexCellTextDisplay
         Err.Raise Number:=383, Description:="Property is read-only"
+    Case FlexCellTag
+        Me.CellTag = Value
     Case Else
         Err.Raise 380
 End Select
@@ -8372,6 +8449,8 @@ On Error GoTo Cancel
 Select Case Setting
     Case FlexCellPicture
         Set Me.CellPicture = Value
+    Case FlexCellTag
+        Set Me.CellTag = Value
     Case Else
         Err.Raise 380
 End Select
@@ -10231,6 +10310,55 @@ End If
 Call RedrawGrid
 End Property
 
+Public Property Get CellTag() As Variant
+Attribute CellTag.VB_Description = "Returns/sets the user-defined tag to be used for individual cells or ranges of cells."
+Attribute CellTag.VB_MemberFlags = "400"
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+Call GetCellTag(VBFlexGridRow, VBFlexGridCol, CellTag)
+End Property
+
+Public Property Let CellTag(ByVal Value As Variant)
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+If PropFillStyle = FlexFillStyleSingle Then
+    Call SetCellTag(VBFlexGridRow, VBFlexGridCol, (Value))
+ElseIf PropFillStyle = FlexFillStyleRepeat Then
+    Dim i As Long, j As Long, SelRange As TCELLRANGE
+    Call GetSelRangeStruct(SelRange)
+    For i = SelRange.TopRow To SelRange.BottomRow
+        For j = SelRange.LeftCol To SelRange.RightCol
+            Call SetCellTag(i, j, (Value))
+        Next j
+    Next i
+End If
+End Property
+
+Public Property Set CellTag(ByVal Value As Variant)
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+If PropFillStyle = FlexFillStyleSingle Then
+    Call SetCellTag(VBFlexGridRow, VBFlexGridCol, Value)
+ElseIf PropFillStyle = FlexFillStyleRepeat Then
+    Dim i As Long, j As Long, SelRange As TCELLRANGE
+    Call GetSelRangeStruct(SelRange)
+    For i = SelRange.TopRow To SelRange.BottomRow
+        For j = SelRange.LeftCol To SelRange.RightCol
+            Call SetCellTag(i, j, Value)
+        Next j
+    Next i
+End If
+End Property
+
 Public Sub CellEnsureVisible(Optional ByVal Visibility As FlexVisibilityConstants = FlexVisibilityCompleteOnly, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1)
 Attribute CellEnsureVisible.VB_Description = "Ensures that the current or an arbitrary cell (row/col subscripts) is visible, scrolling the control if necessary."
 Select Case Visibility
@@ -11499,6 +11627,7 @@ For i = 0 To (PropRows - 1)
     With VBFlexGridCells.Rows(i)
     For j = 0 To (PropCols - 1)
         Call FreeCellFmtg(.Cols(j).lpFmtg)
+        Call FreeCellTag(.Cols(j).lpTag)
     Next j
     End With
 Next i
@@ -14803,6 +14932,42 @@ If .lpFmtg <> NULL_PTR Then
     CopyMemory ByVal VarPtr(lpCellFmtg), ByVal .lpFmtg, LenB(lpCellFmtg)
     lpCellFmtg.Checked = NewValue
     CopyMemory ByVal .lpFmtg, ByVal VarPtr(lpCellFmtg), LenB(lpCellFmtg)
+End If
+End With
+End Sub
+
+Private Sub FreeCellTag(ByRef lpTag As LongPtr)
+If lpTag <> NULL_PTR Then
+    VariantClear lpTag
+    HeapFree GetProcessHeap(), 0, lpTag
+    lpTag = NULL_PTR
+End If
+End Sub
+
+Private Sub AllocCellTag(ByRef lpTag As LongPtr)
+If lpTag = NULL_PTR Then
+    Const VARIANT_CB As Long = 16
+    lpTag = HeapAlloc(GetProcessHeap(), 0, VARIANT_CB)
+    If lpTag <> NULL_PTR Then VariantInit lpTag
+End If
+End Sub
+
+Private Sub GetCellTag(ByVal iRow As Long, ByVal iCol As Long, ByRef TagOut As Variant)
+With VBFlexGridCells.Rows(iRow).Cols(iCol)
+If .lpTag = NULL_PTR Then
+    TagOut = Empty
+Else
+    VariantCopy VarPtr(TagOut), .lpTag
+End If
+End With
+End Sub
+
+Private Sub SetCellTag(ByVal iRow As Long, ByVal iCol As Long, ByRef TagIn As Variant)
+With VBFlexGridCells.Rows(iRow).Cols(iCol)
+If .lpTag = NULL_PTR Then Call AllocCellTag(.lpTag)
+If .lpTag <> NULL_PTR Then
+    VariantCopy .lpTag, VarPtr(TagIn)
+    TagIn = Empty
 End If
 End With
 End Sub
