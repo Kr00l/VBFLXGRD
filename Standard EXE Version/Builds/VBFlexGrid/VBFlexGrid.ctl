@@ -8321,11 +8321,7 @@ Select Case Setting
     Case FlexCellTextDisplay
         Cell = CellTextDisplay()
     Case FlexCellTag
-        If IsObject(Me.CellTag) Then
-            Set Cell = Me.CellTag
-        Else
-            Cell = Me.CellTag
-        End If
+        VariantCopy VarPtr(Cell), VarPtr(Me.CellTag)
     Case Else
         Err.Raise 380
 End Select
@@ -10327,14 +10323,16 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
+Dim VarValue As Variant
+VarValue = Value
 If PropFillStyle = FlexFillStyleSingle Then
-    Call SetCellTag(VBFlexGridRow, VBFlexGridCol, (Value))
+    Call SetCellTag(VBFlexGridRow, VBFlexGridCol, VarValue)
 ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Dim i As Long, j As Long, SelRange As TCELLRANGE
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
         For j = SelRange.LeftCol To SelRange.RightCol
-            Call SetCellTag(i, j, (Value))
+            Call SetCellTag(i, j, VarValue)
         Next j
     Next i
 End If
@@ -14841,7 +14839,6 @@ If .lpFmtg <> NULL_PTR Then
     If (Mask And CFM_TEXTSTYLE) = CFM_TEXTSTYLE Then .TextStyle = CellFmtg.TextStyle
     If (Mask And CFM_ALIGNMENT) = CFM_ALIGNMENT Then .Alignment = CellFmtg.Alignment
     If (Mask And CFM_PICTURE) = CFM_PICTURE Then
-        Dim IUnk As OLEGuids.IUnknownUnrestricted
         If lpCellFmtg.lpPicture <> NULL_PTR Then
             FlexObjSet Nothing, lpCellFmtg.lpPicture
             lpCellFmtg.lpPicture = NULL_PTR
@@ -14965,10 +14962,7 @@ End Sub
 Private Sub SetCellTag(ByVal iRow As Long, ByVal iCol As Long, ByRef TagIn As Variant)
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
 If .lpTag = NULL_PTR Then Call AllocCellTag(.lpTag)
-If .lpTag <> NULL_PTR Then
-    VariantCopy .lpTag, VarPtr(TagIn)
-    TagIn = Empty
-End If
+If .lpTag <> NULL_PTR Then VariantCopy .lpTag, VarPtr(TagIn)
 End With
 End Sub
 
