@@ -1,5 +1,9 @@
 List of revisions:
 
+20-Oct-2023
+- Included enum FlexAlignmentGeneralTop/FlexAlignmentGeneralCenter/FlexAlignmentGeneralBottom.
+  The enum FlexAlignmentGeneral keeps valid and is the default column alignment value.
+
 19-Oct-2023
 - Included the CellTag property which holds a variant to store any extra data.
   The variant is allocated only when needed to keep memory usage low.
