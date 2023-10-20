@@ -58,7 +58,7 @@ Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy, FlexFocusRect
 Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
 Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled, FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
-Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral
+Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral, FlexAlignmentGeneralTop, FlexAlignmentGeneralCenter, FlexAlignmentGeneralBottom
 Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
 Private FlexRowSizingModeIndividual, FlexRowSizingModeAll, FlexRowSizingModeUniform
 Private FlexMergeCellsNever, FlexMergeCellsFree, FlexMergeCellsRestrictRows, FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll, FlexMergeCellsFixedOnly
@@ -216,6 +216,9 @@ FlexAlignmentRightTop = 6
 FlexAlignmentRightCenter = 7
 FlexAlignmentRightBottom = 8
 FlexAlignmentGeneral = 9
+FlexAlignmentGeneralTop = 10
+FlexAlignmentGeneralCenter = 11
+FlexAlignmentGeneralBottom = 12
 End Enum
 Public Enum FlexPictureAlignmentConstants
 FlexPictureAlignmentLeftTop = 0
@@ -5396,7 +5399,7 @@ Select Case Alignment
         dwStyle = dwStyle Or ES_CENTER
     Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
         If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_RIGHT Else dwStyle = dwStyle Or ES_LEFT
-    Case FlexAlignmentGeneral
+    Case FlexAlignmentGeneral, FlexAlignmentGeneralTop, FlexAlignmentGeneralCenter, FlexAlignmentGeneralBottom
         If PropMirrorAlignGeneral = False Then
             If Not IsNumeric(Text) And Not IsDate(Text) Then
                 If VBFlexGridRTLLayout = False Then dwStyle = dwStyle Or ES_LEFT Else dwStyle = dwStyle Or ES_RIGHT
@@ -7434,7 +7437,7 @@ End Property
 Public Property Let ColAlignment(ByVal Index As Long, ByVal Value As FlexAlignmentConstants)
 If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30004, Description:="Invalid Col value for alignment"
 Select Case Value
-    Case FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral
+    Case FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral, FlexAlignmentGeneralTop, FlexAlignmentGeneralCenter, FlexAlignmentGeneralBottom
     Case Else
         Err.Raise Number:=30005, Description:="Invalid Alignment value"
 End Select
@@ -7463,7 +7466,7 @@ End Property
 Public Property Let FixedAlignment(ByVal Index As Long, ByVal Value As FlexAlignmentConstants)
 If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30004, Description:="Invalid Col value for alignment"
 Select Case Value
-    Case -1, FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral
+    Case -1, FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral, FlexAlignmentGeneralTop, FlexAlignmentGeneralCenter, FlexAlignmentGeneralBottom
     Case Else
         Err.Raise Number:=30005, Description:="Invalid Alignment value"
 End Select
@@ -9275,7 +9278,7 @@ ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 Select Case Value
-    Case -1, FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral
+    Case -1, FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral, FlexAlignmentGeneralTop, FlexAlignmentGeneralCenter, FlexAlignmentGeneralBottom
     Case Else
         Err.Raise Number:=30005, Description:="Invalid Alignment value"
 End Select
@@ -13143,6 +13146,7 @@ If PropAllowUserEditing = True Then
 End If
 Dim Text As String, TextRect As RECT, HiddenText As Boolean
 Call GetCellText(iRow, iCol, Text)
+Call GetTextDisplay(iRow, iCol, Text)
 With TextRect
 .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
 .Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
@@ -13424,9 +13428,9 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSor
     If (TextRect.Right - TextRect.Left) >= SortArrowDrawSize.CX And TextRect.Bottom >= TextRect.Top Then
         Dim SortArrowVSpace As Long
         Select Case Alignment
-            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
+            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
                 SortArrowVSpace = (((TextRect.Bottom - TextRect.Top) - SortArrowClientSize.CY) / 2)
-            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
+            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom, FlexAlignmentGeneralBottom
                 SortArrowVSpace = ((TextRect.Bottom - TextRect.Top) - SortArrowClientSize.CY)
         End Select
         Dim SortArrowPoints(0 To 2) As POINTAPI
@@ -13487,7 +13491,6 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSor
         TextRect.Left = TextRect.Left + SortArrowClientSize.CX
     End If
 End If
-Call GetTextDisplay(iRow, iCol, Text)
 If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
     Dim TextStyle As FlexTextStyleConstants, DrawFlags As Long
     If .TextStyle = -1 Then
@@ -13504,7 +13507,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
             DrawFlags = DrawFlags Or DT_CENTER
         Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
             DrawFlags = DrawFlags Or DT_RIGHT
-        Case FlexAlignmentGeneral
+        Case FlexAlignmentGeneral, FlexAlignmentGeneralTop, FlexAlignmentGeneralCenter, FlexAlignmentGeneralBottom
             If PropMirrorAlignGeneral = False Then
                 If Not IsNumeric(Text) And Not IsDate(Text) Then
                     DrawFlags = DrawFlags Or DT_LEFT
@@ -13564,11 +13567,11 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
-            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
+            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
                 LSet CalcRect = TextRect
                 Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
                 Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
-            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
+            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom, FlexAlignmentGeneralBottom
                 LSet CalcRect = TextRect
                 Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
                 Result = ((TextRect.Bottom - TextRect.Top) - Height)
@@ -13576,9 +13579,9 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
         If Result > 0 Then TextRect.Top = TextRect.Top + Result
     Else
         Select Case Alignment
-            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
+            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
                 DrawFlags = DrawFlags Or DT_VCENTER
-            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
+            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom, FlexAlignmentGeneralBottom
                 DrawFlags = DrawFlags Or DT_BOTTOM
         End Select
     End If
@@ -13813,6 +13816,7 @@ If PropAllowUserEditing = True Then
 End If
 Dim Text As String, TextRect As RECT, HiddenText As Boolean
 Call GetCellText(iRow, iCol, Text)
+Call GetTextDisplay(iRow, iCol, Text)
 With TextRect
 .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
 .Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
@@ -14085,7 +14089,6 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End Select
     End With
 End If
-Call GetTextDisplay(iRow, iCol, Text)
 If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
     Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .TextStyle = -1 Then
@@ -14107,7 +14110,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
             DrawFlags = DrawFlags Or DT_CENTER
         Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
             DrawFlags = DrawFlags Or DT_RIGHT
-        Case FlexAlignmentGeneral
+        Case FlexAlignmentGeneral, FlexAlignmentGeneralTop, FlexAlignmentGeneralCenter, FlexAlignmentGeneralBottom
             If PropMirrorAlignGeneral = False Then
                 If Not IsNumeric(Text) And Not IsDate(Text) Then
                     DrawFlags = DrawFlags Or DT_LEFT
@@ -14167,11 +14170,11 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
-            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
+            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
                 LSet CalcRect = TextRect
                 Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
                 Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
-            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
+            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom, FlexAlignmentGeneralBottom
                 LSet CalcRect = TextRect
                 Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
                 Result = ((TextRect.Bottom - TextRect.Top) - Height)
@@ -14179,9 +14182,9 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
         If Result > 0 Then TextRect.Top = TextRect.Top + Result
     Else
         Select Case Alignment
-            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
+            Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
                 DrawFlags = DrawFlags Or DT_VCENTER
-            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
+            Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom, FlexAlignmentGeneralBottom
                 DrawFlags = DrawFlags Or DT_BOTTOM
         End Select
     End If
@@ -16246,7 +16249,7 @@ If hDC <> NULL_PTR Then
             DrawFlags = DrawFlags Or DT_CENTER
         Case FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom
             DrawFlags = DrawFlags Or DT_RIGHT
-        Case FlexAlignmentGeneral
+        Case FlexAlignmentGeneral, FlexAlignmentGeneralTop, FlexAlignmentGeneralCenter, FlexAlignmentGeneralBottom
             If PropMirrorAlignGeneral = False Then
                 If Not IsNumeric(Text) And Not IsDate(Text) Then
                     DrawFlags = DrawFlags Or DT_LEFT
@@ -16309,11 +16312,11 @@ If hDC <> NULL_PTR Then
     Dim CalcRect As RECT, Height As Long, Result As Long
     LSet CalcRect = TextRect
     Select Case Alignment
-        Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral
+        Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
             Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
             Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
             ' DT_VCENTER not applicable to apply here in case of DT_SINGLELINE.
-        Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom
+        Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom, FlexAlignmentGeneralBottom
             Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
             Result = ((TextRect.Bottom - TextRect.Top) - Height)
             ' DT_BOTTOM not applicable to apply here in case of DT_SINGLELINE.
