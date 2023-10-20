@@ -1024,9 +1024,9 @@ Attribute OLEStartDrag.VB_Description = "Occurs when an OLE drag/drop operation 
 #If VBA7 Then
 Private Declare PtrSafe Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare PtrSafe Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
-Private Declare PtrSafe Sub VariantInit Lib "oleaut32" (ByVal lpvarg As LongPtr)
-Private Declare PtrSafe Function VariantClear Lib "oleaut32" (ByVal lpvarg As LongPtr) As Long
-Private Declare PtrSafe Function VariantCopy Lib "oleaut32" (ByVal lpvargDest As LongPtr, ByVal lpvargSrc As LongPtr) As Long
+Private Declare PtrSafe Sub VariantInit Lib "oleaut32" (ByRef pvarg As Any)
+Private Declare PtrSafe Function VariantClear Lib "oleaut32" (ByRef pvarg As Any) As Long
+Private Declare PtrSafe Function VariantCopy Lib "oleaut32" (ByRef pvargDest As Any, ByRef pvargSrc As Any) As Long
 Private Declare PtrSafe Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As LongPtr, ByVal lpWindowName As LongPtr, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As LongPtr, ByVal hMenu As LongPtr, ByVal hInstance As LongPtr, ByRef lpParam As Any) As LongPtr
 Private Declare PtrSafe Function HeapAlloc Lib "kernel32" (ByVal hHeap As LongPtr, ByVal dwFlags As Long, ByVal dwBytes As LongPtr) As LongPtr
 Private Declare PtrSafe Function HeapFree Lib "kernel32" (ByVal hHeap As LongPtr, ByVal dwFlags As Long, ByVal lpMem As LongPtr) As Long
@@ -1147,9 +1147,9 @@ Private Declare PtrSafe Function ReleaseCapture Lib "user32" () As Long
 #Else
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
-Private Declare Sub VariantInit Lib "oleaut32" (ByVal lpvarg As Long)
-Private Declare Function VariantClear Lib "oleaut32" (ByVal lpvarg As Long) As Long
-Private Declare Function VariantCopy Lib "oleaut32" (ByVal lpvargDest As Long, ByVal lpvargSrc As Long) As Long
+Private Declare Sub VariantInit Lib "oleaut32" (ByRef pvarg As Any)
+Private Declare Function VariantClear Lib "oleaut32" (ByRef pvarg As Any) As Long
+Private Declare Function VariantCopy Lib "oleaut32" (ByRef pvargDest As Any, ByRef pvargSrc As Any) As Long
 Private Declare Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As Long, ByVal lpWindowName As Long, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As Long, ByVal hMenu As Long, ByVal hInstance As Long, ByRef lpParam As Any) As Long
 Private Declare Function HeapAlloc Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal dwBytes As Long) As Long
 Private Declare Function HeapFree Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal lpMem As Long) As Long
@@ -8321,7 +8321,7 @@ Select Case Setting
     Case FlexCellTextDisplay
         Cell = CellTextDisplay()
     Case FlexCellTag
-        VariantCopy VarPtr(Cell), VarPtr(Me.CellTag)
+        VariantCopy Cell, Me.CellTag
     Case Else
         Err.Raise 380
 End Select
@@ -14935,7 +14935,7 @@ End Sub
 
 Private Sub FreeCellTag(ByRef lpTag As LongPtr)
 If lpTag <> NULL_PTR Then
-    VariantClear lpTag
+    VariantClear ByVal lpTag
     HeapFree GetProcessHeap(), 0, lpTag
     lpTag = NULL_PTR
 End If
@@ -14945,7 +14945,7 @@ Private Sub AllocCellTag(ByRef lpTag As LongPtr)
 If lpTag = NULL_PTR Then
     Const VARIANT_CB As Long = 16
     lpTag = HeapAlloc(GetProcessHeap(), 0, VARIANT_CB)
-    If lpTag <> NULL_PTR Then VariantInit lpTag
+    If lpTag <> NULL_PTR Then VariantInit ByVal lpTag
 End If
 End Sub
 
@@ -14954,7 +14954,7 @@ With VBFlexGridCells.Rows(iRow).Cols(iCol)
 If .lpTag = NULL_PTR Then
     TagOut = Empty
 Else
-    VariantCopy VarPtr(TagOut), .lpTag
+    VariantCopy TagOut, ByVal .lpTag
 End If
 End With
 End Sub
@@ -14962,7 +14962,7 @@ End Sub
 Private Sub SetCellTag(ByVal iRow As Long, ByVal iCol As Long, ByRef TagIn As Variant)
 With VBFlexGridCells.Rows(iRow).Cols(iCol)
 If .lpTag = NULL_PTR Then Call AllocCellTag(.lpTag)
-If .lpTag <> NULL_PTR Then VariantCopy .lpTag, VarPtr(TagIn)
+If .lpTag <> NULL_PTR Then VariantCopy ByVal .lpTag, TagIn
 End With
 End Sub
 
