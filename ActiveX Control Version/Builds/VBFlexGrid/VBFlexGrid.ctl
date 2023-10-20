@@ -13766,7 +13766,6 @@ If .lpFmtg <> NULL_PTR Then
     If (Mask And CFM_TEXTSTYLE) = CFM_TEXTSTYLE Then .TextStyle = CellFmtg.TextStyle
     If (Mask And CFM_ALIGNMENT) = CFM_ALIGNMENT Then .Alignment = CellFmtg.Alignment
     If (Mask And CFM_PICTURE) = CFM_PICTURE Then
-        Dim IUnk As OLEGuids.IUnknownUnrestricted
         If lpCellFmtg.lpPicture <> NULL_PTR Then
             FlexObjSet Nothing, lpCellFmtg.lpPicture
             lpCellFmtg.lpPicture = NULL_PTR
