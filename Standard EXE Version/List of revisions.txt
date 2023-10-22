@@ -1,5 +1,16 @@
 List of revisions:
 
+22-Oct-2023
+- Included the ColImageList As Variant property. (like in vsFlexGrid)
+  Either an ImageList object or an hImageList handle can be set. (vsFlexGrid allows only handle)
+  Numeric text will be treated as an image index. (both, object or handle)
+  Otherwise it will be tried to access the image index by it's key. (object only)
+  The image alignment is based on the text alignment. (CellAlignment/ColAlignment/FixedAlignment)
+  The cell text will become hidden if an image got drawn.
+- Included the CellImageCallback event where the app can provide the image value.
+  The Handled parameter must be set to True to overwrite the default behavior.
+  It enables also a way to ensure that no image will be tried to retrieve for certain cells. (e.g. for fixed rows)
+
 20-Oct-2023
 - Included enum FlexAlignmentGeneralTop/FlexAlignmentGeneralCenter/FlexAlignmentGeneralBottom.
   The enum FlexAlignmentGeneral keeps valid and is the default column alignment value.
