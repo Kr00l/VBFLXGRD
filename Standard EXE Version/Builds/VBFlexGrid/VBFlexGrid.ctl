@@ -817,6 +817,11 @@ Data As LongPtr
 State As Long
 ID As Long
 End Type
+Private Type TIMAGELIST
+ObjectPointer As LongPtr
+Handle As LongPtr
+Size As SIZEAPI
+End Type
 Private Type TLOOKUPITEM
 Key As String
 Value As String
@@ -840,6 +845,7 @@ State As Long
 Key As String
 Alignment As FlexAlignmentConstants
 FixedAlignment As FlexAlignmentConstants
+ImageList As TIMAGELIST
 WordWrapOption As FlexWordWrapOptions
 WordWrapOptionFixed As FlexWordWrapOptions
 Sort As FlexSortConstants
@@ -978,6 +984,8 @@ Public Event CellClick(ByVal Row As Long, ByVal Col As Long, ByVal Button As Int
 Attribute CellClick.VB_Description = "Occurs when a cell is clicked."
 Public Event CellDblClick(ByVal Row As Long, ByVal Col As Long, ByVal Button As Integer)
 Attribute CellDblClick.VB_Description = "Occurs when a cell is double clicked."
+Public Event CellImageCallback(ByVal Row As Long, ByVal Col As Long, ByRef Image As Variant, ByRef Handled As Boolean)
+Attribute CellImageCallback.VB_Description = "Occurs when an image list control or handle requests for a cell image."
 Public Event CellBeforeCheck(ByVal Row As Long, ByVal Col As Long, ByVal Reason As FlexCellCheckReasonConstants, ByRef Cancel As Boolean)
 Attribute CellBeforeCheck.VB_Description = "Occurs before a cell is about to be checked."
 Public Event CellCheck(ByVal Row As Long, ByVal Col As Long)
@@ -1147,6 +1155,9 @@ Private Declare PtrSafe Function ClipCursor Lib "user32" (ByRef lpRect As Any) A
 Private Declare PtrSafe Function GetCapture Lib "user32" () As LongPtr
 Private Declare PtrSafe Function SetCapture Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
 Private Declare PtrSafe Function ReleaseCapture Lib "user32" () As Long
+Private Declare PtrSafe Function ImageList_GetIconSize Lib "comctl32" (ByVal hImageList As LongPtr, ByRef CX As Long, ByRef CY As Long) As Long
+Private Declare PtrSafe Function ImageList_GetImageCount Lib "comctl32" (ByVal hImageList As LongPtr) As Long
+Private Declare PtrSafe Function ImageList_Draw Lib "comctl32" (ByVal hImageList As LongPtr, ByVal ImgIndex As Long, ByVal hDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal fStyle As Long) As Long
 #Else
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
@@ -1265,6 +1276,9 @@ Private Declare Function ClipCursor Lib "user32" (ByRef lpRect As Any) As Long
 Private Declare Function GetCapture Lib "user32" () As Long
 Private Declare Function SetCapture Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function ReleaseCapture Lib "user32" () As Long
+Private Declare Function ImageList_GetIconSize Lib "comctl32" (ByVal hImageList As Long, ByRef CX As Long, ByRef CY As Long) As Long
+Private Declare Function ImageList_GetImageCount Lib "comctl32" (ByVal hImageList As Long) As Long
+Private Declare Function ImageList_Draw Lib "comctl32" (ByVal hImageList As Long, ByVal ImgIndex As Long, ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByVal fStyle As Long) As Long
 #End If
 
 #If ImplementThemedControls = True Then
@@ -1488,6 +1502,7 @@ Private Const DFCS_CHECKED As Long = &H400
 Private Const DFCS_HOT As Long = &H1000
 Private Const DFCS_ADJUSTRECT As Long = &H2000
 Private Const DFCS_FLAT As Long = &H4000
+Private Const ILD_TRANSPARENT As Long = &H1
 Private Const WS_BORDER As Long = &H800000
 Private Const WS_DLGFRAME As Long = &H400000
 Private Const WS_EX_TRANSPARENT As Long = &H20
@@ -7481,6 +7496,69 @@ End If
 Call RedrawGrid
 End Property
 
+Public Property Get ColImageList(ByVal Index As Long) As Variant
+Attribute ColImageList.VB_Description = "Returns/sets the image list control or handle to be used for the specified column."
+Attribute ColImageList.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+With VBFlexGridColsInfo(Index).ImageList
+If .ObjectPointer <> NULL_PTR Then
+    Set ColImageList = PtrToObj(.ObjectPointer)
+ElseIf .Handle <> NULL_PTR Then
+    ColImageList = .Handle
+Else
+    ColImageList = Empty
+End If
+End With
+End Property
+
+Public Property Set ColImageList(ByVal Index As Long, ByVal Value As Variant)
+Me.ColImageList(Index) = Value
+End Property
+
+Public Property Let ColImageList(ByVal Index As Long, ByVal Value As Variant)
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+With VBFlexGridColsInfo(Index).ImageList
+Dim Success As Boolean, Handle As LongPtr
+Select Case VarType(Value)
+    Case vbObject
+        If Not Value Is Nothing Then
+            If TypeName(Value) = "ImageList" Then
+                On Error Resume Next
+                Handle = Value.hImageList
+                Success = CBool(Err.Number = 0 And Handle <> NULL_PTR)
+                On Error GoTo 0
+            Else
+                Err.Raise Number:=35610, Description:="Invalid object"
+            End If
+        End If
+        If Success = True Then
+            .ObjectPointer = ObjPtr(Value)
+            .Handle = Handle
+            If ImageList_GetIconSize(.Handle, .Size.CX, .Size.CY) = 0 Then Success = False
+        End If
+    Case vbLong, &H14 ' vbLongLong
+        Handle = Value
+        Success = CBool(Handle <> NULL_PTR)
+        If Success = True Then
+            .ObjectPointer = NULL_PTR
+            .Handle = Handle
+            If ImageList_GetIconSize(.Handle, .Size.CX, .Size.CY) = 0 Then Success = False
+        End If
+    Case vbEmpty
+    Case Else
+        Err.Raise 13
+End Select
+If Success = False Then
+    .ObjectPointer = NULL_PTR
+    .Handle = NULL_PTR
+    .Size.CX = 0
+    .Size.CY = 0
+End If
+End With
+Call RedrawGrid
+End Property
+
+
 Public Property Get ColWordWrapOption(ByVal Index As Long) As FlexWordWrapOptions
 Attribute ColWordWrapOption.VB_Description = "Returns/sets how the text is displayed per column."
 Attribute ColWordWrapOption.VB_MemberFlags = "400"
@@ -13268,6 +13346,61 @@ If Not .Picture Is Nothing Then
         End Select
     End If
 End If
+If VBFlexGridColsInfo(iCol).ImageList.Handle <> NULL_PTR Then
+    Dim ImageIndex As Long
+    ImageIndex = GetImageIndex(iRow, iCol, Text)
+    If ImageIndex > 0 Then
+        Dim ImageRect As RECT, ImageAlignment As FlexAlignmentConstants, ImageWidth As Long, ImageHeight As Long
+        Dim ImageLeft As Long, ImageTop As Long, ImageOffsetX As Long, ImageOffsetY As Long
+        LSet ImageRect = CellRect
+        If ComboCueWidth > 0 Then
+            If ComboCueAlignment = FlexLeftRightAlignmentRight Then
+                ImageRect.Right = ImageRect.Right - ComboCueWidth
+            ElseIf ComboCueAlignment = FlexLeftRightAlignmentLeft Then
+                ImageRect.Left = ImageRect.Left + ComboCueWidth
+            End If
+        End If
+        If .Alignment = -1 Then
+            If VBFlexGridColsInfo(iCol).FixedAlignment = -1 Then
+                ImageAlignment = VBFlexGridColsInfo(iCol).Alignment
+            Else
+                ImageAlignment = VBFlexGridColsInfo(iCol).FixedAlignment
+            End If
+        Else
+            ImageAlignment = .Alignment
+        End If
+        ImageWidth = VBFlexGridColsInfo(iCol).ImageList.Size.CX
+        ImageHeight = VBFlexGridColsInfo(iCol).ImageList.Size.CY
+        ImageLeft = ImageRect.Left
+        ImageTop = ImageRect.Top
+        Select Case ImageAlignment
+            Case FlexAlignmentLeftCenter
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+            Case FlexAlignmentLeftBottom
+                ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
+            Case FlexAlignmentCenterTop, FlexAlignmentGeneralTop
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
+            Case FlexAlignmentCenterCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+            Case FlexAlignmentCenterBottom, FlexAlignmentGeneralBottom
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
+                ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
+            Case FlexAlignmentRightTop
+                ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
+            Case FlexAlignmentRightCenter
+                ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+            Case FlexAlignmentRightBottom
+                ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
+                ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
+        End Select
+        If ImageOffsetX > 0 Then ImageLeft = ImageLeft + ImageOffsetX
+        If ImageOffsetY > 0 Then ImageTop = ImageTop + ImageOffsetY
+        ImageList_Draw VBFlexGridColsInfo(iCol).ImageList.Handle, ImageIndex - 1, hDC, ImageLeft, ImageTop, ILD_TRANSPARENT
+        HiddenText = True
+    End If
+End If
 Dim Checked As Integer
 Checked = GetCellChecked(iRow, iCol)
 If Checked > -1 Then
@@ -13946,6 +14079,57 @@ If Not .Picture Is Nothing Then
             Case FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
                 TextRect.Right = TextRect.Right - PictureWidth
         End Select
+    End If
+End If
+If VBFlexGridColsInfo(iCol).ImageList.Handle <> NULL_PTR Then
+    Dim ImageIndex As Long
+    ImageIndex = GetImageIndex(iRow, iCol, Text)
+    If ImageIndex > 0 Then
+        Dim ImageRect As RECT, ImageAlignment As FlexAlignmentConstants, ImageWidth As Long, ImageHeight As Long
+        Dim ImageLeft As Long, ImageTop As Long, ImageOffsetX As Long, ImageOffsetY As Long
+        LSet ImageRect = CellRect
+        If ComboCueWidth > 0 Then
+            If ComboCueAlignment = FlexLeftRightAlignmentRight Then
+                ImageRect.Right = ImageRect.Right - ComboCueWidth
+            ElseIf ComboCueAlignment = FlexLeftRightAlignmentLeft Then
+                ImageRect.Left = ImageRect.Left + ComboCueWidth
+            End If
+        End If
+        If .Alignment = -1 Then
+            ImageAlignment = VBFlexGridColsInfo(iCol).Alignment
+        Else
+            ImageAlignment = .Alignment
+        End If
+        ImageWidth = VBFlexGridColsInfo(iCol).ImageList.Size.CX
+        ImageHeight = VBFlexGridColsInfo(iCol).ImageList.Size.CY
+        ImageLeft = ImageRect.Left
+        ImageTop = ImageRect.Top
+        Select Case ImageAlignment
+            Case FlexAlignmentLeftCenter
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+            Case FlexAlignmentLeftBottom
+                ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
+            Case FlexAlignmentCenterTop, FlexAlignmentGeneralTop
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
+            Case FlexAlignmentCenterCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+            Case FlexAlignmentCenterBottom, FlexAlignmentGeneralBottom
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
+                ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
+            Case FlexAlignmentRightTop
+                ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
+            Case FlexAlignmentRightCenter
+                ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+            Case FlexAlignmentRightBottom
+                ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
+                ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
+        End Select
+        If ImageOffsetX > 0 Then ImageLeft = ImageLeft + ImageOffsetX
+        If ImageOffsetY > 0 Then ImageTop = ImageTop + ImageOffsetY
+        ImageList_Draw VBFlexGridColsInfo(iCol).ImageList.Handle, ImageIndex - 1, hDC, ImageLeft, ImageTop, ILD_TRANSPARENT
+        HiddenText = True
     End If
 End If
 Dim Checked As Integer
@@ -16205,6 +16389,9 @@ If hDC <> NULL_PTR Then
             End Select
         End If
     End If
+    If VBFlexGridColsInfo(iCol).ImageList.Handle <> NULL_PTR Then
+        If GetImageIndex(iRow, iCol, Text) > 0 Then HiddenText = True
+    End If
     Dim Checked As Integer
     Checked = GetCellChecked(iRow, iCol)
     If Checked > -1 Then
@@ -17186,6 +17373,42 @@ End Function
 
 Private Function GetComboCueCol() As Long
 If VBFlexGridComboCueCol = -1 Then GetComboCueCol = VBFlexGridCol Else GetComboCueCol = VBFlexGridComboCueCol
+End Function
+
+Private Function GetImageIndex(ByVal iRow As Long, ByVal iCol As Long, ByRef Text As String) As Long
+If PropRows < 1 Or PropCols < 1 Then Exit Function
+If VBFlexGridColsInfo(iCol).ImageList.Handle = NULL_PTR Then Exit Function
+Dim Image As Variant, Handled As Boolean, ImageIndex As Long
+RaiseEvent CellImageCallback(iRow, iCol, Image, Handled)
+If Handled = True Then
+    Select Case VarType(Image)
+        Case vbLong, vbInteger, vbByte
+            ImageIndex = Image
+        Case vbString
+            If Not Image = vbNullString And VBFlexGridColsInfo(iCol).ImageList.ObjectPointer <> NULL_PTR Then
+                On Error Resume Next
+                ImageIndex = PtrToObj(VBFlexGridColsInfo(iCol).ImageList.ObjectPointer).ListImages(Image).Index
+                On Error GoTo 0
+            End If
+        Case vbDouble, vbSingle
+            On Error Resume Next
+            ImageIndex = CLng(Image)
+            On Error GoTo 0
+    End Select
+ElseIf Not Text = vbNullString Then
+    If IsNumeric(Text) Then
+        On Error Resume Next
+        ImageIndex = CLng(Text)
+        On Error GoTo 0
+    ElseIf VBFlexGridColsInfo(iCol).ImageList.ObjectPointer <> NULL_PTR Then
+        On Error Resume Next
+        ImageIndex = PtrToObj(VBFlexGridColsInfo(iCol).ImageList.ObjectPointer).ListImages(Text).Index
+        On Error GoTo 0
+    End If
+End If
+If ImageIndex > 0 Then
+    If ImageIndex <= ImageList_GetImageCount(VBFlexGridColsInfo(iCol).ImageList.Handle) Then GetImageIndex = ImageIndex
+End If
 End Function
 
 Private Sub ProcessKeyDown(ByVal KeyCode As Integer, ByVal Shift As Integer)
