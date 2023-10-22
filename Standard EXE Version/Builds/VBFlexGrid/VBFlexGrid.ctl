@@ -7558,7 +7558,6 @@ End With
 Call RedrawGrid
 End Property
 
-
 Public Property Get ColWordWrapOption(ByVal Index As Long) As FlexWordWrapOptions
 Attribute ColWordWrapOption.VB_Description = "Returns/sets how the text is displayed per column."
 Attribute ColWordWrapOption.VB_MemberFlags = "400"
