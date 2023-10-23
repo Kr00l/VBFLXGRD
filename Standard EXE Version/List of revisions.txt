@@ -1,5 +1,9 @@
 List of revisions:
 
+23-Oct-2023
+- Internal GetBestWidth/GetBestHeight doesn't measure anymore hidden text.
+  Text can become hidden by FlexTextAsCheckBox or by an image list.
+
 22-Oct-2023
 - Included the ColImageList As Variant property. (like in vsFlexGrid)
   Either an ImageList object or an hImageList handle can be set. (vsFlexGrid allows only handle)
