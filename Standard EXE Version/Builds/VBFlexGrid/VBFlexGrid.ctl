@@ -72,7 +72,7 @@ Private FlexClearEverything, FlexClearText, FlexClearFormatting, FlexClearTag
 Private FlexTabControls, FlexTabCells, FlexTabNext
 Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
 Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
-Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellChecked, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort, FlexCellTextDisplay, FlexCellTag
+Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellChecked, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort, FlexCellTextDisplay, FlexCellTextHidden, FlexCellHasCustomFormatting, FlexCellHasTag, FlexCellTag
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
@@ -356,7 +356,10 @@ FlexCellWidth = 22
 FlexCellHeight = 23
 FlexCellSort = 24
 FlexCellTextDisplay = 25
-FlexCellTag = 26
+FlexCellTextHidden = 26
+FlexCellHasCustomFormatting = 27
+FlexCellHasTag = 28
+FlexCellTag = 29
 End Enum
 Public Enum FlexAutoSizeModeConstants
 FlexAutoSizeModeColWidth = 0
@@ -8400,6 +8403,12 @@ Select Case Setting
         Err.Raise Number:=394, Description:="Property is write-only"
     Case FlexCellTextDisplay
         Cell = CellTextDisplay()
+    Case FlexCellTextHidden
+        Cell = CellTextHidden()
+    Case FlexCellHasCustomFormatting
+        Cell = Me.CellHasCustomFormatting
+    Case FlexCellHasTag
+        Cell = Me.CellHasTag
     Case FlexCellTag
         VariantCopy Cell, Me.CellTag
     Case Else
@@ -8482,6 +8491,12 @@ Select Case Setting
         Me.Sort = Value
     Case FlexCellTextDisplay
         Err.Raise Number:=383, Description:="Property is read-only"
+    Case FlexCellTextHidden
+        Err.Raise Number:=383, Description:="Property is read-only"
+    Case FlexCellHasCustomFormatting
+        Me.CellHasCustomFormatting = Value
+    Case FlexCellHasTag
+        Me.CellHasTag = Value
     Case FlexCellTag
         Me.CellTag = Value
     Case Else
@@ -10384,6 +10399,87 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Next i
 End If
 Call RedrawGrid
+End Property
+
+Public Property Get CellHasCustomFormatting() As Boolean
+Attribute CellHasCustomFormatting.VB_Description = "Returns/sets a value indicating if the cell has custom formatting."
+Attribute CellHasCustomFormatting.VB_MemberFlags = "400"
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+CellHasCustomFormatting = CBool(VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).lpFmtg <> NULL_PTR)
+End Property
+
+Public Property Let CellHasCustomFormatting(ByVal Value As Boolean)
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+If PropFillStyle = FlexFillStyleSingle Then
+    If Value = True Then
+        If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).lpFmtg = NULL_PTR Then Call AllocCellFmtg(VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).lpFmtg)
+    Else
+        If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).lpFmtg <> NULL_PTR Then Call FreeCellFmtg(VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).lpFmtg)
+    End If
+ElseIf PropFillStyle = FlexFillStyleRepeat Then
+    Dim i As Long, j As Long, SelRange As TCELLRANGE
+    Call GetSelRangeStruct(SelRange)
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i)
+        For j = SelRange.LeftCol To SelRange.RightCol
+            If Value = True Then
+                If .Cols(j).lpFmtg = NULL_PTR Then Call AllocCellFmtg(.Cols(j).lpFmtg)
+            Else
+                If .Cols(j).lpFmtg <> NULL_PTR Then Call FreeCellFmtg(.Cols(j).lpFmtg)
+            End If
+        Next j
+        End With
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get CellHasTag() As Boolean
+Attribute CellHasTag.VB_Description = "Returns/sets a value indicating if the cell has a tag associated with it."
+Attribute CellHasTag.VB_MemberFlags = "400"
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+CellHasTag = CBool(VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).lpTag <> NULL_PTR)
+End Property
+
+Public Property Let CellHasTag(ByVal Value As Boolean)
+If VBFlexGridRow < 0 Then
+    Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridCol < 0 Then
+    Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+If PropFillStyle = FlexFillStyleSingle Then
+    If Value = True Then
+        If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).lpTag = NULL_PTR Then Call AllocCellTag(VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).lpTag)
+    Else
+        If VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).lpTag <> NULL_PTR Then Call FreeCellTag(VBFlexGridCells.Rows(VBFlexGridRow).Cols(VBFlexGridCol).lpTag)
+    End If
+ElseIf PropFillStyle = FlexFillStyleRepeat Then
+    Dim i As Long, j As Long, SelRange As TCELLRANGE
+    Call GetSelRangeStruct(SelRange)
+    For i = SelRange.TopRow To SelRange.BottomRow
+        With VBFlexGridCells.Rows(i)
+        For j = SelRange.LeftCol To SelRange.RightCol
+            If Value = True Then
+                If .Cols(j).lpTag = NULL_PTR Then Call AllocCellTag(.Cols(j).lpTag)
+            Else
+                If .Cols(j).lpTag <> NULL_PTR Then Call FreeCellTag(.Cols(j).lpTag)
+            End If
+        Next j
+        End With
+    Next i
+End If
 End Property
 
 Public Property Get CellTag() As Variant
@@ -15199,6 +15295,29 @@ For i = 0 To (Length - 1)
 Next i
 Const HASH_SIZE As Long = 2999
 CalcHash = (CalcHash And &H7FFFFFFF) Mod HASH_SIZE
+End Function
+
+Private Function CellTextHidden() As Boolean
+If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+    Dim Text As String
+    Call GetCellText(VBFlexGridRow, VBFlexGridCol, Text)
+    Call GetTextDisplay(VBFlexGridRow, VBFlexGridCol, Text)
+    If VBFlexGridColsInfo(VBFlexGridCol).ImageList.Handle <> NULL_PTR Then
+        If GetImageIndex(VBFlexGridRow, VBFlexGridCol, Text) > 0 Then
+            CellTextHidden = True
+            Exit Function
+        End If
+    End If
+    Dim Checked As Integer
+    Checked = GetCellChecked(VBFlexGridRow, VBFlexGridCol)
+    If Checked > -1 Then
+        Select Case Checked
+            Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
+                CellTextHidden = True
+                Exit Function
+        End Select
+    End If
+End If
 End Function
 
 Private Function GetRowHeight(ByVal iRow As Long) As Long
