@@ -3,6 +3,9 @@ List of revisions:
 23-Oct-2023
 - Internal GetBestWidth/GetBestHeight doesn't measure anymore hidden text.
   Text can become hidden by FlexTextAsCheckBox or by an image list.
+- Added enum FlexCellTextHidden for the Cell property. (read-only)
+- Added enum FlexCellHasCustomFormatting/FlexCellHasTag for the Cell property.
+  It returns True if memory is allocated. Set to False to release the memory or True to force allocation.
 
 22-Oct-2023
 - Included the ColImageList As Variant property. (like in vsFlexGrid)
