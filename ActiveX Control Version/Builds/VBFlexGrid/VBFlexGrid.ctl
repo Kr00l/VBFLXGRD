@@ -14065,8 +14065,16 @@ If hDC <> NULL_PTR Then
         hFontOld = SelectObject(hDC, hFontTemp)
         Set TempFont = Nothing
     End If
+    Dim HiddenText As Boolean, Checked As Integer
+    Checked = GetCellChecked(iRow, iCol)
+    If Checked > -1 Then
+        Select Case Checked
+            Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
+                HiddenText = True
+        End Select
+    End If
     Dim CY As Long
-    If Not Text = vbNullString Then
+    If Not Text = vbNullString And HiddenText = False Then
         Dim CellRect As RECT
         With CellRect
         .Left = 0
@@ -14115,8 +14123,6 @@ If hDC <> NULL_PTR Then
                 End Select
             End If
         End If
-        Dim Checked As Integer
-        Checked = GetCellChecked(iRow, iCol)
         If Checked > -1 Then
             Dim CheckBoxAlignment As FlexCheckBoxAlignmentConstants
             If iRow < PropFixedRows Or iCol < PropFixedCols Then
@@ -14185,8 +14191,16 @@ If hDC = NULL_PTR Then
     hDC = hDCTemp
 End If
 If hDC <> NULL_PTR Then
+    Dim HiddenText As Boolean, Checked As Integer
+    Checked = GetCellChecked(iRow, iCol)
+    If Checked > -1 Then
+        Select Case Checked
+            Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
+                HiddenText = True
+        End Select
+    End If
     Dim CX As Long
-    CX = GetTextSize(iRow, iCol, Text, hDC).CX
+    If HiddenText = False Then CX = GetTextSize(iRow, iCol, Text, hDC).CX
     If PropBestFitMode <> FlexBestFitModeTextOnly Then
         Dim CellFmtg As TCELLFMTG
         Call GetCellFmtg(iRow, iCol, CFM_PICTURE Or CFM_PICTUREALIGNMENT, CellFmtg)
@@ -14207,8 +14221,6 @@ If hDC <> NULL_PTR Then
                         End Select
                     End If
                 End If
-                Dim Checked As Integer
-                Checked = GetCellChecked(iRow, iCol)
                 If Checked > -1 Then
                     Dim CheckBoxAlignment As FlexCheckBoxAlignmentConstants
                     If iRow < PropFixedRows Or iCol < PropFixedCols Then
