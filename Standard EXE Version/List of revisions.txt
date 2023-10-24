@@ -2,6 +2,7 @@ List of revisions:
 
 24-Oct-2023
 - Internal DrawCellCheckBox function now clipped to the cell rect boundaries.
+- Included the OLEDragDropScroll property which defaults to True.
 
 23-Oct-2023
 - Internal GetBestWidth/GetBestHeight doesn't measure anymore hidden text.
