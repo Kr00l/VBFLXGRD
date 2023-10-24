@@ -1,5 +1,8 @@
 List of revisions:
 
+24-Oct-2023
+- Internal DrawCellCheckBox function now clipped to the cell rect boundaries.
+
 23-Oct-2023
 - Internal GetBestWidth/GetBestHeight doesn't measure anymore hidden text.
   Text can become hidden by FlexTextAsCheckBox or by an image list.
