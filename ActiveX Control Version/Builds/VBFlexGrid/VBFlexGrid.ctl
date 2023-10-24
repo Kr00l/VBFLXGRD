@@ -1938,6 +1938,7 @@ PropGridColorFixed = vbBlack
 PropGridColorFrozen = vbBlack
 PropSortArrowColor = vbGrayText
 PropFloodColor = &HC0&
+Me.OLEDropMode = vbOLEDropNone
 PropMousePointer = 0: Set PropMouseIcon = Nothing
 PropMouseTrack = False
 PropRightToLeft = Ambient.RightToLeft
@@ -2264,6 +2265,45 @@ End Sub
 
 Private Sub UserControl_OLEDragOver(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single, State As Integer)
 RaiseEvent OLEDragOver(Data, Effect, Button, Shift, UserControl.ScaleX(X, vbPixels, vbContainerPosition), UserControl.ScaleY(Y, vbPixels, vbContainerPosition), State)
+If VBFlexGridHandle <> NULL_PTR Then
+    If State = vbOver And Not Effect = vbDropEffectNone Then
+        If (X >= 0 And X <= UserControl.Width) And (Y >= 0 And Y <= UserControl.Height) Then
+            Dim dwStyle As Long, dwExStyle As Long
+            dwStyle = GetWindowLong(VBFlexGridHandle, GWL_STYLE)
+            dwExStyle = GetWindowLong(VBFlexGridHandle, GWL_EXSTYLE)
+            If (dwStyle And WS_HSCROLL) = WS_HSCROLL Then
+                Dim iCol As Long, CX1 As Long, CX2 As Long
+                For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+                    CX1 = CX1 + GetColWidth(iCol)
+                Next iCol
+                If (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+                    If (dwExStyle And WS_EX_LEFTSCROLLBAR) = WS_EX_LEFTSCROLLBAR Then
+                        CX1 = CX1 + GetSystemMetrics(SM_CXVSCROLL)
+                    Else
+                        CX2 = GetSystemMetrics(SM_CXVSCROLL)
+                    End If
+                End If
+                If X < ((16 * PixelsPerDIP_X()) + CX1) Then
+                    SendMessage VBFlexGridHandle, WM_HSCROLL, SB_LINELEFT, ByVal 0&
+                ElseIf (UserControl.ScaleWidth - X) < ((16 * PixelsPerDIP_X()) + CX2) Then
+                    SendMessage VBFlexGridHandle, WM_HSCROLL, SB_LINERIGHT, ByVal 0&
+                End If
+            End If
+            If (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+                Dim iRow As Long, CY1 As Long, CY2 As Long
+                For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
+                    CY1 = CY1 + GetRowHeight(iRow)
+                Next iRow
+                If (dwStyle And WS_HSCROLL) = WS_HSCROLL Then CY2 = GetSystemMetrics(SM_CYHSCROLL)
+                If Y < ((16 * PixelsPerDIP_Y()) + CY1) Then
+                    SendMessage VBFlexGridHandle, WM_VSCROLL, SB_LINEUP, ByVal 0&
+                ElseIf (UserControl.ScaleHeight - Y) < ((16 * PixelsPerDIP_Y()) + CY2) Then
+                    SendMessage VBFlexGridHandle, WM_VSCROLL, SB_LINEDOWN, ByVal 0&
+                End If
+            End If
+        End If
+    End If
+End If
 End Sub
 
 Private Sub UserControl_OLEGiveFeedback(Effect As Long, DefaultCursors As Boolean)
