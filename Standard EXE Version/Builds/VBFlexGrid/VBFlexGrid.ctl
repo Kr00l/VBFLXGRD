@@ -1322,14 +1322,14 @@ End Enum
 #If VBA7 Then
 Private Declare PtrSafe Function IsThemeBackgroundPartiallyTransparent Lib "uxtheme" (ByVal Theme As LongPtr, ByVal iPartId As Long, ByVal iStateId As Long) As Long
 Private Declare PtrSafe Function DrawThemeParentBackground Lib "uxtheme" (ByVal hWnd As LongPtr, ByVal hDC As LongPtr, ByRef pRect As RECT) As Long
-Private Declare PtrSafe Function DrawThemeBackground Lib "uxtheme" (ByVal Theme As LongPtr, ByVal hDC As LongPtr, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pRect As RECT, ByRef pClipRect As RECT) As Long
+Private Declare PtrSafe Function DrawThemeBackground Lib "uxtheme" (ByVal Theme As LongPtr, ByVal hDC As LongPtr, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pRect As RECT, ByRef pClipRect As Any) As Long
 Private Declare PtrSafe Function GetThemeBackgroundContentRect Lib "uxtheme" (ByVal Theme As LongPtr, ByVal hDC As LongPtr, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pBoundingRect As RECT, ByRef pContentRect As RECT) As Long
 Private Declare PtrSafe Function OpenThemeData Lib "uxtheme" (ByVal hWnd As LongPtr, ByVal lpszClassList As LongPtr) As LongPtr
 Private Declare PtrSafe Function CloseThemeData Lib "uxtheme" (ByVal Theme As LongPtr) As Long
 #Else
 Private Declare Function IsThemeBackgroundPartiallyTransparent Lib "uxtheme" (ByVal Theme As Long, ByVal iPartId As Long, ByVal iStateId As Long) As Long
 Private Declare Function DrawThemeParentBackground Lib "uxtheme" (ByVal hWnd As Long, ByVal hDC As Long, ByRef pRect As RECT) As Long
-Private Declare Function DrawThemeBackground Lib "uxtheme" (ByVal Theme As Long, ByVal hDC As Long, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pRect As RECT, ByRef pClipRect As RECT) As Long
+Private Declare Function DrawThemeBackground Lib "uxtheme" (ByVal Theme As Long, ByVal hDC As Long, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pRect As RECT, ByRef pClipRect As Any) As Long
 Private Declare Function GetThemeBackgroundContentRect Lib "uxtheme" (ByVal Theme As Long, ByVal hDC As Long, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pBoundingRect As RECT, ByRef pContentRect As RECT) As Long
 Private Declare Function OpenThemeData Lib "uxtheme" (ByVal hWnd As Long, ByVal lpszClassList As Long) As Long
 Private Declare Function CloseThemeData Lib "uxtheme" (ByVal Theme As Long) As Long
@@ -13542,7 +13542,7 @@ If Checked > -1 Then
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
-    Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, Checked)
+    Call DrawCellCheckBox(hDC, CheckBoxRect, CellRect, Text, iRow, iCol, Checked)
     Select Case CheckBoxAlignment
         Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
@@ -14270,7 +14270,7 @@ If Checked > -1 Then
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
-    Call DrawCellCheckBox(hDC, CheckBoxRect, Text, iRow, iCol, Checked)
+    Call DrawCellCheckBox(hDC, CheckBoxRect, CellRect, Text, iRow, iCol, Checked)
     Select Case CheckBoxAlignment
         Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
@@ -20136,7 +20136,7 @@ If hRgn <> NULL_PTR Then
 End If
 End Sub
 
-Private Sub DrawCellCheckBox(ByVal hDC As LongPtr, ByRef RC As RECT, ByRef Text As String, ByVal iRow As Long, ByVal iCol As Long, ByVal Checked As Integer)
+Private Sub DrawCellCheckBox(ByVal hDC As LongPtr, ByRef RC As RECT, ByRef ClipRect As RECT, ByRef Text As String, ByVal iRow As Long, ByVal iCol As Long, ByVal Checked As Integer)
 If hDC = NULL_PTR Then Exit Sub
 Select Case Checked
     Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
@@ -20152,6 +20152,18 @@ Select Case Checked
             If Checked = FlexTextAsCheckBox Then Checked = FlexGrayed Else Checked = FlexDisabledGrayed
         End If
 End Select
+Dim hRgn As LongPtr, hRgnOld As LongPtr
+hRgn = CreateRectRgn(ClipRect.Left, ClipRect.Top, ClipRect.Right, ClipRect.Bottom)
+If hRgn <> NULL_PTR Then
+    hRgnOld = CreateRectRgn(0, 0, 0, 0)
+    If hRgnOld <> NULL_PTR Then
+        If GetClipRgn(hDC, hRgnOld) = 0 Then
+            DeleteObject hRgnOld
+            hRgnOld = NULL_PTR
+        End If
+    End If
+    ExtSelectClipRgn hDC, hRgn, RGN_COPY
+End If
 Dim Handled As Boolean
 If VBFlexGridCheckBoxDrawMode <> FlexCheckBoxDrawModeNormal Then
     Dim Cancel As Boolean, ItemState As Long, RCItem As RECT, P As POINTAPI
@@ -20218,7 +20230,7 @@ If Handled = False Then
                     CheckState = CBS_MIXEDDISABLED
             End Select
             If IsThemeBackgroundPartiallyTransparent(Theme, BP_CHECKBOX, CheckState) <> 0 Then DrawThemeParentBackground VBFlexGridHandle, hDC, RC
-            DrawThemeBackground Theme, hDC, BP_CHECKBOX, CheckState, RC, RC
+            DrawThemeBackground Theme, hDC, BP_CHECKBOX, CheckState, RC, ByVal NULL_PTR
             CloseThemeData Theme
         End If
     End If
@@ -20261,6 +20273,17 @@ If Handled = False Then
                 FillRect hDC, RC, Brush
         End Select
     End If
+End If
+If hRgnOld <> NULL_PTR Then
+    ExtSelectClipRgn hDC, hRgnOld, RGN_COPY
+    DeleteObject hRgnOld
+    hRgnOld = NULL_PTR
+Else
+    ExtSelectClipRgn hDC, NULL_PTR, RGN_COPY
+End If
+If hRgn <> NULL_PTR Then
+    DeleteObject hRgn
+    hRgn = NULL_PTR
 End If
 End Sub
 
