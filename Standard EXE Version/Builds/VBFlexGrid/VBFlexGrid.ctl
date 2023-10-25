@@ -1386,7 +1386,6 @@ Private Const ODS_CHECKED As Long = &H8
 Private Const ODS_FOCUS As Long = &H10
 Private Const ODS_HOTLIGHT As Long = &H40
 Private Const ODS_NOFOCUSRECT As Long = &H200
-Private Const CDIS_DROPHILITED As Long = &H1000
 Private Const PS_SOLID As Long = 0
 Private Const PS_DASH As Long = 1
 Private Const PS_DOT As Long = 2
@@ -13390,7 +13389,6 @@ If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 If VBFlexGridDropHighlight > -1 Then
     If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
         If iRow = VBFlexGridDropHighlight Then
-            ItemState = ItemState Or CDIS_DROPHILITED
             If iCol >= PropFixedCols Then
                 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
             Else
@@ -13400,7 +13398,6 @@ If VBFlexGridDropHighlight > -1 Then
         End If
     ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
         If iCol = VBFlexGridDropHighlight Then
-            ItemState = ItemState Or CDIS_DROPHILITED
             If iRow >= PropFixedRows Then
                 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
             Else
@@ -13997,11 +13994,15 @@ If ComboCueWidth > 0 Then
     Call ComboButtonDraw(iRow, iCol, DIS)
     SetViewportOrgEx DIS.hDC, P.X, P.Y, P
 End If
-If (ItemState And CDIS_DROPHILITED) = CDIS_DROPHILITED Then
+If VBFlexGridDropHighlight > -1 Then
     If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
-        If iCol < PropFixedCols Then InvertRect hDC, CellRect
+        If iRow = VBFlexGridDropHighlight Then
+            If iCol < PropFixedCols Then InvertRect hDC, CellRect
+        End If
     ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
-        If iRow < PropFixedRows Then InvertRect hDC, CellRect
+        If iCol = VBFlexGridDropHighlight Then
+            If iRow < PropFixedRows Then InvertRect hDC, CellRect
+        End If
     End If
 End If
 End Sub
@@ -14145,13 +14146,11 @@ If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 If VBFlexGridDropHighlight > -1 Then
     If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
         If iRow = VBFlexGridDropHighlight Then
-            ItemState = ItemState Or CDIS_DROPHILITED
             If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
             If (ItemState And ODS_FOCUS) = ODS_FOCUS Then ItemState = ItemState And Not ODS_FOCUS
         End If
     ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
         If iCol = VBFlexGridDropHighlight Then
-            ItemState = ItemState Or CDIS_DROPHILITED
             If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
             If (ItemState And ODS_FOCUS) = ODS_FOCUS Then ItemState = ItemState And Not ODS_FOCUS
         End If
