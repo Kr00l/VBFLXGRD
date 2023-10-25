@@ -651,7 +651,13 @@ Else
 End If
 If State = vbOver Then
     If PropDragRowDragging = True Then
-        If VBFlexGrid1.MouseRow >= VBFlexGrid1.FixedRows Then VBFlexGrid1.DropHighlight = VBFlexGrid1.MouseRow
+        With VBFlexGrid1
+        If .MouseRow >= .FixedRows Then
+            .DropHighlight = .MouseRow
+        Else
+            .DropHighlight = .TopRow
+        End If
+        End With
     End If
 ElseIf State = vbLeave Then
     If PropDragRowDragging = True Then
