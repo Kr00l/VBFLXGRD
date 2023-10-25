@@ -271,6 +271,7 @@ Begin VB.Form MainForm
       Width           =   13575
       _ExtentX        =   23945
       _ExtentY        =   9975
+      OLEDropMode     =   1
       Rows            =   150
       Cols            =   20
       AllowUserFreezing=   3
@@ -280,13 +281,6 @@ Begin VB.Form MainForm
       ShowScrollTips  =   -1  'True
       AllowScrollLock =   -1  'True
       WallPaper       =   "MainForm.frx":0344
-   End
-   Begin VB.Label Label3 
-      Height          =   315
-      Left            =   12360
-      TabIndex        =   32
-      Top             =   7080
-      Width           =   1335
    End
 End
 Attribute VB_Name = "MainForm"
@@ -321,7 +315,7 @@ Private Const CLSID_StandardFontPage As String = "{7EBDAAE0-8120-11CF-899F-00AA0
 Private PropCellBackColor As OLE_COLOR, PropCellForeColor As OLE_COLOR
 Private PropCellFont As StdFont
 Attribute PropCellFont.VB_VarHelpID = -1
-Private PropDragRowActive As Boolean, PropDragRowDragging As Boolean, PropDragRowSourceRow As Long
+Private PropDragRowActive As Boolean, PropDragRowDragging As Boolean
 
 Public Property Get CellBackColor() As OLE_COLOR
 CellBackColor = PropCellBackColor
@@ -633,21 +627,64 @@ PropDragRowActive = Not PropDragRowActive
 MsgBox "DragRow mode is '" & PropDragRowActive & "'"
 End Sub
 
-Private Sub VBFlexGrid1_DragDrop(Source As Control, X As Single, Y As Single)
-If Source.Name = "Label3" Then
-    With VBFlexGrid1
-    If .MouseRow > 0 And .MouseRow <> PropDragRowSourceRow Then
-        .RowPosition(PropDragRowSourceRow) = .MouseRow
-        .Col = 1
-        .Row = .MouseRow
-        .RowSel = .MouseRow
-        PropDragRowSourceRow = .MouseRow
-    End If
-    Label3.Drag vbEndDrag
-    .Refresh
-    End With
-    PropDragRowDragging = False
+Private Sub VBFlexGrid1_OLEStartDrag(Data As DataObject, AllowedEffects As Long)
+Data.SetData StrToVar(VBFlexGrid1.Name), vbCFRTF
+AllowedEffects = vbDropEffectMove
+End Sub
+
+Private Sub VBFlexGrid1_OLEDragOver(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single, State As Integer)
+If Data.GetFormat(vbCFRTF) = False Then
+    Effect = vbDropEffectNone
+    Exit Sub
 End If
+Dim DataString As String
+DataString = VarToStr(Data.GetData(vbCFRTF))
+If DataString = VBFlexGrid1.Name Then
+    If PropDragRowDragging = True Then
+        Effect = vbDropEffectMove
+    Else
+        Effect = vbDropEffectCopy Or vbDropEffectMove
+    End If
+Else
+    Effect = vbDropEffectNone
+    Exit Sub
+End If
+If State = vbOver Then
+    If PropDragRowDragging = True Then
+        If VBFlexGrid1.MouseRow >= VBFlexGrid1.FixedRows Then VBFlexGrid1.DropHighlight = VBFlexGrid1.MouseRow
+    End If
+ElseIf State = vbLeave Then
+    If PropDragRowDragging = True Then
+        VBFlexGrid1.DropHighlight = -1
+    End If
+End If
+End Sub
+
+Private Sub VBFlexGrid1_OLEDragDrop(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single)
+If Data.GetFormat(vbCFRTF) = False Then Exit Sub
+Dim DataString As String
+DataString = VarToStr(Data.GetData(vbCFRTF))
+If DataString = VBFlexGrid1.Name Then
+    If PropDragRowDragging = True Then
+        With VBFlexGrid1
+        If .MouseRow >= .FixedRows Then
+            .RowPosition(.Row) = .MouseRow
+            .Col = .FixedCols
+            .Row = .MouseRow
+        Else
+            .RowPosition(.Row) = .FixedRows
+            .Col = .FixedCols
+            .Row = .FixedRows
+        End If
+        .DropHighlight = -1
+        End With
+        PropDragRowDragging = False
+    End If
+End If
+End Sub
+
+Private Sub VBFlexGrid1_OLECompleteDrag(Effect As Long)
+PropDragRowDragging = False
 End Sub
 
 Private Sub VBFlexGrid1_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
@@ -655,10 +692,7 @@ With VBFlexGrid1
 If PropDragRowActive = True Then
     .HitTest X, Y
     If .HitResult = FlexHitResultCell Then
-        If .HitCol < .FixedCols And .HitRow >= .FixedRows Then
-            PropDragRowSourceRow = .HitRow
-            PropDragRowDragging = True
-        End If
+        If .HitCol < .FixedCols And .HitRow >= .FixedRows Then PropDragRowDragging = True
     End If
 End If
 End With
@@ -669,10 +703,7 @@ If PropDragRowDragging = True Then
     With VBFlexGrid1
     .Col = 0
     .Row = .MouseRow
-    Label3.Move .Left + .CellLeft, .Top + .CellTop
-    Label3.Height = .CellHeight
-    Label3.Width = .Width
-    Label3.Drag vbBeginDrag
+    .OLEDrag
     End With
 End If
 End Sub
