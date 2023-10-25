@@ -655,7 +655,7 @@ If State = vbOver Then
         If .MouseRow >= .FixedRows Then
             .DropHighlight = .MouseRow
         Else
-            .DropHighlight = .TopRow
+            .DropHighlight = .FixedRows
         End If
         End With
     End If
