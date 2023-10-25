@@ -20109,11 +20109,11 @@ LSet VBFlexGridDividerDragSplitterRect = VBFlexGridClientRect
 With VBFlexGridDividerDragSplitterRect
 Select Case VBFlexGridCaptureHitResult
     Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom
-        .Top = Y - (1 * PixelsPerDIP_Y())
-        .Bottom = Y + (1 * PixelsPerDIP_Y())
+        .Top = Y - 1
+        .Bottom = Y + 1
     Case FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
-        .Left = X - (1 * PixelsPerDIP_X())
-        .Right = X + (1 * PixelsPerDIP_X())
+        .Left = X - 1
+        .Right = X + 1
 End Select
 End With
 End Sub
