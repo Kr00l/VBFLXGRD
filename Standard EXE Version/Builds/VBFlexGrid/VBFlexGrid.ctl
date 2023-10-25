@@ -58,6 +58,7 @@ Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy, FlexFocusRect
 Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
 Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled, FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
+Private FlexDropHighlightModeRow, FlexDropHighlightModeCol
 Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral, FlexAlignmentGeneralTop, FlexAlignmentGeneralCenter, FlexAlignmentGeneralBottom
 Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
 Private FlexRowSizingModeIndividual, FlexRowSizingModeAll, FlexRowSizingModeUniform
@@ -204,6 +205,10 @@ FlexHitResultComboCue = 10
 FlexHitResultComboCueDisabled = 11
 FlexHitResultCheckBox = 12
 FlexHitResultCheckBoxDisabled = 13
+End Enum
+Public Enum FlexDropHighlightModeConstants
+FlexDropHighlightModeRow = 0
+FlexDropHighlightModeCol = 1
 End Enum
 Public Enum FlexAlignmentConstants
 FlexAlignmentLeftTop = 0
@@ -1381,6 +1386,7 @@ Private Const ODS_CHECKED As Long = &H8
 Private Const ODS_FOCUS As Long = &H10
 Private Const ODS_HOTLIGHT As Long = &H40
 Private Const ODS_NOFOCUSRECT As Long = &H200
+Private Const CDIS_DROPHILITED As Long = &H1000
 Private Const PS_SOLID As Long = 0
 Private Const PS_DASH As Long = 1
 Private Const PS_DOT As Long = 2
@@ -1683,6 +1689,8 @@ Private VBFlexGridDividerDragDirty As Boolean
 Private VBFlexGridHitRow As Long, VBFlexGridHitCol As Long
 Private VBFlexGridHitRowDivider As Long, VBFlexGridHitColDivider As Long
 Private VBFlexGridHitResult As FlexHitResultConstants
+Private VBFlexGridDropHighlight As Long
+Private VBFlexGridDropHighlightMode As FlexDropHighlightModeConstants
 Private VBFlexGridCellClickRow As Long, VBFlexGridCellClickCol As Long
 Private VBFlexGridEditRow As Long, VBFlexGridEditCol As Long
 Private VBFlexGridEditMergedRange As TCELLRANGE
@@ -2024,6 +2032,8 @@ VBFlexGridHitCol = -1
 VBFlexGridHitRowDivider = -1
 VBFlexGridHitColDivider = -1
 VBFlexGridHitResult = FlexHitResultNoWhere
+VBFlexGridDropHighlight = -1
+VBFlexGridDropHighlightMode = FlexDropHighlightModeRow
 VBFlexGridCellClickRow = -1
 VBFlexGridCellClickCol = -1
 VBFlexGridEditRow = -1
@@ -6735,6 +6745,41 @@ Attribute HitResult.VB_MemberFlags = "400"
 HitResult = VBFlexGridHitResult
 End Property
 
+Public Property Get DropHighlight() As Long
+Attribute DropHighlight.VB_Description = "Returns/sets the row or column which is used to highlight the target of a drag/drop operation."
+Attribute DropHighlight.VB_MemberFlags = "400"
+DropHighlight = VBFlexGridDropHighlight
+End Property
+
+Public Property Let DropHighlight(ByVal Value As Long)
+If VBFlexGridDropHighlight = Value Then Exit Property
+If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
+    If Value <> -1 And (Value < 0 Or Value > (PropRows - 1)) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
+    If Value <> -1 And (Value < 0 Or Value > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+End If
+VBFlexGridDropHighlight = Value
+Call RedrawGrid
+End Property
+
+Public Property Get DropHighlightMode() As FlexDropHighlightModeConstants
+Attribute DropHighlightMode.VB_Description = "Returns/sets a value that determines whether a row or a column is used as a drag/drop target."
+Attribute DropHighlightMode.VB_MemberFlags = "400"
+DropHighlightMode = VBFlexGridDropHighlightMode
+End Property
+
+Public Property Let DropHighlightMode(ByVal Value As FlexDropHighlightModeConstants)
+If VBFlexGridDropHighlightMode = Value Then Exit Property
+Select Case Value
+    Case FlexDropHighlightModeRow, FlexDropHighlightModeCol
+        VBFlexGridDropHighlightMode = Value
+        VBFlexGridDropHighlight = -1
+    Case Else
+        Err.Raise 380
+End Select
+Call RedrawGrid
+End Property
+
 Public Property Get RowPos(ByVal Index As Long) As Long
 Attribute RowPos.VB_Description = "Returns the distance in twips between the upper-left corner of the control and the upper-left corner of a specified row."
 Attribute RowPos.VB_MemberFlags = "400"
@@ -11411,7 +11456,7 @@ ComboCueCol = GetComboCueCol()
 End Property
 
 Public Property Let ComboCueCol(ByVal Value As Long)
-If Value <> -1 And (Value < 0 Or Value > (PropRows - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Value <> -1 And (Value < 0 Or Value > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 VBFlexGridComboCueCol = Value
 Call RedrawGrid
 End Property
@@ -13342,6 +13387,29 @@ If PropFocusRect <> FlexFocusRectNone Then
     If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
+If VBFlexGridDropHighlight > -1 Then
+    If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
+        If iRow = VBFlexGridDropHighlight Then
+            ItemState = ItemState Or CDIS_DROPHILITED
+            If iCol >= PropFixedCols Then
+                If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+            Else
+                If (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState And Not ODS_SELECTED
+            End If
+            If (ItemState And ODS_FOCUS) = ODS_FOCUS Then ItemState = ItemState And Not ODS_FOCUS
+        End If
+    ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
+        If iCol = VBFlexGridDropHighlight Then
+            ItemState = ItemState Or CDIS_DROPHILITED
+            If iRow >= PropFixedRows Then
+                If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+            Else
+                If (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState And Not ODS_SELECTED
+            End If
+            If (ItemState And ODS_FOCUS) = ODS_FOCUS Then ItemState = ItemState And Not ODS_FOCUS
+        End If
+    End If
+End If
 Call GetGridLineOffsets(iRow, iCol, VBFlexGridDrawInfo.GridLineOffsets)
 Dim CellFmtg As TCELLFMTG
 Call GetCellFmtg(iRow, iCol, CFM_TEXTSTYLE Or CFM_ALIGNMENT Or CFM_PICTURE Or CFM_PICTURERENDERFLAG Or CFM_PICTUREALIGNMENT Or CFM_BACKCOLOR Or CFM_FORECOLOR Or CFM_FLOODPERCENT Or CFM_FLOODCOLOR Or CFM_FONT, CellFmtg)
@@ -13929,6 +13997,13 @@ If ComboCueWidth > 0 Then
     Call ComboButtonDraw(iRow, iCol, DIS)
     SetViewportOrgEx DIS.hDC, P.X, P.Y, P
 End If
+If (ItemState And CDIS_DROPHILITED) = CDIS_DROPHILITED Then
+    If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
+        If iCol < PropFixedCols Then InvertRect hDC, CellRect
+    ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
+        If iRow < PropFixedRows Then InvertRect hDC, CellRect
+    End If
+End If
 End Sub
 
 Private Sub DrawCell(ByRef hDC As LongPtr, ByRef CellRect As RECT, ByVal iRow As Long, ByVal iCol As Long)
@@ -14067,6 +14142,21 @@ If PropFocusRect <> FlexFocusRectNone Then
     If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
+If VBFlexGridDropHighlight > -1 Then
+    If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
+        If iRow = VBFlexGridDropHighlight Then
+            ItemState = ItemState Or CDIS_DROPHILITED
+            If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+            If (ItemState And ODS_FOCUS) = ODS_FOCUS Then ItemState = ItemState And Not ODS_FOCUS
+        End If
+    ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
+        If iCol = VBFlexGridDropHighlight Then
+            ItemState = ItemState Or CDIS_DROPHILITED
+            If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
+            If (ItemState And ODS_FOCUS) = ODS_FOCUS Then ItemState = ItemState And Not ODS_FOCUS
+        End If
+    End If
+End If
 Call GetGridLineOffsets(iRow, iCol, VBFlexGridDrawInfo.GridLineOffsets)
 Dim CellFmtg As TCELLFMTG
 Call GetCellFmtg(iRow, iCol, CFM_TEXTSTYLE Or CFM_ALIGNMENT Or CFM_PICTURE Or CFM_PICTURERENDERFLAG Or CFM_PICTUREALIGNMENT Or CFM_BACKCOLOR Or CFM_FORECOLOR Or CFM_FLOODPERCENT Or CFM_FLOODCOLOR Or CFM_FONT, CellFmtg)
