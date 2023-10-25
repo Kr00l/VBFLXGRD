@@ -10286,7 +10286,7 @@ ComboCueCol = GetComboCueCol()
 End Property
 
 Public Property Let ComboCueCol(ByVal Value As Long)
-If Value <> -1 And (Value < 0 Or Value > (PropRows - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Value <> -1 And (Value < 0 Or Value > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 VBFlexGridComboCueCol = Value
 Call RedrawGrid
 End Property
