@@ -10,7 +10,7 @@ List of revisions:
 
 25-Oct-2023
 - Included the DropHighlight/DropHighlightMode run-time property.
-  The DropHighlightMode can be set to 0 - Row (default) or 1 - Col.
+  The DropHighlightMode can be set to 0 - ByRow (default) or 1 - ByColumn.
 
 24-Oct-2023
 - Internal DrawCellCheckBox function now clipped to the cell rect boundaries.

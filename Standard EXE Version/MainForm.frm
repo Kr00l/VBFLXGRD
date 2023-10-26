@@ -622,6 +622,7 @@ End Sub
 
 Private Sub Picture2_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
 If PropInsertRowDragging = True Then
+    VBFlexGrid1.DropHighlightMode = FlexDropHighlightModeByRow
     VBFlexGrid1.DropHighlightStyle = FlexDropHighlightStyleInsertMark
     Picture2.OLEDrag
 End If
@@ -767,6 +768,7 @@ If PropDragRowDragging = True Then
     With VBFlexGrid1
     .Col = 0
     .Row = .MouseRow
+    .DropHighlightMode = FlexDropHighlightModeByRow
     .DropHighlightStyle = FlexDropHighlightStyleOnTop
     .OLEDrag
     End With
