@@ -17931,7 +17931,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                         .PT.Y = .PT.Y + GetRowHeight(i)
                     Next i
                 End If
-                If (Y - .PT.Y) >= (GetRowHeight(.MouseRow) / 2) Then
+                If Y > (.PT.Y + (GetRowHeight(.MouseRow) / 2)) Then
                     iRow = iRow + 1
                     .MouseRow = .MouseRow + 1
                 End If
@@ -17952,7 +17952,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                         .PT.X = .PT.X + GetColWidth(i)
                     Next i
                 End If
-                If (X - .PT.X) >= (GetColWidth(.MouseCol) / 2) Then
+                If X > (.PT.X + (GetColWidth(.MouseCol) / 2)) Then
                     iCol = iCol + 1
                     .MouseCol = .MouseCol + 1
                 End If
@@ -18104,7 +18104,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                     Next i
                 End If
                 If .MouseRow < (PropRows - 1) Then
-                    If (Y - .PT.Y) >= (GetRowHeight(.MouseRow) / 2) Then .PT.Y = .PT.Y + GetRowHeight(.MouseRow)
+                    If Y > (.PT.Y + (GetRowHeight(.MouseRow) / 2)) Then .PT.Y = .PT.Y + GetRowHeight(.MouseRow)
                 End If
             End If
             If VBFlexGridCaptureDividerCol > -1 Then
@@ -18124,7 +18124,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                     Next i
                 End If
                 If .MouseCol < (PropCols - 1) Then
-                    If (X - .PT.X) >= (GetColWidth(.MouseCol) / 2) Then .PT.X = .PT.X + GetColWidth(.MouseCol)
+                    If X > (.PT.X + (GetColWidth(.MouseCol) / 2)) Then .PT.X = .PT.X + GetColWidth(.MouseCol)
                 End If
             End If
             ' VBFlexGridDividerDragOffset is not applicable as PT has fixed coordinates.
