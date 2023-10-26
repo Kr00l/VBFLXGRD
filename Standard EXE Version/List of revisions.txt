@@ -4,6 +4,7 @@ List of revisions:
 - Included the InsertMark/InsertMarkMode run-time property.
   The InsertMarkMode can be set to 0 - ByRow (default) or 1 - ByColumn.
 - Included the HitTestInsertMark function which returns the insert mark row or column.
+- Included the InsertMarkColor property.
 
 25-Oct-2023
 - Included the DropHighlight/DropHighlightMode run-time property.
