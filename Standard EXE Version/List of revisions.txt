@@ -1,5 +1,13 @@
 List of revisions:
 
+26-Oct-2023
+- Included the DropHighlightStyle run-time property.
+  The DropHighlightStyle can be set to 0 - OnTop (default) or 1 - InsertMark.
+  For inserting new drop items the InsertMark is preferred as it allows to insert at the end. (e.g. via AddItem)
+- Included the HitDropHighlight property which returns the drop highlight row or column from the last invoked .HitTest.
+  For style 0 - OnTop it is the same as the MouseRow/MouseCol.
+  For style 1 - InsertMark it is flexible and could be equal to the number of rows/cols when at the very end.
+
 25-Oct-2023
 - Included the DropHighlight/DropHighlightMode run-time property.
   The DropHighlightMode can be set to 0 - Row (default) or 1 - Col.

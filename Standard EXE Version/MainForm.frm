@@ -19,19 +19,31 @@ Begin VB.Form MainForm
       TabStop         =   0   'False
       Top             =   5895
       Width           =   13830
+      Begin VB.PictureBox Picture2 
+         BackColor       =   &H8000000D&
+         ForeColor       =   &H8000000E&
+         Height          =   315
+         Left            =   9480
+         ScaleHeight     =   255
+         ScaleWidth      =   1275
+         TabIndex        =   28
+         TabStop         =   0   'False
+         Top             =   1200
+         Width           =   1335
+      End
       Begin VB.CommandButton Command9 
          Caption         =   "Paste"
          Height          =   315
-         Left            =   9480
+         Left            =   10200
          TabIndex        =   27
-         Top             =   1200
-         Width           =   1335
+         Top             =   840
+         Width           =   615
       End
       Begin VB.CheckBox Check1 
          Caption         =   "Partial Search"
          Height          =   255
          Left            =   10920
-         TabIndex        =   29
+         TabIndex        =   30
          Top             =   1200
          Width           =   1335
       End
@@ -39,7 +51,7 @@ Begin VB.Form MainForm
          Caption         =   "DragRow"
          Height          =   315
          Left            =   12360
-         TabIndex        =   31
+         TabIndex        =   32
          Top             =   1200
          Width           =   1335
       End
@@ -49,13 +61,13 @@ Begin VB.Form MainForm
          Left            =   9480
          TabIndex        =   26
          Top             =   840
-         Width           =   1335
+         Width           =   615
       End
       Begin VB.CommandButton Command16 
          Caption         =   "FindItem"
          Height          =   315
          Left            =   10920
-         TabIndex        =   28
+         TabIndex        =   29
          Top             =   840
          Width           =   1335
       End
@@ -63,7 +75,7 @@ Begin VB.Form MainForm
          Caption         =   "RowHidden"
          Height          =   315
          Left            =   12360
-         TabIndex        =   30
+         TabIndex        =   31
          Top             =   840
          Width           =   1335
       End
@@ -316,6 +328,7 @@ Private PropCellBackColor As OLE_COLOR, PropCellForeColor As OLE_COLOR
 Private PropCellFont As StdFont
 Attribute PropCellFont.VB_VarHelpID = -1
 Private PropDragRowActive As Boolean, PropDragRowDragging As Boolean
+Private PropInsertRowDragging As Boolean
 
 Public Property Get CellBackColor() As OLE_COLOR
 CellBackColor = PropCellBackColor
@@ -599,6 +612,34 @@ Private Sub Command9_Click()
 VBFlexGrid1.Paste
 End Sub
 
+Private Sub Picture2_Paint()
+Picture2.Print "Drag/drop me"
+End Sub
+
+Private Sub Picture2_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+PropInsertRowDragging = True
+End Sub
+
+Private Sub Picture2_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+If PropInsertRowDragging = True Then
+    VBFlexGrid1.DropHighlightStyle = FlexDropHighlightStyleInsertMark
+    Picture2.OLEDrag
+End If
+End Sub
+
+Private Sub Picture2_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+PropInsertRowDragging = False
+End Sub
+
+Private Sub Picture2_OLEStartDrag(Data As DataObject, AllowedEffects As Long)
+Data.SetData StrToVar(Picture2.Name), vbCFRTF
+AllowedEffects = vbDropEffectMove + vbDropEffectCopy
+End Sub
+
+Private Sub Picture2_OLECompleteDrag(Effect As Long)
+PropInsertRowDragging = False
+End Sub
+
 Private Sub Command16_Click()
 With New InputForm
 .SearchMode = True
@@ -639,7 +680,7 @@ If Data.GetFormat(vbCFRTF) = False Then
 End If
 Dim DataString As String
 DataString = VarToStr(Data.GetData(vbCFRTF))
-If DataString = VBFlexGrid1.Name Then
+If DataString = VBFlexGrid1.Name Or DataString = Picture2.Name Then
     If PropDragRowDragging = True Then
         Effect = vbDropEffectMove
     Else
@@ -658,11 +699,18 @@ If State = vbOver Then
             .DropHighlight = .FixedRows
         End If
         End With
+    Else
+        With VBFlexGrid1
+        .HitTest X, Y
+        If .HitDropHighlight >= .FixedRows Then
+            .DropHighlight = .HitDropHighlight
+        Else
+            .DropHighlight = .FixedRows
+        End If
+        End With
     End If
 ElseIf State = vbLeave Then
-    If PropDragRowDragging = True Then
-        VBFlexGrid1.DropHighlight = -1
-    End If
+    VBFlexGrid1.DropHighlight = -1
 End If
 End Sub
 
@@ -670,7 +718,7 @@ Private Sub VBFlexGrid1_OLEDragDrop(Data As DataObject, Effect As Long, Button A
 If Data.GetFormat(vbCFRTF) = False Then Exit Sub
 Dim DataString As String
 DataString = VarToStr(Data.GetData(vbCFRTF))
-If DataString = VBFlexGrid1.Name Then
+If DataString = VBFlexGrid1.Name Or DataString = Picture2.Name Then
     If PropDragRowDragging = True Then
         With VBFlexGrid1
         If .MouseRow >= .FixedRows Then
@@ -685,6 +733,16 @@ If DataString = VBFlexGrid1.Name Then
         .DropHighlight = -1
         End With
         PropDragRowDragging = False
+    Else
+        With VBFlexGrid1
+        .HitTest X, Y
+        If .HitDropHighlight >= .FixedRows Then
+            .AddItem CStr(.Rows - .FixedRows + 1) & vbTab & "New", .HitDropHighlight
+        Else
+            .AddItem CStr(.Rows - .FixedRows + 1) & vbTab & "New", .FixedRows
+        End If
+        .DropHighlight = -1
+        End With
     End If
 End If
 End Sub
@@ -709,6 +767,7 @@ If PropDragRowDragging = True Then
     With VBFlexGrid1
     .Col = 0
     .Row = .MouseRow
+    .DropHighlightStyle = FlexDropHighlightStyleOnTop
     .OLEDrag
     End With
 End If
