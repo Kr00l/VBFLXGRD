@@ -1691,6 +1691,7 @@ Private VBFlexGridHitResult As FlexHitResultConstants
 Private VBFlexGridDropHighlight As Long
 Private VBFlexGridDropHighlightMode As FlexDropTargetModeConstants
 Private VBFlexGridInsertMark As Long
+Private VBFlexGridInsertMarkAfter As Boolean
 Private VBFlexGridInsertMarkMode As FlexDropTargetModeConstants
 Private VBFlexGridCellClickRow As Long, VBFlexGridCellClickCol As Long
 Private VBFlexGridEditRow As Long, VBFlexGridEditCol As Long
@@ -2036,6 +2037,7 @@ VBFlexGridHitResult = FlexHitResultNoWhere
 VBFlexGridDropHighlight = -1
 VBFlexGridDropHighlightMode = FlexDropTargetModeByRow
 VBFlexGridInsertMark = -1
+VBFlexGridInsertMarkAfter = False
 VBFlexGridInsertMarkMode = FlexDropTargetModeByRow
 VBFlexGridCellClickRow = -1
 VBFlexGridCellClickCol = -1
@@ -6783,20 +6785,22 @@ End Select
 Call RedrawGrid
 End Property
 
-Public Property Get InsertMark() As Long
+Public Property Get InsertMark(Optional ByRef After As Boolean) As Long
 Attribute InsertMark.VB_Description = "Returns/sets the row or column where an insertion mark is positioned to indicate the target of a drag/drop operation."
 Attribute InsertMark.VB_MemberFlags = "400"
 InsertMark = VBFlexGridInsertMark
+After = VBFlexGridInsertMarkAfter
 End Property
 
-Public Property Let InsertMark(ByVal Value As Long)
-If VBFlexGridInsertMark = Value Then Exit Property
+Public Property Let InsertMark(Optional ByRef After As Boolean, ByVal Value As Long)
+If VBFlexGridInsertMark = Value And VBFlexGridInsertMarkAfter = After Then Exit Property
 If VBFlexGridInsertMarkMode = FlexDropTargetModeByRow Then
-    If Value <> -1 And (Value < 0 Or Value > (PropRows - 0)) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+    If Value <> -1 And (Value < 0 Or Value > (PropRows - 1)) Then Err.Raise Number:=30009, Description:="Invalid Row value"
 ElseIf VBFlexGridDropHighlightMode = FlexDropTargetModeByColumn Then
-    If Value <> -1 And (Value < 0 Or Value > (PropCols - 0)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+    If Value <> -1 And (Value < 0 Or Value > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 VBFlexGridInsertMark = Value
+VBFlexGridInsertMarkAfter = After
 Call RedrawGrid
 End Property
 
@@ -6812,6 +6816,7 @@ Select Case Value
     Case FlexDropTargetModeByRow, FlexDropTargetModeByColumn
         VBFlexGridInsertMarkMode = Value
         VBFlexGridInsertMark = -1
+        VBFlexGridInsertMarkAfter = False
     Case Else
         Err.Raise 380
 End Select
@@ -10792,72 +10797,42 @@ VBFlexGridHitResult = .HitResult
 End With
 End Sub
 
-Public Function HitTestInsertMark(ByVal X As Single, ByVal Y As Single) As Long
+Public Function HitTestInsertMark(ByVal X As Single, ByVal Y As Single, Optional ByRef After As Boolean) As Long
 Attribute HitTestInsertMark.VB_Description = "Returns the insert mark row or column located at the specified X and Y coordinates."
 Dim P As POINTAPI
 P.X = UserControl.ScaleX(X, vbContainerPosition, vbPixels)
 P.Y = UserControl.ScaleY(Y, vbContainerPosition, vbPixels)
 HitTestInsertMark = -1
 If (PropRows < 1 Or PropCols < 1) Or (P.X < 0 And P.Y < 0) Then Exit Function
-Dim CellRect As RECT
+Dim CellRect As RECT, i As Long
 With CellRect
 If VBFlexGridInsertMarkMode = FlexDropTargetModeByRow Then
     If P.Y >= 0 Then
-        Dim iRow As Long
-        For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
-            .Top = .Bottom
-            .Bottom = .Top + GetRowHeight(iRow)
-            If P.Y >= .Top Then
-                HitTestInsertMark = iRow
-                If P.Y < .Bottom Then Exit For
-            End If
-        Next iRow
-        For iRow = VBFlexGridTopRow To (PropRows - 1)
-            .Top = .Bottom
-            .Bottom = .Top + GetRowHeight(iRow)
-            If P.Y >= .Top Then
-                HitTestInsertMark = iRow
-                If P.Y < .Bottom Then Exit For
-            End If
-        Next iRow
-        If HitTestInsertMark > -1 Then
-            If (P.Y - .Top) >= (GetRowHeight(HitTestInsertMark) / 2) Then
-                If HitTestInsertMark < GetLastMovableRow() Then
-                    Call MoveNextRow(HitTestInsertMark)
-                Else
-                    HitTestInsertMark = PropRows
+        For i = 0 To (PropRows - 1)
+            If i >= VBFlexGridTopRow Or i < (PropFixedRows + PropFrozenRows) Then
+                .Top = .Bottom
+                .Bottom = .Top + GetRowHeight(i)
+                If P.Y >= .Top Then
+                    HitTestInsertMark = i
+                    If P.Y < .Bottom Then Exit For
                 End If
             End If
-        End If
+        Next i
+        If HitTestInsertMark > -1 Then After = CBool(P.Y > (.Top + (GetRowHeight(HitTestInsertMark) / 2)))
     End If
 ElseIf VBFlexGridInsertMarkMode = FlexDropTargetModeByColumn Then
     If P.X >= 0 Then
-        Dim iCol As Long, iColHit As Long
-        For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
-            .Left = .Right
-            .Right = .Left + GetColWidth(iCol)
-            If P.X >= .Left Then
-                HitTestInsertMark = iCol
-                If P.X < .Right Then Exit For
-            End If
-        Next iCol
-        For iCol = VBFlexGridLeftCol To (PropCols - 1)
-            .Left = .Right
-            .Right = .Left + GetColWidth(iCol)
-            If P.X >= .Left Then
-                HitTestInsertMark = iCol
-                If P.X < .Right Then Exit For
-            End If
-        Next iCol
-        If HitTestInsertMark > -1 Then
-            If (P.X - .Left) >= (GetColWidth(HitTestInsertMark) / 2) Then
-                If HitTestInsertMark < GetLastMovableCol() Then
-                    Call MoveNextCol(HitTestInsertMark)
-                Else
-                    HitTestInsertMark = PropCols
+        For i = 0 To (PropCols - 1)
+            If i >= VBFlexGridLeftCol Or i < (PropFixedCols + PropFrozenCols) Then
+                .Left = .Right
+                .Right = .Left + GetColWidth(i)
+                If P.X >= .Left Then
+                    HitTestInsertMark = i
+                    If P.X < .Right Then Exit For
                 End If
             End If
-        End If
+        Next i
+        If HitTestInsertMark > -1 Then After = CBool(P.X > (.Left + (GetColWidth(HitTestInsertMark) / 2)))
     End If
 End If
 End With
@@ -11957,6 +11932,7 @@ If PropRows < 1 Or PropCols < 1 Then
     VBFlexGridLeftCol = -1
     VBFlexGridDropHighlight = -1
     VBFlexGridInsertMark = -1
+    VBFlexGridInsertMarkAfter = False
     VBFlexGridComboCueRow = -1
     VBFlexGridComboCueCol = -1
     VBFlexGridExtendLastCol = -1
@@ -12001,6 +11977,7 @@ VBFlexGridTopRow = PropFixedRows + PropFrozenRows
 VBFlexGridLeftCol = PropFixedCols + PropFrozenCols
 VBFlexGridDropHighlight = -1
 VBFlexGridInsertMark = -1
+VBFlexGridInsertMarkAfter = False
 VBFlexGridComboCueRow = -1
 VBFlexGridComboCueCol = -1
 VBFlexGridExtendLastCol = GetExtendLastCol()
@@ -12028,6 +12005,7 @@ VBFlexGridTopRow = -1
 VBFlexGridLeftCol = -1
 VBFlexGridDropHighlight = -1
 VBFlexGridInsertMark = -1
+VBFlexGridInsertMarkAfter = False
 VBFlexGridComboCueRow = -1
 VBFlexGridComboCueCol = -1
 VBFlexGridExtendLastCol = -1
@@ -13431,13 +13409,13 @@ If VBFlexGridInsertMark > -1 Then
             RC.Top = 0
             RC.Right = VBFlexGridClientRect.Right
             RC.Bottom = 0
-            For iRow = 0 To IIf(VBFlexGridInsertMark <= (PropRows - 1), VBFlexGridInsertMark, PropRows - 1)
+            For iRow = 0 To VBFlexGridInsertMark
                 If iRow >= VBFlexGridTopRow Or iRow < (PropFixedRows + PropFrozenRows) Then
                     RC.Top = RC.Bottom
                     RC.Bottom = RC.Bottom + GetRowHeight(iRow)
                 End If
             Next iRow
-            If VBFlexGridInsertMark <= (PropRows - 1) Then
+            If VBFlexGridInsertMarkAfter = False Then
                 RC.Bottom = RC.Top + 1
                 RC.Top = RC.Top - 1
             Else
@@ -13446,7 +13424,7 @@ If VBFlexGridInsertMark > -1 Then
             End If
             PatBlt hDC, RC.Left, RC.Top - 2, 1, 6, vbPatCopy
             PatBlt hDC, RC.Left + 1, RC.Top - 1, 1, 4, vbPatCopy
-            PatBlt hDC, RC.Left + 2, RC.Top, RC.Right - RC.Left - 2, RC.Bottom - RC.Top, vbPatCopy
+            PatBlt hDC, RC.Left + 2, RC.Top, RC.Right - RC.Left - 4, RC.Bottom - RC.Top, vbPatCopy
             PatBlt hDC, RC.Right - 2, RC.Top - 1, 1, 4, vbPatCopy
             PatBlt hDC, RC.Right - 1, RC.Top - 2, 1, 6, vbPatCopy
         End If
@@ -13456,24 +13434,24 @@ If VBFlexGridInsertMark > -1 Then
             RC.Top = 0
             RC.Right = 0
             RC.Bottom = VBFlexGridClientRect.Bottom
-            For iCol = 0 To IIf(VBFlexGridInsertMark <= (PropCols - 1), VBFlexGridInsertMark, PropCols - 1)
+            For iCol = 0 To VBFlexGridInsertMark
                 If iCol >= VBFlexGridLeftCol Or iCol < (PropFixedCols + PropFrozenCols) Then
                     RC.Left = RC.Right
                     RC.Right = RC.Right + GetColWidth(iCol)
                 End If
             Next iCol
-            If VBFlexGridInsertMark <= (PropCols - 1) Then
-                RC.Bottom = RC.Top + 1
-                RC.Top = RC.Top - 1
+            If VBFlexGridInsertMarkAfter = False Then
+                RC.Right = RC.Left + 1
+                RC.Left = RC.Left - 1
             Else
-                RC.Top = RC.Bottom - 1
-                RC.Bottom = RC.Bottom + 1
+                RC.Left = RC.Right - 1
+                RC.Right = RC.Right + 1
             End If
-            PatBlt hDC, RC.Left, RC.Top - 2, 1, 6, vbPatCopy
-            PatBlt hDC, RC.Left + 1, RC.Top - 1, 1, 4, vbPatCopy
-            PatBlt hDC, RC.Left + 2, RC.Top, RC.Right - RC.Left - 2, RC.Bottom - RC.Top, vbPatCopy
-            PatBlt hDC, RC.Right - 2, RC.Top - 1, 1, 4, vbPatCopy
-            PatBlt hDC, RC.Right - 1, RC.Top - 2, 1, 6, vbPatCopy
+            PatBlt hDC, RC.Left - 2, RC.Top, 6, 1, vbPatCopy
+            PatBlt hDC, RC.Left - 1, RC.Top + 1, 4, 1, vbPatCopy
+            PatBlt hDC, RC.Left, RC.Top + 2, RC.Right - RC.Left, RC.Bottom - RC.Top - 4, vbPatCopy
+            PatBlt hDC, RC.Left - 1, RC.Bottom - 2, 4, 1, vbPatCopy
+            PatBlt hDC, RC.Left - 2, RC.Bottom - 1, 6, 1, vbPatCopy
         End If
     End If
     If OldBrush <> NULL_PTR Then SelectObject hDC, OldBrush
@@ -19765,7 +19743,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                         .PT.Y = .PT.Y + GetRowHeight(i)
                     Next i
                 End If
-                If (Y - .PT.Y) >= (GetRowHeight(.MouseRow) / 2) Then
+                If Y > (.PT.Y + (GetRowHeight(.MouseRow) / 2)) Then
                     iRow = iRow + 1
                     .MouseRow = .MouseRow + 1
                 End If
@@ -19786,7 +19764,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                         .PT.X = .PT.X + GetColWidth(i)
                     Next i
                 End If
-                If (X - .PT.X) >= (GetColWidth(.MouseCol) / 2) Then
+                If X > (.PT.X + (GetColWidth(.MouseCol) / 2)) Then
                     iCol = iCol + 1
                     .MouseCol = .MouseCol + 1
                 End If
@@ -19938,7 +19916,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                     Next i
                 End If
                 If .MouseRow < (PropRows - 1) Then
-                    If (Y - .PT.Y) >= (GetRowHeight(.MouseRow) / 2) Then .PT.Y = .PT.Y + GetRowHeight(.MouseRow)
+                    If Y > (.PT.Y + (GetRowHeight(.MouseRow) / 2)) Then .PT.Y = .PT.Y + GetRowHeight(.MouseRow)
                 End If
             End If
             If VBFlexGridCaptureDividerCol > -1 Then
@@ -19958,7 +19936,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                     Next i
                 End If
                 If .MouseCol < (PropCols - 1) Then
-                    If (X - .PT.X) >= (GetColWidth(.MouseCol) / 2) Then .PT.X = .PT.X + GetColWidth(.MouseCol)
+                    If X > (.PT.X + (GetColWidth(.MouseCol) / 2)) Then .PT.X = .PT.X + GetColWidth(.MouseCol)
                 End If
             End If
             ' VBFlexGridDividerDragOffset is not applicable as PT has fixed coordinates.
