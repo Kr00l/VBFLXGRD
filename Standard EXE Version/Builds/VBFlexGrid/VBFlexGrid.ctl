@@ -1693,6 +1693,7 @@ Private VBFlexGridDropHighlightMode As FlexDropTargetModeConstants
 Private VBFlexGridInsertMark As Long
 Private VBFlexGridInsertMarkAfter As Boolean
 Private VBFlexGridInsertMarkMode As FlexDropTargetModeConstants
+Private VBFlexGridInsertMarkBrush As LongPtr
 Private VBFlexGridCellClickRow As Long, VBFlexGridCellClickCol As Long
 Private VBFlexGridEditRow As Long, VBFlexGridEditCol As Long
 Private VBFlexGridEditMergedRange As TCELLRANGE
@@ -1779,6 +1780,7 @@ Private PropGridColorFixed As OLE_COLOR
 Private PropGridColorFrozen As OLE_COLOR
 Private PropSortArrowColor As OLE_COLOR
 Private PropFloodColor As OLE_COLOR
+Private PropInsertMarkColor As OLE_COLOR
 Private PropOLEDragDropScroll As Boolean
 Private PropMousePointer As Integer, PropMouseIcon As IPictureDisp
 Private PropMouseTrack As Boolean
@@ -2095,6 +2097,7 @@ PropGridColorFixed = vbBlack
 PropGridColorFrozen = vbBlack
 PropSortArrowColor = vbGrayText
 PropFloodColor = &HC0&
+PropInsertMarkColor = vbBlack
 PropOLEDragDropScroll = True
 Me.OLEDropMode = vbOLEDropNone
 PropMousePointer = 0: Set PropMouseIcon = Nothing
@@ -2202,6 +2205,7 @@ PropGridColorFixed = .ReadProperty("GridColorFixed", vbBlack)
 PropGridColorFrozen = .ReadProperty("GridColorFrozen", vbBlack)
 PropSortArrowColor = .ReadProperty("SortArrowColor", vbGrayText)
 PropFloodColor = .ReadProperty("FloodColor", &HC0&)
+PropInsertMarkColor = .ReadProperty("InsertMarkColor", vbBlack)
 Me.Enabled = .ReadProperty("Enabled", True)
 PropOLEDragDropScroll = .ReadProperty("OLEDragDropScroll", True)
 Me.OLEDropMode = .ReadProperty("OLEDropMode", vbOLEDropNone)
@@ -2308,6 +2312,7 @@ With PropBag
 .WriteProperty "GridColorFrozen", PropGridColorFrozen, vbBlack
 .WriteProperty "SortArrowColor", PropSortArrowColor, vbGrayText
 .WriteProperty "FloodColor", PropFloodColor, &HC0&
+.WriteProperty "InsertMarkColor", PropInsertMarkColor, vbBlack
 .WriteProperty "Enabled", Me.Enabled, True
 .WriteProperty "OLEDragDropScroll", PropOLEDragDropScroll, True
 .WriteProperty "OLEDropMode", Me.OLEDropMode, vbOLEDropNone
@@ -3206,6 +3211,23 @@ Public Property Let FloodColor(ByVal Value As OLE_COLOR)
 PropFloodColor = Value
 Me.Refresh
 UserControl.PropertyChanged "FloodColor"
+End Property
+
+Public Property Get InsertMarkColor() As OLE_COLOR
+Attribute InsertMarkColor.VB_Description = "Returns/sets the color of the insertion mark."
+InsertMarkColor = PropInsertMarkColor
+End Property
+
+Public Property Let InsertMarkColor(ByVal Value As OLE_COLOR)
+PropInsertMarkColor = Value
+If VBFlexGridHandle <> NULL_PTR Then
+    If VBFlexGridInsertMarkBrush <> NULL_PTR Then
+        DeleteObject VBFlexGridInsertMarkBrush
+        VBFlexGridInsertMarkBrush = NULL_PTR
+    End If
+End If
+If VBFlexGridInsertMark > -1 Then Call RedrawGrid
+UserControl.PropertyChanged "InsertMarkColor"
 End Property
 
 Public Property Get Enabled() As Boolean
@@ -5402,6 +5424,10 @@ End If
 If VBFlexGridGridLineBlackPen <> NULL_PTR Then
     DeleteObject VBFlexGridGridLineBlackPen
     VBFlexGridGridLineBlackPen = NULL_PTR
+End If
+If VBFlexGridInsertMarkBrush <> NULL_PTR Then
+    DeleteObject VBFlexGridInsertMarkBrush
+    VBFlexGridInsertMarkBrush = NULL_PTR
 End If
 End Sub
 
@@ -13400,9 +13426,9 @@ If hPenOld <> NULL_PTR Then
     hPenOld = NULL_PTR
 End If
 If VBFlexGridInsertMark > -1 Then
-    Dim RC As RECT, OldBrush As LongPtr
-    Brush = CreateSolidBrush(WinColor(PropGridColorFixed))
-    If Brush <> NULL_PTR Then OldBrush = SelectObject(hDC, Brush)
+    Dim RC As RECT
+    If VBFlexGridInsertMarkBrush = NULL_PTR Then VBFlexGridInsertMarkBrush = CreateSolidBrush(WinColor(PropInsertMarkColor))
+    If VBFlexGridInsertMarkBrush <> NULL_PTR Then Brush = SelectObject(hDC, VBFlexGridInsertMarkBrush)
     If VBFlexGridInsertMarkMode = FlexDropTargetModeByRow Then
         If VBFlexGridInsertMark > -1 And (VBFlexGridInsertMark <= ((PropFixedRows + PropFrozenRows) - 1) Or VBFlexGridInsertMark >= VBFlexGridTopRow) Then
             RC.Left = 0
@@ -13454,7 +13480,6 @@ If VBFlexGridInsertMark > -1 Then
             PatBlt hDC, RC.Left - 2, RC.Bottom - 1, 6, 1, vbPatCopy
         End If
     End If
-    If OldBrush <> NULL_PTR Then SelectObject hDC, OldBrush
     If Brush <> NULL_PTR Then
         SelectObject hDC, Brush
         Brush = NULL_PTR
