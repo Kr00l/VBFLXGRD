@@ -622,8 +622,7 @@ End Sub
 
 Private Sub Picture2_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
 If PropInsertRowDragging = True Then
-    VBFlexGrid1.DropHighlightMode = FlexDropHighlightModeByRow
-    VBFlexGrid1.DropHighlightStyle = FlexDropHighlightStyleInsertMark
+    VBFlexGrid1.InsertMarkMode = FlexDropTargetModeByRow
     Picture2.OLEDrag
 End If
 End Sub
@@ -684,8 +683,11 @@ DataString = VarToStr(Data.GetData(vbCFRTF))
 If DataString = VBFlexGrid1.Name Or DataString = Picture2.Name Then
     If PropDragRowDragging = True Then
         Effect = vbDropEffectMove
-    Else
+    ElseIf PropInsertRowDragging = True Then
         Effect = vbDropEffectCopy Or vbDropEffectMove
+    Else
+        Effect = vbDropEffectNone
+        Exit Sub
     End If
 Else
     Effect = vbDropEffectNone
@@ -700,18 +702,23 @@ If State = vbOver Then
             .DropHighlight = .FixedRows
         End If
         End With
-    Else
+    ElseIf PropInsertRowDragging = True Then
+        Dim HitInsertMark As Long
         With VBFlexGrid1
-        .HitTest X, Y
-        If .HitDropHighlight >= .FixedRows Then
-            .DropHighlight = .HitDropHighlight
+        HitInsertMark = .HitTestInsertMark(X, Y)
+        If HitInsertMark >= .FixedRows Then
+            .InsertMark = HitInsertMark
         Else
-            .DropHighlight = .FixedRows
+            .InsertMark = .FixedRows
         End If
         End With
     End If
 ElseIf State = vbLeave Then
-    VBFlexGrid1.DropHighlight = -1
+    If PropDragRowDragging = True Then
+        VBFlexGrid1.DropHighlight = -1
+    ElseIf PropInsertRowDragging = True Then
+        VBFlexGrid1.InsertMark = -1
+    End If
 End If
 End Sub
 
@@ -734,16 +741,18 @@ If DataString = VBFlexGrid1.Name Or DataString = Picture2.Name Then
         .DropHighlight = -1
         End With
         PropDragRowDragging = False
-    Else
+    ElseIf PropInsertRowDragging = True Then
+        Dim HitInsertMark As Long
         With VBFlexGrid1
-        .HitTest X, Y
-        If .HitDropHighlight >= .FixedRows Then
-            .AddItem CStr(.Rows - .FixedRows + 1) & vbTab & "New", .HitDropHighlight
+        HitInsertMark = .HitTestInsertMark(X, Y)
+        If HitInsertMark >= .FixedRows Then
+            .AddItem CStr(.Rows - .FixedRows + 1) & vbTab & "New", HitInsertMark
         Else
             .AddItem CStr(.Rows - .FixedRows + 1) & vbTab & "New", .FixedRows
         End If
-        .DropHighlight = -1
+        .InsertMark = -1
         End With
+        PropInsertRowDragging = False
     End If
 End If
 End Sub
@@ -768,8 +777,7 @@ If PropDragRowDragging = True Then
     With VBFlexGrid1
     .Col = 0
     .Row = .MouseRow
-    .DropHighlightMode = FlexDropHighlightModeByRow
-    .DropHighlightStyle = FlexDropHighlightStyleOnTop
+    .DropHighlightMode = FlexDropTargetModeByRow
     .OLEDrag
     End With
 End If
