@@ -703,11 +703,11 @@ If State = vbOver Then
         End If
         End With
     ElseIf PropInsertRowDragging = True Then
-        Dim HitInsertMark As Long
+        Dim HitInsertMark As Long, After As Boolean
         With VBFlexGrid1
-        HitInsertMark = .HitTestInsertMark(X, Y)
+        HitInsertMark = .HitTestInsertMark(X, Y, After)
         If HitInsertMark >= .FixedRows Then
-            .InsertMark = HitInsertMark
+            .InsertMark(After) = HitInsertMark
         Else
             .InsertMark = .FixedRows
         End If
@@ -742,11 +742,11 @@ If DataString = VBFlexGrid1.Name Or DataString = Picture2.Name Then
         End With
         PropDragRowDragging = False
     ElseIf PropInsertRowDragging = True Then
-        Dim HitInsertMark As Long
+        Dim HitInsertMark As Long, After As Boolean
         With VBFlexGrid1
-        HitInsertMark = .HitTestInsertMark(X, Y)
+        HitInsertMark = .HitTestInsertMark(X, Y, After)
         If HitInsertMark >= .FixedRows Then
-            .AddItem CStr(.Rows - .FixedRows + 1) & vbTab & "New", HitInsertMark
+            .AddItem CStr(.Rows - .FixedRows + 1) & vbTab & "New", IIf(After = True, HitInsertMark + 1, HitInsertMark)
         Else
             .AddItem CStr(.Rows - .FixedRows + 1) & vbTab & "New", .FixedRows
         End If
