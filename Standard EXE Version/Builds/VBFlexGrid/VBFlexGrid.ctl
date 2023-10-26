@@ -58,7 +58,7 @@ Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy, FlexFocusRect
 Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
 Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled, FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
-Private FlexDropHighlightModeRow, FlexDropHighlightModeCol
+Private FlexDropHighlightModeByRow, FlexDropHighlightModeByColumn
 Private FlexDropHighlightStyleOnTop, FlexDropHighlightStyleInsertMark
 Private FlexAlignmentLeftTop, FlexAlignmentLeftCenter, FlexAlignmentLeftBottom, FlexAlignmentCenterTop, FlexAlignmentCenterCenter, FlexAlignmentCenterBottom, FlexAlignmentRightTop, FlexAlignmentRightCenter, FlexAlignmentRightBottom, FlexAlignmentGeneral, FlexAlignmentGeneralTop, FlexAlignmentGeneralCenter, FlexAlignmentGeneralBottom
 Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftBottom, FlexPictureAlignmentCenterTop, FlexPictureAlignmentCenterCenter, FlexPictureAlignmentCenterBottom, FlexPictureAlignmentRightTop, FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightBottom, FlexPictureAlignmentStretch, FlexPictureAlignmentTile, FlexPictureAlignmentLeftTopNoOverlap, FlexPictureAlignmentLeftCenterNoOverlap, FlexPictureAlignmentLeftBottomNoOverlap, FlexPictureAlignmentRightTopNoOverlap, FlexPictureAlignmentRightCenterNoOverlap, FlexPictureAlignmentRightBottomNoOverlap
@@ -208,8 +208,8 @@ FlexHitResultCheckBox = 12
 FlexHitResultCheckBoxDisabled = 13
 End Enum
 Public Enum FlexDropHighlightModeConstants
-FlexDropHighlightModeRow = 0
-FlexDropHighlightModeCol = 1
+FlexDropHighlightModeByRow = 0
+FlexDropHighlightModeByColumn = 1
 End Enum
 Public Enum FlexDropHighlightStyleConstants
 FlexDropHighlightStyleOnTop = 0
@@ -2040,7 +2040,7 @@ VBFlexGridHitRowDivider = -1
 VBFlexGridHitColDivider = -1
 VBFlexGridHitResult = FlexHitResultNoWhere
 VBFlexGridDropHighlight = -1
-VBFlexGridDropHighlightMode = FlexDropHighlightModeRow
+VBFlexGridDropHighlightMode = FlexDropHighlightModeByRow
 VBFlexGridDropHighlightStyle = FlexDropHighlightStyleOnTop
 VBFlexGridCellClickRow = -1
 VBFlexGridCellClickCol = -1
@@ -6767,9 +6767,9 @@ End Property
 
 Public Property Let DropHighlight(ByVal Value As Long)
 If VBFlexGridDropHighlight = Value Then Exit Property
-If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
+If VBFlexGridDropHighlightMode = FlexDropHighlightModeByRow Then
     If Value <> -1 And (Value < 0 Or Value > (PropRows - IIf(VBFlexGridDropHighlightStyle <> FlexDropHighlightStyleInsertMark, 1, 0))) Then Err.Raise Number:=30009, Description:="Invalid Row value"
-ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
+ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeByColumn Then
     If Value <> -1 And (Value < 0 Or Value > (PropCols - IIf(VBFlexGridDropHighlightStyle <> FlexDropHighlightStyleInsertMark, 1, 0))) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
 VBFlexGridDropHighlight = Value
@@ -6785,7 +6785,7 @@ End Property
 Public Property Let DropHighlightMode(ByVal Value As FlexDropHighlightModeConstants)
 If VBFlexGridDropHighlightMode = Value Then Exit Property
 Select Case Value
-    Case FlexDropHighlightModeRow, FlexDropHighlightModeCol
+    Case FlexDropHighlightModeByRow, FlexDropHighlightModeByColumn
         VBFlexGridDropHighlightMode = Value
         VBFlexGridDropHighlight = -1
     Case Else
@@ -13347,7 +13347,7 @@ If VBFlexGridDropHighlight > -1 Then
         Dim RC As RECT, OldBrush As LongPtr
         Brush = CreateSolidBrush(WinColor(PropGridColorFixed))
         If Brush <> NULL_PTR Then OldBrush = SelectObject(hDC, Brush)
-        If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
+        If VBFlexGridDropHighlightMode = FlexDropHighlightModeByRow Then
             If VBFlexGridDropHighlight > -1 And (VBFlexGridDropHighlight <= ((PropFixedRows + PropFrozenRows) - 1) Or VBFlexGridDropHighlight >= VBFlexGridTopRow) Then
                 RC.Left = 0
                 RC.Top = 0
@@ -13372,7 +13372,7 @@ If VBFlexGridDropHighlight > -1 Then
                 PatBlt hDC, RC.Right - 2, RC.Top - 1, 1, 4, vbPatCopy
                 PatBlt hDC, RC.Right - 1, RC.Top - 2, 1, 6, vbPatCopy
             End If
-        ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
+        ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeByColumn Then
             If VBFlexGridDropHighlight > -1 And (VBFlexGridDropHighlight <= ((PropFixedCols + PropFrozenCols) - 1) Or VBFlexGridDropHighlight >= VBFlexGridLeftCol) Then
                 RC.Left = 0
                 RC.Top = 0
@@ -13488,7 +13488,7 @@ End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 If VBFlexGridDropHighlight > -1 Then
     If VBFlexGridDropHighlightStyle = FlexDropHighlightStyleOnTop Then
-        If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
+        If VBFlexGridDropHighlightMode = FlexDropHighlightModeByRow Then
             If iRow = VBFlexGridDropHighlight Then
                 If iCol >= PropFixedCols Then
                     If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
@@ -13497,7 +13497,7 @@ If VBFlexGridDropHighlight > -1 Then
                 End If
                 If (ItemState And ODS_FOCUS) = ODS_FOCUS Then ItemState = ItemState And Not ODS_FOCUS
             End If
-        ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
+        ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeByColumn Then
             If iCol = VBFlexGridDropHighlight Then
                 If iRow >= PropFixedRows Then
                     If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
@@ -14098,11 +14098,11 @@ If ComboCueWidth > 0 Then
 End If
 If VBFlexGridDropHighlight > -1 Then
     If VBFlexGridDropHighlightStyle = FlexDropHighlightStyleOnTop Then
-        If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
+        If VBFlexGridDropHighlightMode = FlexDropHighlightModeByRow Then
             If iRow = VBFlexGridDropHighlight Then
                 If iCol < PropFixedCols Then InvertRect hDC, CellRect
             End If
-        ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
+        ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeByColumn Then
             If iCol = VBFlexGridDropHighlight Then
                 If iRow < PropFixedRows Then InvertRect hDC, CellRect
             End If
@@ -14249,12 +14249,12 @@ End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 If VBFlexGridDropHighlight > -1 Then
     If VBFlexGridDropHighlightStyle = FlexDropHighlightStyleOnTop Then
-        If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
+        If VBFlexGridDropHighlightMode = FlexDropHighlightModeByRow Then
             If iRow = VBFlexGridDropHighlight Then
                 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
                 If (ItemState And ODS_FOCUS) = ODS_FOCUS Then ItemState = ItemState And Not ODS_FOCUS
             End If
-        ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
+        ElseIf VBFlexGridDropHighlightMode = FlexDropHighlightModeByColumn Then
             If iCol = VBFlexGridDropHighlight Then
                 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
                 If (ItemState And ODS_FOCUS) = ODS_FOCUS Then ItemState = ItemState And Not ODS_FOCUS
@@ -16135,7 +16135,7 @@ If HTI.PT.Y >= 0 Then
             End If
         Next iRow
     End If
-    If VBFlexGridDropHighlightMode = FlexDropHighlightModeRow Then
+    If VBFlexGridDropHighlightMode = FlexDropHighlightModeByRow Then
         HTI.HitDropHighlight = HTI.MouseRow
         If VBFlexGridDropHighlightStyle = FlexDropHighlightStyleInsertMark Then
             If HTI.HitDropHighlight > -1 Then
@@ -16175,7 +16175,7 @@ If HTI.PT.X >= 0 Then
             End If
         Next iCol
     End If
-    If VBFlexGridDropHighlightMode = FlexDropHighlightModeCol Then
+    If VBFlexGridDropHighlightMode = FlexDropHighlightModeByColumn Then
         HTI.HitDropHighlight = HTI.MouseCol
         If VBFlexGridDropHighlightStyle = FlexDropHighlightStyleInsertMark Then
             If HTI.HitDropHighlight > -1 Then
