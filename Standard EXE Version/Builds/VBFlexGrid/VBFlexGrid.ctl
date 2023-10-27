@@ -2434,14 +2434,22 @@ RaiseEvent OLECompleteDrag(Effect)
 End Sub
 
 Private Sub UserControl_OLEDragDrop(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single)
-RaiseEvent OLEDragDrop(Data, Effect, Button, Shift, UserControl.ScaleX(X, vbPixels, vbContainerPosition), UserControl.ScaleY(Y, vbPixels, vbContainerPosition))
+Dim P As POINTAPI
+P.X = X
+P.Y = Y
+If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints UserControl.hWnd, VBFlexGridHandle, P, 1
+RaiseEvent OLEDragDrop(Data, Effect, Button, Shift, UserControl.ScaleX(P.X, vbPixels, vbContainerPosition), UserControl.ScaleY(P.Y, vbPixels, vbContainerPosition))
 End Sub
 
 Private Sub UserControl_OLEDragOver(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single, State As Integer)
-RaiseEvent OLEDragOver(Data, Effect, Button, Shift, UserControl.ScaleX(X, vbPixels, vbContainerPosition), UserControl.ScaleY(Y, vbPixels, vbContainerPosition), State)
+Dim P As POINTAPI
+P.X = X
+P.Y = Y
+If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints UserControl.hWnd, VBFlexGridHandle, P, 1
+RaiseEvent OLEDragOver(Data, Effect, Button, Shift, UserControl.ScaleX(P.X, vbPixels, vbContainerPosition), UserControl.ScaleY(P.Y, vbPixels, vbContainerPosition), State)
 If VBFlexGridHandle <> NULL_PTR Then
     If State = vbOver And Not Effect = vbDropEffectNone Then
-        If PropOLEDragDropScroll = True And (X >= 0 And X <= UserControl.Width) And (Y >= 0 And Y <= UserControl.Height) Then
+        If PropOLEDragDropScroll = True And (X >= 0 And X <= UserControl.ScaleWidth) And (Y >= 0 And Y <= UserControl.ScaleHeight) Then
             Dim dwStyle As Long, dwExStyle As Long
             dwStyle = GetWindowLong(VBFlexGridHandle, GWL_STYLE)
             dwExStyle = GetWindowLong(VBFlexGridHandle, GWL_EXSTYLE)
