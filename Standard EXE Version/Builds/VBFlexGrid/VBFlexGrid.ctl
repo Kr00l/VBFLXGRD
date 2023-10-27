@@ -10836,7 +10836,6 @@ Attribute HitTestInsertMark.VB_Description = "Returns the insert mark row or col
 Dim P As POINTAPI
 P.X = UserControl.ScaleX(X, vbContainerPosition, vbPixels)
 P.Y = UserControl.ScaleY(Y, vbContainerPosition, vbPixels)
-HitTestInsertMark = -1
 If (PropRows < 1 Or PropCols < 1) Or (P.X < 0 And P.Y < 0) Then Exit Function
 Dim CellRect As RECT, i As Long
 With CellRect
@@ -10852,7 +10851,7 @@ If VBFlexGridInsertMarkMode = FlexDropTargetModeByRow Then
                 End If
             End If
         Next i
-        If HitTestInsertMark > -1 Then After = CBool(P.Y > (.Top + (GetRowHeight(HitTestInsertMark) / 2)))
+        If HitTestInsertMark <= (PropRows - 1) Then After = CBool(P.Y > (.Top + (GetRowHeight(HitTestInsertMark) / 2)))
     End If
 ElseIf VBFlexGridInsertMarkMode = FlexDropTargetModeByColumn Then
     If P.X >= 0 Then
@@ -10866,7 +10865,7 @@ ElseIf VBFlexGridInsertMarkMode = FlexDropTargetModeByColumn Then
                 End If
             End If
         Next i
-        If HitTestInsertMark > -1 Then After = CBool(P.X > (.Left + (GetColWidth(HitTestInsertMark) / 2)))
+        If HitTestInsertMark <= (PropCols - 1) Then After = CBool(P.X > (.Left + (GetColWidth(HitTestInsertMark) / 2)))
     End If
 End If
 End With
