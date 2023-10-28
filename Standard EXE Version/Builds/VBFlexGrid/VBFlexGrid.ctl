@@ -4046,7 +4046,6 @@ SelectionMode = PropSelectionMode
 End Property
 
 Public Property Let SelectionMode(ByVal Value As FlexSelectionModeConstants)
-If PropSelectionMode = Value Then Exit Property
 Select Case Value
     Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         PropSelectionMode = Value
