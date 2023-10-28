@@ -1,5 +1,9 @@
 List of revisions:
 
+28-Oct-2023
+- Changing SelectionMode property does not reset selection anymore. (like MS(H)FlexGrid)
+  However, at design-time it still does change and reset the selection.
+
 26-Oct-2023
 - Included the InsertMark/InsertMarkMode run-time property.
   The InsertMarkMode can be set to 0 - ByRow (default) or 1 - ByColumn.
