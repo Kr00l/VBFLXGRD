@@ -3839,38 +3839,43 @@ SelectionMode = PropSelectionMode
 End Property
 
 Public Property Let SelectionMode(ByVal Value As FlexSelectionModeConstants)
+If PropSelectionMode = Value Then Exit Property
 Select Case Value
     Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         PropSelectionMode = Value
     Case Else
         Err.Raise 380
 End Select
-Dim RCP As TROWCOLPARAMS
-With RCP
-.Mask = RCPM_ROW Or RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL
 Select Case PropSelectionMode
     Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
     Case Else
-        PropAllowMultiSelection = False
-        VBFlexGridInvertSelection = False
-        Call ClearSelectedRows
-        .Flags = RCPF_FORCEREDRAW
+        If PropAllowMultiSelection = True Then
+            PropAllowMultiSelection = False
+            VBFlexGridInvertSelection = False
+            Call ClearSelectedRows
+        End If
 End Select
-.Row = PropFixedRows
-.Col = PropFixedCols
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        .RowSel = .Row
-        .ColSel = .Col
-    Case FlexSelectionModeByRow
-        .RowSel = .Row
-        .ColSel = (PropCols - 1)
-    Case FlexSelectionModeByColumn
-        .RowSel = (PropRows - 1)
-        .ColSel = .Col
-End Select
-Call SetRowColParams(RCP)
-End With
+If VBFlexGridDesignMode = True Then
+    Dim RCP As TROWCOLPARAMS
+    With RCP
+    .Mask = RCPM_ROW Or RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL
+    .Row = PropFixedRows
+    .Col = PropFixedCols
+    Select Case PropSelectionMode
+        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+            .RowSel = .Row
+            .ColSel = .Col
+        Case FlexSelectionModeByRow
+            .RowSel = .Row
+            .ColSel = (PropCols - 1)
+        Case FlexSelectionModeByColumn
+            .RowSel = (PropRows - 1)
+            .ColSel = .Col
+    End Select
+    Call SetRowColParams(RCP)
+    End With
+End If
+Call RedrawGrid
 UserControl.PropertyChanged "SelectionMode"
 End Property
 
