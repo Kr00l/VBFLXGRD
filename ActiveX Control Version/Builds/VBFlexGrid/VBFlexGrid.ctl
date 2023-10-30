@@ -19774,7 +19774,7 @@ Select Case wMsg
             End If
             End With
             EndPaint hWnd, PS
-            If VBFlexGridCaptureDividerDrag = True Then
+            If VBFlexGridDividerDragDirty = True Then
                 With PS.RCPaint
                 hRgn = CreateRectRgn(.Left, .Top, .Right, .Bottom)
                 End With
