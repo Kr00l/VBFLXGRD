@@ -1673,10 +1673,12 @@ Private VBFlexGridUniformRowHeight As Long
 Private VBFlexGridRow As Long, VBFlexGridCol As Long
 Private VBFlexGridRowSel As Long, VBFlexGridColSel As Long
 Private VBFlexGridTopRow As Long, VBFlexGridLeftCol As Long
+Private VBFlexGridCapturePoint As POINTAPI
 Private VBFlexGridCaptureRow As Long, VBFlexGridCaptureCol As Long
 Private VBFlexGridCaptureHitResult As FlexHitResultConstants
 Private VBFlexGridCaptureDividerRow As Long, VBFlexGridCaptureDividerCol As Long
 Private VBFlexGridCaptureDividerDrag As Boolean
+Private VBFlexGridCaptureDividerMoved As Boolean
 Private VBFlexGridToolTipRow As Long, VBFlexGridToolTipCol As Long
 Private VBFlexGridToolTipHitResult As FlexHitResultConstants
 Private VBFlexGridScrollTipTrack As Boolean
@@ -2024,6 +2026,7 @@ VBFlexGridCaptureHitResult = FlexHitResultNoWhere
 VBFlexGridCaptureDividerRow = -1
 VBFlexGridCaptureDividerCol = -1
 VBFlexGridCaptureDividerDrag = False
+VBFlexGridCaptureDividerMoved = False
 VBFlexGridToolTipRow = -1
 VBFlexGridToolTipCol = -1
 VBFlexGridToolTipHitResult = FlexHitResultNoWhere
@@ -19412,6 +19415,8 @@ End With
 End Sub
 
 Private Function ProcessLButtonDown(ByVal Shift As Integer, ByRef HTI As THITTESTINFO) As Boolean
+VBFlexGridCapturePoint.X = HTI.PT.X
+VBFlexGridCapturePoint.Y = HTI.PT.Y
 VBFlexGridCaptureRow = HTI.HitRow
 VBFlexGridCaptureCol = HTI.HitCol
 VBFlexGridCaptureDividerRow = HTI.HitRowDivider
@@ -19427,6 +19432,7 @@ Select Case HTI.HitResult
         If HTI.HitRow <= (PropFixedRows - 1) Or HTI.HitCol <= (PropFixedCols - 1) Then Exit Function
     Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
         VBFlexGridCaptureDividerDrag = True
+        VBFlexGridCaptureDividerMoved = False
         Dim iRow As Long, iCol As Long, Cancel As Boolean
         iRow = VBFlexGridCaptureDividerRow
         iCol = VBFlexGridCaptureDividerCol
@@ -19683,76 +19689,85 @@ If VBFlexGridCaptureDividerDrag = True Then
     iCol = VBFlexGridCaptureDividerCol
     Select Case VBFlexGridCaptureHitResult
         Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
-            Dim Size As SIZEAPI, NewSize As Long
-            With Size
-            If iRow > -1 Then
-                For i = 0 To iRow - 1
-                    If i >= VBFlexGridTopRow Then
-                        .CY = .CY + GetRowHeight(i)
-                    ElseIf i < (PropFixedRows + PropFrozenRows) Then
-                        .CY = .CY + GetRowHeight(i)
+            If VBFlexGridCaptureDividerMoved = False Then
+                ClipCursor ByVal NULL_PTR
+                SetRect VBFlexGridDividerDragSplitterRect, 0, 0, 0, 0
+                VBFlexGridDividerDragOffset.X = 0
+                VBFlexGridDividerDragOffset.Y = 0
+                VBFlexGridDividerDragDirty = False
+                Call RedrawGrid
+            Else
+                Dim Size As SIZEAPI, NewSize As Long
+                With Size
+                If iRow > -1 Then
+                    For i = 0 To iRow - 1
+                        If i >= VBFlexGridTopRow Then
+                            .CY = .CY + GetRowHeight(i)
+                        ElseIf i < (PropFixedRows + PropFrozenRows) Then
+                            .CY = .CY + GetRowHeight(i)
+                        Else
+                            i = VBFlexGridTopRow - 1
+                        End If
+                    Next i
+                    If (Y - VBFlexGridDividerDragOffset.Y) < (.CY + 1) Then
+                        NewSize = UserControl.ScaleY(1, vbPixels, vbTwips)
                     Else
-                        i = VBFlexGridTopRow - 1
+                        NewSize = UserControl.ScaleY(((Y - VBFlexGridDividerDragOffset.Y) - .CY), vbPixels, vbTwips)
                     End If
-                Next i
-                If (Y - VBFlexGridDividerDragOffset.Y) < (.CY + 1) Then
-                    NewSize = UserControl.ScaleY(1, vbPixels, vbTwips)
-                Else
-                    NewSize = UserControl.ScaleY(((Y - VBFlexGridDividerDragOffset.Y) - .CY), vbPixels, vbTwips)
-                End If
-                RaiseEvent AfterUserResize(iRow, iCol, NewSize)
-                If NewSize > 0 Then .CY = UserControl.ScaleY(NewSize, vbTwips, vbPixels) Else .CY = 0
-                Select Case PropRowSizingMode
-                    Case FlexRowSizingModeIndividual
-                        VBFlexGridCells.Rows(iRow).RowInfo.Height = .CY
-                    Case FlexRowSizingModeAll
-                        VBFlexGridCells.Rows(iRow).RowInfo.Height = .CY
-                        For i = 0 To PropRows - 1
-                            VBFlexGridCells.Rows(i).RowInfo.Height = .CY
-                        Next i
-                    Case FlexRowSizingModeUniform
-                        VBFlexGridUniformRowHeight = .CY
-                        VBFlexGridCells.Rows(iRow).RowInfo.Height = -1
-                End Select
-            ElseIf iCol > -1 Then
-                For i = 0 To iCol - 1
-                    If i >= VBFlexGridLeftCol Then
-                        .CX = .CX + GetColWidth(i)
-                    ElseIf i < (PropFixedCols + PropFrozenCols) Then
-                        .CX = .CX + GetColWidth(i)
+                    RaiseEvent AfterUserResize(iRow, iCol, NewSize)
+                    If NewSize > 0 Then .CY = UserControl.ScaleY(NewSize, vbTwips, vbPixels) Else .CY = 0
+                    Select Case PropRowSizingMode
+                        Case FlexRowSizingModeIndividual
+                            VBFlexGridCells.Rows(iRow).RowInfo.Height = .CY
+                        Case FlexRowSizingModeAll
+                            VBFlexGridCells.Rows(iRow).RowInfo.Height = .CY
+                            For i = 0 To PropRows - 1
+                                VBFlexGridCells.Rows(i).RowInfo.Height = .CY
+                            Next i
+                        Case FlexRowSizingModeUniform
+                            VBFlexGridUniformRowHeight = .CY
+                            VBFlexGridCells.Rows(iRow).RowInfo.Height = -1
+                    End Select
+                ElseIf iCol > -1 Then
+                    For i = 0 To iCol - 1
+                        If i >= VBFlexGridLeftCol Then
+                            .CX = .CX + GetColWidth(i)
+                        ElseIf i < (PropFixedCols + PropFrozenCols) Then
+                            .CX = .CX + GetColWidth(i)
+                        Else
+                            i = VBFlexGridLeftCol - 1
+                        End If
+                    Next i
+                    If (X - VBFlexGridDividerDragOffset.X) < (.CX + 1) Then
+                        NewSize = UserControl.ScaleX(1, vbPixels, vbTwips)
                     Else
-                        i = VBFlexGridLeftCol - 1
+                        NewSize = UserControl.ScaleX(((X - VBFlexGridDividerDragOffset.X) - .CX), vbPixels, vbTwips)
                     End If
-                Next i
-                If (X - VBFlexGridDividerDragOffset.X) < (.CX + 1) Then
-                    NewSize = UserControl.ScaleX(1, vbPixels, vbTwips)
-                Else
-                    NewSize = UserControl.ScaleX(((X - VBFlexGridDividerDragOffset.X) - .CX), vbPixels, vbTwips)
+                    RaiseEvent AfterUserResize(iRow, iCol, NewSize)
+                    If NewSize > 0 Then .CX = UserControl.ScaleX(NewSize, vbTwips, vbPixels) Else .CX = 0
+                    VBFlexGridColsInfo(iCol).Width = .CX
                 End If
-                RaiseEvent AfterUserResize(iRow, iCol, NewSize)
-                If NewSize > 0 Then .CX = UserControl.ScaleX(NewSize, vbTwips, vbPixels) Else .CX = 0
-                VBFlexGridColsInfo(iCol).Width = .CX
+                End With
+                ClipCursor ByVal NULL_PTR
+                SetRect VBFlexGridDividerDragSplitterRect, 0, 0, 0, 0
+                VBFlexGridDividerDragOffset.X = 0
+                VBFlexGridDividerDragOffset.Y = 0
+                VBFlexGridDividerDragDirty = False
+                With RCP
+                If iRow > -1 Then
+                    .Mask = RCPM_TOPROW
+                    .Flags = RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK
+                    .TopRow = VBFlexGridTopRow
+                ElseIf iCol > -1 Then
+                    .Mask = RCPM_LEFTCOL
+                    .Flags = RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK
+                    .LeftCol = VBFlexGridLeftCol
+                End If
+                .Flags = .Flags Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+                Call SetRowColParams(RCP)
+                End With
+                RaiseEvent AfterUserResizeEnd(iRow, iCol)
             End If
-            End With
-            ClipCursor ByVal NULL_PTR
-            SetRect VBFlexGridDividerDragSplitterRect, 0, 0, 0, 0
-            VBFlexGridDividerDragOffset.X = 0
-            VBFlexGridDividerDragOffset.Y = 0
-            VBFlexGridDividerDragDirty = False
-            With RCP
-            If iRow > -1 Then
-                .Mask = RCPM_TOPROW
-                .Flags = RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK
-                .TopRow = VBFlexGridTopRow
-            ElseIf iCol > -1 Then
-                .Mask = RCPM_LEFTCOL
-                .Flags = RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK
-                .LeftCol = VBFlexGridLeftCol
-            End If
-            .Flags = .Flags Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
-            Call SetRowColParams(RCP)
-            End With
-            RaiseEvent AfterUserResizeEnd(iRow, iCol)
         Case FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
             Dim HTI As THITTESTINFO, NewCount As Long
             With HTI
@@ -19924,6 +19939,7 @@ Private Sub ProcessMouseMove(ByVal Button As Integer, ByVal X As Long, ByVal Y A
 Dim HTI As THITTESTINFO, i As Long
 If PropShowInfoTips = True Or PropShowLabelTips = True Then Call CheckToolTipRowCol(X, Y)
 If VBFlexGridCaptureDividerDrag = True Then
+    If VBFlexGridCapturePoint.X <> X Or VBFlexGridCapturePoint.Y <> Y Then VBFlexGridCaptureDividerMoved = True
     Call DrawDividerDragSplitter
     Select Case VBFlexGridCaptureHitResult
         Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
@@ -20369,15 +20385,17 @@ If Text1 = vbNullString Or Text2 = vbNullString Then Exit Function
 If StrComp(Text1, Text2) = 0 Then MergeCompareFunction = True
 End Function
 
-Private Sub DrawDividerDragSplitter()
+Private Sub DrawDividerDragSplitter(Optional ByVal hRgn As LongPtr)
 If VBFlexGridHandle = NULL_PTR Or VBFlexGridCaptureDividerDrag = False Or FlexGetSplitterBrush() = NULL_PTR Then Exit Sub
 Dim hDC As LongPtr, hBmpOld As LongPtr
 hDC = GetDC(VBFlexGridHandle)
 If hDC <> NULL_PTR Then
     hBmpOld = SelectObject(hDC, FlexGetSplitterBrush())
+    If hRgn <> NULL_PTR Then ExtSelectClipRgn hDC, hRgn, RGN_COPY
     With VBFlexGridDividerDragSplitterRect
     PatBlt hDC, .Left, .Top, .Right - .Left, .Bottom - .Top, vbPatInvert
     End With
+    If hRgn <> NULL_PTR Then ExtSelectClipRgn hDC, NULL_PTR, RGN_COPY
     SelectObject hDC, hBmpOld
     ReleaseDC VBFlexGridHandle, hDC
 End If
@@ -20420,10 +20438,10 @@ Else
 End If
 End Sub
 
-Private Sub DrawColSortArrow(ByVal hDC As LongPtr, ByVal Color As Long, ByRef P() As POINTAPI, ByRef RectRgn As RECT)
+Private Sub DrawColSortArrow(ByVal hDC As LongPtr, ByVal Color As Long, ByRef P() As POINTAPI, ByRef ClipRgn As RECT)
 If hDC = NULL_PTR Then Exit Sub
 Dim hRgn As LongPtr, hRgnOld As LongPtr
-hRgn = CreateRectRgn(RectRgn.Left, RectRgn.Top, RectRgn.Right, RectRgn.Bottom)
+hRgn = CreateRectRgn(ClipRgn.Left, ClipRgn.Top, ClipRgn.Right, ClipRgn.Bottom)
 If hRgn <> NULL_PTR Then
     hRgnOld = CreateRectRgn(0, 0, 0, 0)
     If hRgnOld <> NULL_PTR Then
@@ -21839,6 +21857,13 @@ Select Case wMsg
             End If
             End With
             EndPaint hWnd, PS
+            If VBFlexGridCaptureDividerDrag = True Then
+                With PS.RCPaint
+                hRgn = CreateRectRgn(.Left, .Top, .Right, .Bottom)
+                End With
+                Call DrawDividerDragSplitter(hRgn)
+                If hRgn <> NULL_PTR Then DeleteObject hRgn
+            End If
         Else
             Dim hDCBmp As LongPtr, hBmp As LongPtr, hBmpOld As LongPtr
             hDCBmp = CreateCompatibleDC(wParam)
@@ -22168,12 +22193,15 @@ Select Case wMsg
         Call ProcessLButtonUp(GetShiftStateFromParam(wParam), Get_X_lParam(lParam), Get_Y_lParam(lParam))
         ReleaseCapture
     Case WM_CAPTURECHANGED
+        VBFlexGridCapturePoint.X = 0
+        VBFlexGridCapturePoint.Y = 0
         VBFlexGridCaptureRow = -1
         VBFlexGridCaptureCol = -1
         VBFlexGridCaptureHitResult = FlexHitResultNoWhere
         VBFlexGridCaptureDividerRow = -1
         VBFlexGridCaptureDividerCol = -1
         VBFlexGridCaptureDividerDrag = False
+        VBFlexGridCaptureDividerMoved = False
         VBFlexGridMouseMoveRow = -1
         VBFlexGridMouseMoveCol = -1
         VBFlexGridMouseMoveChanged = False
