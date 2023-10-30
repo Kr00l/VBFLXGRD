@@ -1,5 +1,9 @@
 List of revisions:
 
+30-Oct-2023
+- Divider resize drag will not be applied anymore when the divider drag never moved. (like MS(H)FlexGrid)
+  This solves also the problem with FlexRowSizingModeUniform and double click divider to auto size.
+
 28-Oct-2023
 - Changing SelectionMode property does not reset selection anymore. (like MS(H)FlexGrid)
   However, at design-time it still does change and reset the selection.
