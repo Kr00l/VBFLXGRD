@@ -19940,62 +19940,64 @@ Dim HTI As THITTESTINFO, i As Long
 If PropShowInfoTips = True Or PropShowLabelTips = True Then Call CheckToolTipRowCol(X, Y)
 If VBFlexGridCaptureDividerDrag = True Then
     If VBFlexGridCapturePoint.X <> X Or VBFlexGridCapturePoint.Y <> Y Then VBFlexGridCaptureDividerMoved = True
-    Call DrawDividerDragSplitter
-    Select Case VBFlexGridCaptureHitResult
-        Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
-            Call SetDividerDragSplitterRect(X - VBFlexGridDividerDragOffset.X, Y - VBFlexGridDividerDragOffset.Y)
-        Case FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
-            With HTI
-            .PT.X = X
-            .PT.Y = Y
-            Call GetHitTestInfo(HTI)
-            .PT.X = 0
-            .PT.Y = 0
-            If VBFlexGridCaptureDividerRow > -1 Then
-                If .MouseRow >= (PropFixedRows + PropFrozenRows) Then
-                    For i = 0 To ((PropFixedRows + PropFrozenRows) - 1)
-                        .PT.Y = .PT.Y + GetRowHeight(i)
-                    Next i
-                    For i = VBFlexGridTopRow To (.MouseRow - 1)
-                        .PT.Y = .PT.Y + GetRowHeight(i)
-                    Next i
-                Else
-                    For i = 0 To (PropFixedRows - 1)
-                        .PT.Y = .PT.Y + GetRowHeight(i)
-                    Next i
-                    For i = PropFixedRows To (.MouseRow - 1)
-                        .PT.Y = .PT.Y + GetRowHeight(i)
-                    Next i
+    If VBFlexGridDividerDragDirty = True Then
+        Call DrawDividerDragSplitter
+        Select Case VBFlexGridCaptureHitResult
+            Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
+                Call SetDividerDragSplitterRect(X - VBFlexGridDividerDragOffset.X, Y - VBFlexGridDividerDragOffset.Y)
+            Case FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
+                With HTI
+                .PT.X = X
+                .PT.Y = Y
+                Call GetHitTestInfo(HTI)
+                .PT.X = 0
+                .PT.Y = 0
+                If VBFlexGridCaptureDividerRow > -1 Then
+                    If .MouseRow >= (PropFixedRows + PropFrozenRows) Then
+                        For i = 0 To ((PropFixedRows + PropFrozenRows) - 1)
+                            .PT.Y = .PT.Y + GetRowHeight(i)
+                        Next i
+                        For i = VBFlexGridTopRow To (.MouseRow - 1)
+                            .PT.Y = .PT.Y + GetRowHeight(i)
+                        Next i
+                    Else
+                        For i = 0 To (PropFixedRows - 1)
+                            .PT.Y = .PT.Y + GetRowHeight(i)
+                        Next i
+                        For i = PropFixedRows To (.MouseRow - 1)
+                            .PT.Y = .PT.Y + GetRowHeight(i)
+                        Next i
+                    End If
+                    If .MouseRow < (PropRows - 1) Then
+                        If Y > (.PT.Y + (GetRowHeight(.MouseRow) / 2)) Then .PT.Y = .PT.Y + GetRowHeight(.MouseRow)
+                    End If
                 End If
-                If .MouseRow < (PropRows - 1) Then
-                    If Y > (.PT.Y + (GetRowHeight(.MouseRow) / 2)) Then .PT.Y = .PT.Y + GetRowHeight(.MouseRow)
+                If VBFlexGridCaptureDividerCol > -1 Then
+                    If .MouseCol >= (PropFixedCols + PropFrozenCols) Then
+                        For i = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+                            .PT.X = .PT.X + GetColWidth(i)
+                        Next i
+                        For i = VBFlexGridLeftCol To (.MouseCol - 1)
+                            .PT.X = .PT.X + GetColWidth(i)
+                        Next i
+                    Else
+                        For i = 0 To (PropFixedCols - 1)
+                            .PT.X = .PT.X + GetColWidth(i)
+                        Next i
+                        For i = PropFixedCols To (.MouseCol - 1)
+                            .PT.X = .PT.X + GetColWidth(i)
+                        Next i
+                    End If
+                    If .MouseCol < (PropCols - 1) Then
+                        If X > (.PT.X + (GetColWidth(.MouseCol) / 2)) Then .PT.X = .PT.X + GetColWidth(.MouseCol)
+                    End If
                 End If
-            End If
-            If VBFlexGridCaptureDividerCol > -1 Then
-                If .MouseCol >= (PropFixedCols + PropFrozenCols) Then
-                    For i = 0 To ((PropFixedCols + PropFrozenCols) - 1)
-                        .PT.X = .PT.X + GetColWidth(i)
-                    Next i
-                    For i = VBFlexGridLeftCol To (.MouseCol - 1)
-                        .PT.X = .PT.X + GetColWidth(i)
-                    Next i
-                Else
-                    For i = 0 To (PropFixedCols - 1)
-                        .PT.X = .PT.X + GetColWidth(i)
-                    Next i
-                    For i = PropFixedCols To (.MouseCol - 1)
-                        .PT.X = .PT.X + GetColWidth(i)
-                    Next i
-                End If
-                If .MouseCol < (PropCols - 1) Then
-                    If X > (.PT.X + (GetColWidth(.MouseCol) / 2)) Then .PT.X = .PT.X + GetColWidth(.MouseCol)
-                End If
-            End If
-            ' VBFlexGridDividerDragOffset is not applicable as PT has fixed coordinates.
-            Call SetDividerDragSplitterRect(.PT.X, .PT.Y)
-            End With
-    End Select
-    Call DrawDividerDragSplitter
+                ' VBFlexGridDividerDragOffset is not applicable as PT has fixed coordinates.
+                Call SetDividerDragSplitterRect(.PT.X, .PT.Y)
+                End With
+        End Select
+        Call DrawDividerDragSplitter
+    End If
     Exit Sub
 End If
 Select Case VBFlexGridCaptureHitResult
