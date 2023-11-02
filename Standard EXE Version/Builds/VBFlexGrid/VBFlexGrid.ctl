@@ -6031,6 +6031,48 @@ End Property
 
 #End If
 
+Public Function CopyFromRecordset(ByRef Data As Object, Optional ByVal Rows As Long = -1, Optional ByVal Cols As Long = -1, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Long
+Attribute CopyFromRecordset.VB_Description = "Copies the contents of an ADO or DAO Recordset onto the flex grid."
+If Data Is Nothing Then Err.Raise 5
+If Not TypeName(Data) = "Recordset" Then Err.Raise 430
+If Rows < -1 Then Err.Raise 380
+If Cols < -1 Then Err.Raise 380
+If Row < -1 Then Err.Raise 380
+If Col < -1 Then Err.Raise 380
+If Row = -1 Then Row = PropFixedRows
+If Col = -1 Then Col = PropFixedCols
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+If Rows = -1 Then Rows = PropRows - Row
+If Cols = -1 Then Cols = PropCols - Col
+If Data.RecordCount > 0 And Rows > 0 And Cols > 0 Then
+    Dim ArrRows As Variant
+    ArrRows = Data.GetRows(Rows)
+    Dim LBoundCols As Long, UBoundCols As Long
+    LBoundCols = LBound(ArrRows, 1)
+    UBoundCols = UBound(ArrRows, 1)
+    Dim LBoundRows As Long, UBoundRows As Long
+    LBoundRows = LBound(ArrRows, 2)
+    UBoundRows = UBound(ArrRows, 2)
+    Dim iRow As Long, iCol As Long
+    If (Row + (UBoundRows - LBoundRows)) > (PropRows - 1) Then
+        If Rows > (PropRows - Row) Then Rows = PropRows - Row
+    End If
+    If (Col + (UBoundCols - LBoundCols)) > (PropCols - 1) Then
+        If Cols > (PropCols - Col) Then Cols = PropCols - Col
+    End If
+    For iRow = LBoundRows To (LBoundRows + (Rows - 1))
+        For iCol = LBoundCols To (LBoundCols + (Cols - 1))
+            If Not IsNull(ArrRows(iCol, iRow)) Then
+                Me.TextMatrix((iRow + (0 - LBoundRows)) + Row, (iCol + (0 - LBoundCols)) + Col) = ArrRows(iCol, iRow)
+            Else
+                Me.TextMatrix((iRow + (0 - LBoundRows)) + Row, (iCol + (0 - LBoundCols)) + Col) = vbNullString
+            End If
+        Next iCol
+    Next iRow
+    CopyFromRecordset = (UBoundRows - LBoundRows) + 1
+End If
+End Function
+
 Public Property Get ClientLeft() As Long
 Attribute ClientLeft.VB_Description = "Returns the left coordinate in twips of the control's client area."
 Attribute ClientLeft.VB_MemberFlags = "400"
