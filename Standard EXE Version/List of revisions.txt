@@ -1,5 +1,14 @@
 List of revisions:
 
+02-Nov-2023
+- Included the CopyFromRecordset function which copies the contents of an ADO or DAO Recordset onto the flex grid.
+  It works like the Excel function which returns the number of fetched records and copies from the current position to EOF.
+  The number of maximum rows and columns can be specified.
+  If omitted it is maximum remaining rows and columns that the grid can receive relative to the destination starting point.
+  The grid will not grow and it just ignores the overflow of rows and columns. (like Excel)
+  The destination row/col can be specified where the pasting onto the flex grid starts.
+  If omitted it is the first non-fixed row and first non-fixed column.
+
 30-Oct-2023
 - Divider resize drag will not be applied anymore when the divider drag never moved. (like MS(H)FlexGrid)
   This solves also the problem with FlexRowSizingModeUniform and double click divider to auto size.

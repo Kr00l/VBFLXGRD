@@ -613,6 +613,7 @@ VBFlexGrid1.Paste
 End Sub
 
 Private Sub Picture2_Paint()
+Picture2.Cls
 Picture2.Print "Drag/drop me"
 End Sub
 
