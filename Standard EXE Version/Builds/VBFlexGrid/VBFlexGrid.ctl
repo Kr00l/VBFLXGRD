@@ -2858,12 +2858,13 @@ If VBFlexGridDesignMode = False Then
                     For iRow = LBoundRows To UBoundRows
                         For iCol = LBoundCols To UBoundCols
                             If Not IsNull(ArrRows(iCol, iRow)) Then
-                                Me.TextMatrix((iRow + (0 - LBoundRows)) + PropFixedRows, (iCol + (0 - LBoundCols)) + PropFixedCols) = ArrRows(iCol, iRow)
+                                Call SetCellText((iRow + (0 - LBoundRows)) + PropFixedRows, (iCol + (0 - LBoundCols)) + PropFixedCols, (ArrRows(iCol, iRow)))
                             Else
-                                Me.TextMatrix((iRow + (0 - LBoundRows)) + PropFixedRows, (iCol + (0 - LBoundCols)) + PropFixedCols) = vbNullString
+                                Call SetCellText((iRow + (0 - LBoundRows)) + PropFixedRows, (iCol + (0 - LBoundCols)) + PropFixedCols, vbNullString)
                             End If
                         Next iCol
                     Next iRow
+                    Call RedrawGrid
                 End If
             End If
         End If
@@ -6045,6 +6046,8 @@ If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then E
 If Rows = -1 Then Rows = PropRows - Row
 If Cols = -1 Then Cols = PropCols - Col
 If Data.RecordCount > 0 And Rows > 0 And Cols > 0 Then
+    If Rows > (PropRows - Row) Then Rows = PropRows - Row
+    If Cols > (PropCols - Col) Then Cols = PropCols - Col
     Dim ArrRows As Variant
     ArrRows = Data.GetRows(Rows)
     Dim LBoundCols As Long, UBoundCols As Long
@@ -6054,21 +6057,17 @@ If Data.RecordCount > 0 And Rows > 0 And Cols > 0 Then
     LBoundRows = LBound(ArrRows, 2)
     UBoundRows = UBound(ArrRows, 2)
     Dim iRow As Long, iCol As Long
-    If (Row + (UBoundRows - LBoundRows)) > (PropRows - 1) Then
-        If Rows > (PropRows - Row) Then Rows = PropRows - Row
-    End If
-    If (Col + (UBoundCols - LBoundCols)) > (PropCols - 1) Then
-        If Cols > (PropCols - Col) Then Cols = PropCols - Col
-    End If
-    For iRow = LBoundRows To (LBoundRows + (Rows - 1))
-        For iCol = LBoundCols To (LBoundCols + (Cols - 1))
+    If (Col + (UBoundCols - LBoundCols)) > (Cols - 1) Then UBoundCols = LBoundCols + (Cols - 1)
+    For iRow = LBoundRows To UBoundRows
+        For iCol = LBoundCols To UBoundCols
             If Not IsNull(ArrRows(iCol, iRow)) Then
-                Me.TextMatrix((iRow + (0 - LBoundRows)) + Row, (iCol + (0 - LBoundCols)) + Col) = ArrRows(iCol, iRow)
+                Call SetCellText((iRow + (0 - LBoundRows)) + Row, (iCol + (0 - LBoundCols)) + Col, (ArrRows(iCol, iRow)))
             Else
-                Me.TextMatrix((iRow + (0 - LBoundRows)) + Row, (iCol + (0 - LBoundCols)) + Col) = vbNullString
+                Call SetCellText((iRow + (0 - LBoundRows)) + Row, (iCol + (0 - LBoundCols)) + Col, vbNullString)
             End If
         Next iCol
     Next iRow
+    Call RedrawGrid
     CopyFromRecordset = (UBoundRows - LBoundRows) + 1
 End If
 End Function
