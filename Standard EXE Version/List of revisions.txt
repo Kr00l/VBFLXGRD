@@ -1,5 +1,8 @@
 List of revisions:
 
+03-Nov-2023
+- Edge case bugfix in the CopyFromRecordset function and minor tweaks.
+
 02-Nov-2023
 - Included the CopyFromRecordset function which copies the contents of an ADO or DAO Recordset onto the flex grid.
   It works like the Excel function which returns the number of fetched records and copies from the current position to EOF.
