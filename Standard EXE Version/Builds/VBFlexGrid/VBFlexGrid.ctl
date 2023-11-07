@@ -5557,7 +5557,7 @@ If (dwExStyle And WS_EX_CLIENTEDGE) = WS_EX_CLIENTEDGE Then dwExStyle = dwExStyl
 If (dwExStyle And WS_EX_WINDOWEDGE) = WS_EX_WINDOWEDGE Then dwExStyle = dwExStyle And Not WS_EX_WINDOWEDGE
 Dim CellRangeRect As RECT, EditRect As RECT, ComboItems As String, ComboButtonWidth As Long, ComboButtonAlignment As FlexLeftRightAlignmentConstants
 Call GetMergedRangeStruct(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditMergedRange)
-Call GetGridLineOffsets(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditGridLineOffsets)
+Call GetGridLineOffsetsStruct(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditGridLineOffsets)
 Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
 Call GetCellRangeRect(VBFlexGridEditMergedRange, CellRangeRect)
 With EditRect
@@ -10803,7 +10803,7 @@ End If
 Me.CellEnsureVisible
 Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS, RC As RECT
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
-Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
+Call GetGridLineOffsetsStruct(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
 SetRect RC, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight
 If VBFlexGridRTLLayout Xor CBool((GetWindowLong(UserControl.ContainerHwnd, GWL_EXSTYLE) And WS_EX_LAYOUTRTL) = WS_EX_LAYOUTRTL) Then
     Dim Swap As Long
@@ -10829,7 +10829,7 @@ End If
 Me.CellEnsureVisible
 Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
-Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
+Call GetGridLineOffsetsStruct(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
 If VBFlexGridHandle <> NULL_PTR Then MapWindowPoints VBFlexGridHandle, UserControl.hWnd, CellRect, 2
 CellTop = UserControl.ScaleY(CellRect.Top + GridLineOffsets.LeftTop.CY, vbPixels, vbTwips)
 End Property
@@ -10845,7 +10845,7 @@ End If
 Me.CellEnsureVisible
 Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
-Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
+Call GetGridLineOffsetsStruct(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
 CellWidth = UserControl.ScaleX((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX), vbPixels, vbTwips)
 End Property
 
@@ -10860,9 +10860,26 @@ End If
 Me.CellEnsureVisible
 Dim CellRect As RECT, GridLineOffsets As TGRIDLINEOFFSETS
 Call GetCellRect(VBFlexGridRow, VBFlexGridCol, CellRect)
-Call GetGridLineOffsets(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
+Call GetGridLineOffsetsStruct(VBFlexGridRow, VBFlexGridCol, GridLineOffsets)
 CellHeight = UserControl.ScaleY((CellRect.Bottom - CellRect.Top) - (GridLineOffsets.LeftTop.CY + GridLineOffsets.RightBottom.CY), vbPixels, vbTwips)
 End Property
+
+Public Sub GetGridLineOffsets(ByRef Left As Long, ByRef Top As Long, ByRef Right As Long, ByRef Bottom As Long, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1)
+Attribute GetGridLineOffsets.VB_Description = "Retrieves the grid line offsets between cells."
+If Row < -1 Then Err.Raise 380
+If Col < -1 Then Err.Raise 380
+If Row = -1 Then Row = VBFlexGridRow
+If Col = -1 Then Col = VBFlexGridCol
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+Dim GridLineOffsets As TGRIDLINEOFFSETS
+Call GetGridLineOffsetsStruct(Row, Col, GridLineOffsets)
+With GridLineOffsets
+Left = UserControl.ScaleX(.LeftTop.CX, vbPixels, vbTwips)
+Top = UserControl.ScaleY(.LeftTop.CY, vbPixels, vbTwips)
+Right = UserControl.ScaleX(.RightBottom.CX, vbPixels, vbTwips)
+Bottom = UserControl.ScaleY(.RightBottom.CY, vbPixels, vbTwips)
+End With
+End Sub
 
 Public Sub HitTest(ByVal X As Single, ByVal Y As Single)
 Attribute HitTest.VB_Description = "A method that returns a value which indicates the element located at the specified X and Y coordinates."
@@ -11794,6 +11811,48 @@ End Property
 
 Public Property Let ComboButtonClientWidth(ByVal Value As Long)
 Err.Raise Number:=383, Description:="Property is read-only"
+End Property
+
+Public Property Get ComboButtonNonClientWidth() As Long
+Attribute ComboButtonNonClientWidth.VB_Description = "Returns the combo button non-client width in twips. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ComboButtonNonClientWidth.VB_MemberFlags = "400"
+If VBFlexGridHandle <> NULL_PTR Then
+    Dim RC As RECT, Theme As LongPtr
+    
+    #If ImplementThemedControls = True Then
+    
+    If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
+    If Theme <> NULL_PTR Then
+        GetThemeBackgroundContentRect Theme, NULL_PTR, BP_PUSHBUTTON, PBS_NORMAL, RC, RC
+        CloseThemeData Theme
+    End If
+    
+    #End If
+    
+    If Theme = NULL_PTR Then DrawFrameControl NULL_PTR, RC, DFC_BUTTON, DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
+    ComboButtonNonClientWidth = UserControl.ScaleX(0 - (RC.Right - RC.Left), vbPixels, vbTwips)
+End If
+End Property
+
+Public Property Get ComboButtonNonClientHeight() As Long
+Attribute ComboButtonNonClientHeight.VB_Description = "Returns the combo button non-client height in twips. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ComboButtonNonClientHeight.VB_MemberFlags = "400"
+If VBFlexGridHandle <> NULL_PTR Then
+    Dim RC As RECT, Theme As LongPtr
+    
+    #If ImplementThemedControls = True Then
+    
+    If VBFlexGridEnabledVisualStyles = True And PropVisualStyles = True Then Theme = OpenThemeData(VBFlexGridHandle, StrPtr("Button"))
+    If Theme <> NULL_PTR Then
+        GetThemeBackgroundContentRect Theme, NULL_PTR, BP_PUSHBUTTON, PBS_NORMAL, RC, RC
+        CloseThemeData Theme
+    End If
+    
+    #End If
+    
+    If Theme = NULL_PTR Then DrawFrameControl NULL_PTR, RC, DFC_BUTTON, DFCS_BUTTONPUSH Or DFCS_ADJUSTRECT
+    ComboButtonNonClientHeight = UserControl.ScaleX(0 - (RC.Bottom - RC.Top), vbPixels, vbTwips)
+End If
 End Property
 
 Public Property Get ComboItems() As String
@@ -13642,7 +13701,7 @@ If VBFlexGridDropHighlight > -1 Then
         End If
     End If
 End If
-Call GetGridLineOffsets(iRow, iCol, VBFlexGridDrawInfo.GridLineOffsets)
+Call GetGridLineOffsetsStruct(iRow, iCol, VBFlexGridDrawInfo.GridLineOffsets)
 Dim CellFmtg As TCELLFMTG
 Call GetCellFmtg(iRow, iCol, CFM_TEXTSTYLE Or CFM_ALIGNMENT Or CFM_PICTURE Or CFM_PICTURERENDERFLAG Or CFM_PICTUREALIGNMENT Or CFM_BACKCOLOR Or CFM_FORECOLOR Or CFM_FLOODPERCENT Or CFM_FLOODCOLOR Or CFM_FONT, CellFmtg)
 With CellFmtg
@@ -14391,7 +14450,7 @@ If VBFlexGridDropHighlight > -1 Then
         End If
     End If
 End If
-Call GetGridLineOffsets(iRow, iCol, VBFlexGridDrawInfo.GridLineOffsets)
+Call GetGridLineOffsetsStruct(iRow, iCol, VBFlexGridDrawInfo.GridLineOffsets)
 Dim CellFmtg As TCELLFMTG
 Call GetCellFmtg(iRow, iCol, CFM_TEXTSTYLE Or CFM_ALIGNMENT Or CFM_PICTURE Or CFM_PICTURERENDERFLAG Or CFM_PICTUREALIGNMENT Or CFM_BACKCOLOR Or CFM_FORECOLOR Or CFM_FLOODPERCENT Or CFM_FLOODCOLOR Or CFM_FONT, CellFmtg)
 With CellFmtg
@@ -15908,7 +15967,7 @@ If hDC <> NULL_PTR Then
         If PropAllowUserEditing = True Then
             ComboCue = GetComboCueActive(iRow, iCol)
             If ComboCue > FlexComboCueNone Then
-                Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
+                Call GetGridLineOffsetsStruct(iRow, iCol, GridLineOffsets)
                 ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
                 If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
                 If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
@@ -16118,7 +16177,7 @@ If hDC <> NULL_PTR Then
 End If
 End Function
 
-Private Sub GetGridLineOffsets(ByVal iRow As Long, ByVal iCol As Long, ByRef GridLineOffsets As TGRIDLINEOFFSETS)
+Private Sub GetGridLineOffsetsStruct(ByVal iRow As Long, ByVal iCol As Long, ByRef GridLineOffsets As TGRIDLINEOFFSETS)
 ' The grid line offsets in the MS flex grid control are hard-coded for all scenarios as per below values.
 With GridLineOffsets
 .LeftTop.CX = 0
@@ -16295,7 +16354,7 @@ If iRowHit > -1 And iColHit > -1 Then
     If PropAllowUserEditing = True Then
         ComboCue = GetComboCueActive(iRowHit, iColHit)
         If ComboCue > FlexComboCueNone Then
-            Call GetGridLineOffsets(iRowHit, iColHit, GridLineOffsets)
+            Call GetGridLineOffsetsStruct(iRowHit, iColHit, GridLineOffsets)
             ComboCueWidth = GetComboButtonWidth(iColHit, ComboCue)
             If (((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
             If VBFlexGridColsInfo(iColHit).ComboButtonAlignment = -1 Then
@@ -16824,7 +16883,7 @@ If hDC <> NULL_PTR Then
     If PropAllowUserEditing = True Then
         ComboCue = GetComboCueActive(iRow, iCol)
         If ComboCue > FlexComboCueNone Then
-            Call GetGridLineOffsets(iRow, iCol, GridLineOffsets)
+            Call GetGridLineOffsetsStruct(iRow, iCol, GridLineOffsets)
             ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
             If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
             If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
