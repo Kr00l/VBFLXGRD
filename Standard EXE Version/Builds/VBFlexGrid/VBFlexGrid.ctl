@@ -11809,10 +11809,6 @@ If VBFlexGridHandle <> NULL_PTR Then
 End If
 End Property
 
-Public Property Let ComboButtonClientWidth(ByVal Value As Long)
-Err.Raise Number:=383, Description:="Property is read-only"
-End Property
-
 Public Property Get ComboButtonNonClientWidth() As Long
 Attribute ComboButtonNonClientWidth.VB_Description = "Returns the combo button non-client width in twips. Only applicable if the combo mode property is set to 3 - Button."
 Attribute ComboButtonNonClientWidth.VB_MemberFlags = "400"
@@ -21987,8 +21983,7 @@ Select Case wMsg
         WindowProcControl = 0
         Exit Function
     Case WM_PRINTCLIENT
-        SendMessage hWnd, WM_PAINT, wParam, ByVal lParam
-        WindowProcControl = 0
+        WindowProcControl = WindowProcControl(hWnd, WM_PAINT, wParam, ByVal 0&)
         Exit Function
     Case WM_MOUSEACTIVATE
         If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then
