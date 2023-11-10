@@ -19804,8 +19804,7 @@ Select Case wMsg
         WindowProcControl = 0
         Exit Function
     Case WM_PRINTCLIENT
-        SendMessage hWnd, WM_PAINT, wParam, ByVal lParam
-        WindowProcControl = 0
+        WindowProcControl = WindowProcControl(hWnd, WM_PAINT, wParam, ByVal 0&)
         Exit Function
     Case WM_MOUSEACTIVATE
         If VBFlexGridEditRow > -1 And VBFlexGridEditCol > -1 Then
