@@ -1,5 +1,8 @@
 List of revisions:
 
+13-Nov-2023
+- No crash anymore in internal AddSelectedRows/RemoveSelectedRows when grid is empty. (AllowMultiSelection property)
+
 07-Nov-2023
 - Included the ComboButtonNonClientWidth/ComboButtonNonClientHeight property.
 - Exposed the GetGridLineOffsets method which retrieves the grid line offsets between cells. (optional row/col subscripts)
