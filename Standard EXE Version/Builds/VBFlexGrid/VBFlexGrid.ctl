@@ -3546,23 +3546,25 @@ ElseIf Value >= (PropRows - PropFrozenRows) Then
     End If
 End If
 PropFixedRows = Value
-Dim RCP As TROWCOLPARAMS
-With RCP
-.Mask = RCPM_ROW Or RCPM_TOPROW
-.Flags = RCPF_FORCETOPROWMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
-.Row = PropFixedRows + PropFrozenRows
-.TopRow = PropFixedRows + PropFrozenRows
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        .Mask = .Mask Or RCPM_ROWSEL
-        .RowSel = .Row
-    Case FlexSelectionModeByRow
-        .Mask = .Mask Or RCPM_ROWSEL Or RCPM_COLSEL
-        .RowSel = .Row
-        .ColSel = (PropCols - 1)
-End Select
-Call SetRowColParams(RCP)
-End With
+If PropRows > 0 And PropCols > 0 Then
+    Dim RCP As TROWCOLPARAMS
+    With RCP
+    .Mask = RCPM_ROW Or RCPM_TOPROW
+    .Flags = RCPF_FORCETOPROWMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+    .Row = PropFixedRows + PropFrozenRows
+    .TopRow = PropFixedRows + PropFrozenRows
+    Select Case PropSelectionMode
+        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+            .Mask = .Mask Or RCPM_ROWSEL
+            .RowSel = .Row
+        Case FlexSelectionModeByRow
+            .Mask = .Mask Or RCPM_ROWSEL Or RCPM_COLSEL
+            .RowSel = .Row
+            .ColSel = (PropCols - 1)
+    End Select
+    Call SetRowColParams(RCP)
+    End With
+End If
 UserControl.PropertyChanged "FixedRows"
 End Property
 
@@ -3588,23 +3590,25 @@ ElseIf Value >= (PropCols - PropFrozenCols) Then
     End If
 End If
 PropFixedCols = Value
-Dim RCP As TROWCOLPARAMS
-With RCP
-.Mask = RCPM_COL Or RCPM_LEFTCOL
-.Flags = RCPF_FORCELEFTCOLMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
-.Col = PropFixedCols + PropFrozenCols
-.LeftCol = PropFixedCols + PropFrozenCols
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        .Mask = .Mask Or RCPM_COLSEL
-        .ColSel = .Col
-    Case FlexSelectionModeByColumn
-        .Mask = .Mask Or RCPM_ROWSEL Or RCPM_COLSEL
-        .RowSel = (PropRows - 1)
-        .ColSel = .Col
-End Select
-Call SetRowColParams(RCP)
-End With
+If PropRows > 0 And PropCols > 0 Then
+    Dim RCP As TROWCOLPARAMS
+    With RCP
+    .Mask = RCPM_COL Or RCPM_LEFTCOL
+    .Flags = RCPF_FORCELEFTCOLMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+    .Col = PropFixedCols + PropFrozenCols
+    .LeftCol = PropFixedCols + PropFrozenCols
+    Select Case PropSelectionMode
+        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+            .Mask = .Mask Or RCPM_COLSEL
+            .ColSel = .Col
+        Case FlexSelectionModeByColumn
+            .Mask = .Mask Or RCPM_ROWSEL Or RCPM_COLSEL
+            .RowSel = (PropRows - 1)
+            .ColSel = .Col
+    End Select
+    Call SetRowColParams(RCP)
+    End With
+End If
 UserControl.PropertyChanged "FixedCols"
 End Property
 
@@ -3630,23 +3634,25 @@ ElseIf Value >= (PropRows - PropFixedRows) Then
     End If
 End If
 PropFrozenRows = Value
-Dim RCP As TROWCOLPARAMS
-With RCP
-.Mask = RCPM_ROW Or RCPM_TOPROW
-.Flags = RCPF_FORCETOPROWMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
-.Row = PropFixedRows + PropFrozenRows
-.TopRow = PropFixedRows + PropFrozenRows
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        .Mask = .Mask Or RCPM_ROWSEL
-        .RowSel = .Row
-    Case FlexSelectionModeByRow
-        .Mask = .Mask Or RCPM_ROWSEL Or RCPM_COLSEL
-        .RowSel = .Row
-        .ColSel = (PropCols - 1)
-End Select
-Call SetRowColParams(RCP)
-End With
+If PropRows > 0 And PropCols > 0 Then
+    Dim RCP As TROWCOLPARAMS
+    With RCP
+    .Mask = RCPM_ROW Or RCPM_TOPROW
+    .Flags = RCPF_FORCETOPROWMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+    .Row = PropFixedRows + PropFrozenRows
+    .TopRow = PropFixedRows + PropFrozenRows
+    Select Case PropSelectionMode
+        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+            .Mask = .Mask Or RCPM_ROWSEL
+            .RowSel = .Row
+        Case FlexSelectionModeByRow
+            .Mask = .Mask Or RCPM_ROWSEL Or RCPM_COLSEL
+            .RowSel = .Row
+            .ColSel = (PropCols - 1)
+    End Select
+    Call SetRowColParams(RCP)
+    End With
+End If
 UserControl.PropertyChanged "FrozenRows"
 End Property
 
@@ -3672,23 +3678,25 @@ ElseIf Value >= (PropCols - PropFixedCols) Then
     End If
 End If
 PropFrozenCols = Value
-Dim RCP As TROWCOLPARAMS
-With RCP
-.Mask = RCPM_COL Or RCPM_LEFTCOL
-.Flags = RCPF_FORCELEFTCOLMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
-.Col = PropFixedCols + PropFrozenCols
-.LeftCol = PropFixedCols + PropFrozenCols
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        .Mask = .Mask Or RCPM_COLSEL
-        .ColSel = .Col
-    Case FlexSelectionModeByColumn
-        .Mask = .Mask Or RCPM_ROWSEL Or RCPM_COLSEL
-        .RowSel = (PropRows - 1)
-        .ColSel = .Col
-End Select
-Call SetRowColParams(RCP)
-End With
+If PropRows > 0 And PropCols > 0 Then
+    Dim RCP As TROWCOLPARAMS
+    With RCP
+    .Mask = RCPM_COL Or RCPM_LEFTCOL
+    .Flags = RCPF_FORCELEFTCOLMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+    .Col = PropFixedCols + PropFrozenCols
+    .LeftCol = PropFixedCols + PropFrozenCols
+    Select Case PropSelectionMode
+        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+            .Mask = .Mask Or RCPM_COLSEL
+            .ColSel = .Col
+        Case FlexSelectionModeByColumn
+            .Mask = .Mask Or RCPM_ROWSEL Or RCPM_COLSEL
+            .RowSel = (PropRows - 1)
+            .ColSel = .Col
+    End Select
+    Call SetRowColParams(RCP)
+    End With
+End If
 UserControl.PropertyChanged "FrozenCols"
 End Property
 
@@ -3751,47 +3759,49 @@ Else
     PropRows = Value
 End If
 If VBFlexGridComboCueRow > (PropRows - 1) Then VBFlexGridComboCueRow = (PropRows - 1)
-Dim RCP As TROWCOLPARAMS
-With RCP
-.Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
-.Row = VBFlexGridRow
-If .Row > (PropRows - 1) Then
-    .Mask = .Mask Or RCPM_ROW
-    .Row = (PropRows - 1)
-End If
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        If VBFlexGridRowSel > (PropRows - 1) Then
-            .Mask = .Mask Or RCPM_ROWSEL
-            .RowSel = (PropRows - 1)
-        End If
-    Case FlexSelectionModeByColumn
-        If VBFlexGridRowSel <> (PropRows - 1) Then
-            .Mask = .Mask Or RCPM_ROWSEL
-            .RowSel = (PropRows - 1)
-        End If
-End Select
-If .Row < PropFixedRows And PropRows > PropFixedRows Then
-    ' In case there were no movable rows before and are now again available.
-    ' Then it is necessary that the active row gets adjusted to the first movable row.
-    If Not (.Mask And RCPM_ROW) = RCPM_ROW Then .Mask = .Mask Or RCPM_ROW
-    .Row = PropFixedRows
-    If Not (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then .Mask = .Mask Or RCPM_ROWSEL
-    If PropSelectionMode <> FlexSelectionModeByColumn Then .RowSel = PropFixedRows Else .RowSel = (PropRows - 1)
-End If
-If RowsPerPage > -1 Then
-    If VBFlexGridTopRow > (PropRows - 1) - RowsPerPage + 1 Then
-        .Mask = .Mask Or RCPM_TOPROW
-        .Flags = .Flags Or RCPF_FORCETOPROWMASK
-        .TopRow = (PropRows - 1) - RowsPerPage + 1
+If PropRows > 0 And PropCols > 0 Then
+    Dim RCP As TROWCOLPARAMS
+    With RCP
+    .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+    .Row = VBFlexGridRow
+    If .Row > (PropRows - 1) Then
+        .Mask = .Mask Or RCPM_ROW
+        .Row = (PropRows - 1)
     End If
-ElseIf VBFlexGridTopRow > (PropRows - 1) Then
-    .Mask = .Mask Or RCPM_TOPROW
-    .Flags = .Flags Or RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK
-    .TopRow = (PropRows - 1)
+    Select Case PropSelectionMode
+        Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+            If VBFlexGridRowSel > (PropRows - 1) Then
+                .Mask = .Mask Or RCPM_ROWSEL
+                .RowSel = (PropRows - 1)
+            End If
+        Case FlexSelectionModeByColumn
+            If VBFlexGridRowSel <> (PropRows - 1) Then
+                .Mask = .Mask Or RCPM_ROWSEL
+                .RowSel = (PropRows - 1)
+            End If
+    End Select
+    If .Row < PropFixedRows And PropRows > PropFixedRows Then
+        ' In case there were no movable rows before and are now again available.
+        ' Then it is necessary that the active row gets adjusted to the first movable row.
+        If Not (.Mask And RCPM_ROW) = RCPM_ROW Then .Mask = .Mask Or RCPM_ROW
+        .Row = PropFixedRows
+        If Not (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then .Mask = .Mask Or RCPM_ROWSEL
+        If PropSelectionMode <> FlexSelectionModeByColumn Then .RowSel = PropFixedRows Else .RowSel = (PropRows - 1)
+    End If
+    If RowsPerPage > -1 Then
+        If VBFlexGridTopRow > (PropRows - 1) - RowsPerPage + 1 Then
+            .Mask = .Mask Or RCPM_TOPROW
+            .Flags = .Flags Or RCPF_FORCETOPROWMASK
+            .TopRow = (PropRows - 1) - RowsPerPage + 1
+        End If
+    ElseIf VBFlexGridTopRow > (PropRows - 1) Then
+        .Mask = .Mask Or RCPM_TOPROW
+        .Flags = .Flags Or RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK
+        .TopRow = (PropRows - 1)
+    End If
+    Call SetRowColParams(RCP)
+    End With
 End If
-Call SetRowColParams(RCP)
-End With
 UserControl.PropertyChanged "Rows"
 End Property
 
@@ -3865,48 +3875,50 @@ Else
     PropCols = Value
 End If
 If VBFlexGridComboCueCol > (PropCols - 1) Then VBFlexGridComboCueCol = (PropCols - 1)
-VBFlexGridExtendLastCol = GetExtendLastCol()
-Dim RCP As TROWCOLPARAMS
-With RCP
-.Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
-.Col = VBFlexGridCol
-If .Col > (PropCols - 1) Then
-    .Mask = .Mask Or RCPM_COL
-    .Col = (PropCols - 1)
-End If
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeByColumn, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        If VBFlexGridColSel > (PropCols - 1) Then
-            .Mask = .Mask Or RCPM_COLSEL
-            .ColSel = (PropCols - 1)
-        End If
-    Case FlexSelectionModeByRow
-        If VBFlexGridColSel <> (PropCols - 1) Then
-            .Mask = .Mask Or RCPM_COLSEL
-            .ColSel = (PropCols - 1)
-        End If
-End Select
-If .Col < PropFixedCols And PropCols > PropFixedCols Then
-    ' In case there were no movable columns before and are now again available.
-    ' Then it is necessary that the active col gets adjusted to the first movable column.
-    If Not (.Mask And RCPM_COL) = RCPM_COL Then .Mask = .Mask Or RCPM_COL
-    .Col = PropFixedCols
-    If Not (.Mask And RCPM_COLSEL) = RCPM_COLSEL Then .Mask = .Mask Or RCPM_COLSEL
-    If PropSelectionMode <> FlexSelectionModeByRow Then .ColSel = PropFixedCols Else .ColSel = (PropCols - 1)
-End If
-If ColsPerPage > -1 Then
-    If VBFlexGridLeftCol > (PropCols - 1) - ColsPerPage + 1 Then
-        .Mask = .Mask Or RCPM_LEFTCOL
-        .Flags = .Flags Or RCPF_FORCELEFTCOLMASK
-        .LeftCol = (PropCols - 1) - ColsPerPage + 1
+If PropRows > 0 And PropCols > 0 Then
+    VBFlexGridExtendLastCol = GetExtendLastCol()
+    Dim RCP As TROWCOLPARAMS
+    With RCP
+    .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+    .Col = VBFlexGridCol
+    If .Col > (PropCols - 1) Then
+        .Mask = .Mask Or RCPM_COL
+        .Col = (PropCols - 1)
     End If
-ElseIf VBFlexGridLeftCol > (PropCols - 1) Then
-    .Mask = .Mask Or RCPM_LEFTCOL
-    .Flags = .Flags Or RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK
-    .LeftCol = (PropCols - 1)
+    Select Case PropSelectionMode
+        Case FlexSelectionModeFree, FlexSelectionModeByColumn, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+            If VBFlexGridColSel > (PropCols - 1) Then
+                .Mask = .Mask Or RCPM_COLSEL
+                .ColSel = (PropCols - 1)
+            End If
+        Case FlexSelectionModeByRow
+            If VBFlexGridColSel <> (PropCols - 1) Then
+                .Mask = .Mask Or RCPM_COLSEL
+                .ColSel = (PropCols - 1)
+            End If
+    End Select
+    If .Col < PropFixedCols And PropCols > PropFixedCols Then
+        ' In case there were no movable columns before and are now again available.
+        ' Then it is necessary that the active col gets adjusted to the first movable column.
+        If Not (.Mask And RCPM_COL) = RCPM_COL Then .Mask = .Mask Or RCPM_COL
+        .Col = PropFixedCols
+        If Not (.Mask And RCPM_COLSEL) = RCPM_COLSEL Then .Mask = .Mask Or RCPM_COLSEL
+        If PropSelectionMode <> FlexSelectionModeByRow Then .ColSel = PropFixedCols Else .ColSel = (PropCols - 1)
+    End If
+    If ColsPerPage > -1 Then
+        If VBFlexGridLeftCol > (PropCols - 1) - ColsPerPage + 1 Then
+            .Mask = .Mask Or RCPM_LEFTCOL
+            .Flags = .Flags Or RCPF_FORCELEFTCOLMASK
+            .LeftCol = (PropCols - 1) - ColsPerPage + 1
+        End If
+    ElseIf VBFlexGridLeftCol > (PropCols - 1) Then
+        .Mask = .Mask Or RCPM_LEFTCOL
+        .Flags = .Flags Or RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK
+        .LeftCol = (PropCols - 1)
+    End If
+    Call SetRowColParams(RCP)
+    End With
 End If
-Call SetRowColParams(RCP)
-End With
 UserControl.PropertyChanged "Cols"
 End Property
 
@@ -5064,14 +5076,16 @@ End Property
 
 Public Property Let ExtendLastCol(ByVal Value As Boolean)
 PropExtendLastCol = Value
-VBFlexGridExtendLastCol = GetExtendLastCol()
-Dim RCP As TROWCOLPARAMS
-With RCP
-.Mask = RCPM_LEFTCOL
-.Flags = RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
-.LeftCol = VBFlexGridLeftCol
-Call SetRowColParams(RCP)
-End With
+If PropRows > 0 And PropCols > 0 Then
+    VBFlexGridExtendLastCol = GetExtendLastCol()
+    Dim RCP As TROWCOLPARAMS
+    With RCP
+    .Mask = RCPM_LEFTCOL
+    .Flags = RCPF_CHECKLEFTCOL Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+    .LeftCol = VBFlexGridLeftCol
+    Call SetRowColParams(RCP)
+    End With
+End If
 UserControl.PropertyChanged "ExtendLastCol"
 End Property
 
@@ -6142,26 +6156,13 @@ Else
         PropRows = PropRows + 1
         If PropCols > 0 Then Call InitFlexGridCells
     End If
-    Dim Pos1 As Long, Pos2 As Long, iCol As Long
-    Dim CSCol As String, CSColLen As Long
-    CSCol = GetClipSeparatorCol()
-    CSColLen = Len(CSCol)
-    If PropClipMode = FlexClipModeNormal Then
-        Do
-            Pos1 = InStr(Pos1 + 1, Item, CSCol)
-            If Pos1 > 0 Then
-                Pos1 = Pos1 + CSColLen - 1
-                If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - CSColLen))
-            Else
-                If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1))
-            End If
-            Pos2 = Pos1
-            iCol = iCol + 1
-        Loop Until Pos1 = 0
-    ElseIf PropClipMode = FlexClipModeExcludeHidden Then
-        Dim ColLoop As Boolean
-        Do
-            If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+    If PropRows > 0 And PropCols > 0 Then
+        Dim Pos1 As Long, Pos2 As Long, iCol As Long
+        Dim CSCol As String, CSColLen As Long
+        CSCol = GetClipSeparatorCol()
+        CSColLen = Len(CSCol)
+        If PropClipMode = FlexClipModeNormal Then
+            Do
                 Pos1 = InStr(Pos1 + 1, Item, CSCol)
                 If Pos1 > 0 Then
                     Pos1 = Pos1 + CSColLen - 1
@@ -6171,23 +6172,38 @@ Else
                 End If
                 Pos2 = Pos1
                 iCol = iCol + 1
-                ColLoop = CBool(Pos1 <> 0 And iCol < PropCols)
-            Else
-                iCol = iCol + 1
-                ColLoop = CBool(iCol < PropCols)
-            End If
-        Loop Until ColLoop = False
+            Loop Until Pos1 = 0
+        ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+            Dim ColLoop As Boolean
+            Do
+                If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                    Pos1 = InStr(Pos1 + 1, Item, CSCol)
+                    If Pos1 > 0 Then
+                        Pos1 = Pos1 + CSColLen - 1
+                        If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - CSColLen))
+                    Else
+                        If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1))
+                    End If
+                    Pos2 = Pos1
+                    iCol = iCol + 1
+                    ColLoop = CBool(Pos1 <> 0 And iCol < PropCols)
+                Else
+                    iCol = iCol + 1
+                    ColLoop = CBool(iCol < PropCols)
+                End If
+            Loop Until ColLoop = False
+        End If
+        Dim RCP As TROWCOLPARAMS
+        With RCP
+        .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+        Select Case PropSelectionMode
+            Case FlexSelectionModeByColumn
+                .Mask = .Mask Or RCPM_ROWSEL
+                .RowSel = (PropRows - 1)
+        End Select
+        Call SetRowColParams(RCP)
+        End With
     End If
-    Dim RCP As TROWCOLPARAMS
-    With RCP
-    .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
-    Select Case PropSelectionMode
-        Case FlexSelectionModeByColumn
-            .Mask = .Mask Or RCPM_ROWSEL
-            .RowSel = (PropRows - 1)
-    End Select
-    Call SetRowColParams(RCP)
-    End With
 End If
 End Sub
 
@@ -6220,36 +6236,38 @@ Else
         RowsPerPage = GetRowsPerPageRev(PropRows - 1)
     End If
     If VBFlexGridComboCueRow > (PropRows - 1) Then VBFlexGridComboCueRow = (PropRows - 1)
-    Dim RCP As TROWCOLPARAMS
-    With RCP
-    .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
-    If VBFlexGridRow > (PropRows - 1) Then
-        .Mask = .Mask Or RCPM_ROW
-        .Row = (PropRows - 1)
-    End If
-    Select Case PropSelectionMode
-        Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-            If VBFlexGridRowSel > (PropRows - 1) Then
+    If PropCols > 0 Then
+        Dim RCP As TROWCOLPARAMS
+        With RCP
+        .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+        If VBFlexGridRow > (PropRows - 1) Then
+            .Mask = .Mask Or RCPM_ROW
+            .Row = (PropRows - 1)
+        End If
+        Select Case PropSelectionMode
+            Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+                If VBFlexGridRowSel > (PropRows - 1) Then
+                    .Mask = .Mask Or RCPM_ROWSEL
+                    .RowSel = (PropRows - 1)
+                End If
+            Case FlexSelectionModeByColumn
                 .Mask = .Mask Or RCPM_ROWSEL
                 .RowSel = (PropRows - 1)
+        End Select
+        If RowsPerPage > -1 Then
+            If VBFlexGridTopRow > (PropRows - 1) - RowsPerPage + 1 Then
+                .Mask = .Mask Or RCPM_TOPROW
+                .Flags = .Flags Or RCPF_FORCETOPROWMASK
+                .TopRow = (PropRows - 1) - RowsPerPage + 1
             End If
-        Case FlexSelectionModeByColumn
-            .Mask = .Mask Or RCPM_ROWSEL
-            .RowSel = (PropRows - 1)
-    End Select
-    If RowsPerPage > -1 Then
-        If VBFlexGridTopRow > (PropRows - 1) - RowsPerPage + 1 Then
+        ElseIf VBFlexGridTopRow > (PropRows - 1) Then
             .Mask = .Mask Or RCPM_TOPROW
-            .Flags = .Flags Or RCPF_FORCETOPROWMASK
-            .TopRow = (PropRows - 1) - RowsPerPage + 1
+            .Flags = .Flags Or RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK
+            .TopRow = (PropRows - 1)
         End If
-    ElseIf VBFlexGridTopRow > (PropRows - 1) Then
-        .Mask = .Mask Or RCPM_TOPROW
-        .Flags = .Flags Or RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK
-        .TopRow = (PropRows - 1)
+        Call SetRowColParams(RCP)
+        End With
     End If
-    Call SetRowColParams(RCP)
-    End With
 End If
 End Sub
 
