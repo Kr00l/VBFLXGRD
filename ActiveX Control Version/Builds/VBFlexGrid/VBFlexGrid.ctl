@@ -15961,6 +15961,7 @@ Next i
 End Sub
 
 Private Sub AddSelectedRows()
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
 Dim SelRange As TCELLRANGE
 Call GetSelRangeStruct(SelRange)
 If SelRange.TopRow > -1 And SelRange.BottomRow > -1 Then
@@ -15974,6 +15975,7 @@ End If
 End Sub
 
 Private Sub RemoveSelectedRows()
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
 Dim SelRange As TCELLRANGE
 Call GetSelRangeStruct(SelRange)
 If SelRange.TopRow > -1 And SelRange.BottomRow > -1 Then
