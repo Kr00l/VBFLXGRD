@@ -2,6 +2,8 @@ List of revisions:
 
 13-Nov-2023
 - No crash anymore in internal AddSelectedRows/RemoveSelectedRows when grid is empty. (AllowMultiSelection property)
+- No illogical Row/Col combination (e.g. -1/0) possible anymore when grid is empty. (Rows = 0 or Cols = 0)
+  Such combination could occur when changing for example FixedRows and Rows is > 0 but Cols still 0.
 
 07-Nov-2023
 - Included the ComboButtonNonClientWidth/ComboButtonNonClientHeight property.
