@@ -763,6 +763,14 @@ With ComboClipCopyMode
 .ItemData(.NewIndex) = FlexClipCopyModeIncludeFixedColumns
 .AddItem FlexClipCopyModeIncludeFixedAll & " - IncludeFixedAll"
 .ItemData(.NewIndex) = FlexClipCopyModeIncludeFixedAll
+.AddItem FlexClipCopyModeExtended & " - Extended"
+.ItemData(.NewIndex) = FlexClipCopyModeExtended
+.AddItem FlexClipCopyModeExtendedFixedRows & " - ExtendedFixedRows"
+.ItemData(.NewIndex) = FlexClipCopyModeExtendedFixedRows
+.AddItem FlexClipCopyModeExtendedFixedColumns & " - ExtendedFixedColumns"
+.ItemData(.NewIndex) = FlexClipCopyModeExtendedFixedColumns
+.AddItem FlexClipCopyModeExtendedFixedAll & " - ExtendedFixedAll"
+.ItemData(.NewIndex) = FlexClipCopyModeExtendedFixedAll
 End With
 With ComboClipPasteMode
 .AddItem FlexClipPasteModeNormal & " - Normal"
