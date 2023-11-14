@@ -1,5 +1,10 @@
 List of revisions:
 
+14-Nov-2023
+- Added enum 4 - Extended for the ClipCopyMode property. (and 5,6,7 for Fixed* variants)
+  This is useful for FreeByRow, FreeByColumn selection mode or for AllowMultiSelection.
+  The extended clip copy mode contains the visual selection and not the technical single selection.
+
 13-Nov-2023
 - No crash anymore in internal AddSelectedRows/RemoveSelectedRows when grid is empty. (AllowMultiSelection property)
 - No illogical Row/Col combination (e.g. -1/0) possible anymore when grid is empty. (Rows = 0 or Cols = 0)
