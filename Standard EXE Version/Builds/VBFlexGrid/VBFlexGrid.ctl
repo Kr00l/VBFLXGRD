@@ -6714,6 +6714,20 @@ Call SetRowColParams(RCP)
 End With
 End Sub
 
+Public Sub SelectAll()
+Attribute SelectAll.VB_Description = "Selects all cells with a single command."
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
+Dim RCP As TROWCOLPARAMS
+With RCP
+.Mask = RCPM_ROW Or RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL
+.Row = PropFixedRows
+.Col = PropFixedCols
+.RowSel = (PropRows - 1)
+.ColSel = (PropCols - 1)
+Call SetRowColParams(RCP)
+End With
+End Sub
+
 Public Property Get TopRow() As Long
 Attribute TopRow.VB_Description = "Returns/sets the uppermost row displayed in the flex grid."
 Attribute TopRow.VB_MemberFlags = "400"
