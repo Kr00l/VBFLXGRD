@@ -1,5 +1,8 @@
 List of revisions:
 
+02-Dec-2023
+- Included the SelectAll method which is useful to call for providing a Ctrl + A feature within the KeyDown event.
+
 14-Nov-2023
 - Added enum 4 - Extended for the ClipCopyMode property. (and 5,6,7 for Fixed* variants)
   This is useful for FreeByRow, FreeByColumn selection mode or for AllowMultiSelection.
