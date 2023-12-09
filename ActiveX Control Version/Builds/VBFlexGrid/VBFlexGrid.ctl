@@ -10717,7 +10717,9 @@ For i = 0 To (PropCols - 1)
 Next i
 LSet VBFlexGridDefaultCols = VBFlexGridCells.Rows(0)
 VBFlexGridRow = PropFixedRows
+If VBFlexGridRow > (PropRows - 1) Then VBFlexGridRow = (PropRows - 1)
 VBFlexGridCol = PropFixedCols
+If VBFlexGridCol > (PropCols - 1) Then VBFlexGridCol = (PropCols - 1)
 Select Case PropSelectionMode
     Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         VBFlexGridRowSel = VBFlexGridRow
