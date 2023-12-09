@@ -3805,6 +3805,8 @@ If PropRows > 0 And PropCols > 0 Then
     End If
     Call SetRowColParams(RCP)
     End With
+Else
+    Call RedrawGrid
 End If
 UserControl.PropertyChanged "Rows"
 End Property
@@ -3922,6 +3924,8 @@ If PropRows > 0 And PropCols > 0 Then
     End If
     Call SetRowColParams(RCP)
     End With
+Else
+    Call RedrawGrid
 End If
 UserControl.PropertyChanged "Cols"
 End Property
