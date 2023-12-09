@@ -6595,6 +6595,34 @@ End Select
 Call RedrawGrid
 End Sub
 
+Public Sub ClearRowInfo(ByVal Index As Long)
+Attribute ClearRowInfo.VB_Description = "Clears the info structure for the specified row."
+If Index <> -1 And (Index < 0 Or Index > (PropRows - 1)) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+If Index > -1 Then
+    LSet VBFlexGridCells.Rows(Index).RowInfo = VBFlexGridDefaultRowInfo
+Else
+    Dim i As Long
+    For i = 0 To (PropRows - 1)
+        LSet VBFlexGridCells.Rows(i).RowInfo = VBFlexGridDefaultRowInfo
+    Next i
+End If
+Call RedrawGrid
+End Sub
+
+Public Sub ClearColInfo(ByVal Index As Long)
+Attribute ClearColInfo.VB_Description = "Clears the info structure for the specified column."
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    LSet VBFlexGridColsInfo(Index) = VBFlexGridDefaultColInfo
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        LSet VBFlexGridColsInfo(i) = VBFlexGridDefaultColInfo
+    Next i
+End If
+Call RedrawGrid
+End Sub
+
 Public Property Get Row() As Long
 Attribute Row.VB_Description = "Returns/sets the active cell in the flex grid."
 Attribute Row.VB_MemberFlags = "400"
