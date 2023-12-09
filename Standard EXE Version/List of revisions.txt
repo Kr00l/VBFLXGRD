@@ -2,6 +2,8 @@ List of revisions:
 
 09-Dec-2023
 - Fixed that no invalidation occurs when setting Rows/Cols to 0. (regression 13-Nov-2023)
+- Included the ClearRowInfo/ClearColInfo method which clears the info structure for the specified row/column.
+  An index of -1 will clear the info structure for all rows/columns.
 
 02-Dec-2023
 - Included the SelectAll method which is useful to call for providing a Ctrl + A feature within the KeyDown event.
