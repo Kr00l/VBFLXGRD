@@ -5967,6 +5967,7 @@ Select Case What
     Case Else
         Err.Raise 380
 End Select
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
 Dim iRow As Long, iCol As Long
 Select Case Where
     Case FlexClearEverywhere
@@ -13688,11 +13689,11 @@ Else
         ElseIf (VBFlexGridFlexDataSourceFlags And FlexDataSourceChecked) <> 0 Then
             If (VBFlexGridFlexDataSourceFlags And FlexDataSourceUnboundFixedColumns) = 0 Then
                 Checked = VBFlexGridFlexDataSource2.GetChecked(iCol, iRow - PropFixedRows)
-                If GetCellChecked >= -2 And GetCellChecked <= 7 Then GetCellChecked = Checked
+                If Checked >= -2 And Checked <= 7 Then GetCellChecked = Checked
             Else
                 If iCol >= PropFixedCols Then
                     Checked = VBFlexGridFlexDataSource2.GetChecked(iCol - PropFixedCols, iRow - PropFixedRows)
-                    If GetCellChecked >= -2 And GetCellChecked <= 7 Then GetCellChecked = Checked
+                    If Checked >= -2 And Checked <= 7 Then GetCellChecked = Checked
                 Else
                     Checked = GetCellFmtgChecked(iRow, iCol)
                     If Checked <> -1 Then GetCellChecked = Checked
