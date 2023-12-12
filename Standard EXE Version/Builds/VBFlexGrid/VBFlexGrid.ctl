@@ -851,7 +851,9 @@ Private Const CLIS_NULLABLE As Long = &H4
 Private Const CLIS_NOSIZING As Long = &H8
 Private Const CLIS_CHECKBOXES As Long = &H10
 Private Const CLIS_CHECKBOXESHITTESTINVISIBLE As Long = &H20
-Private Const CLIS_CHECKBOXESHITTESTINVISIBLEFIXED As Long = &H40
+Private Const CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY As Long = &H40
+Private Const CLIS_CHECKBOXESHITTESTINVISIBLEFIXED As Long = &H80
+Private Const CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY As Long = &H100
 Private Type TCOLINFO
 Width As Long
 Data As LongPtr
@@ -8595,64 +8597,96 @@ End If
 Call RedrawGrid
 End Property
 
-Public Property Get ColCheckBoxesHitTestInvisible(ByVal Index As Long) As Boolean
+Public Property Get ColCheckBoxesHitTestInvisible(ByVal Index As Long, Optional ByRef DisabledOnly As Boolean) As Boolean
 Attribute ColCheckBoxesHitTestInvisible.VB_Description = "Returns/sets a value that determines whether check boxes are visible but not hit-testable (cannot interact with mouse cursor) for the specified column."
 Attribute ColCheckBoxesHitTestInvisible.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 ColCheckBoxesHitTestInvisible = CBool((VBFlexGridColsInfo(Index).State And CLIS_CHECKBOXESHITTESTINVISIBLE) = CLIS_CHECKBOXESHITTESTINVISIBLE)
+DisabledOnly = CBool((VBFlexGridColsInfo(Index).State And CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY) = CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY)
 End Property
 
-Public Property Let ColCheckBoxesHitTestInvisible(ByVal Index As Long, ByVal Value As Boolean)
+Public Property Let ColCheckBoxesHitTestInvisible(ByVal Index As Long, Optional ByRef DisabledOnly As Boolean, ByVal Value As Boolean)
 If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 If Index > -1 Then
     With VBFlexGridColsInfo(Index)
     If Value = True Then
         If (.State And CLIS_CHECKBOXESHITTESTINVISIBLE) = 0 Then .State = .State Or CLIS_CHECKBOXESHITTESTINVISIBLE
+        If DisabledOnly = False Then
+            If (.State And CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY) = CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY Then .State = .State And Not CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY
+        Else
+            If (.State And CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY) = 0 Then .State = .State Or CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY
+        End If
     Else
         If (.State And CLIS_CHECKBOXESHITTESTINVISIBLE) = CLIS_CHECKBOXESHITTESTINVISIBLE Then .State = .State And Not CLIS_CHECKBOXESHITTESTINVISIBLE
+        If (.State And CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY) = CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY Then .State = .State And Not CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY
     End If
     End With
 Else
     Dim i As Long
     If Value = True Then
-        For i = 0 To (PropCols - 1)
-            If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLE) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_CHECKBOXESHITTESTINVISIBLE
-        Next i
+        If DisabledOnly = False Then
+            For i = 0 To (PropCols - 1)
+                If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLE) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_CHECKBOXESHITTESTINVISIBLE
+                If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY) = CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY
+            Next i
+        Else
+            For i = 0 To (PropCols - 1)
+                If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLE) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_CHECKBOXESHITTESTINVISIBLE
+                If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY
+            Next i
+        End If
     Else
         For i = 0 To (PropCols - 1)
             If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLE) = CLIS_CHECKBOXESHITTESTINVISIBLE Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_CHECKBOXESHITTESTINVISIBLE
+            If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY) = CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY
         Next i
     End If
 End If
 Call RedrawGrid
 End Property
 
-Public Property Get ColCheckBoxesHitTestInvisibleFixed(ByVal Index As Long) As Boolean
+Public Property Get ColCheckBoxesHitTestInvisibleFixed(ByVal Index As Long, Optional ByRef DisabledOnly As Boolean) As Boolean
 Attribute ColCheckBoxesHitTestInvisibleFixed.VB_Description = "Returns/sets a value that determines whether check boxes are visible but not hit-testable (cannot interact with mouse cursor) for the specified column."
 Attribute ColCheckBoxesHitTestInvisibleFixed.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 ColCheckBoxesHitTestInvisibleFixed = CBool((VBFlexGridColsInfo(Index).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXED) = CLIS_CHECKBOXESHITTESTINVISIBLEFIXED)
+DisabledOnly = CBool((VBFlexGridColsInfo(Index).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY) = CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY)
 End Property
 
-Public Property Let ColCheckBoxesHitTestInvisibleFixed(ByVal Index As Long, ByVal Value As Boolean)
+Public Property Let ColCheckBoxesHitTestInvisibleFixed(ByVal Index As Long, Optional ByRef DisabledOnly As Boolean, ByVal Value As Boolean)
 If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 If Index > -1 Then
     With VBFlexGridColsInfo(Index)
     If Value = True Then
         If (.State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXED) = 0 Then .State = .State Or CLIS_CHECKBOXESHITTESTINVISIBLEFIXED
+        If DisabledOnly = False Then
+            If (.State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY) = CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY Then .State = .State And Not CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY
+        Else
+            If (.State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY) = 0 Then .State = .State Or CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY
+        End If
     Else
         If (.State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXED) = CLIS_CHECKBOXESHITTESTINVISIBLEFIXED Then .State = .State And Not CLIS_CHECKBOXESHITTESTINVISIBLEFIXED
+        If (.State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY) = CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY Then .State = .State And Not CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY
     End If
     End With
 Else
     Dim i As Long
     If Value = True Then
-        For i = 0 To (PropCols - 1)
-            If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXED) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_CHECKBOXESHITTESTINVISIBLEFIXED
-        Next i
+        If DisabledOnly = False Then
+            For i = 0 To (PropCols - 1)
+                If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXED) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_CHECKBOXESHITTESTINVISIBLEFIXED
+                If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY) = CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY
+            Next i
+        Else
+            For i = 0 To (PropCols - 1)
+                If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXED) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_CHECKBOXESHITTESTINVISIBLEFIXED
+                If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY
+            Next i
+        End If
     Else
         For i = 0 To (PropCols - 1)
             If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXED) = CLIS_CHECKBOXESHITTESTINVISIBLEFIXED Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_CHECKBOXESHITTESTINVISIBLEFIXED
+            If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY) = CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY
         Next i
     End If
 End If
@@ -15823,13 +15857,23 @@ If iRow >= PropFixedRows And iCol >= PropFixedCols Then
     If (VBFlexGridColsInfo(iCol).State And CLIS_CHECKBOXESHITTESTINVISIBLE) = 0 Then
         GetCellChecked_HitTest = GetCellChecked(iRow, iCol)
     Else
-        GetCellChecked_HitTest = -1
+        If (VBFlexGridColsInfo(iCol).State And CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY) = 0 Then
+            GetCellChecked_HitTest = -1
+        Else
+            GetCellChecked_HitTest = GetCellChecked(iRow, iCol)
+            If GetCellChecked_HitTest >= 4 And GetCellChecked_HitTest <= 7 Then GetCellChecked_HitTest = -1
+        End If
     End If
 Else
     If (VBFlexGridColsInfo(iCol).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXED) = 0 Then
         GetCellChecked_HitTest = GetCellChecked(iRow, iCol)
     Else
-        GetCellChecked_HitTest = -1
+        If (VBFlexGridColsInfo(iCol).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY) = 0 Then
+            GetCellChecked_HitTest = -1
+        Else
+            GetCellChecked_HitTest = GetCellChecked(iRow, iCol)
+            If GetCellChecked_HitTest >= 4 And GetCellChecked_HitTest <= 7 Then GetCellChecked_HitTest = -1
+        End If
     End If
 End If
 End Function
