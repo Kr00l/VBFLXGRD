@@ -1,5 +1,12 @@
 List of revisions:
 
+12-Dec-2023
+- Included the ColCheckBoxesHitTestInvisible/ColCheckBoxesHitTestInvisibleFixed run-time property.
+  It determines whether check boxes are visible but not hit-testable. (cannot interact with mouse cursor)
+  This can be useful for representation only check boxes (e.g. FlexTextAsCheckBox) where hot-light is not needed and CellClick (etc.) events should fire.
+  However, this does not avoid changing the checked state by space key.
+  To avoid that use the FlexDisabled* checked states or set Cancel = True on the CellBeforeCheck event.
+
 09-Dec-2023
 - Fixed that no invalidation occurs when setting Rows/Cols to 0. (regression 13-Nov-2023)
 - Included the ClearRowInfo/ClearColInfo method which clears the info structure for the specified row/column.
