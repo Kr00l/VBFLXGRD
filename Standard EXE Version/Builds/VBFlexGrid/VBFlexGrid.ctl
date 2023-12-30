@@ -16143,7 +16143,11 @@ End Sub
 
 Private Sub AllocCellTag(ByRef lpTag As LongPtr)
 If lpTag = NULL_PTR Then
+    #If Win64 Then
+    Const VARIANT_CB As Long = 24
+    #Else
     Const VARIANT_CB As Long = 16
+    #End If
     lpTag = HeapAlloc(GetProcessHeap(), 0, VARIANT_CB)
     If lpTag <> NULL_PTR Then VariantInit ByVal lpTag
 End If
