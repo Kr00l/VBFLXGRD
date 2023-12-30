@@ -1,5 +1,8 @@
 List of revisions:
 
+30-Dec-2023
+- Const VARIANT_CB now 24 instead of 16 for Win64.
+
 12-Dec-2023
 - Included the ColCheckBoxesHitTestInvisible/ColCheckBoxesHitTestInvisibleFixed run-time property.
   It determines whether check boxes are visible but not hit-testable. (cannot interact with mouse cursor)
