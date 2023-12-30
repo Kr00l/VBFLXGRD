@@ -1,4 +1,7 @@
 List of revisions:
 
+30-Dec-2023
+- Revision update. (Version 1.7.1)
+
 13-Dec-2023
 - First release. (Version 1.7.0)
