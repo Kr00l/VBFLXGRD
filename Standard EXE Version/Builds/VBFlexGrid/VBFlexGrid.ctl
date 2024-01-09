@@ -1541,6 +1541,7 @@ Private Const WM_NOTIFYFORMAT As Long = &H55
 Private Const WM_MOUSEACTIVATE As Long = &H21, MA_ACTIVATE As Long = &H1, MA_ACTIVATEANDEAT As Long = &H2, MA_NOACTIVATE As Long = &H3, MA_NOACTIVATEANDEAT As Long = &H4
 Private Const WM_SETTINGCHANGE As Long = &H1A
 Private Const WM_MOUSEWHEEL As Long = &H20A
+Private Const WM_MOUSEHWHEEL As Long = &H20E
 Private Const SW_HIDE As Long = &H0
 Private Const SW_SHOW As Long = &H5
 Private Const SW_SHOWNA As Long = &H8
@@ -22559,6 +22560,21 @@ Select Case wMsg
             WindowProcControl = 0
             Exit Function
         End If
+    Case WM_MOUSEHWHEEL
+        Static HWheelDelta As Long, LastHWheelDelta As Long
+        If Sgn(HiWord(CLng(wParam))) <> Sgn(LastHWheelDelta) Then HWheelDelta = 0
+        HWheelDelta = HWheelDelta + HiWord(CLng(wParam))
+        If Abs(HWheelDelta) >= 120 Then
+            If Sgn(HWheelDelta) = -1 Then
+                SendMessage hWnd, WM_HSCROLL, MakeDWord(SB_LINELEFT, 0), ByVal 0&
+            Else
+                SendMessage hWnd, WM_HSCROLL, MakeDWord(SB_LINERIGHT, 0), ByVal 0&
+            End If
+            HWheelDelta = 0
+        End If
+        LastHWheelDelta = HiWord(CLng(wParam))
+        WindowProcControl = 0
+        Exit Function
     Case WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP
         Dim KeyCode As Integer
         KeyCode = CLng(wParam) And &HFF&
