@@ -1,5 +1,8 @@
 List of revisions:
 
+09-Jan-2024
+- WM_MOUSEHWHEEL support. (horizontal mouse wheel)
+
 30-Dec-2023
 - Const VARIANT_CB now 24 instead of 16 for Win64.
 
