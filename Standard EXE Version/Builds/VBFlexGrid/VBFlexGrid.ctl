@@ -23168,10 +23168,10 @@ Select Case wMsg
         ' This enables the parent window - when it receives WM_MOUSEACTIVATE - to destroy this child window.
         WindowProcEdit = MA_ACTIVATE
         Exit Function
-    Case WM_MOUSEWHEEL
+    Case WM_MOUSEWHEEL, WM_MOUSEHWHEEL
         If VBFlexGridComboListHandle <> NULL_PTR Then
             If ComboButtonGetState(ODS_SELECTED) = True Then
-                SendMessage VBFlexGridComboListHandle, WM_MOUSEWHEEL, wParam, ByVal lParam
+                SendMessage VBFlexGridComboListHandle, wMsg, wParam, ByVal lParam
                 Exit Function
             End If
         End If
@@ -23443,6 +23443,13 @@ Select Case wMsg
             WindowProcComboButton = MA_ACTIVATEANDEAT
         End If
         Exit Function
+    Case WM_MOUSEWHEEL, WM_MOUSEHWHEEL
+        If VBFlexGridComboListHandle <> NULL_PTR Then
+            If ComboButtonGetState(ODS_SELECTED) = True Then
+                SendMessage VBFlexGridComboListHandle, wMsg, wParam, ByVal lParam
+                Exit Function
+            End If
+        End If
     Case WM_LBUTTONDOWN
         ' In case the edit window is still active due to failed validation then this ensures that the focus is properly set when clicked from outside.
         If VBFlexGridEditHandle <> NULL_PTR Then
