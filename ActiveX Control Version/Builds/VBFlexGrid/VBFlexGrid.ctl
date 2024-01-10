@@ -1751,6 +1751,7 @@ Private VBFlexGridHotRow As Long, VBFlexGridHotCol As Long
 Private VBFlexGridHotHitResult As FlexHitResultConstants
 Private VBFlexGridWallPaperRenderFlag As Integer
 Private VBFlexGridIncrementalSearch As TINCREMENTALSEARCH
+Private VBFlexGridReaderModeScroll As SIZEAPI
 
 #If ImplementFlexDataSource = True Then
 
@@ -1862,6 +1863,7 @@ Private PropBestFitMode As FlexBestFitModeConstants
 Private PropWallPaper As IPictureDisp
 Private PropWallPaperAlignment As FlexWallPaperAlignmentConstants
 Private PropAllowIncrementalSearch As Boolean
+Private PropAllowReaderMode As Boolean
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -2185,6 +2187,7 @@ PropBestFitMode = FlexBestFitModeTextOnly
 Set PropWallPaper = Nothing
 PropWallPaperAlignment = FlexWallPaperAlignmentStretch
 PropAllowIncrementalSearch = False
+PropAllowReaderMode = False
 Call CreateVBFlexGrid
 End Sub
 
@@ -2295,6 +2298,7 @@ PropBestFitMode = .ReadProperty("BestFitMode", FlexBestFitModeTextOnly)
 Set PropWallPaper = .ReadProperty("WallPaper", Nothing)
 PropWallPaperAlignment = .ReadProperty("WallPaperAlignment", FlexWallPaperAlignmentStretch)
 PropAllowIncrementalSearch = .ReadProperty("AllowIncrementalSearch", False)
+PropAllowReaderMode = .ReadProperty("AllowReaderMode", False)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -2401,6 +2405,7 @@ With PropBag
 .WriteProperty "WallPaper", PropWallPaper, Nothing
 .WriteProperty "WallPaperAlignment", PropWallPaperAlignment, FlexWallPaperAlignmentStretch
 .WriteProperty "AllowIncrementalSearch", PropAllowIncrementalSearch, False
+.WriteProperty "AllowReaderMode", PropAllowReaderMode, False
 End With
 End Sub
 
@@ -5208,6 +5213,16 @@ Public Property Let AllowIncrementalSearch(ByVal Value As Boolean)
 PropAllowIncrementalSearch = Value
 If PropAllowIncrementalSearch = False Then Call CancelIncrementalSearch
 UserControl.PropertyChanged "AllowIncrementalSearch"
+End Property
+
+Public Property Get AllowReaderMode() As Boolean
+Attribute AllowReaderMode.VB_Description = "Returns/sets a value that determines whether the control supports reader-mode for auto-scrolling and panning."
+AllowReaderMode = PropAllowReaderMode
+End Property
+
+Public Property Let AllowReaderMode(ByVal Value As Boolean)
+PropAllowReaderMode = Value
+UserControl.PropertyChanged "AllowReaderMode"
 End Property
 
 Private Sub CreateVBFlexGrid()
@@ -22215,6 +22230,44 @@ End Function
 
 #End If
 
+Friend Sub FReaderModeScroll(ByVal DX As Long, ByVal DY As Long)
+If VBFlexGridHandle = NULL_PTR Then Exit Sub
+If DX > 0 Then
+    If VBFlexGridReaderModeScroll.CX < 0 Then VBFlexGridReaderModeScroll.CX = 0
+ElseIf DX < 0 Then
+    If VBFlexGridReaderModeScroll.CX > 0 Then VBFlexGridReaderModeScroll.CX = 0
+End If
+VBFlexGridReaderModeScroll.CX = VBFlexGridReaderModeScroll.CX + DX
+If DY > 0 Then
+    If VBFlexGridReaderModeScroll.CY < 0 Then VBFlexGridReaderModeScroll.CY = 0
+ElseIf DY < 0 Then
+    If VBFlexGridReaderModeScroll.CY > 0 Then VBFlexGridReaderModeScroll.CY = 0
+End If
+VBFlexGridReaderModeScroll.CY = VBFlexGridReaderModeScroll.CY + DY
+If VBFlexGridReaderModeScroll.CX > 0 Then
+    While VBFlexGridReaderModeScroll.CX >= GetColWidth(VBFlexGridLeftCol)
+        SendMessage VBFlexGridHandle, WM_HSCROLL, MakeDWord(SB_LINERIGHT, 0), ByVal 0&
+        VBFlexGridReaderModeScroll.CX = VBFlexGridReaderModeScroll.CX - GetColWidth(VBFlexGridLeftCol)
+    Wend
+ElseIf VBFlexGridReaderModeScroll.CX < 0 Then
+    While VBFlexGridReaderModeScroll.CX <= -GetColWidth(VBFlexGridLeftCol)
+        SendMessage VBFlexGridHandle, WM_HSCROLL, MakeDWord(SB_LINELEFT, 0), ByVal 0&
+        VBFlexGridReaderModeScroll.CX = VBFlexGridReaderModeScroll.CX + GetColWidth(VBFlexGridLeftCol)
+    Wend
+End If
+If VBFlexGridReaderModeScroll.CY > 0 Then
+    While VBFlexGridReaderModeScroll.CY >= GetRowHeight(VBFlexGridTopRow)
+        SendMessage VBFlexGridHandle, WM_VSCROLL, MakeDWord(SB_LINEDOWN, 0), ByVal 0&
+        VBFlexGridReaderModeScroll.CY = VBFlexGridReaderModeScroll.CY - GetRowHeight(VBFlexGridTopRow)
+    Wend
+ElseIf VBFlexGridReaderModeScroll.CY < 0 Then
+    While VBFlexGridReaderModeScroll.CY <= -GetRowHeight(VBFlexGridTopRow)
+        SendMessage VBFlexGridHandle, WM_VSCROLL, MakeDWord(SB_LINEUP, 0), ByVal 0&
+        VBFlexGridReaderModeScroll.CY = VBFlexGridReaderModeScroll.CY + GetRowHeight(VBFlexGridTopRow)
+    Wend
+End If
+End Sub
+
 #If VBA7 Then
 Friend Function FSubclass_Message(ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr, ByVal dwRefData As LongPtr) As LongPtr
 #Else
@@ -22761,6 +22814,15 @@ Select Case wMsg
                 End If
             End If
             End With
+            If PropAllowReaderMode = True Then
+                If wMsg = WM_MBUTTONDOWN Then
+                    If PropRows > 0 And PropCols > 0 And PropScrollBars <> vbSBNone Then
+                        VBFlexGridReaderModeScroll.CX = 0
+                        VBFlexGridReaderModeScroll.CY = 0
+                        Call FlexDoReaderMode(hWnd, wParam, lParam)
+                    End If
+                End If
+            End If
         End If
     Case WM_MOUSEMOVE
         Call ProcessMouseMove(GetMouseStateFromParam(wParam), Get_X_lParam(lParam), Get_Y_lParam(lParam))
