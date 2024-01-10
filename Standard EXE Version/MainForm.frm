@@ -293,6 +293,7 @@ Begin VB.Form MainForm
       ShowScrollTips  =   -1  'True
       AllowScrollLock =   -1  'True
       WallPaper       =   "MainForm.frx":0344
+      AllowReaderMode =   -1  'True
    End
 End
 Attribute VB_Name = "MainForm"

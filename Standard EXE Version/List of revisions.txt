@@ -1,5 +1,9 @@
 List of revisions:
 
+10-Jan-2024
+- Included the AllowReaderMode property. (auto-scrolling and panning)
+  It defaults to False, when set to True it uses the DoReaderMode API upon WM_MBUTTONDOWN.
+
 09-Jan-2024
 - WM_MOUSEHWHEEL support. (horizontal mouse wheel)
 

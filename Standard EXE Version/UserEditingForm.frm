@@ -148,6 +148,7 @@ Begin VB.Form UserEditingForm
       AllowUserResizing=   3
       MergeCells      =   1
       FormatString    =   "UserEditingForm.frx":0000
+      AllowReaderMode =   -1  'True
    End
    Begin VB.Label Label1 
       Caption         =   "Editing mode OFF"
