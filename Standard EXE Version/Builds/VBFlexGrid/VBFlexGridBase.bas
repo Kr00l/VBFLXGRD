@@ -33,6 +33,24 @@ lpszMenuName As LongPtr
 lpszClassName As LongPtr
 hIconSm As LongPtr
 End Type
+Private Type RECT
+Left As Long
+Top As Long
+Right As Long
+Bottom As Long
+End Type
+Private Type POINTAPI
+X As Long
+Y As Long
+End Type
+Private Type TMSG
+hWnd As LongPtr
+Message As Long
+wParam As LongPtr
+lParam As LongPtr
+Time As Long
+PT As POINTAPI
+End Type
 Private Type BITMAP
 BMType As Long
 BMWidth As Long
@@ -42,16 +60,31 @@ BMPlanes As Integer
 BMBitsPixel As Integer
 BMBits As LongPtr
 End Type
+Private Const RMF_ZEROCURSOR As Long = &H1
+Private Const RMF_VERTICALONLY As Long = &H2
+Private Const RMF_HORIZONTALONLY As Long = &H4
+Private Type READERMODEINFO
+cbSize As Long
+hWnd As LongPtr
+dwFlags As Long
+lpRC As LongPtr
+lpfnScroll As LongPtr
+lpfnDispatch As LongPtr
+lParam As LongPtr
+End Type
 #If VBA7 Then
 Public Declare PtrSafe Function FlexObjAddRef Lib "msvbvm60.dll" Alias "__vbaObjAddref" (ByVal lpObject As LongPtr) As Long
 Public Declare PtrSafe Function FlexObjSet Lib "msvbvm60.dll" Alias "__vbaObjSet" (ByRef Destination As Any, ByVal lpObject As LongPtr) As Long
 Public Declare PtrSafe Function FlexObjSetAddRef Lib "msvbvm60.dll" Alias "__vbaObjSetAddref" (ByRef Destination As Any, ByVal lpObject As LongPtr) As Long
 Private Declare PtrSafe Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
+Private Declare PtrSafe Sub DoReaderMode Lib "comctl32" Alias "#383" (ByRef lpRMI As READERMODEINFO)
 Private Declare PtrSafe Function InitCommonControlsEx Lib "comctl32" (ByRef ICCEX As TINITCOMMONCONTROLSEX) As Long
 Private Declare PtrSafe Function GetClassInfoEx Lib "user32" Alias "GetClassInfoExW" (ByVal hInstance As LongPtr, ByVal lpClassName As LongPtr, ByRef lpWndClassEx As WNDCLASSEX) As Long
 Private Declare PtrSafe Function RegisterClassEx Lib "user32" Alias "RegisterClassExW" (ByRef lpWndClassEx As WNDCLASSEX) As Integer
 Private Declare PtrSafe Function UnregisterClass Lib "user32" Alias "UnregisterClassW" (ByVal lpClassName As LongPtr, ByVal hInstance As LongPtr) As Long
 Private Declare PtrSafe Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
+Private Declare PtrSafe Function SetWindowLong Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As LongPtr, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
+Private Declare PtrSafe Function GetWindowLong Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As LongPtr, ByVal nIndex As Long) As Long
 #If Win64 Then
 Private Declare PtrSafe Function SetWindowLongPtr Lib "user32" Alias "SetWindowLongPtrW" (ByVal hWnd As LongPtr, ByVal nIndex As Long, ByVal dwNewLong As LongPtr) As LongPtr
 Private Declare PtrSafe Function GetWindowLongPtr Lib "user32" Alias "GetWindowLongPtrW" (ByVal hWnd As LongPtr, ByVal nIndex As Long) As LongPtr
@@ -60,6 +93,7 @@ Private Declare PtrSafe Function SetWindowLongPtr Lib "user32" Alias "SetWindowL
 Private Declare PtrSafe Function GetWindowLongPtr Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As LongPtr, ByVal nIndex As Long) As LongPtr
 #End If
 Private Declare PtrSafe Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByRef lParam As Any) As LongPtr
+Private Declare PtrSafe Function PostMessage Lib "user32" Alias "PostMessageW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByRef lParam As Any) As LongPtr
 Private Declare PtrSafe Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hInstance As LongPtr, ByVal lpCursorName As Any) As LongPtr
 Private Declare PtrSafe Function GetProcAddress Lib "kernel32" (ByVal hModule As LongPtr, ByVal lpProcName As Any) As LongPtr
 Private Declare PtrSafe Function LoadLibrary Lib "kernel32" Alias "LoadLibraryW" (ByVal lpLibFileName As LongPtr) As LongPTr
@@ -78,14 +112,18 @@ Public Declare Function FlexObjAddRef Lib "msvbvm60.dll" Alias "__vbaObjAddref" 
 Public Declare Function FlexObjSet Lib "msvbvm60.dll" Alias "__vbaObjSet" (ByRef Destination As Any, ByVal lpObject As Long) As Long
 Public Declare Function FlexObjSetAddRef Lib "msvbvm60.dll" Alias "__vbaObjSetAddref" (ByRef Destination As Any, ByVal lpObject As Long) As Long
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
+Private Declare Sub DoReaderMode Lib "comctl32" Alias "#383" (ByRef lpRMI As READERMODEINFO)
 Private Declare Function InitCommonControlsEx Lib "comctl32" (ByRef ICCEX As TINITCOMMONCONTROLSEX) As Long
 Private Declare Function GetClassInfoEx Lib "user32" Alias "GetClassInfoExW" (ByVal hInstance As Long, ByVal lpClassName As Long, ByRef lpWndClassEx As WNDCLASSEX) As Long
 Private Declare Function RegisterClassEx Lib "user32" Alias "RegisterClassExW" (ByRef lpWndClassEx As WNDCLASSEX) As Integer
 Private Declare Function UnregisterClass Lib "user32" Alias "UnregisterClassW" (ByVal lpClassName As Long, ByVal hInstance As Long) As Long
 Private Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
+Private Declare Function GetWindowLong Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long) As Long
 Private Declare Function SetWindowLongPtr Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
 Private Declare Function GetWindowLongPtr Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long) As Long
 Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
+Private Declare Function PostMessage Lib "user32" Alias "PostMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
 Private Declare Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hInstance As Long, ByVal lpCursorName As Any) As Long
 Private Declare Function GetProcAddress Lib "kernel32" (ByVal hModule As Long, ByVal lpProcName As Any) As Long
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryW" (ByVal lpLibFileName As Long) As Long
@@ -103,6 +141,8 @@ Private Declare Function SetWindowSubclassW2K Lib "comctl32" Alias "#410" (ByVal
 Private Declare Function RemoveWindowSubclassW2K Lib "comctl32" Alias "#412" (ByVal hWnd As Long, ByVal pfnSubclass As Long, ByVal uIdSubclass As Long) As Long
 Private Declare Function DefSubclassProcW2K Lib "comctl32" Alias "#413" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 #End If
+Private Const GWL_STYLE As Long = (-16)
+Private Const GWL_EXSTYLE As Long = (-20)
 Private Const WM_CREATE As Long = &H1
 Private Const WM_DESTROY As Long = &H2
 Private Const WM_NCDESTROY As Long = &H82
@@ -118,21 +158,10 @@ Private FlexSubclassW2K As Integer
 Private FlexClassAtom As Integer, FlexRefCount As Long
 Private FlexComboCalendarClassAtom As Integer, FlexComboCalendarRefCount As Long
 Private FlexSplitterBrush As LongPtr
+Private FlexReaderModeScrolled As Boolean
 
 #If ImplementPreTranslateMsg = True Then
 
-Private Type POINTAPI
-X As Long
-Y As Long
-End Type
-Private Type TMSG
-hWnd As LongPtr
-Message As Long
-wParam As LongPtr
-lParam As LongPtr
-Time As Long
-PT As POINTAPI
-End Type
 #If VBA7 Then
 Private Declare PtrSafe Function SetWindowsHookEx Lib "user32" Alias "SetWindowsHookExW" (ByVal IDHook As Long, ByVal lpfn As LongPtr, ByVal hMod As LongPtr, ByVal dwThreadID As Long) As LongPtr
 Private Declare PtrSafe Function UnhookWindowsHookEx Lib "user32" (ByVal hHook As LongPtr) As Long
@@ -461,3 +490,75 @@ FlexPreTranslateMsgHookProc = CallNextHookEx(FlexPreTranslateMsgHookHandle, nCod
 End Function
 
 #End If
+
+#If VBA7 Then
+Public Sub FlexDoReaderMode(ByVal hWnd As LongPtr, ByVal wParam As LongPtr, ByVal lParam As LongPtr)
+#Else
+Public Sub FlexDoReaderMode(ByVal hWnd As Long, ByVal wParam As Long, ByVal lParam As Long)
+#End If
+If hWnd = NULL_PTR Or GetShiftStateFromParam(wParam) <> 0 Then Exit Sub
+Const WS_HSCROLL As Long = &H100000, WS_VSCROLL As Long = &H200000
+Dim dwStyle As Long
+dwStyle = GetWindowLong(hWnd, GWL_STYLE)
+If Not (dwStyle And WS_HSCROLL) = WS_HSCROLL And Not (dwStyle And WS_VSCROLL) = WS_VSCROLL Then Exit Sub
+Dim X As Long, Y As Long, RC As RECT
+X = Get_X_lParam(lParam)
+Y = Get_Y_lParam(lParam)
+RC.Left = X - 8
+RC.Top = Y - 8
+RC.Right = X + 8
+RC.Bottom = Y + 8
+Dim RMI As READERMODEINFO
+RMI.cbSize = LenB(RMI)
+RMI.hWnd = hWnd
+RMI.dwFlags = 0
+If Not (dwStyle And WS_HSCROLL) = WS_HSCROLL And (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+    RMI.dwFlags = RMF_VERTICALONLY
+ElseIf (dwStyle And WS_HSCROLL) = WS_HSCROLL And Not (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+    RMI.dwFlags = RMF_HORIZONTALONLY
+End If
+RMI.lpRC = VarPtr(RC)
+RMI.lpfnScroll = ProcPtr(AddressOf FlexReaderModeScroll)
+RMI.lpfnDispatch = ProcPtr(AddressOf FlexReaderModeDispatch)
+RMI.lParam = GetWindowLongPtr(hWnd, 0)
+FlexReaderModeScrolled = False
+' Ensure that the cursor will be set immediately.
+Const WM_MOUSEMOVE As Long = &H200
+PostMessage hWnd, WM_MOUSEMOVE, wParam, ByVal lParam
+DoReaderMode RMI
+End Sub
+
+Private Function FlexReaderModeScroll(ByVal lpRMI As LongPtr, ByVal DX As Long, ByVal DY As Long) As Long
+If lpRMI = NULL_PTR Then
+    FlexReaderModeScroll = 0
+    Exit Function
+End If
+If DX <> 0 Or DY <> 0 Then FlexReaderModeScrolled = True
+Dim RMI As READERMODEINFO
+CopyMemory RMI, ByVal lpRMI, LenB(RMI)
+If RMI.lParam <> NULL_PTR Then
+    On Error Resume Next
+    Dim This As VBFlexGrid
+    FlexObjSetAddRef This, RMI.lParam
+    If Err.Number = 0 Then This.FReaderModeScroll DX, DY
+End If
+FlexReaderModeScroll = 1
+End Function
+
+Private Function FlexReaderModeDispatch(ByVal lpMsg As LongPtr) As Long
+Dim Msg As TMSG
+CopyMemory Msg, ByVal lpMsg, LenB(Msg)
+Const WM_MBUTTONUP As Long = &H208, WM_MOUSEWHEEL As Long = &H20A, WM_MOUSEHWHEEL As Long = &H20E
+Select Case Msg.Message
+    Case WM_MBUTTONUP
+        ' ReaderMode will be finished at default handler.
+        If FlexReaderModeScrolled = False Then
+            FlexReaderModeDispatch = 1
+            Exit Function
+        End If
+    Case WM_MOUSEWHEEL, WM_MOUSEHWHEEL
+        FlexReaderModeDispatch = 1
+        Exit Function
+End Select
+FlexReaderModeDispatch = 0
+End Function
