@@ -1751,6 +1751,7 @@ Private VBFlexGridHotRow As Long, VBFlexGridHotCol As Long
 Private VBFlexGridHotHitResult As FlexHitResultConstants
 Private VBFlexGridWallPaperRenderFlag As Integer
 Private VBFlexGridIncrementalSearch As TINCREMENTALSEARCH
+Private VBFlexGridReaderModeAnchorRegistered As Boolean
 Private VBFlexGridReaderModeScroll As SIZEAPI
 
 #If ImplementFlexDataSource = True Then
@@ -2591,6 +2592,7 @@ Call RemoveVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 Call DestroyVBFlexGrid
 Call FlexWndReleaseClass
 If VBFlexGridComboCalendarRegistered = True Then Call FlexComboCalendarReleaseClass
+If VBFlexGridReaderModeAnchorRegistered = True Then Call FlexReaderModeAnchorReleaseClass
 Call FlexReleaseShellMod
 End Sub
 
@@ -22817,6 +22819,10 @@ Select Case wMsg
             If PropAllowReaderMode = True Then
                 If wMsg = WM_MBUTTONDOWN Then
                     If PropRows > 0 And PropCols > 0 And PropScrollBars <> vbSBNone Then
+                        If VBFlexGridReaderModeAnchorRegistered = False Then
+                            Call FlexReaderModeAnchorRegisterClass
+                            VBFlexGridReaderModeAnchorRegistered = True
+                        End If
                         VBFlexGridReaderModeScroll.CX = 0
                         VBFlexGridReaderModeScroll.CY = 0
                         Call FlexDoReaderMode(hWnd, wParam, lParam)
