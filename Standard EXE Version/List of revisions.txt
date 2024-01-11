@@ -1,5 +1,8 @@
 List of revisions:
 
+11-Jan-2024
+- ReaderMode shows now a half blended cursor image indicating the anchor position. (like in WordPad)
+
 10-Jan-2024
 - Included the AllowReaderMode property. (auto-scrolling and panning)
   It defaults to False, when set to True it uses the DoReaderMode API upon WM_MBUTTONDOWN.
