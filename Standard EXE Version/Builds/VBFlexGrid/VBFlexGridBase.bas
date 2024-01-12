@@ -111,23 +111,20 @@ Private Declare PtrSafe Function PostMessage Lib "user32" Alias "PostMessageW" (
 Private Declare PtrSafe Function SetLayeredWindowAttributes Lib "user32" (ByVal hWnd As LongPtr, ByVal crKey As Long, ByVal bAlpha As Byte, ByVal dwFlags As Long) As Long
 Private Declare PtrSafe Function DestroyWindow Lib "user32" (ByVal hWnd As LongPtr) As Long
 Private Declare PtrSafe Function ShowWindow Lib "user32" (ByVal hWnd As LongPtr, ByVal nCmdShow As Long) As Long
+Private Declare PtrSafe Function GetClientRect Lib "user32" (ByVal hWnd As LongPtr, ByRef lpRect As RECT) As Long
 Private Declare PtrSafe Function GetCursorInfo Lib "user32" (ByRef pCI As CURSORINFO) As LongPtr
 Private Declare PtrSafe Function GetIconInfo Lib "user32" (ByVal hIcon As LongPtr, ByRef pIconInfo As ICONINFO) As Long
 Private Declare PtrSafe Function DrawIconEx Lib "user32" (ByVal hDC As LongPtr, ByVal XLeft As Long, ByVal YTop As Long, ByVal hIcon As LongPtr, ByVal CXWidth As Long, ByVal CYWidth As Long, ByVal istepIfAniCur As Long, ByVal hbrFlickerFreeDraw As LongPtr, ByVal diFlags As Long) As Long
+Private Declare PtrSafe Function CopyIcon Lib "user32" (ByVal hIcon As LongPtr) As LongPtr
+Private Declare PtrSafe Function DestroyIcon Lib "user32" (ByVal hIcon As LongPtr) As Long
 Private Declare PtrSafe Function GetStockObject Lib "gdi32" (ByVal nIndex As Long) As LongPtr
-Private Declare PtrSafe Function GetDC Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
-Private Declare PtrSafe Function ReleaseDC Lib "user32" (ByVal hWnd As LongPtr, ByVal hDC As LongPtr) As Long
-Private Declare PtrSafe Function DeleteDC Lib "gdi32" (ByVal hDC As LongPtr) As Long
 Private Declare PtrSafe Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hInstance As LongPtr, ByVal lpCursorName As Any) As LongPtr
 Private Declare PtrSafe Function GetProcAddress Lib "kernel32" (ByVal hModule As LongPtr, ByVal lpProcName As Any) As LongPtr
 Private Declare PtrSafe Function LoadLibrary Lib "kernel32" Alias "LoadLibraryW" (ByVal lpLibFileName As LongPtr) As LongPTr
 Private Declare PtrSafe Function FreeLibrary Lib "kernel32" (ByVal hLibModule As LongPtr) As Long
 Private Declare PtrSafe Function CreateBitmapIndirect Lib "gdi32" (ByRef lpBitmap As BITMAP) As LongPtr
 Private Declare PtrSafe Function CreatePatternBrush Lib "gdi32" (ByVal hBitmap As LongPtr) As LongPtr
-Private Declare PtrSafe Function CreateCompatibleDC Lib "gdi32" (ByVal hDC As LongPtr) As LongPtr
-Private Declare PtrSafe Function CreateCompatibleBitmap Lib "gdi32" (ByVal hDC As LongPtr, ByVal nWidth As Long, ByVal nHeight As Long) As LongPtr
 Private Declare PtrSafe Function GetObjectAPI Lib "gdi32" Alias "GetObjectW" (ByVal hObject As LongPtr, ByVal nCount As Long, ByRef lpObject As Any) As Long
-Private Declare PtrSafe Function SelectObject Lib "gdi32" (ByVal hDC As LongPtr, ByVal hObject As LongPtr) As LongPtr
 Private Declare PtrSafe Function DeleteObject Lib "gdi32" (ByVal hObject As LongPtr) As Long
 Private Declare PtrSafe Function SetProp Lib "user32" Alias "SetPropW" (ByVal hWnd As LongPtr, ByVal lpString As LongPtr, ByVal hData As LongPtr) As Long
 Private Declare PtrSafe Function GetProp Lib "user32" Alias "GetPropW" (ByVal hWnd As LongPtr, ByVal lpString As LongPtr) As LongPtr
@@ -156,23 +153,20 @@ Private Declare Function PostMessage Lib "user32" Alias "PostMessageW" (ByVal hW
 Private Declare Function SetLayeredWindowAttributes Lib "user32" (ByVal hWnd As Long, ByVal crKey As Long, ByVal bAlpha As Byte, ByVal dwFlags As Long) As Long
 Private Declare Function DestroyWindow Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function ShowWindow Lib "user32" (ByVal hWnd As Long, ByVal nCmdShow As Long) As Long
+Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As RECT) As Long
 Private Declare Function GetCursorInfo Lib "user32" (ByRef pCI As CURSORINFO) As Long
 Private Declare Function GetIconInfo Lib "user32" (ByVal hIcon As Long, ByRef pIconInfo As ICONINFO) As Long
 Private Declare Function DrawIconEx Lib "user32" (ByVal hDC As Long, ByVal XLeft As Long, ByVal YTop As Long, ByVal hIcon As Long, ByVal CXWidth As Long, ByVal CYWidth As Long, ByVal istepIfAniCur As Long, ByVal hbrFlickerFreeDraw As Long, ByVal diFlags As Long) As Long
+Private Declare Function CopyIcon Lib "user32" (ByVal hIcon As Long) As Long
+Private Declare Function DestroyIcon Lib "user32" (ByVal hIcon As Long) As Long
 Private Declare Function GetStockObject Lib "gdi32" (ByVal nIndex As Long) As Long
-Private Declare Function GetDC Lib "user32" (ByVal hWnd As Long) As Long
-Private Declare Function ReleaseDC Lib "user32" (ByVal hWnd As Long, ByVal hDC As Long) As Long
-Private Declare Function DeleteDC Lib "gdi32" (ByVal hDC As Long) As Long
 Private Declare Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hInstance As Long, ByVal lpCursorName As Any) As Long
 Private Declare Function GetProcAddress Lib "kernel32" (ByVal hModule As Long, ByVal lpProcName As Any) As Long
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryW" (ByVal lpLibFileName As Long) As Long
 Private Declare Function FreeLibrary Lib "kernel32" (ByVal hLibModule As Long) As Long
 Private Declare Function CreateBitmapIndirect Lib "gdi32" (ByRef lpBitmap As BITMAP) As Long
 Private Declare Function CreatePatternBrush Lib "gdi32" (ByVal hBitmap As Long) As Long
-Private Declare Function CreateCompatibleDC Lib "gdi32" (ByVal hDC As Long) As Long
-Private Declare Function CreateCompatibleBitmap Lib "gdi32" (ByVal hDC As Long, ByVal nWidth As Long, ByVal nHeight As Long) As Long
 Private Declare Function GetObjectAPI Lib "gdi32" Alias "GetObjectW" (ByVal hObject As Long, ByVal nCount As Long, ByRef lpObject As Any) As Long
-Private Declare Function SelectObject Lib "gdi32" (ByVal hDC As Long, ByVal hObject As Long) As Long
 Private Declare Function DeleteObject Lib "gdi32" (ByVal hObject As Long) As Long
 Private Declare Function SetProp Lib "user32" Alias "SetPropW" (ByVal hWnd As Long, ByVal lpString As Long, ByVal hData As Long) As Long
 Private Declare Function GetProp Lib "user32" Alias "GetPropW" (ByVal hWnd As Long, ByVal lpString As Long) As Long
@@ -191,9 +185,9 @@ Private Const WM_DESTROY As Long = &H2
 Private Const WM_NCDESTROY As Long = &H82
 Private Const WM_UAHDESTROYWINDOW As Long = &H90
 Private Const CS_DBLCLKS As Long = &H8
-Private Const CS_PARENTDC As Long = &H80
 Private Const CS_DROPSHADOW As Long = &H20000
 Private Const IDC_ARROW As Long = 32512
+Private Const WHITE_BRUSH As Long = 0
 Private ShellModHandle As LongPtr, ShellModCount As Long
 Private FlexSubclassProcPtr As LongPtr
 #If (VBA7 = 0) Then
@@ -202,7 +196,7 @@ Private FlexSubclassW2K As Integer
 Private FlexClassAtom As Integer, FlexRefCount As Long
 Private FlexComboCalendarClassAtom As Integer, FlexComboCalendarRefCount As Long
 Private FlexSplitterBrush As LongPtr
-Private FlexReaderModeScrolled As Boolean, FlexReaderModeCursorInitialized As Boolean, FlexReaderModeAnchorClassAtom As Integer, FlexReaderModeAnchorRefCount As Long, FlexReaderModeAnchorHandle As LongPtr, FlexReaderModeAnchorImage As LongPtr
+Private FlexReaderModeScrolled As Boolean, FlexReaderModeCursorInitialized As Boolean, FlexReaderModeAnchorClassAtom As Integer, FlexReaderModeAnchorRefCount As Long, FlexReaderModeAnchorHandle As LongPtr
 
 #If ImplementPreTranslateMsg = True Then
 
@@ -572,12 +566,11 @@ Const WM_MOUSEMOVE As Long = &H200
 PostMessage hWnd, WM_MOUSEMOVE, wParam, ByVal lParam
 DoReaderMode RMI
 If FlexReaderModeAnchorHandle <> NULL_PTR Then
+    Dim hIcon As LongPtr
+    hIcon = GetWindowLongPtr(FlexReaderModeAnchorHandle, 0)
     DestroyWindow FlexReaderModeAnchorHandle
     FlexReaderModeAnchorHandle = NULL_PTR
-End If
-If FlexReaderModeAnchorImage <> NULL_PTR Then
-    DeleteObject FlexReaderModeAnchorImage
-    FlexReaderModeAnchorImage = NULL_PTR
+    If hIcon <> NULL_PTR Then DestroyIcon hIcon
 End If
 End Sub
 
@@ -608,7 +601,7 @@ Select Case Msg.Message
             PostMessage Msg.hWnd, WM_MOUSEMOVE, Msg.wParam, ByVal Msg.lParam
             FlexReaderModeCursorInitialized = True
         ElseIf FlexReaderModeAnchorHandle = NULL_PTR Then
-            Call FlexReaderModeCreateAnchorImage
+            Call FlexReaderModeCreateAnchor
         End If
     Case WM_MBUTTONUP
         ' ReaderMode will be finished at default handler.
@@ -623,72 +616,51 @@ End Select
 FlexReaderModeDispatch = 0
 End Function
 
-Private Sub FlexReaderModeCreateAnchorImage()
+Private Sub FlexReaderModeCreateAnchor()
 If FlexReaderModeAnchorHandle <> NULL_PTR Then Exit Sub
 Dim CI As CURSORINFO
 CI.cbSize = LenB(CI)
 GetCursorInfo CI
 If CI.hCursor = NULL_PTR Then Exit Sub
-Dim pIconInfo As ICONINFO
+Dim pIconInfo As ICONINFO, Bmp As BITMAP, CX As Long, CY As Long
 GetIconInfo CI.hCursor, pIconInfo
-If FlexReaderModeAnchorImage = NULL_PTR Then
-    Dim Bmp As BITMAP, CX As Long, CY As Long
-    GetObjectAPI pIconInfo.hBMMask, LenB(Bmp), Bmp
-    CX = Bmp.BMWidth
-    If pIconInfo.hBMColor <> NULL_PTR Then
-        CY = Bmp.BMHeight
-    Else
-        CY = Bmp.BMHeight / 2
-    End If
-    Dim hDCScreen As LongPtr, hDC As LongPtr, hBmp As LongPtr, hBmpOld As LongPtr
-    hDCScreen = GetDC(NULL_PTR)
-    If hDCScreen <> NULL_PTR Then
-        hDC = CreateCompatibleDC(hDCScreen)
-        If hDC <> NULL_PTR Then
-            hBmp = CreateCompatibleBitmap(hDCScreen, CX, CY)
-            If hBmp <> NULL_PTR Then
-                hBmpOld = SelectObject(hDC, hBmp)
-                Const WHITE_BRUSH As Long = 0, DI_NORMAL As Long = &H3
-                DrawIconEx hDC, 0, 0, CI.hCursor, CX, CY, 0, GetStockObject(WHITE_BRUSH), DI_NORMAL
-                SelectObject hDC, hBmpOld
-                FlexReaderModeAnchorImage = hBmp
-            End If
-            DeleteDC hDC
-        End If
-        ReleaseDC NULL_PTR, hDCScreen
-    End If
-    If pIconInfo.hBMColor <> NULL_PTR Then DeleteObject pIconInfo.hBMColor
-    If pIconInfo.hBMMask <> NULL_PTR Then DeleteObject pIconInfo.hBMMask
+GetObjectAPI pIconInfo.hBMMask, LenB(Bmp), Bmp
+CX = Bmp.BMWidth
+If pIconInfo.hBMColor <> NULL_PTR Then
+    CY = Bmp.BMHeight
+Else
+    CY = Bmp.BMHeight / 2
 End If
-If FlexReaderModeAnchorImage <> NULL_PTR Then
-    Const SS_BITMAP As Long = &HE
-    Const WS_POPUP As Long = &H80000000
-    Const WS_EX_LAYERED As Long = &H80000, WS_EX_TOOLWINDOW As Long = &H80, WS_EX_TOPMOST As Long = &H8, WS_EX_TRANSPARENT As Long = &H20
-    Dim dwStyle As Long, dwExStyle As Long
-    dwStyle = SS_BITMAP Or WS_POPUP
-    dwExStyle = WS_EX_LAYERED Or WS_EX_TOOLWINDOW Or WS_EX_TOPMOST Or WS_EX_TRANSPARENT
-    FlexReaderModeAnchorHandle = CreateWindowEx(dwExStyle, StrPtr("VBFlexGridReaderModeAnchorClass"), NULL_PTR, dwStyle, CI.PTScreenPos.X - pIconInfo.XHotspot, CI.PTScreenPos.Y - pIconInfo.YHotspot, 0, 0, NULL_PTR, NULL_PTR, App.hInstance, ByVal NULL_PTR)
-    If FlexReaderModeAnchorHandle <> NULL_PTR Then
-        Const STM_SETIMAGE As Long = &H172, IMAGE_BITMAP As Long = 0
-        SendMessage FlexReaderModeAnchorHandle, STM_SETIMAGE, IMAGE_BITMAP, ByVal FlexReaderModeAnchorImage
-        Const LWA_COLORKEY As Long = &H1, LWA_ALPHA As Long = &H2
-        SetLayeredWindowAttributes FlexReaderModeAnchorHandle, vbWhite, 128, LWA_COLORKEY Or LWA_ALPHA
-        Const SW_SHOWNA As Long = 8
-        ShowWindow FlexReaderModeAnchorHandle, SW_SHOWNA
-    End If
+If pIconInfo.hBMColor <> NULL_PTR Then DeleteObject pIconInfo.hBMColor
+If pIconInfo.hBMMask <> NULL_PTR Then DeleteObject pIconInfo.hBMMask
+Const WS_POPUP As Long = &H80000000
+Const WS_EX_TOOLWINDOW As Long = &H80, WS_EX_TOPMOST As Long = &H8, WS_EX_TRANSPARENT As Long = &H20, WS_EX_LAYERED As Long = &H80000
+Dim dwStyle As Long, dwExStyle As Long
+dwStyle = WS_POPUP
+dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST Or WS_EX_TRANSPARENT Or WS_EX_LAYERED
+FlexReaderModeAnchorHandle = CreateWindowEx(dwExStyle, StrPtr("VBFlexGridReaderModeAnchorClass"), NULL_PTR, dwStyle, CI.PTScreenPos.X - pIconInfo.XHotspot, CI.PTScreenPos.Y - pIconInfo.YHotspot, CX, CY, NULL_PTR, NULL_PTR, App.hInstance, ByVal NULL_PTR)
+If FlexReaderModeAnchorHandle <> NULL_PTR Then
+    SetWindowLongPtr FlexReaderModeAnchorHandle, 0, CopyIcon(CI.hCursor)
+    Const LWA_COLORKEY As Long = &H1, LWA_ALPHA As Long = &H2
+    SetLayeredWindowAttributes FlexReaderModeAnchorHandle, vbWhite, 128, LWA_COLORKEY Or LWA_ALPHA
+    Const SW_SHOWNA As Long = 8
+    ShowWindow FlexReaderModeAnchorHandle, SW_SHOWNA
 End If
 End Sub
 
 Public Sub FlexReaderModeAnchorRegisterClass()
 If FlexReaderModeAnchorClassAtom = 0 And FlexReaderModeAnchorRefCount = 0 Then
     Dim WCEX As WNDCLASSEX, ClassName As String
-    GetClassInfoEx App.hInstance, StrPtr("Static"), WCEX
     ClassName = "VBFlexGridReaderModeAnchorClass"
     With WCEX
     .cbSize = LenB(WCEX)
-    ' This is necessary so that SetLayeredWindowAttributes can work prior to Windows 8.
-    If (.dwStyle And CS_PARENTDC) = CS_PARENTDC Then .dwStyle = .dwStyle And Not CS_PARENTDC
+    ' CS_VREDRAW and CS_HREDRAW will not be specified as entire redraw upon resize is not necessary.
+    .dwStyle = 0
+    .lpfnWndProc = ProcPtr(AddressOf FlexReaderModeAnchorWindowProc)
+    .cbWndExtra = PTR_SIZE
     .hInstance = App.hInstance
+    .hCursor = LoadCursor(NULL_PTR, IDC_ARROW)
+    .hbrBackground = GetStockObject(WHITE_BRUSH)
     .lpszClassName = StrPtr(ClassName)
     End With
     FlexReaderModeAnchorClassAtom = RegisterClassEx(WCEX)
@@ -703,3 +675,21 @@ If FlexReaderModeAnchorClassAtom <> 0 And FlexReaderModeAnchorRefCount = 0 Then
     FlexReaderModeAnchorClassAtom = 0
 End If
 End Sub
+
+Private Function FlexReaderModeAnchorWindowProc(ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
+Const WM_ERASEBKGND As Long = &H14
+Select Case wMsg
+    Case WM_ERASEBKGND
+        Dim hIcon As LongPtr
+        hIcon = GetWindowLongPtr(hWnd, 0)
+        If hIcon <> NULL_PTR Then
+            Dim RC As RECT
+            GetClientRect hWnd, RC
+            Const DI_NORMAL As Long = &H3
+            DrawIconEx wParam, RC.Left, RC.Top, hIcon, RC.Right - RC.Left, RC.Bottom - RC.Top, 0, GetStockObject(WHITE_BRUSH), DI_NORMAL
+            FlexReaderModeAnchorWindowProc = 1
+            Exit Function
+        End If
+End Select
+FlexReaderModeAnchorWindowProc = DefWindowProc(hWnd, wMsg, wParam, lParam)
+End Function
