@@ -97,8 +97,6 @@ Private Declare PtrSafe Function RegisterClassEx Lib "user32" Alias "RegisterCla
 Private Declare PtrSafe Function UnregisterClass Lib "user32" Alias "UnregisterClassW" (ByVal lpClassName As LongPtr, ByVal hInstance As LongPtr) As Long
 Private Declare PtrSafe Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As LongPtr, ByVal lpWindowName As LongPtr, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As LongPtr, ByVal hMenu As LongPtr, ByVal hInstance As LongPtr, ByRef lpParam As Any) As LongPtr
 Private Declare PtrSafe Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
-Private Declare PtrSafe Function SetWindowLong Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As LongPtr, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
-Private Declare PtrSafe Function GetWindowLong Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As LongPtr, ByVal nIndex As Long) As Long
 #If Win64 Then
 Private Declare PtrSafe Function SetWindowLongPtr Lib "user32" Alias "SetWindowLongPtrW" (ByVal hWnd As LongPtr, ByVal nIndex As Long, ByVal dwNewLong As LongPtr) As LongPtr
 Private Declare PtrSafe Function GetWindowLongPtr Lib "user32" Alias "GetWindowLongPtrW" (ByVal hWnd As LongPtr, ByVal nIndex As Long) As LongPtr
@@ -144,8 +142,6 @@ Private Declare Function RegisterClassEx Lib "user32" Alias "RegisterClassExW" (
 Private Declare Function UnregisterClass Lib "user32" Alias "UnregisterClassW" (ByVal lpClassName As Long, ByVal hInstance As Long) As Long
 Private Declare Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As Long, ByVal lpWindowName As Long, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As Long, ByVal hMenu As Long, ByVal hInstance As Long, ByRef lpParam As Any) As Long
 Private Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
-Private Declare Function GetWindowLong Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long) As Long
 Private Declare Function SetWindowLongPtr Lib "user32" Alias "SetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
 Private Declare Function GetWindowLongPtr Lib "user32" Alias "GetWindowLongW" (ByVal hWnd As Long, ByVal nIndex As Long) As Long
 Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
@@ -178,8 +174,6 @@ Private Declare Function SetWindowSubclassW2K Lib "comctl32" Alias "#410" (ByVal
 Private Declare Function RemoveWindowSubclassW2K Lib "comctl32" Alias "#412" (ByVal hWnd As Long, ByVal pfnSubclass As Long, ByVal uIdSubclass As Long) As Long
 Private Declare Function DefSubclassProcW2K Lib "comctl32" Alias "#413" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 #End If
-Private Const GWL_STYLE As Long = (-16)
-Private Const GWL_EXSTYLE As Long = (-20)
 Private Const WM_CREATE As Long = &H1
 Private Const WM_DESTROY As Long = &H2
 Private Const WM_NCDESTROY As Long = &H82
@@ -460,15 +454,11 @@ End If
 End Function
 
 #If VBA7 Then
-Public Sub FlexDoReaderMode(ByVal hWnd As LongPtr, ByVal wParam As LongPtr, ByVal lParam As LongPtr)
+Public Sub FlexDoReaderMode(ByVal hWnd As LongPtr, ByVal ScrollBars As Integer, ByVal wParam As LongPtr, ByVal lParam As LongPtr)
 #Else
-Public Sub FlexDoReaderMode(ByVal hWnd As Long, ByVal wParam As Long, ByVal lParam As Long)
+Public Sub FlexDoReaderMode(ByVal hWnd As Long, ByVal ScrollBars As Integer, ByVal wParam As Long, ByVal lParam As Long)
 #End If
-If hWnd = NULL_PTR Or GetShiftStateFromParam(wParam) <> 0 Then Exit Sub
-Const WS_HSCROLL As Long = &H100000, WS_VSCROLL As Long = &H200000
-Dim dwStyle As Long
-dwStyle = GetWindowLong(hWnd, GWL_STYLE)
-If Not (dwStyle And WS_HSCROLL) = WS_HSCROLL And Not (dwStyle And WS_VSCROLL) = WS_VSCROLL Then Exit Sub
+If hWnd = NULL_PTR Or ScrollBars = vbSBNone Or GetShiftStateFromParam(wParam) <> 0 Then Exit Sub
 Dim X As Long, Y As Long, RC As RECT
 X = Get_X_lParam(lParam)
 Y = Get_Y_lParam(lParam)
@@ -480,9 +470,9 @@ Dim RMI As READERMODEINFO
 RMI.cbSize = LenB(RMI)
 RMI.hWnd = hWnd
 RMI.dwFlags = 0
-If Not (dwStyle And WS_HSCROLL) = WS_HSCROLL And (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+If ScrollBars = vbVertical Then
     RMI.dwFlags = RMF_VERTICALONLY
-ElseIf (dwStyle And WS_HSCROLL) = WS_HSCROLL And Not (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+ElseIf ScrollBars = vbHorizontal Then
     RMI.dwFlags = RMF_HORIZONTALONLY
 End If
 RMI.lpRC = VarPtr(RC)
