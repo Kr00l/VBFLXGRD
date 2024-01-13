@@ -20984,6 +20984,49 @@ End If
 End With
 End Sub
 
+Private Sub StartReaderMode(ByVal wParam As LongPtr, ByVal lParam As LongPtr)
+If VBFlexGridHandle = NULL_PTR Then Exit Sub
+Dim dwStyle As Long, SCI(0 To 1) As SCROLLINFO, ScrollBars As Integer
+dwStyle = GetWindowLong(VBFlexGridHandle, GWL_STYLE)
+SCI(0).cbSize = LenB(SCI(0))
+SCI(0).fMask = SIF_RANGE
+LSet SCI(1) = SCI(0)
+If (dwStyle And WS_HSCROLL) = WS_HSCROLL And (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+    GetScrollInfo VBFlexGridHandle, SB_HORZ, SCI(0)
+    GetScrollInfo VBFlexGridHandle, SB_VERT, SCI(1)
+    If SCI(0).nMax > SCI(0).nMin Then
+        If SCI(1).nMax > SCI(1).nMin Then
+            ScrollBars = vbBoth
+        Else
+            ScrollBars = vbHorizontal
+        End If
+    Else
+        If SCI(1).nMax > SCI(1).nMin Then
+            ScrollBars = vbVertical
+        Else
+            ScrollBars = vbSBNone
+        End If
+    End If
+ElseIf Not (dwStyle And WS_HSCROLL) = WS_HSCROLL And (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+    GetScrollInfo VBFlexGridHandle, SB_VERT, SCI(1)
+    If SCI(1).nMax > SCI(1).nMin Then
+        ScrollBars = vbVertical
+    Else
+        ScrollBars = vbSBNone
+    End If
+ElseIf (dwStyle And WS_HSCROLL) = WS_HSCROLL And Not (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+    GetScrollInfo VBFlexGridHandle, SB_HORZ, SCI(0)
+    If SCI(0).nMax > SCI(0).nMin Then
+        ScrollBars = vbHorizontal
+    Else
+        ScrollBars = vbSBNone
+    End If
+Else
+    ScrollBars = vbSBNone
+End If
+Call FlexDoReaderMode(VBFlexGridHandle, ScrollBars, wParam, lParam)
+End Sub
+
 Private Function MergeCompareFunction(ByVal Row1 As Long, ByVal Col1 As Long, ByVal Row2 As Long, ByVal Col2 As Long) As Boolean
 Dim Text1 As String, Text2 As String
 Call GetCellText(Row1, Col1, Text1)
@@ -22825,7 +22868,7 @@ Select Case wMsg
                         End If
                         VBFlexGridReaderModeScroll.CX = 0
                         VBFlexGridReaderModeScroll.CY = 0
-                        Call FlexDoReaderMode(hWnd, wParam, lParam)
+                        Call StartReaderMode(wParam, lParam)
                     End If
                 End If
             End If
