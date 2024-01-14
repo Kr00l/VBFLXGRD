@@ -2579,13 +2579,11 @@ Private Sub UserControl_Terminate()
 
 If VBFlexGridUsePreTranslateMsg = False Then Call RemoveVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
 Call RemoveVTableHandling(Me, VTableInterfaceControl)
-Call RemoveVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 
 #Else
 
 Call RemoveVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
 Call RemoveVTableHandling(Me, VTableInterfaceControl)
-Call RemoveVTableHandling(Me, VTableInterfacePerPropertyBrowsing)
 
 #End If
 
