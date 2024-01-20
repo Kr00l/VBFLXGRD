@@ -20518,7 +20518,7 @@ If PropAllowMultiSelection = True Then
             ' Not supported.
     End Select
 End If
-If VBFlexGridMouseMoveChanged = False Then
+If VBFlexGridMouseMoveChanged = False And VBFlexGridMouseMoveRow > -1 And VBFlexGridMouseMoveCol > -1 Then
     With RCP
     .Mask = RCPM_TOPROW Or RCPM_LEFTCOL
     .TopRow = VBFlexGridTopRow
