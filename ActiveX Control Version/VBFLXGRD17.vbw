@@ -1,6 +1,6 @@
 Common = 81, 25, 900, 698, C
 VisualStyles = 54, 137, 814, 825, C
-VTableHandle = 122, 33, 865, 706, C
+VTableHandle = 122, 33, 1127, 727, C
 VBFlexGridBase = 205, 158, 1108, 760, C
 VBFlexGrid = 278, 120, 1440, 801, C, 129, 34, 587, 401, C
 IVBFlexDataSource = 23, 31, 981, 573, C
