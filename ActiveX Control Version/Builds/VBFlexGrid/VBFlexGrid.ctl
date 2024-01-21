@@ -1980,15 +1980,14 @@ Call FlexWndRegisterClass
 #If ImplementPreTranslateMsg = True Then
 
 If SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject) = False Then VBFlexGridUsePreTranslateMsg = True
-Call SetVTableHandling(Me, VTableInterfaceControl)
 
 #Else
 
 Call SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
-Call SetVTableHandling(Me, VTableInterfaceControl)
 
 #End If
 
+Call SetVTableHandling(Me, VTableInterfaceControl)
 With VBFlexGridPixelMetrics
 .DividerSpacing.CX = DIVIDER_SPACING_DIP * PixelsPerDIP_X()
 .DividerSpacing.CY = DIVIDER_SPACING_DIP * PixelsPerDIP_Y()
@@ -2578,15 +2577,14 @@ Private Sub UserControl_Terminate()
 #If ImplementPreTranslateMsg = True Then
 
 If VBFlexGridUsePreTranslateMsg = False Then Call RemoveVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
-Call RemoveVTableHandling(Me, VTableInterfaceControl)
 
 #Else
 
 Call RemoveVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
-Call RemoveVTableHandling(Me, VTableInterfaceControl)
 
 #End If
 
+Call RemoveVTableHandling(Me, VTableInterfaceControl)
 Call DestroyVBFlexGrid
 Call FlexWndReleaseClass
 If VBFlexGridComboCalendarRegistered = True Then Call FlexComboCalendarReleaseClass
