@@ -9345,7 +9345,7 @@ If PropClipMode = FlexClipModeNormal Then
                         Call GetCellText(iSelRow, iCol, Buffer)
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer & CSCol
-                        ElseIf iRow < SelRange.BottomRow Then
+                        ElseIf iSelRow < SelRange.BottomRow Then
                             StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer & CSRow
                         Else
                             StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer
@@ -9386,7 +9386,7 @@ If PropClipMode = FlexClipModeNormal Then
                         Call GetCellText(iSelRow, iCol, Buffer)
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + PropFixedRows, iCol + (0 - SelRange.LeftCol)) = Buffer & CSCol
-                        ElseIf iRow < SelRange.BottomRow Then
+                        ElseIf iSelRow < SelRange.BottomRow Then
                             StrArr(iRow + PropFixedRows, iCol + (0 - SelRange.LeftCol)) = Buffer & CSRow
                         Else
                             StrArr(iRow + PropFixedRows, iCol + (0 - SelRange.LeftCol)) = Buffer
@@ -9425,7 +9425,7 @@ If PropClipMode = FlexClipModeNormal Then
                         Call GetCellText(iSelRow, iCol, Buffer)
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow, iCol) = Buffer & CSCol
-                        ElseIf iRow < SelRange.BottomRow Then
+                        ElseIf iSelRow < SelRange.BottomRow Then
                             StrArr(iRow, iCol) = Buffer & CSRow
                         Else
                             StrArr(iRow, iCol) = Buffer
@@ -9435,7 +9435,7 @@ If PropClipMode = FlexClipModeNormal Then
                         Call GetCellText(iSelRow, iCol, Buffer)
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
-                        ElseIf iRow < SelRange.BottomRow Then
+                        ElseIf iSelRow < SelRange.BottomRow Then
                             StrArr(iRow, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSRow
                         Else
                             StrArr(iRow, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer
@@ -9496,7 +9496,7 @@ If PropClipMode = FlexClipModeNormal Then
                         Call GetCellText(iSelRow, iCol, Buffer)
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + PropFixedRows, iCol) = Buffer & CSCol
-                        ElseIf iRow < SelRange.BottomRow Then
+                        ElseIf iSelRow < SelRange.BottomRow Then
                             StrArr(iRow + PropFixedRows, iCol) = Buffer & CSRow
                         Else
                             StrArr(iRow + PropFixedRows, iCol) = Buffer
@@ -9506,7 +9506,7 @@ If PropClipMode = FlexClipModeNormal Then
                         Call GetCellText(iSelRow, iCol, Buffer)
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + PropFixedRows, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
-                        ElseIf iRow < SelRange.BottomRow Then
+                        ElseIf iSelRow < SelRange.BottomRow Then
                             StrArr(iRow + PropFixedRows, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSRow
                         Else
                             StrArr(iRow + PropFixedRows, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer
@@ -9564,7 +9564,7 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
-                                ElseIf iRow < SelRange.BottomRow Then
+                                ElseIf iSelRow < SelRange.BottomRow Then
                                     StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
                                 Else
                                     StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer
@@ -9634,7 +9634,7 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
-                                ElseIf iRow < SelRange.BottomRow Then
+                                ElseIf iSelRow < SelRange.BottomRow Then
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
                                 Else
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer
@@ -9696,7 +9696,7 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
-                                ElseIf iRow < SelRange.BottomRow Then
+                                ElseIf iSelRow < SelRange.BottomRow Then
                                     StrArr(iRow - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSRow
                                 Else
                                     StrArr(iRow - ArrRowAdj, iCol - ArrColAdj) = Buffer
@@ -9711,7 +9711,7 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
-                                ElseIf iRow < SelRange.BottomRow Then
+                                ElseIf iSelRow < SelRange.BottomRow Then
                                     StrArr(iRow - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
                                 Else
                                     StrArr(iRow - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer
@@ -9811,7 +9811,7 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
-                                ElseIf iRow < SelRange.BottomRow Then
+                                ElseIf iSelRow < SelRange.BottomRow Then
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSRow
                                 Else
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol - ArrColAdj) = Buffer
@@ -9826,7 +9826,7 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
-                                ElseIf iRow < SelRange.BottomRow Then
+                                ElseIf iSelRow < SelRange.BottomRow Then
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSRow
                                 Else
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer
@@ -9866,7 +9866,7 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-Dim SelRange As TCELLRANGE, Temp As String, iRow As Long, iCol As Long
+Dim iRow As Long, iCol As Long, iSelRow As Long, SelRange As TCELLRANGE, Temp As String
 Dim Pos1 As Long, Pos2 As Long, Pos3 As Long, Pos4 As Long
 Dim CSCol As String, CSColLen As Long, CSRow As String, CSRowLen As Long
 Call GetSelRangeStruct(SelRange)
@@ -9901,7 +9901,7 @@ CSRow = GetClipSeparatorRow()
 CSRowLen = Len(CSRow)
 With VBFlexGridCells
 If PropClipMode = FlexClipModeNormal Then
-    If PropAllowMultiSelection = False Or PropClipPasteMode < FlexClipPasteModeExtended Then
+    If PropAllowMultiSelection = False Or PropClipPasteMode <> FlexClipPasteModeExtended Then
         Do
             Pos1 = InStr(Pos1 + 1, Value, CSRow)
             If Pos1 > 0 Then Pos1 = Pos1 + CSRowLen - 1
@@ -9931,11 +9931,39 @@ If PropClipMode = FlexClipModeNormal Then
             iCol = 0
         Loop Until Pos1 = 0
     Else
-        Err.Raise 5
+        Do
+            iSelRow = Me.SelectedRow(iRow)
+            If iSelRow > -1 Then
+                Pos1 = InStr(Pos1 + 1, Value, CSRow)
+                If Pos1 > 0 Then
+                    Pos1 = Pos1 + CSRowLen - 1
+                    Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - CSRowLen)
+                Else
+                    Temp = Mid$(Value, Pos2 + 1)
+                End If
+                Do
+                    Pos3 = InStr(Pos3 + 1, Temp, CSCol)
+                    If Pos3 > 0 Then
+                        Pos3 = Pos3 + CSColLen - 1
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                    Else
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                    End If
+                    Pos4 = Pos3
+                    iCol = iCol + 1
+                Loop Until Pos3 = 0
+                Pos2 = Pos1
+                Pos4 = 0
+                iRow = iRow + 1
+                iCol = 0
+            Else
+                Pos1 = 0
+            End If
+        Loop Until Pos1 = 0
     End If
 ElseIf PropClipMode = FlexClipModeExcludeHidden Then
     Dim RowLoop As Boolean, ColLoop As Boolean
-    If PropAllowMultiSelection = False Or PropClipPasteMode < FlexClipPasteModeExtended Then
+    If PropAllowMultiSelection = False Or PropClipPasteMode <> FlexClipPasteModeExtended Then
         Do
             If (.Rows(SelRange.TopRow + iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
                 Pos1 = InStr(Pos1 + 1, Value, CSRow)
@@ -9994,7 +10022,48 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
             End If
         Loop Until RowLoop = False
     Else
-        Err.Raise 5
+        Do
+            iSelRow = Me.SelectedRow(iRow)
+            If iSelRow > -1 Then
+                If (.Rows(iSelRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                    Pos1 = InStr(Pos1 + 1, Value, CSRow)
+                    If Pos1 > 0 Then
+                        Pos1 = Pos1 + CSRowLen - 1
+                        Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - CSRowLen)
+                    Else
+                        Temp = Mid$(Value, Pos2 + 1)
+                    End If
+                    Do
+                        If (VBFlexGridColsInfo(SelRange.LeftCol + iCol).State And CLIS_HIDDEN) = 0 Then
+                            Pos3 = InStr(Pos3 + 1, Temp, CSCol)
+                            If Pos3 > 0 Then
+                                Pos3 = Pos3 + CSColLen - 1
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                            Else
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                            End If
+                            Pos4 = Pos3
+                            iCol = iCol + 1
+                            ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                        Else
+                            iCol = iCol + 1
+                            ColLoop = CBool((SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                        End If
+                    Loop Until ColLoop = False
+                    Pos2 = Pos1
+                    Pos4 = 0
+                    iRow = iRow + 1
+                    iCol = 0
+                    RowLoop = CBool(Pos1 <> 0)
+                Else
+                    iRow = iRow + 1
+                    iCol = 0
+                    RowLoop = True
+                End If
+            Else
+                RowLoop = False
+            End If
+        Loop Until RowLoop = False
     End If
 End If
 End With
