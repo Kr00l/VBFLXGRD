@@ -68,7 +68,7 @@ Private FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
 Private FlexPictureTypeColor, FlexPictureTypeMonochrome
 Private FlexEllipsisFormatNone, FlexEllipsisFormatEnd, FlexEllipsisFormatPath, FlexEllipsisFormatWord
 Private FlexWordWrapNone, FlexWordBreak, FlexSingleLine, FlexEndEllipsis, FlexPathEllipsis, FlexWordEllipsis, FlexWordBreakEndEllipsis, FlexWordBreakPathEllipsis, FlexWordBreakWordEllipsis, FlexSingleLineEndEllipsis, FlexSingleLinePathEllipsis, FlexSingleLineWordEllipsis
-Private FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearMovable, FlexClearFrozen, FlexClearSelection
+Private FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearMovable, FlexClearFrozen, FlexClearSelection, FlexClearClip
 Private FlexClearEverything, FlexClearText, FlexClearFormatting, FlexClearTag
 Private FlexTabControls, FlexTabCells, FlexTabNext
 Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
@@ -78,7 +78,7 @@ Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
 Private FlexClipModeNormal, FlexClipModeExcludeHidden
 Private FlexClipCopyModeNormal, FlexClipCopyModeIncludeFixedRows, FlexClipCopyModeIncludeFixedColumns, FlexClipCopyModeIncludeFixedAll, FlexClipCopyModeExtended, FlexClipCopyModeExtendedFixedRows, FlexClipCopyModeExtendedFixedColumns, FlexClipCopyModeExtendedFixedAll
-Private FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection
+Private FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection, FlexClipPasteModeExtended, FlexClipPasteModeExtendedAutoSelection
 Private FlexClipboardActionCopy, FlexClipboardActionCut, FlexClipboardActionPaste, FlexClipboardActionDelete
 Private FlexFindMatchExact, FlexFindMatchPartial, FlexFindMatchStartsWith, FlexFindMatchEndsWith
 Private FlexFindDirectionDown, FlexFindDirectionUp, FlexFindDirectionRight, FlexFindDirectionLeft
@@ -310,6 +310,7 @@ FlexClearScrollable = 2
 FlexClearMovable = 3
 FlexClearFrozen = 4
 FlexClearSelection = 5
+FlexClearClip = 6
 End Enum
 Public Enum FlexClearWhatConstants
 FlexClearEverything = 0
@@ -394,6 +395,8 @@ End Enum
 Public Enum FlexClipPasteModeConstants
 FlexClipPasteModeNormal = 0
 FlexClipPasteModeAutoSelection = 1
+FlexClipPasteModeExtended = 2
+FlexClipPasteModeExtendedAutoSelection = 3
 End Enum
 Public Enum FlexClipboardActionConstants
 FlexClipboardActionCopy = 0
@@ -4920,7 +4923,7 @@ End Property
 
 Public Property Let ClipPasteMode(ByVal Value As FlexClipPasteModeConstants)
 Select Case Value
-    Case FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection
+    Case FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection, FlexClipPasteModeExtended, FlexClipPasteModeExtendedAutoSelection
         PropClipPasteMode = Value
     Case Else
         Err.Raise 380
@@ -6315,7 +6318,7 @@ Text = Me.Clip
 RaiseEvent BeforeClipboardAction(FlexClipboardActionCut, Text, Cancel)
 If Cancel = False Then
     Call SetClipboardText(Text)
-    Me.Clear FlexClearSelection, FlexClearText
+    Me.Clear FlexClearClip, FlexClearText
     Me.CellEnsureVisible
     RaiseEvent AfterClipboardAction(FlexClipboardActionCut)
 End If
@@ -6338,7 +6341,7 @@ Attribute Delete.VB_Description = "Deletes the current selection of the flex gri
 Dim Cancel As Boolean
 RaiseEvent BeforeClipboardAction(FlexClipboardActionDelete, vbNullString, Cancel)
 If Cancel = False Then
-    Me.Clear FlexClearSelection, FlexClearText
+    Me.Clear FlexClearClip, FlexClearText
     Me.CellEnsureVisible
     RaiseEvent AfterClipboardAction(FlexClipboardActionDelete)
 End If
@@ -6347,25 +6350,25 @@ End Sub
 Public Sub Clear(Optional ByVal Where As FlexClearWhereConstants, Optional ByVal What As FlexClearWhatConstants)
 Attribute Clear.VB_Description = "Clears the contents of the flex grid."
 Select Case Where
-    Case FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearMovable, FlexClearFrozen, FlexClearSelection
+    Case FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearMovable, FlexClearFrozen, FlexClearSelection, FlexClearClip
     Case Else
         Err.Raise 380
 End Select
 Select Case What
-    Case FlexClearEverything, FlexClearText
+    Case FlexClearEverything
         
         #If ImplementFlexDataSource Then
         
-        If Not VBFlexGridFlexDataSource Is Nothing Then Err.Raise Number:=5, Description:="This function cannot be used to clear text (only to clear formatting) when custom data source is set."
+        If Not VBFlexGridFlexDataSource Is Nothing Then Err.Raise Number:=5, Description:="This function cannot be used to clear everything when custom data source is set."
         
         #End If
         
-    Case FlexClearFormatting, FlexClearTag
+    Case FlexClearText, FlexClearFormatting, FlexClearTag
     Case Else
         Err.Raise 380
 End Select
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
-Dim iRow As Long, iCol As Long
+Dim iRow As Long, iCol As Long, iSelRow As Long, SelRange As TCELLRANGE
 Select Case Where
     Case FlexClearEverywhere
         Select Case What
@@ -6382,7 +6385,7 @@ Select Case Where
             Case FlexClearText
                 For iRow = 0 To (PropRows - 1)
                     For iCol = 0 To (PropCols - 1)
-                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                        Call SetCellText(iRow, iCol, vbNullString)
                     Next iCol
                 Next iRow
             Case FlexClearFormatting
@@ -6426,12 +6429,12 @@ Select Case Where
             Case FlexClearText
                 For iRow = 0 To (PropFixedRows - 1)
                     For iCol = 0 To (PropCols - 1)
-                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                        Call SetCellText(iRow, iCol, vbNullString)
                     Next iCol
                 Next iRow
                 For iCol = 0 To (PropFixedCols - 1)
                     For iRow = PropFixedRows To (PropRows - 1)
-                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                        Call SetCellText(iRow, iCol, vbNullString)
                     Next iRow
                 Next iCol
             Case FlexClearFormatting
@@ -6476,7 +6479,7 @@ Select Case Where
             Case FlexClearText
                 For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
                     For iCol = (PropFixedCols + PropFrozenCols) To (PropCols - 1)
-                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                        Call SetCellText(iRow, iCol, vbNullString)
                     Next iCol
                 Next iRow
             Case FlexClearFormatting
@@ -6507,7 +6510,7 @@ Select Case Where
             Case FlexClearText
                 For iRow = PropFixedRows To (PropRows - 1)
                     For iCol = PropFixedCols To (PropCols - 1)
-                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                        Call SetCellText(iRow, iCol, vbNullString)
                     Next iCol
                 Next iRow
             Case FlexClearFormatting
@@ -6546,12 +6549,12 @@ Select Case Where
             Case FlexClearText
                 For iRow = PropFixedRows To ((PropFixedRows + PropFrozenRows) - 1)
                     For iCol = PropFixedCols To (PropCols - 1)
-                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                        Call SetCellText(iRow, iCol, vbNullString)
                     Next iCol
                 Next iRow
                 For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
                     For iRow = (PropFixedRows + PropFrozenRows) To (PropRows - 1)
-                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                        Call SetCellText(iRow, iCol, vbNullString)
                     Next iRow
                 Next iCol
             Case FlexClearFormatting
@@ -6578,7 +6581,6 @@ Select Case Where
                 Next iCol
         End Select
     Case FlexClearSelection
-        Dim SelRange As TCELLRANGE
         Call GetSelRangeStruct(SelRange)
         Select Case What
             Case FlexClearEverything
@@ -6594,7 +6596,7 @@ Select Case Where
             Case FlexClearText
                 For iRow = SelRange.TopRow To SelRange.BottomRow
                     For iCol = SelRange.LeftCol To SelRange.RightCol
-                        VBFlexGridCells.Rows(iRow).Cols(iCol).Text = vbNullString
+                        Call SetCellText(iRow, iCol, vbNullString)
                     Next iCol
                 Next iRow
             Case FlexClearFormatting
@@ -6610,6 +6612,187 @@ Select Case Where
                     Next iCol
                 Next iRow
         End Select
+    Case FlexClearClip
+        Call GetSelRangeStruct(SelRange)
+        If PropClipPasteMode >= FlexClipPasteModeExtended Then
+            Select Case PropSelectionMode
+                Case FlexSelectionModeFreeByRow
+                    If SelRange.LeftCol > PropFixedCols Then SelRange.LeftCol = PropFixedCols
+                    SelRange.RightCol = PropCols - 1
+                Case FlexSelectionModeFreeByColumn
+                    If SelRange.TopRow > PropFixedRows Then SelRange.TopRow = PropFixedRows
+                    SelRange.BottomRow = PropRows - 1
+            End Select
+        End If
+        If PropClipMode = FlexClipModeNormal Then
+            If PropAllowMultiSelection = False Or PropClipPasteMode < FlexClipPasteModeExtended Then
+                Select Case What
+                    Case FlexClearEverything
+                        For iRow = SelRange.TopRow To SelRange.BottomRow
+                            For iCol = SelRange.LeftCol To SelRange.RightCol
+                                With VBFlexGridCells.Rows(iRow)
+                                Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                                Call FreeCellTag(.Cols(iCol).lpTag)
+                                LSet .Cols(iCol) = VBFlexGridDefaultCell
+                                End With
+                            Next iCol
+                        Next iRow
+                    Case FlexClearText
+                        For iRow = SelRange.TopRow To SelRange.BottomRow
+                            For iCol = SelRange.LeftCol To SelRange.RightCol
+                                Call SetCellText(iRow, iCol, vbNullString)
+                            Next iCol
+                        Next iRow
+                    Case FlexClearFormatting
+                        For iRow = SelRange.TopRow To SelRange.BottomRow
+                            For iCol = SelRange.LeftCol To SelRange.RightCol
+                                Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
+                            Next iCol
+                        Next iRow
+                    Case FlexClearTag
+                        For iRow = SelRange.TopRow To SelRange.BottomRow
+                            For iCol = SelRange.LeftCol To SelRange.RightCol
+                                Call FreeCellTag(VBFlexGridCells.Rows(iRow).Cols(iCol).lpTag)
+                            Next iCol
+                        Next iRow
+                End Select
+            Else
+                Select Case What
+                    Case FlexClearEverything
+                        For iRow = 0 To Me.SelectedRows - 1
+                            iSelRow = Me.SelectedRow(iRow)
+                            For iCol = SelRange.LeftCol To SelRange.RightCol
+                                With VBFlexGridCells.Rows(iSelRow)
+                                Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                                Call FreeCellTag(.Cols(iCol).lpTag)
+                                LSet .Cols(iCol) = VBFlexGridDefaultCell
+                                End With
+                            Next iCol
+                        Next iRow
+                    Case FlexClearText
+                        For iRow = 0 To Me.SelectedRows - 1
+                            iSelRow = Me.SelectedRow(iRow)
+                            For iCol = SelRange.LeftCol To SelRange.RightCol
+                                Call SetCellText(iSelRow, iCol, vbNullString)
+                            Next iCol
+                        Next iRow
+                    Case FlexClearFormatting
+                        For iRow = 0 To Me.SelectedRows - 1
+                            iSelRow = Me.SelectedRow(iRow)
+                            For iCol = SelRange.LeftCol To SelRange.RightCol
+                                Call FreeCellFmtg(VBFlexGridCells.Rows(iSelRow).Cols(iCol).lpFmtg)
+                            Next iCol
+                        Next iRow
+                    Case FlexClearTag
+                        For iRow = 0 To Me.SelectedRows - 1
+                            iSelRow = Me.SelectedRow(iRow)
+                            For iCol = SelRange.LeftCol To SelRange.RightCol
+                                Call FreeCellTag(VBFlexGridCells.Rows(iSelRow).Cols(iCol).lpTag)
+                            Next iCol
+                        Next iRow
+                End Select
+            End If
+        ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+            If PropAllowMultiSelection = False Or PropClipPasteMode < FlexClipPasteModeExtended Then
+                Select Case What
+                    Case FlexClearEverything
+                        For iRow = SelRange.TopRow To SelRange.BottomRow
+                            If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                                For iCol = SelRange.LeftCol To SelRange.RightCol
+                                    If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                                        With VBFlexGridCells.Rows(iRow)
+                                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                                        Call FreeCellTag(.Cols(iCol).lpTag)
+                                        LSet .Cols(iCol) = VBFlexGridDefaultCell
+                                        End With
+                                    End If
+                                Next iCol
+                            End If
+                        Next iRow
+                    Case FlexClearText
+                        For iRow = SelRange.TopRow To SelRange.BottomRow
+                            If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                                For iCol = SelRange.LeftCol To SelRange.RightCol
+                                    If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                                        Call SetCellText(iRow, iCol, vbNullString)
+                                    End If
+                                Next iCol
+                            End If
+                        Next iRow
+                    Case FlexClearFormatting
+                        For iRow = SelRange.TopRow To SelRange.BottomRow
+                            If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                                For iCol = SelRange.LeftCol To SelRange.RightCol
+                                    If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                                        Call FreeCellFmtg(VBFlexGridCells.Rows(iRow).Cols(iCol).lpFmtg)
+                                    End If
+                                Next iCol
+                            End If
+                        Next iRow
+                    Case FlexClearTag
+                        For iRow = SelRange.TopRow To SelRange.BottomRow
+                            If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                                For iCol = SelRange.LeftCol To SelRange.RightCol
+                                    If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                                        Call FreeCellTag(VBFlexGridCells.Rows(iRow).Cols(iCol).lpTag)
+                                    End If
+                                Next iCol
+                            End If
+                        Next iRow
+                End Select
+            Else
+                Select Case What
+                    Case FlexClearEverything
+                        For iRow = 0 To Me.SelectedRows - 1
+                            iSelRow = Me.SelectedRow(iRow)
+                            If (VBFlexGridCells.Rows(iSelRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                                For iCol = SelRange.LeftCol To SelRange.RightCol
+                                    If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                                        With VBFlexGridCells.Rows(iSelRow)
+                                        Call FreeCellFmtg(.Cols(iCol).lpFmtg)
+                                        Call FreeCellTag(.Cols(iCol).lpTag)
+                                        LSet .Cols(iCol) = VBFlexGridDefaultCell
+                                        End With
+                                    End If
+                                Next iCol
+                            End If
+                        Next iRow
+                    Case FlexClearText
+                        For iRow = 0 To Me.SelectedRows - 1
+                            iSelRow = Me.SelectedRow(iRow)
+                            If (VBFlexGridCells.Rows(iSelRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                                For iCol = SelRange.LeftCol To SelRange.RightCol
+                                    If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                                        Call SetCellText(iSelRow, iCol, vbNullString)
+                                    End If
+                                Next iCol
+                            End If
+                        Next iRow
+                    Case FlexClearFormatting
+                        For iRow = 0 To Me.SelectedRows - 1
+                            iSelRow = Me.SelectedRow(iRow)
+                            If (VBFlexGridCells.Rows(iSelRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                                For iCol = SelRange.LeftCol To SelRange.RightCol
+                                    If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                                        Call FreeCellFmtg(VBFlexGridCells.Rows(iSelRow).Cols(iCol).lpFmtg)
+                                    End If
+                                Next iCol
+                            End If
+                        Next iRow
+                    Case FlexClearTag
+                        For iRow = 0 To Me.SelectedRows - 1
+                            iSelRow = Me.SelectedRow(iRow)
+                            If (VBFlexGridCells.Rows(iSelRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                                For iCol = SelRange.LeftCol To SelRange.RightCol
+                                    If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
+                                        Call FreeCellTag(VBFlexGridCells.Rows(iSelRow).Cols(iCol).lpTag)
+                                    End If
+                                Next iCol
+                            End If
+                        Next iRow
+                End Select
+            End If
+        End If
 End Select
 Call RedrawGrid
 End Sub
@@ -9687,106 +9870,135 @@ Dim SelRange As TCELLRANGE, Temp As String, iRow As Long, iCol As Long
 Dim Pos1 As Long, Pos2 As Long, Pos3 As Long, Pos4 As Long
 Dim CSCol As String, CSColLen As Long, CSRow As String, CSRowLen As Long
 Call GetSelRangeStruct(SelRange)
-If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
-    SelRange.RightCol = SelRange.LeftCol
-    SelRange.BottomRow = SelRange.TopRow
-End If
+Select Case PropClipPasteMode
+    Case FlexClipPasteModeAutoSelection
+        SelRange.RightCol = SelRange.LeftCol
+        SelRange.BottomRow = SelRange.TopRow
+    Case FlexClipPasteModeExtended
+        Select Case PropSelectionMode
+            Case FlexSelectionModeFreeByRow
+                If SelRange.LeftCol > PropFixedCols Then SelRange.LeftCol = PropFixedCols
+                SelRange.RightCol = PropCols - 1
+            Case FlexSelectionModeFreeByColumn
+                If SelRange.TopRow > PropFixedRows Then SelRange.TopRow = PropFixedRows
+                SelRange.BottomRow = PropRows - 1
+        End Select
+    Case FlexClipPasteModeExtendedAutoSelection
+        Select Case PropSelectionMode
+            Case FlexSelectionModeFreeByRow
+                SelRange.BottomRow = SelRange.TopRow
+                If SelRange.LeftCol > PropFixedCols Then SelRange.LeftCol = PropFixedCols
+                SelRange.RightCol = PropCols - 1
+            Case FlexSelectionModeFreeByColumn
+                SelRange.RightCol = SelRange.LeftCol
+                If SelRange.TopRow > PropFixedRows Then SelRange.TopRow = PropFixedRows
+                SelRange.BottomRow = PropRows - 1
+        End Select
+End Select
 CSCol = GetClipSeparatorCol()
 CSColLen = Len(CSCol)
 CSRow = GetClipSeparatorRow()
 CSRowLen = Len(CSRow)
 With VBFlexGridCells
 If PropClipMode = FlexClipModeNormal Then
-    Do
-        Pos1 = InStr(Pos1 + 1, Value, CSRow)
-        If Pos1 > 0 Then Pos1 = Pos1 + CSRowLen - 1
-        If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
-            If (SelRange.TopRow + iRow) <= (PropRows - 1) And (SelRange.TopRow + iRow) > SelRange.BottomRow Then SelRange.BottomRow = SelRange.TopRow + iRow
-        End If
-        If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
-            If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - CSRowLen) Else Temp = Mid$(Value, Pos2 + 1)
-            Do
-                Pos3 = InStr(Pos3 + 1, Temp, CSCol)
-                If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
-                    If (SelRange.LeftCol + iCol) <= (PropCols - 1) And (SelRange.LeftCol + iCol) > SelRange.RightCol Then SelRange.RightCol = SelRange.LeftCol + iCol
-                End If
-                If Pos3 > 0 Then
-                    Pos3 = Pos3 + CSColLen - 1
-                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
-                Else
-                    If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
-                End If
-                Pos4 = Pos3
-                iCol = iCol + 1
-            Loop Until Pos3 = 0
-        End If
-        Pos2 = Pos1
-        Pos4 = 0
-        iRow = iRow + 1
-        iCol = 0
-    Loop Until Pos1 = 0
-ElseIf PropClipMode = FlexClipModeExcludeHidden Then
-    Dim RowLoop As Boolean, ColLoop As Boolean
-    Do
-        If (.Rows(SelRange.TopRow + iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+    If PropAllowMultiSelection = False Or PropClipPasteMode < FlexClipPasteModeExtended Then
+        Do
             Pos1 = InStr(Pos1 + 1, Value, CSRow)
             If Pos1 > 0 Then Pos1 = Pos1 + CSRowLen - 1
-            If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+            If PropClipPasteMode = FlexClipPasteModeAutoSelection Or PropClipPasteMode = FlexClipPasteModeExtendedAutoSelection Then
                 If (SelRange.TopRow + iRow) <= (PropRows - 1) And (SelRange.TopRow + iRow) > SelRange.BottomRow Then SelRange.BottomRow = SelRange.TopRow + iRow
             End If
             If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
                 If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - CSRowLen) Else Temp = Mid$(Value, Pos2 + 1)
                 Do
-                    If (VBFlexGridColsInfo(SelRange.LeftCol + iCol).State And CLIS_HIDDEN) = 0 Then
-                        Pos3 = InStr(Pos3 + 1, Temp, CSCol)
-                        If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
-                            If (SelRange.LeftCol + iCol) <= (PropCols - 1) And (SelRange.LeftCol + iCol) > SelRange.RightCol Then SelRange.RightCol = SelRange.LeftCol + iCol
-                        End If
-                        If Pos3 > 0 Then
-                            Pos3 = Pos3 + CSColLen - 1
-                            If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
-                        Else
-                            If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
-                        End If
-                        Pos4 = Pos3
-                        iCol = iCol + 1
-                        If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
-                            ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= (PropCols - 1))
-                        Else
-                            ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= SelRange.RightCol)
-                        End If
-                    Else
-                        iCol = iCol + 1
-                        If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
-                            ColLoop = CBool((SelRange.LeftCol + iCol) <= (PropCols - 1))
-                        Else
-                            ColLoop = CBool((SelRange.LeftCol + iCol) <= SelRange.RightCol)
-                        End If
+                    Pos3 = InStr(Pos3 + 1, Temp, CSCol)
+                    If PropClipPasteMode = FlexClipPasteModeAutoSelection Or PropClipPasteMode = FlexClipPasteModeExtendedAutoSelection Then
+                        If (SelRange.LeftCol + iCol) <= (PropCols - 1) And (SelRange.LeftCol + iCol) > SelRange.RightCol Then SelRange.RightCol = SelRange.LeftCol + iCol
                     End If
-                Loop Until ColLoop = False
+                    If Pos3 > 0 Then
+                        Pos3 = Pos3 + CSColLen - 1
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                    Else
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                    End If
+                    Pos4 = Pos3
+                    iCol = iCol + 1
+                Loop Until Pos3 = 0
             End If
             Pos2 = Pos1
             Pos4 = 0
             iRow = iRow + 1
             iCol = 0
-            If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
-                RowLoop = CBool(Pos1 <> 0 And (SelRange.TopRow + iRow) <= (PropRows - 1))
+        Loop Until Pos1 = 0
+    Else
+        Err.Raise 5
+    End If
+ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+    Dim RowLoop As Boolean, ColLoop As Boolean
+    If PropAllowMultiSelection = False Or PropClipPasteMode < FlexClipPasteModeExtended Then
+        Do
+            If (.Rows(SelRange.TopRow + iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
+                Pos1 = InStr(Pos1 + 1, Value, CSRow)
+                If Pos1 > 0 Then Pos1 = Pos1 + CSRowLen - 1
+                If PropClipPasteMode = FlexClipPasteModeAutoSelection Or PropClipPasteMode = FlexClipPasteModeExtendedAutoSelection Then
+                    If (SelRange.TopRow + iRow) <= (PropRows - 1) And (SelRange.TopRow + iRow) > SelRange.BottomRow Then SelRange.BottomRow = SelRange.TopRow + iRow
+                End If
+                If (SelRange.TopRow + iRow) <= SelRange.BottomRow Then
+                    If Pos1 > 0 Then Temp = Mid$(Value, Pos2 + 1, Pos1 - Pos2 - CSRowLen) Else Temp = Mid$(Value, Pos2 + 1)
+                    Do
+                        If (VBFlexGridColsInfo(SelRange.LeftCol + iCol).State And CLIS_HIDDEN) = 0 Then
+                            Pos3 = InStr(Pos3 + 1, Temp, CSCol)
+                            If PropClipPasteMode = FlexClipPasteModeAutoSelection Or PropClipPasteMode = FlexClipPasteModeExtendedAutoSelection Then
+                                If (SelRange.LeftCol + iCol) <= (PropCols - 1) And (SelRange.LeftCol + iCol) > SelRange.RightCol Then SelRange.RightCol = SelRange.LeftCol + iCol
+                            End If
+                            If Pos3 > 0 Then
+                                Pos3 = Pos3 + CSColLen - 1
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                            Else
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                            End If
+                            Pos4 = Pos3
+                            iCol = iCol + 1
+                            If PropClipPasteMode = FlexClipPasteModeAutoSelection Or PropClipPasteMode = FlexClipPasteModeExtendedAutoSelection Then
+                                ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= (PropCols - 1))
+                            Else
+                                ColLoop = CBool(Pos3 <> 0 And (SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                            End If
+                        Else
+                            iCol = iCol + 1
+                            If PropClipPasteMode = FlexClipPasteModeAutoSelection Or PropClipPasteMode = FlexClipPasteModeExtendedAutoSelection Then
+                                ColLoop = CBool((SelRange.LeftCol + iCol) <= (PropCols - 1))
+                            Else
+                                ColLoop = CBool((SelRange.LeftCol + iCol) <= SelRange.RightCol)
+                            End If
+                        End If
+                    Loop Until ColLoop = False
+                End If
+                Pos2 = Pos1
+                Pos4 = 0
+                iRow = iRow + 1
+                iCol = 0
+                If PropClipPasteMode = FlexClipPasteModeAutoSelection Or PropClipPasteMode = FlexClipPasteModeExtendedAutoSelection Then
+                    RowLoop = CBool(Pos1 <> 0 And (SelRange.TopRow + iRow) <= (PropRows - 1))
+                Else
+                    RowLoop = CBool(Pos1 <> 0 And (SelRange.TopRow + iRow) <= SelRange.BottomRow)
+                End If
             Else
-                RowLoop = CBool(Pos1 <> 0 And (SelRange.TopRow + iRow) <= SelRange.BottomRow)
+                iRow = iRow + 1
+                iCol = 0
+                If PropClipPasteMode = FlexClipPasteModeAutoSelection Or PropClipPasteMode = FlexClipPasteModeExtendedAutoSelection Then
+                    RowLoop = CBool((SelRange.TopRow + iRow) <= (PropRows - 1))
+                Else
+                    RowLoop = CBool((SelRange.TopRow + iRow) <= SelRange.BottomRow)
+                End If
             End If
-        Else
-            iRow = iRow + 1
-            iCol = 0
-            If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
-                RowLoop = CBool((SelRange.TopRow + iRow) <= (PropRows - 1))
-            Else
-                RowLoop = CBool((SelRange.TopRow + iRow) <= SelRange.BottomRow)
-            End If
-        End If
-    Loop Until RowLoop = False
+        Loop Until RowLoop = False
+    Else
+        Err.Raise 5
+    End If
 End If
 End With
-If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
+If PropClipPasteMode = FlexClipPasteModeAutoSelection Or PropClipPasteMode = FlexClipPasteModeExtendedAutoSelection Then
     Dim RCP As TROWCOLPARAMS
     With RCP
     .Mask = RCPM_ROW Or RCPM_COL Or RCPM_ROWSEL Or RCPM_COLSEL
@@ -9794,6 +10006,18 @@ If PropClipPasteMode = FlexClipPasteModeAutoSelection Then
     .Col = SelRange.LeftCol
     .RowSel = SelRange.BottomRow
     .ColSel = SelRange.RightCol
+    If PropClipPasteMode = FlexClipPasteModeExtendedAutoSelection Then
+        Select Case PropSelectionMode
+            Case FlexSelectionModeFreeByRow
+                .Mask = .Mask And Not (RCPM_COL Or RCPM_COLSEL)
+                .Row = SelRange.TopRow
+                .RowSel = SelRange.BottomRow
+            Case FlexSelectionModeFreeByColumn
+                .Mask = .Mask And Not (RCPM_ROW Or RCPM_ROWSEL)
+                .Col = SelRange.LeftCol
+                .ColSel = SelRange.RightCol
+        End Select
+    End If
     End With
     If VBFlexGridIndirectCellRef.InProc = False Then
         Call SetRowColParams(RCP)
@@ -22713,32 +22937,34 @@ Select Case wMsg
                     End If
                 End If
                 If PropAutoClipboard = True Then
-                    If PropAllowUserEditing = False Then
-                        If GetShiftStateFromMsg() = vbCtrlMask And (KeyCode = vbKeyC Or KeyCode = vbKeyInsert) Then Me.Copy
-                    Else
-                        Select Case GetShiftStateFromMsg()
-                            Case vbShiftMask
-                                Select Case KeyCode
-                                    Case vbKeyDelete
-                                        Me.Cut
-                                    Case vbKeyInsert
-                                        Me.Paste
-                                End Select
-                            Case vbCtrlMask
-                                Select Case KeyCode
-                                    Case vbKeyC, vbKeyInsert
-                                        Me.Copy
-                                    Case vbKeyX
-                                        Me.Cut
-                                    Case vbKeyV
-                                        Me.Paste
-                                End Select
-                            Case Else
-                                Select Case KeyCode
-                                    Case vbKeyDelete
-                                        Me.Delete
-                                End Select
-                        End Select
+                    If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                        If PropAllowUserEditing = False Then
+                            If GetShiftStateFromMsg() = vbCtrlMask And (KeyCode = vbKeyC Or KeyCode = vbKeyInsert) Then Me.Copy
+                        Else
+                            Select Case GetShiftStateFromMsg()
+                                Case vbShiftMask
+                                    Select Case KeyCode
+                                        Case vbKeyDelete
+                                            Me.Cut
+                                        Case vbKeyInsert
+                                            Me.Paste
+                                    End Select
+                                Case vbCtrlMask
+                                    Select Case KeyCode
+                                        Case vbKeyC, vbKeyInsert
+                                            Me.Copy
+                                        Case vbKeyX
+                                            Me.Cut
+                                        Case vbKeyV
+                                            Me.Paste
+                                    End Select
+                                Case Else
+                                    Select Case KeyCode
+                                        Case vbKeyDelete
+                                            Me.Delete
+                                    End Select
+                            End Select
+                        End If
                     End If
                 End If
             ElseIf wMsg = WM_KEYUP Then
