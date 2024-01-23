@@ -785,6 +785,10 @@ With ComboClipPasteMode
 .ItemData(.NewIndex) = FlexClipPasteModeNormal
 .AddItem FlexClipPasteModeAutoSelection & " - AutoSelection"
 .ItemData(.NewIndex) = FlexClipPasteModeAutoSelection
+.AddItem FlexClipPasteModeExtended & " - Extended"
+.ItemData(.NewIndex) = FlexClipPasteModeExtended
+.AddItem FlexClipPasteModeExtendedAutoSelection & " - ExtendedAutoSelection"
+.ItemData(.NewIndex) = FlexClipPasteModeExtendedAutoSelection
 End With
 With ComboIMEMode
 .AddItem FlexIMEModeNoControl & " - NoControl"
