@@ -1,5 +1,11 @@
 List of revisions:
 
+23-Jan-2024
+- FlexClearText for the .Clear method can now be used even when a custom data source is set.
+- Added FlexClearClip enum (clip range) which the .Delete method now uses instead of FlexClearSelection.
+- Added FlexClipPasteModeExtended/FlexClipPasteModeExtendedAutoSelection enum.
+  If ClipPasteMode is >= Extended then FlexClearClip deletes also the extended selection. (opposite action)
+
 11-Jan-2024
 - ReaderMode shows now a half blended cursor image indicating the anchor position. (like in WordPad)
 
