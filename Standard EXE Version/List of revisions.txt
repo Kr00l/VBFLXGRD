@@ -1,5 +1,9 @@
 List of revisions:
 
+24-Jan-2024
+- Label tips now updated to cell font over which it is displayed to have an perfect overlay.
+  Info and scroll tips remain on the standard default font of the tool tip.
+
 23-Jan-2024
 - FlexClearText for the .Clear method can now be used even when a custom data source is set.
 - Added FlexClearClip enum (clip range) which the .Delete method now uses instead of FlexClearSelection.
