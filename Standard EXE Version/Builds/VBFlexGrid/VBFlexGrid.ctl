@@ -1653,7 +1653,7 @@ Implements OLEGuids.IOleControlVB
 Private VBFlexGridHandle As LongPtr, VBFlexGridToolTipHandle As LongPtr, VBFlexGridScrollTipHandle As LongPtr
 Private VBFlexGridEditHandle As LongPtr, VBFlexGridComboButtonHandle As LongPtr, VBFlexGridComboListHandle As LongPtr, VBFlexGridComboCalendarHandle As LongPtr
 Private VBFlexGridDoubleBufferDC As LongPtr, VBFlexGridDoubleBufferBmp As LongPtr, VBFlexGridDoubleBufferBmpOld As LongPtr
-Private VBFlexGridFontHandle As LongPtr, VBFlexGridFontFixedHandle As LongPtr
+Private VBFlexGridFontHandle As LongPtr, VBFlexGridFontFixedHandle As LongPtr, VBFlexGridFontToolTipHandle As LongPtr
 Private VBFlexGridClientRect As RECT
 Private VBFlexGridIMCHandle As LongPtr
 Private VBFlexGridBackColorBrush As LongPtr
@@ -5439,6 +5439,10 @@ End If
 If VBFlexGridFontFixedHandle <> NULL_PTR Then
     DeleteObject VBFlexGridFontFixedHandle
     VBFlexGridFontFixedHandle = NULL_PTR
+End If
+If VBFlexGridFontToolTipHandle <> NULL_PTR Then
+    DeleteObject VBFlexGridFontToolTipHandle
+    VBFlexGridFontToolTipHandle = NULL_PTR
 End If
 If VBFlexGridBackColorBrush <> NULL_PTR Then
     DeleteObject VBFlexGridBackColorBrush
@@ -21739,6 +21743,46 @@ If VBFlexGridHandle <> NULL_PTR And VBFlexGridToolTipHandle <> NULL_PTR Then
 End If
 End Sub
 
+Private Sub UpdateToolTipFont(ByVal iRow As Long, ByVal iCol As Long, ByVal InfoTip As Boolean)
+If VBFlexGridHandle <> NULL_PTR And VBFlexGridToolTipHandle <> NULL_PTR Then
+    If iRow > -1 And iCol > -1 And InfoTip = False Then
+        Dim OldFontHandle As LongPtr
+        OldFontHandle = VBFlexGridFontToolTipHandle
+        Dim CellFmtg As TCELLFMTG
+        Call GetCellFmtg(iRow, iCol, CFM_FONT, CellFmtg)
+        With CellFmtg
+        If .FontName = vbNullString Then
+            If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
+                VBFlexGridFontToolTipHandle = CloneGDIFont(VBFlexGridFontHandle)
+            Else
+                If VBFlexGridFontFixedHandle = NULL_PTR Then
+                    VBFlexGridFontToolTipHandle = CloneGDIFont(VBFlexGridFontHandle)
+                Else
+                    VBFlexGridFontToolTipHandle = CloneGDIFont(VBFlexGridFontFixedHandle)
+                End If
+            End If
+        Else
+            Dim TempFont As StdFont
+            Set TempFont = New StdFont
+            TempFont.Name = .FontName
+            TempFont.Size = .FontSize
+            TempFont.Bold = CBool((.FontStyle And FS_BOLD) = FS_BOLD)
+            TempFont.Italic = CBool((.FontStyle And FS_ITALIC) = FS_ITALIC)
+            TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
+            TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
+            TempFont.Charset = .FontCharset
+            VBFlexGridFontToolTipHandle = CreateGDIFontFromOLEFont(TempFont)
+            Set TempFont = Nothing
+        End If
+        End With
+        SendMessage VBFlexGridToolTipHandle, WM_SETFONT, VBFlexGridFontToolTipHandle, ByVal 0&
+        If OldFontHandle <> NULL_PTR Then DeleteObject OldFontHandle
+    Else
+        SendMessage VBFlexGridToolTipHandle, WM_SETFONT, 0, ByVal 0&
+    End If
+End If
+End Sub
+
 Private Sub CheckToolTipRowCol(ByVal X As Long, ByVal Y As Long)
 If VBFlexGridHandle <> NULL_PTR And VBFlexGridToolTipHandle <> NULL_PTR Then
     Dim HTI As THITTESTINFO
@@ -23223,11 +23267,13 @@ Select Case wMsg
         Dim NM As NMHDR
         CopyMemory NM, ByVal lParam, LenB(NM)
         If NM.hWndFrom = VBFlexGridToolTipHandle And VBFlexGridToolTipHandle <> NULL_PTR Then
-            Static ShowInfoTip As Boolean, LBLI As TLABELINFO
+            Static ShowTipRow As Long, ShowTipCol As Long, ShowInfoTip As Boolean, LBLI As TLABELINFO
             Select Case NM.Code
                 Case TTN_GETDISPINFO
                     Dim NMTTDI As NMTTDISPINFO
                     CopyMemory NMTTDI, ByVal lParam, LenB(NMTTDI)
+                    ShowTipRow = -1
+                    ShowTipCol = -1
                     ShowInfoTip = False
                     LBLI.Flags = 0
                     Dim Text As String
@@ -23246,13 +23292,19 @@ Select Case wMsg
                                 If InStr(Text, vbCr) Then Text = Replace$(Text, vbCr, vbNullString)
                                 If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbNullString)
                             End If
+                            ShowTipRow = .HitRow
+                            ShowTipCol = .HitCol
+                            ShowInfoTip = False
                         ElseIf PropShowInfoTips = True Then
                             Call GetCellToolTipText(.HitRow, .HitCol, Text)
+                            ShowTipRow = .HitRow
+                            ShowTipCol = .HitCol
                             ShowInfoTip = True
                         End If
                     End If
                     End With
                     If Not Text = vbNullString Then
+                        Call UpdateToolTipFont(ShowTipRow, ShowTipCol, ShowInfoTip)
                         With NMTTDI
                         If Len(Text) <= 80 Then
                             Text = Left$(Text & vbNullChar, 80)
@@ -23264,6 +23316,8 @@ Select Case wMsg
                         End With
                         CopyMemory ByVal lParam, NMTTDI, LenB(NMTTDI)
                     Else
+                        ShowTipRow = -1
+                        ShowTipCol = -1
                         ShowInfoTip = False
                     End If
                 Case TTN_SHOW
