@@ -6330,6 +6330,7 @@ End Sub
 
 Public Sub Paste()
 Attribute Paste.VB_Description = "Pastes the current content of the clipboard at the current selection of the flex grid."
+If HasClipboardText() = False Then Exit Sub
 Dim Text As String, Cancel As Boolean
 Text = GetClipboardText()
 RaiseEvent BeforeClipboardAction(FlexClipboardActionPaste, Text, Cancel)
@@ -23321,13 +23322,13 @@ Select Case wMsg
                         ShowInfoTip = False
                     End If
                 Case TTN_SHOW
-                    If PropShowLabelTips = True And ShowInfoTip = False Then
+                    If PropShowLabelTips = True And ShowTipRow > -1 And ShowTipCol > -1 And ShowInfoTip = False Then
                         If (LBLI.Flags And LBLI_VALID) = LBLI_VALID Then
                             Dim RC As RECT
                             LSet RC = LBLI.RC
                             MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, RC, 2
                             SendMessage VBFlexGridToolTipHandle, TTM_ADJUSTRECT, 1, ByVal VarPtr(RC)
-                            SetWindowPos VBFlexGridToolTipHandle, NULL_PTR, RC.Left, RC.Top, 0, 0, SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+                            SetWindowPos VBFlexGridToolTipHandle, NULL_PTR, RC.Left, RC.Top, (RC.Right - RC.Left), (RC.Bottom - RC.Top), SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
                             WindowProcControl = 1
                             Exit Function
                         End If
