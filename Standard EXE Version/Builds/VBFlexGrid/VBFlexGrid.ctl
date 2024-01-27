@@ -21159,6 +21159,8 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                     RCP.LeftCol = .Col - GetColsPerPageRev(.Col) + 1
                 End If
                 Call SetRowColParams(RCP)
+            ElseIf .SearchString = vbNullString Then
+                RaiseEvent EndIncrementalSearch(-1, -1)
             End If
         Else
             Call CancelIncrementalSearch
