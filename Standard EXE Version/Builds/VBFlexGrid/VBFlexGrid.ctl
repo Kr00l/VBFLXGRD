@@ -5533,6 +5533,9 @@ Else
     VBFlexGridEditCloseMode = -1
     VBFlexGridComboModeActive = FlexComboModeNone
 End If
+If PropAllowIncrementalSearch = True Then
+    If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then Call CancelIncrementalSearch
+End If
 If VBFlexGridCaptureDividerDrag = True Then ReleaseCapture
 If VBFlexGridFocused = False Then SetFocusAPI UserControl.hWnd
 Dim IsFixedCell As Boolean, Text As String
@@ -23471,8 +23474,8 @@ WindowProcControl = DefWindowProc(hWnd, wMsg, wParam, lParam)
 Select Case wMsg
     Case WM_SETFOCUS, WM_KILLFOCUS
         VBFlexGridFocused = CBool(wMsg = WM_SETFOCUS)
-        If PropAllowIncrementalSearch = True Then
-            If wMsg = WM_KILLFOCUS Then Call CancelIncrementalSearch(True)
+        If PropAllowIncrementalSearch = True And wMsg = WM_KILLFOCUS Then
+            If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then Call CancelIncrementalSearch(True)
         End If
         Call RedrawGrid
     Case WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK
