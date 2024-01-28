@@ -21160,7 +21160,9 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                 End If
                 Call SetRowColParams(RCP)
             ElseIf .SearchString = vbNullString Then
+                ' Fire end event immediately with row/col of -1 as an alias that the incremental search could not begin at all.
                 RaiseEvent EndIncrementalSearch(-1, -1)
+                Exit Sub
             End If
         Else
             Call CancelIncrementalSearch
