@@ -1,5 +1,10 @@
 List of revisions:
 
+29-Jan-2024
+- Included the CanPaste function. The Paste method pastes only when there is a text format available in the clipboard.
+- Included the IncrementalSearchTime run-time property.
+- Included the AllowDropFiles property and DropFiles event.
+
 24-Jan-2024
 - Label tips now updated to cell font over which it is displayed to have an perfect overlay.
   Info and scroll tips remain on the standard default font of the tool tip.
