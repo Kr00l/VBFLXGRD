@@ -916,6 +916,7 @@ CaseSensitive As Boolean
 NoWrap As Boolean
 Direction As FlexFindDirectionConstants
 CancellationPending As Boolean
+Time As Long
 End Type
 Public Event Click()
 Attribute Click.VB_Description = "Occurs when the user presses and then releases a mouse button over an object."
@@ -923,6 +924,8 @@ Attribute Click.VB_UserMemId = -600
 Public Event DblClick()
 Attribute DblClick.VB_Description = "Occurs when the user presses and releases a mouse button and then presses and releases it again over an object."
 Attribute DblClick.VB_UserMemId = -601
+Public Event DropFiles(ByRef FileList As Variant, ByVal X As Single, ByVal Y As Single)
+Attribute DropFiles.VB_Description = "Occurs when the user drops files on the control. Only applicable when there is no OLE drop target available and the allow drop files property is set to true."
 Public Event Scroll()
 Attribute Scroll.VB_Description = "Occurs when you reposition the scroll box on a control."
 Public Event ScrollTip(ByVal Row As Long, ByVal Col As Long)
@@ -1054,6 +1057,8 @@ Attribute OLEStartDrag.VB_Description = "Occurs when an OLE drag/drop operation 
 #If VBA7 Then
 Private Declare PtrSafe Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare PtrSafe Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
+Private Declare PtrSafe Sub DragAcceptFiles Lib "shell32" (ByVal hWnd As LongPtr, ByVal fAccept As Long)
+Private Declare PtrSafe Sub DragFinish Lib "shell32" (ByVal hDrop As LongPtr)
 Private Declare PtrSafe Sub VariantInit Lib "oleaut32" (ByRef pvarg As Any)
 Private Declare PtrSafe Function VariantClear Lib "oleaut32" (ByRef pvarg As Any) As Long
 Private Declare PtrSafe Function VariantCopy Lib "oleaut32" (ByRef pvargDest As Any, ByRef pvargSrc As Any) As Long
@@ -1177,9 +1182,13 @@ Private Declare PtrSafe Function ReleaseCapture Lib "user32" () As Long
 Private Declare PtrSafe Function ImageList_GetIconSize Lib "comctl32" (ByVal hImageList As LongPtr, ByRef CX As Long, ByRef CY As Long) As Long
 Private Declare PtrSafe Function ImageList_GetImageCount Lib "comctl32" (ByVal hImageList As LongPtr) As Long
 Private Declare PtrSafe Function ImageList_Draw Lib "comctl32" (ByVal hImageList As LongPtr, ByVal ImgIndex As Long, ByVal hDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal fStyle As Long) As Long
+Private Declare PtrSafe Function DragQueryFile Lib "shell32" Alias "DragQueryFileW" (ByVal hDrop As LongPtr, ByVal iFile As Long, ByVal lpszFile As LongPtr, ByVal cch As Long) As Long
+Private Declare PtrSafe Function DragQueryPoint Lib "shell32" (ByVal hDrop As LongPtr, ByRef lpPoint As POINTAPI) As Long
 #Else
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
+Private Declare Sub DragAcceptFiles Lib "shell32" (ByVal hWnd As Long, ByVal fAccept As Long)
+Private Declare Sub DragFinish Lib "shell32" (ByVal hDrop As Long)
 Private Declare Sub VariantInit Lib "oleaut32" (ByRef pvarg As Any)
 Private Declare Function VariantClear Lib "oleaut32" (ByRef pvarg As Any) As Long
 Private Declare Function VariantCopy Lib "oleaut32" (ByRef pvargDest As Any, ByRef pvargSrc As Any) As Long
@@ -1298,6 +1307,8 @@ Private Declare Function ReleaseCapture Lib "user32" () As Long
 Private Declare Function ImageList_GetIconSize Lib "comctl32" (ByVal hImageList As Long, ByRef CX As Long, ByRef CY As Long) As Long
 Private Declare Function ImageList_GetImageCount Lib "comctl32" (ByVal hImageList As Long) As Long
 Private Declare Function ImageList_Draw Lib "comctl32" (ByVal hImageList As Long, ByVal ImgIndex As Long, ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByVal fStyle As Long) As Long
+Private Declare Function DragQueryFile Lib "shell32" Alias "DragQueryFileW" (ByVal hDrop As Long, ByVal iFile As Long, ByVal lpszFile As Long, ByVal cch As Long) As Long
+Private Declare Function DragQueryPoint Lib "shell32" (ByVal hDrop As Long, ByRef lpPoint As POINTAPI) As Long
 #End If
 
 #If ImplementThemedControls = True Then
@@ -1536,6 +1547,7 @@ Private Const WS_CLIPSIBLINGS As Long = &H4000000
 Private Const WS_POPUP As Long = &H80000000
 Private Const WS_EX_TOOLWINDOW As Long = &H80
 Private Const WS_EX_TOPMOST As Long = &H8
+Private Const WS_EX_ACCEPTFILES As Long = &H10
 Private Const WS_EX_LAYOUTRTL As Long = &H400000, WS_EX_RTLREADING As Long = &H2000, WS_EX_RIGHT As Long = &H1000, WS_EX_LEFTSCROLLBAR As Long = &H4000
 Private Const WS_HSCROLL As Long = &H100000
 Private Const WS_VSCROLL As Long = &H200000
@@ -1574,6 +1586,7 @@ Private Const WM_RBUTTONDBLCLK As Long = &H206
 Private Const WM_MOUSEMOVE As Long = &H200
 Private Const WM_MOUSELEAVE As Long = &H2A3
 Private Const WM_CAPTURECHANGED As Long = &H215
+Private Const WM_DROPFILES As Long = &H233
 Private Const WM_HSCROLL As Long = &H114
 Private Const WM_VSCROLL As Long = &H115
 Private Const WM_CONTEXTMENU As Long = &H7B
@@ -1797,6 +1810,7 @@ Private PropGridColorFrozen As OLE_COLOR
 Private PropSortArrowColor As OLE_COLOR
 Private PropFloodColor As OLE_COLOR
 Private PropInsertMarkColor As OLE_COLOR
+Private PropAllowDropFiles As Boolean
 Private PropOLEDragDropScroll As Boolean
 Private PropMousePointer As Integer, PropMouseIcon As IPictureDisp
 Private PropMouseTrack As Boolean
@@ -2084,6 +2098,7 @@ VBFlexGridHotCol = -1
 VBFlexGridHotHitResult = FlexHitResultNoWhere
 VBFlexGridIncrementalSearch.Row = -1
 VBFlexGridIncrementalSearch.Col = -1
+VBFlexGridIncrementalSearch.Time = -1
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -2115,6 +2130,7 @@ PropGridColorFrozen = vbBlack
 PropSortArrowColor = vbGrayText
 PropFloodColor = &HC0&
 PropInsertMarkColor = vbBlack
+PropAllowDropFiles = False
 PropOLEDragDropScroll = True
 Me.OLEDropMode = vbOLEDropNone
 PropMousePointer = 0: Set PropMouseIcon = Nothing
@@ -2225,6 +2241,7 @@ PropSortArrowColor = .ReadProperty("SortArrowColor", vbGrayText)
 PropFloodColor = .ReadProperty("FloodColor", &HC0&)
 PropInsertMarkColor = .ReadProperty("InsertMarkColor", vbBlack)
 Me.Enabled = .ReadProperty("Enabled", True)
+PropAllowDropFiles = .ReadProperty("AllowDropFiles", False)
 PropOLEDragDropScroll = .ReadProperty("OLEDragDropScroll", True)
 Me.OLEDropMode = .ReadProperty("OLEDropMode", vbOLEDropNone)
 PropMousePointer = .ReadProperty("MousePointer", 0)
@@ -2333,6 +2350,7 @@ With PropBag
 .WriteProperty "FloodColor", PropFloodColor, &HC0&
 .WriteProperty "InsertMarkColor", PropInsertMarkColor, vbBlack
 .WriteProperty "Enabled", Me.Enabled, True
+.WriteProperty "AllowDropFiles", PropAllowDropFiles, False
 .WriteProperty "OLEDragDropScroll", PropOLEDragDropScroll, True
 .WriteProperty "OLEDropMode", Me.OLEDropMode, vbOLEDropNone
 .WriteProperty "MousePointer", PropMousePointer, 0
@@ -3267,6 +3285,21 @@ Public Property Let Enabled(ByVal Value As Boolean)
 UserControl.Enabled = Value
 If VBFlexGridHandle <> NULL_PTR And VBFlexGridDesignMode = False Then EnableWindow VBFlexGridHandle, IIf(Value = True, 1, 0)
 UserControl.PropertyChanged "Enabled"
+End Property
+
+Public Property Get AllowDropFiles() As Boolean
+Attribute AllowDropFiles.VB_Description = "Returns/sets a value that determines whether drag-drop files are allowed or not. Only applicable when there is no OLE drop target available."
+If VBFlexGridHandle <> NULL_PTR And VBFlexGridDesignMode = False Then
+    AllowDropFiles = CBool((GetWindowLong(VBFlexGridHandle, GWL_EXSTYLE) And WS_EX_ACCEPTFILES) <> 0)
+Else
+    AllowDropFiles = PropAllowDropFiles
+End If
+End Property
+
+Public Property Let AllowDropFiles(ByVal Value As Boolean)
+PropAllowDropFiles = Value
+If VBFlexGridHandle <> NULL_PTR And VBFlexGridDesignMode = False Then DragAcceptFiles VBFlexGridHandle, IIf(PropAllowDropFiles = True, 1, 0)
+UserControl.PropertyChanged "AllowDropFiles"
 End Property
 
 Public Property Get OLEDragDropScroll() As Boolean
@@ -5233,6 +5266,7 @@ If VBFlexGridDesignMode = False Then
     Dim dwStyle As Long, dwExStyle As Long
     dwStyle = WS_CHILD Or WS_VISIBLE Or WS_CLIPCHILDREN Or WS_CLIPSIBLINGS
     dwExStyle = WS_EX_NOINHERITLAYOUT
+    If PropAllowDropFiles = True Then dwExStyle = dwExStyle Or WS_EX_ACCEPTFILES
     If PropRightToLeft = True Then
         If PropRightToLeftLayout = True Then
             dwExStyle = dwExStyle Or WS_EX_LAYOUTRTL
@@ -6343,6 +6377,11 @@ If Cancel = False Then
     RaiseEvent AfterClipboardAction(FlexClipboardActionPaste)
 End If
 End Sub
+
+Public Function CanPaste() As Boolean
+Attribute CanPaste.VB_Description = "Determines whether there is a text format currently on the clipboard that can be pasted."
+CanPaste = HasClipboardText()
+End Function
 
 Public Sub Delete()
 Attribute Delete.VB_Description = "Deletes the current selection of the flex grid."
@@ -12813,6 +12852,17 @@ Attribute IncrementalSearchCol.VB_MemberFlags = "400"
 IncrementalSearchCol = VBFlexGridIncrementalSearch.Col
 End Property
 
+Public Property Get IncrementalSearchTime() As Long
+Attribute IncrementalSearchTime.VB_Description = "Returns/sets the incremental search time in milliseconds."
+Attribute IncrementalSearchTime.VB_MemberFlags = "400"
+IncrementalSearchTime = GetIncrementalSearchTime()
+End Property
+
+Public Property Let IncrementalSearchTime(ByVal Value As Long)
+If (Value < 0 Or Value > 65535) And Not Value = -1 Then Err.Raise 380
+VBFlexGridIncrementalSearch.Time = Value
+End Property
+
 Public Property Get Version() As Integer
 Attribute Version.VB_Description = "Returns the version of the flex grid control currently loaded in memory."
 Attribute Version.VB_MemberFlags = "400"
@@ -18326,11 +18376,14 @@ If PropAllowMultiSelection = True And .Message <> WM_MOUSEMOVE Then
     End Select
     NeedRedraw = True
 End If
-If PropAllowIncrementalSearch = True And .Message = WM_KEYDOWN Then
-    If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then
-        Call CancelIncrementalSearch(True)
-        NeedRedraw = True
-    End If
+If PropAllowIncrementalSearch = True Then
+    Select Case .Message
+        Case WM_KEYDOWN, WM_LBUTTONDOWN
+            If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then
+                Call CancelIncrementalSearch(True)
+                NeedRedraw = True
+            End If
+    End Select
 End If
 If ScrollChanged = True Then
     If (.Mask And RCPM_TOPROW) = RCPM_TOPROW And (.Mask And RCPM_LEFTCOL) = RCPM_LEFTCOL Then
@@ -18784,6 +18837,10 @@ End If
 If ImageIndex > 0 Then
     If ImageIndex <= ImageList_GetImageCount(VBFlexGridColsInfo(iCol).ImageList.Handle) Then GetImageIndex = ImageIndex
 End If
+End Function
+
+Private Function GetIncrementalSearchTime() As Long
+If VBFlexGridIncrementalSearch.Time = -1 Then GetIncrementalSearchTime = GetDoubleClickTime() * 2 Else GetIncrementalSearchTime = VBFlexGridIncrementalSearch.Time
 End Function
 
 Private Sub ProcessKeyDown(ByVal KeyCode As Integer, ByVal Shift As Integer)
@@ -21176,7 +21233,7 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
     End With
 End If
 If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then
-    TimerIncrementalSearch.Interval = GetDoubleClickTime() * 2
+    TimerIncrementalSearch.Interval = GetIncrementalSearchTime()
     TimerIncrementalSearch.Enabled = True
 End If
 End Sub
@@ -23153,6 +23210,25 @@ Select Case wMsg
         If wParam <> 0 Then Call SetIMEMode(hWnd, VBFlexGridIMCHandle, PropIMEMode)
     Case WM_IME_CHAR
         SendMessage hWnd, WM_CHAR, wParam, ByVal lParam
+        Exit Function
+    Case WM_DROPFILES
+        If wParam <> NULL_PTR Then
+            Dim FileCount As Long
+            FileCount = DragQueryFile(wParam, -1, NULL_PTR, 0)
+            If FileCount > 0 Then
+                Dim FileList() As String, iFile As Long, FileBuffer As String, P As POINTAPI
+                ReDim FileList(0 To (FileCount - 1)) As String
+                For iFile = 0 To (FileCount - 1)
+                    FileBuffer = String(DragQueryFile(wParam, iFile, NULL_PTR, 0), vbNullChar)
+                    DragQueryFile wParam, iFile, StrPtr(FileBuffer), Len(FileBuffer) + 1
+                    FileList(iFile) = FileBuffer
+                Next iFile
+                DragQueryPoint wParam, P
+                RaiseEvent DropFiles(FileList(), UserControl.ScaleX(P.X, vbPixels, vbContainerPosition), UserControl.ScaleY(P.Y, vbPixels, vbContainerPosition))
+            End If
+            DragFinish wParam
+        End If
+        WindowProcControl = 0
         Exit Function
     Case WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_RBUTTONDOWN
         With HTI
