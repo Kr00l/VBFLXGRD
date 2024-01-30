@@ -3,6 +3,7 @@ List of revisions:
 30-Jan-2024
 - Included the OLEDragDropScrollOrientation property which can be 0 - Horizontal, 1 - Vertical or 2 - Both (default).
 - Included the IncrementalSearch event.
+- WM_CANCELMODE will now cancel the incremental search, if applicable.
 
 29-Jan-2024
 - Included the CanPaste function. The Paste method pastes only when there is a text format available in the clipboard.
