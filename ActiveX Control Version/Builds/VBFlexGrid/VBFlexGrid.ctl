@@ -49,6 +49,7 @@ Private FlexMousePointerDefault, FlexMousePointerArrow, FlexMousePointerCrosshai
 Private FlexRightToLeftModeNoControl, FlexRightToLeftModeVBAME, FlexRightToLeftModeSystemLocale, FlexRightToLeftModeUserLocale, FlexRightToLeftModeOSLanguage
 Private FlexBorderStyleNone, FlexBorderStyleSingle, FlexBorderStyleThin, FlexBorderStyleSunken, FlexBorderStyleRaised
 Private FlexLeftRightAlignmentLeft, FlexLeftRightAlignmentRight
+Private FlexScrollOrientationHorizontal, FlexScrollOrientationVertical, FlexScrollOrientationBoth
 Private FlexAllowUserFreezingNone, FlexAllowUserFreezingColumns, FlexAllowUserFreezingRows, FlexAllowUserFreezingBoth
 Private FlexAllowUserResizingNone, FlexAllowUserResizingColumns, FlexAllowUserResizingRows, FlexAllowUserResizingBoth
 Private FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
@@ -140,6 +141,11 @@ End Enum
 Public Enum FlexLeftRightAlignmentConstants
 FlexLeftRightAlignmentLeft = 0
 FlexLeftRightAlignmentRight = 1
+End Enum
+Public Enum FlexScrollOrientationConstants
+FlexScrollOrientationHorizontal = 0
+FlexScrollOrientationVertical = 1
+FlexScrollOrientationBoth = 2
 End Enum
 Public Enum FlexAllowUserFreezingConstants
 FlexAllowUserFreezingNone = 0
@@ -934,6 +940,8 @@ Public Event ContextMenu(ByVal X As Single, ByVal Y As Single)
 Attribute ContextMenu.VB_Description = "Occurs when the user clicked the right mouse button or types SHIFT + F10."
 Public Event BeginIncrementalSearch(ByRef Row As Long, ByRef Col As Long, ByRef CaseSensitive As Boolean, ByRef NoWrap As Boolean, ByRef Direction As FlexFindDirectionConstants, ByRef Cancel As Boolean)
 Attribute BeginIncrementalSearch.VB_Description = "Occurs when the user is about to begin an incremental search."
+Public Event IncrementalSearch(ByVal Row As Long, ByVal Col As Long, ByVal CharCode As Long, ByVal CaseSensitive As Boolean, ByVal NoWrap As Boolean, ByVal Direction As FlexFindDirectionConstants, ByVal FoundIndex As Long)
+Attribute IncrementalSearch.VB_Description = "Occurs when an incremental search has started."
 Public Event EndIncrementalSearch(ByVal Row As Long, ByVal Col As Long)
 Attribute EndIncrementalSearch.VB_Description = "Occurs when an incremental search has elapsed or ended."
 Public Event BeforeClipboardAction(ByVal Action As FlexClipboardActionConstants, ByRef Text As String, ByRef Cancel As Boolean)
@@ -1812,6 +1820,7 @@ Private PropFloodColor As OLE_COLOR
 Private PropInsertMarkColor As OLE_COLOR
 Private PropAllowDropFiles As Boolean
 Private PropOLEDragDropScroll As Boolean
+Private PropOLEDragDropScrollOrientation As FlexScrollOrientationConstants
 Private PropMousePointer As Integer, PropMouseIcon As IPictureDisp
 Private PropMouseTrack As Boolean
 Private PropRightToLeft As Boolean
@@ -2132,6 +2141,7 @@ PropFloodColor = &HC0&
 PropInsertMarkColor = vbBlack
 PropAllowDropFiles = False
 PropOLEDragDropScroll = True
+PropOLEDragDropScrollOrientation = FlexScrollOrientationBoth
 Me.OLEDropMode = vbOLEDropNone
 PropMousePointer = 0: Set PropMouseIcon = Nothing
 PropMouseTrack = False
@@ -2243,6 +2253,7 @@ PropInsertMarkColor = .ReadProperty("InsertMarkColor", vbBlack)
 Me.Enabled = .ReadProperty("Enabled", True)
 PropAllowDropFiles = .ReadProperty("AllowDropFiles", False)
 PropOLEDragDropScroll = .ReadProperty("OLEDragDropScroll", True)
+PropOLEDragDropScrollOrientation = .ReadProperty("OLEDragDropScrollOrientation", FlexScrollOrientationBoth)
 Me.OLEDropMode = .ReadProperty("OLEDropMode", vbOLEDropNone)
 PropMousePointer = .ReadProperty("MousePointer", 0)
 Set PropMouseIcon = .ReadProperty("MouseIcon", Nothing)
@@ -2352,6 +2363,7 @@ With PropBag
 .WriteProperty "Enabled", Me.Enabled, True
 .WriteProperty "AllowDropFiles", PropAllowDropFiles, False
 .WriteProperty "OLEDragDropScroll", PropOLEDragDropScroll, True
+.WriteProperty "OLEDragDropScrollOrientation", PropOLEDragDropScrollOrientation, FlexScrollOrientationBoth
 .WriteProperty "OLEDropMode", Me.OLEDropMode, vbOLEDropNone
 .WriteProperty "MousePointer", PropMousePointer, 0
 .WriteProperty "MouseIcon", PropMouseIcon, Nothing
@@ -2491,34 +2503,38 @@ If VBFlexGridHandle <> NULL_PTR Then
             Dim dwStyle As Long, dwExStyle As Long
             dwStyle = GetWindowLong(VBFlexGridHandle, GWL_STYLE)
             dwExStyle = GetWindowLong(VBFlexGridHandle, GWL_EXSTYLE)
-            If (dwStyle And WS_HSCROLL) = WS_HSCROLL Then
-                Dim iCol As Long, CX1 As Long, CX2 As Long
-                For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
-                    CX1 = CX1 + GetColWidth(iCol)
-                Next iCol
-                If (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
-                    If (dwExStyle And WS_EX_LEFTSCROLLBAR) = WS_EX_LEFTSCROLLBAR Then
-                        CX1 = CX1 + GetSystemMetrics(SM_CXVSCROLL)
-                    Else
-                        CX2 = GetSystemMetrics(SM_CXVSCROLL)
+            If PropOLEDragDropScrollOrientation = FlexScrollOrientationHorizontal Or PropOLEDragDropScrollOrientation = FlexScrollOrientationBoth Then
+                If (dwStyle And WS_HSCROLL) = WS_HSCROLL Then
+                    Dim iCol As Long, CX1 As Long, CX2 As Long
+                    For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+                        CX1 = CX1 + GetColWidth(iCol)
+                    Next iCol
+                    If (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+                        If (dwExStyle And WS_EX_LEFTSCROLLBAR) = WS_EX_LEFTSCROLLBAR Then
+                            CX1 = CX1 + GetSystemMetrics(SM_CXVSCROLL)
+                        Else
+                            CX2 = GetSystemMetrics(SM_CXVSCROLL)
+                        End If
+                    End If
+                    If X < ((16 * PixelsPerDIP_X()) + CX1) Then
+                        SendMessage VBFlexGridHandle, WM_HSCROLL, SB_LINELEFT, ByVal 0&
+                    ElseIf (UserControl.ScaleWidth - X) < ((16 * PixelsPerDIP_X()) + CX2) Then
+                        SendMessage VBFlexGridHandle, WM_HSCROLL, SB_LINERIGHT, ByVal 0&
                     End If
                 End If
-                If X < ((16 * PixelsPerDIP_X()) + CX1) Then
-                    SendMessage VBFlexGridHandle, WM_HSCROLL, SB_LINELEFT, ByVal 0&
-                ElseIf (UserControl.ScaleWidth - X) < ((16 * PixelsPerDIP_X()) + CX2) Then
-                    SendMessage VBFlexGridHandle, WM_HSCROLL, SB_LINERIGHT, ByVal 0&
-                End If
             End If
-            If (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
-                Dim iRow As Long, CY1 As Long, CY2 As Long
-                For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
-                    CY1 = CY1 + GetRowHeight(iRow)
-                Next iRow
-                If (dwStyle And WS_HSCROLL) = WS_HSCROLL Then CY2 = GetSystemMetrics(SM_CYHSCROLL)
-                If Y < ((16 * PixelsPerDIP_Y()) + CY1) Then
-                    SendMessage VBFlexGridHandle, WM_VSCROLL, SB_LINEUP, ByVal 0&
-                ElseIf (UserControl.ScaleHeight - Y) < ((16 * PixelsPerDIP_Y()) + CY2) Then
-                    SendMessage VBFlexGridHandle, WM_VSCROLL, SB_LINEDOWN, ByVal 0&
+            If PropOLEDragDropScrollOrientation = FlexScrollOrientationVertical Or PropOLEDragDropScrollOrientation = FlexScrollOrientationBoth Then
+                If (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+                    Dim iRow As Long, CY1 As Long, CY2 As Long
+                    For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
+                        CY1 = CY1 + GetRowHeight(iRow)
+                    Next iRow
+                    If (dwStyle And WS_HSCROLL) = WS_HSCROLL Then CY2 = GetSystemMetrics(SM_CYHSCROLL)
+                    If Y < ((16 * PixelsPerDIP_Y()) + CY1) Then
+                        SendMessage VBFlexGridHandle, WM_VSCROLL, SB_LINEUP, ByVal 0&
+                    ElseIf (UserControl.ScaleHeight - Y) < ((16 * PixelsPerDIP_Y()) + CY2) Then
+                        SendMessage VBFlexGridHandle, WM_VSCROLL, SB_LINEDOWN, ByVal 0&
+                    End If
                 End If
             End If
         End If
@@ -3310,6 +3326,21 @@ End Property
 Public Property Let OLEDragDropScroll(ByVal Value As Boolean)
 PropOLEDragDropScroll = Value
 UserControl.PropertyChanged "OLEDragDropScroll"
+End Property
+
+Public Property Get OLEDragDropScrollOrientation() As FlexScrollOrientationConstants
+Attribute OLEDragDropScrollOrientation.VB_Description = "Returns/Sets the scroll orientation for an OLE drag/drop scroll."
+OLEDragDropScrollOrientation = PropOLEDragDropScrollOrientation
+End Property
+
+Public Property Let OLEDragDropScrollOrientation(ByVal Value As FlexScrollOrientationConstants)
+Select Case Value
+    Case FlexScrollOrientationHorizontal, FlexScrollOrientationVertical, FlexScrollOrientationBoth
+        PropOLEDragDropScrollOrientation = Value
+    Case Else
+        Err.Raise 380
+End Select
+UserControl.PropertyChanged "OLEDragDropScrollOrientation"
 End Property
 
 Public Property Get OLEDropMode() As FlexOLEDropModeConstants
@@ -21217,6 +21248,10 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                 End If
                 Call SetRowColParams(RCP)
             ElseIf .SearchString = vbNullString Then
+                Cancel = True
+            End If
+            RaiseEvent IncrementalSearch(Row, Col, CharCode, .CaseSensitive, .NoWrap, .Direction, FoundIndex)
+            If Cancel = True Then
                 ' Fire end event immediately with row/col of -1 as an alias that the incremental search could not begin at all.
                 RaiseEvent EndIncrementalSearch(-1, -1)
                 Exit Sub
