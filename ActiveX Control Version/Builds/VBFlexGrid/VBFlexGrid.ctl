@@ -1593,6 +1593,7 @@ Private Const WM_MBUTTONDBLCLK As Long = &H209
 Private Const WM_RBUTTONDBLCLK As Long = &H206
 Private Const WM_MOUSEMOVE As Long = &H200
 Private Const WM_MOUSELEAVE As Long = &H2A3
+Private Const WM_CANCELMODE As Long = &H1F
 Private Const WM_CAPTURECHANGED As Long = &H215
 Private Const WM_DROPFILES As Long = &H233
 Private Const WM_HSCROLL As Long = &H114
@@ -23361,6 +23362,10 @@ Select Case wMsg
     Case WM_LBUTTONUP
         Call ProcessLButtonUp(GetShiftStateFromParam(wParam), Get_X_lParam(lParam), Get_Y_lParam(lParam))
         ReleaseCapture
+    Case WM_CANCELMODE
+        If PropAllowIncrementalSearch = True Then
+            If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then Call CancelIncrementalSearch
+        End If
     Case WM_CAPTURECHANGED
         VBFlexGridCapturePoint.X = 0
         VBFlexGridCapturePoint.Y = 0
