@@ -785,6 +785,7 @@ End Sub
 Private Sub VBFlexGrid1_OLECompleteDrag(Effect As Long)
 PropDragRowDragging = False
 PropDragColDragging = False
+VBFlexGrid1.OLEDragDropScrollOrientation = FlexScrollOrientationBoth
 End Sub
 
 Private Sub VBFlexGrid1_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
@@ -812,6 +813,7 @@ If PropDragRowDragging = True And (PropDragRowColX <> X Or PropDragRowColY <> Y)
     .Col = 0
     .Row = .MouseRow
     .DropHighlightMode = FlexDropTargetModeByRow
+    .OLEDragDropScrollOrientation = FlexScrollOrientationVertical
     .OLEDrag
     End With
 ElseIf PropDragColDragging = True And (PropDragRowColX <> X Or PropDragRowColY <> Y) Then
@@ -819,6 +821,7 @@ ElseIf PropDragColDragging = True And (PropDragRowColX <> X Or PropDragRowColY <
     .Col = .MouseCol
     .Row = 0
     .DropHighlightMode = FlexDropTargetModeByColumn
+    .OLEDragDropScrollOrientation = FlexScrollOrientationHorizontal
     .OLEDrag
     End With
 End If
