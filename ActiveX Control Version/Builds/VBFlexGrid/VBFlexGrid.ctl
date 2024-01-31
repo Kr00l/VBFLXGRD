@@ -922,6 +922,7 @@ CaseSensitive As Boolean
 NoWrap As Boolean
 Direction As FlexFindDirectionConstants
 CancellationPending As Boolean
+NoLostFocus As Boolean
 Time As Long
 End Type
 Public Event Click()
@@ -5277,7 +5278,9 @@ End Property
 
 Public Property Let AllowIncrementalSearch(ByVal Value As Boolean)
 PropAllowIncrementalSearch = Value
-If PropAllowIncrementalSearch = False Then Call CancelIncrementalSearch
+If PropAllowIncrementalSearch = False Then
+    If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then Call CancelIncrementalSearch
+End If
 UserControl.PropertyChanged "AllowIncrementalSearch"
 End Property
 
@@ -21251,7 +21254,9 @@ If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
             ElseIf .SearchString = vbNullString Then
                 Cancel = True
             End If
+            .NoLostFocus = True
             RaiseEvent IncrementalSearch(Row, Col, CharCode, .CaseSensitive, .NoWrap, .Direction, FoundIndex)
+            .NoLostFocus = False
             If Cancel = True Then
                 ' Fire end event immediately with row/col of -1 as an alias that the incremental search could not begin at all.
                 RaiseEvent EndIncrementalSearch(-1, -1)
@@ -23595,7 +23600,7 @@ Select Case wMsg
     Case WM_SETFOCUS, WM_KILLFOCUS
         VBFlexGridFocused = CBool(wMsg = WM_SETFOCUS)
         If PropAllowIncrementalSearch = True And wMsg = WM_KILLFOCUS Then
-            If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then Call CancelIncrementalSearch(True)
+            If Not VBFlexGridIncrementalSearch.SearchString = vbNullString And VBFlexGridIncrementalSearch.NoLostFocus = False Then Call CancelIncrementalSearch(True)
         End If
         Call RedrawGrid
     Case WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK
