@@ -23124,19 +23124,23 @@ Select Case wMsg
                             If CreateEdit(FlexEditReasonF2) = True Then Exit Function
                         Case vbKeySpace
                             If VBFlexGridIncrementalSearch.SearchString = vbNullString Then
-                                If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
-                                    If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then
-                                        Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
-                                    ElseIf CreateEdit(FlexEditReasonSpace) = True Then
-                                        Exit Function
+                                If GetShiftStateFromMsg() = 0 Then
+                                    If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                                        If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then
+                                            Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
+                                        ElseIf CreateEdit(FlexEditReasonSpace) = True Then
+                                            Exit Function
+                                        End If
+                                    Else
+                                        If CreateEdit(FlexEditReasonSpace) = True Then Exit Function
                                     End If
-                                Else
-                                    If CreateEdit(FlexEditReasonSpace) = True Then Exit Function
                                 End If
                             End If
                         Case vbKeyBack
                             If VBFlexGridIncrementalSearch.SearchString = vbNullString Then
-                                If CreateEdit(FlexEditReasonBackSpace) = True Then Exit Function
+                                If GetShiftStateFromMsg() = 0 Then
+                                    If CreateEdit(FlexEditReasonBackSpace) = True Then Exit Function
+                                End If
                             End If
                         Case vbKeyF4
                             If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
@@ -23149,8 +23153,10 @@ Select Case wMsg
                 Else
                     If KeyCode = vbKeySpace Then
                         If VBFlexGridIncrementalSearch.SearchString = vbNullString Then
-                            If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
-                                If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
+                            If GetShiftStateFromMsg() = 0 Then
+                                If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                                    If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
+                                End If
                             End If
                         End If
                     End If
