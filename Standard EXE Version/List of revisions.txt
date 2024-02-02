@@ -1,5 +1,9 @@
 List of revisions:
 
+02-Feb-2024
+- Space/BackSpace key now only invoke cell editing when shift state is 0.
+- Space key now only invoke cell checkbox check when shift state is 0.
+
 30-Jan-2024
 - Included the OLEDragDropScrollOrientation property which can be 0 - Horizontal, 1 - Vertical or 2 - Both (default).
 - Included the IncrementalSearch event.
