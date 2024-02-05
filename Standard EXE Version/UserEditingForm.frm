@@ -259,7 +259,7 @@ End Sub
 
 Private Sub VBFlexGrid1_KeyDown(KeyCode As Integer, Shift As Integer)
 If Option5.Value = True Then
-    If KeyCode = vbKeyReturn Then VBFlexGrid1.StartEdit
+    If KeyCode = vbKeyReturn And Shift = 0 Then VBFlexGrid1.StartEdit
 End If
 End Sub
 
