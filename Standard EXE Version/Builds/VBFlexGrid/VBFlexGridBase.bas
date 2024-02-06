@@ -205,7 +205,7 @@ Private Declare Function CallNextHookEx Lib "user32" (ByVal hHook As Long, ByVal
 Private Const WM_USER As Long = &H400
 Private Const UM_PRETRANSLATEMSG As Long = (WM_USER + 333)
 Private FlexPreTranslateMsgHookHandle As LongPtr
-Private FlexPreTranslateMsgHwnd() As LongPtr, FlexPreTranslateMsgCount As Long
+Private FlexPreTranslateMsgHwnd As LongPtr, FlexPreTranslateMsgCount As Long
 
 #End If
 
@@ -452,44 +452,33 @@ End Function
 
 #If ImplementPreTranslateMsg = True Then
 
-#If VBA7 Then
-Public Sub FlexPreTranslateMsgAddHook(ByVal hWnd As LongPtr)
-#Else
-Public Sub FlexPreTranslateMsgAddHook(ByVal hWnd As Long)
-#End If
+Public Sub FlexPreTranslateMsgAddHook()
 If FlexPreTranslateMsgHookHandle = NULL_PTR And FlexPreTranslateMsgCount = 0 Then
     Const WH_GETMESSAGE As Long = 3
     FlexPreTranslateMsgHookHandle = SetWindowsHookEx(WH_GETMESSAGE, AddressOf FlexPreTranslateMsgHookProc, NULL_PTR, App.ThreadID)
-    ReDim FlexPreTranslateMsgHwnd(0) ' As LongPtr
-    FlexPreTranslateMsgHwnd(0) = hWnd
-Else
-    ReDim Preserve FlexPreTranslateMsgHwnd(0 To FlexPreTranslateMsgCount) ' As LongPtr
-    FlexPreTranslateMsgHwnd(FlexPreTranslateMsgCount) = hWnd
 End If
 FlexPreTranslateMsgCount = FlexPreTranslateMsgCount + 1
 End Sub
 
-#If VBA7 Then
-Public Sub FlexPreTranslateMsgReleaseHook(ByVal hWnd As LongPtr)
-#Else
-Public Sub FlexPreTranslateMsgReleaseHook(ByVal hWnd As Long)
-#End If
+Public Sub FlexPreTranslateMsgReleaseHook()
 FlexPreTranslateMsgCount = FlexPreTranslateMsgCount - 1
 If FlexPreTranslateMsgHookHandle <> NULL_PTR And FlexPreTranslateMsgCount = 0 Then
     UnhookWindowsHookEx FlexPreTranslateMsgHookHandle
     FlexPreTranslateMsgHookHandle = NULL_PTR
-    Erase FlexPreTranslateMsgHwnd()
-Else
-    If FlexPreTranslateMsgCount > 0 Then
-        Dim i As Long
-        For i = 0 To FlexPreTranslateMsgCount
-            If FlexPreTranslateMsgHwnd(i) = hWnd And i < FlexPreTranslateMsgCount Then
-                FlexPreTranslateMsgHwnd(i) = FlexPreTranslateMsgHwnd(i + 1)
-            End If
-        Next i
-        ReDim Preserve FlexPreTranslateMsgHwnd(0 To FlexPreTranslateMsgCount - 1) ' As LongPtr
-    End If
+    FlexPreTranslateMsgHwnd = NULL_PTR
 End If
+End Sub
+
+#If VBA7 Then
+Public Sub FlexPreTranslateMsgActivate(ByVal hWnd As LongPtr)
+#Else
+Public Sub FlexPreTranslateMsgActivate(ByVal hWnd As Long)
+#End If
+FlexPreTranslateMsgHwnd = hWnd
+End Sub
+
+Public Sub FlexPreTranslateMsgDeActivate()
+FlexPreTranslateMsgHwnd = NULL_PTR
 End Sub
 
 Private Function FlexPreTranslateMsgHookProc(ByVal nCode As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
@@ -499,19 +488,15 @@ If nCode >= HC_ACTION And wParam = PM_REMOVE Then
     Dim Msg As TMSG
     CopyMemory Msg, ByVal lParam, LenB(Msg)
     If Msg.Message >= WM_KEYFIRST And Msg.Message <= WM_KEYLAST Then
-        If FlexPreTranslateMsgCount > 0 Then
-            Dim i As Long
-            For i = 0 To FlexPreTranslateMsgCount - 1
-                If Msg.hWnd = FlexPreTranslateMsgHwnd(i) Then
-                    If SendMessage(Msg.hWnd, UM_PRETRANSLATEMSG, 0, ByVal lParam) <> 0 Then
-                        Msg.Message = WM_NULL
-                        Msg.wParam = 0
-                        Msg.lParam = 0
-                        CopyMemory ByVal lParam, Msg, LenB(Msg)
-                        Exit For
-                    End If
+        If FlexPreTranslateMsgHwnd <> NULL_PTR And FlexPreTranslateMsgCount > 0 Then
+            If Msg.hWnd = FlexPreTranslateMsgHwnd Then
+                If SendMessage(Msg.hWnd, UM_PRETRANSLATEMSG, 0, ByVal lParam) <> 0 Then
+                    Msg.Message = WM_NULL
+                    Msg.wParam = 0
+                    Msg.lParam = 0
+                    CopyMemory ByVal lParam, Msg, LenB(Msg)
                 End If
-            Next i
+            End If
         End If
     End If
 End If

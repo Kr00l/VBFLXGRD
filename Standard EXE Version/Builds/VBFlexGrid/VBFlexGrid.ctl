@@ -5399,9 +5399,7 @@ If VBFlexGridDesignMode = False Then
     
     #If ImplementPreTranslateMsg = True Then
     
-    If VBFlexGridUsePreTranslateMsg = True Then
-        If VBFlexGridHandle <> NULL_PTR Then Call FlexPreTranslateMsgAddHook(VBFlexGridHandle)
-    End If
+    If VBFlexGridUsePreTranslateMsg = True Then Call FlexPreTranslateMsgAddHook
     
     #End If
     
@@ -5473,7 +5471,7 @@ If VBFlexGridDesignMode = False Then
     
     #If ImplementPreTranslateMsg = True Then
     
-    If VBFlexGridUsePreTranslateMsg = True Then Call FlexPreTranslateMsgReleaseHook(VBFlexGridHandle)
+    If VBFlexGridUsePreTranslateMsg = True Then Call FlexPreTranslateMsgReleaseHook
     
     #End If
     
@@ -5921,16 +5919,6 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                 End If
         End Select
     End If
-    
-    #If ImplementPreTranslateMsg = True Then
-    
-    If VBFlexGridUsePreTranslateMsg = True Then
-        Call FlexPreTranslateMsgAddHook(VBFlexGridEditHandle)
-        If VBFlexGridComboCalendarHandle <> NULL_PTR Then Call FlexPreTranslateMsgAddHook(VBFlexGridComboCalendarHandle)
-    End If
-    
-    #End If
-    
     RaiseEvent EnterEdit
     CreateEdit = True
 End If
@@ -5989,16 +5977,6 @@ End If
 InProc = True
 VBFlexGridEditCloseMode = CloseMode
 RaiseEvent LeaveEdit
-
-#If ImplementPreTranslateMsg = True Then
-
-If VBFlexGridUsePreTranslateMsg = True Then
-    Call FlexPreTranslateMsgReleaseHook(VBFlexGridEditHandle)
-    If VBFlexGridComboCalendarHandle <> NULL_PTR Then Call FlexPreTranslateMsgReleaseHook(VBFlexGridComboCalendarHandle)
-End If
-
-#End If
-
 Dim Row As Long, Col As Long
 ' It is necessary to preserve the edit row and col from here on.
 ' When the edit control has been destroyed it could be started again resulting that the edit row and col will be overwritten.
@@ -22782,7 +22760,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me)
+        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me) Else Call FlexPreTranslateMsgActivate(hWnd)
         
         #Else
         
@@ -22794,7 +22772,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO
+        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO Else Call FlexPreTranslateMsgDeActivate
         
         #Else
         
@@ -23734,7 +23712,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me)
+        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me) Else Call FlexPreTranslateMsgActivate(hWnd)
         
         #Else
         
@@ -23746,7 +23724,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO
+        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO Else Call FlexPreTranslateMsgDeActivate
         
         #Else
         
@@ -24122,7 +24100,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me)
+        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me) Else Call FlexPreTranslateMsgActivate(hWnd)
         
         #Else
         
@@ -24134,7 +24112,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO
+        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO Else Call FlexPreTranslateMsgDeActivate
         
         #Else
         
