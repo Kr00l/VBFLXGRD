@@ -1797,7 +1797,7 @@ Private PropDataSource As MSDATASRC.DataSource, PropDataMember As MSDATASRC.Data
 #If ImplementPreTranslateMsg = True Then
 
 Private Const UM_PRETRANSLATEMSG As Long = (WM_USER + 333)
-Private VBFlexGridUsePreTranslateMsg As Boolean
+Private UsePreTranslateMsg As Boolean
 
 #End If
 
@@ -2007,7 +2007,7 @@ Call FlexWndRegisterClass
 
 #If ImplementPreTranslateMsg = True Then
 
-If SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject) = False Then VBFlexGridUsePreTranslateMsg = True
+If SetVTableHandling(Me, VTableInterfaceInPlaceActiveObject) = False Then UsePreTranslateMsg = True
 
 #Else
 
@@ -2615,7 +2615,7 @@ Private Sub UserControl_Terminate()
 
 #If ImplementPreTranslateMsg = True Then
 
-If VBFlexGridUsePreTranslateMsg = False Then Call RemoveVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
+If UsePreTranslateMsg = False Then Call RemoveVTableHandling(Me, VTableInterfaceInPlaceActiveObject)
 
 #Else
 
@@ -5399,7 +5399,7 @@ If VBFlexGridDesignMode = False Then
     
     #If ImplementPreTranslateMsg = True Then
     
-    If VBFlexGridUsePreTranslateMsg = True Then Call FlexPreTranslateMsgAddHook
+    If UsePreTranslateMsg = True Then Call FlexPreTranslateMsgAddHook
     
     #End If
     
@@ -5471,7 +5471,7 @@ If VBFlexGridDesignMode = False Then
     
     #If ImplementPreTranslateMsg = True Then
     
-    If VBFlexGridUsePreTranslateMsg = True Then Call FlexPreTranslateMsgReleaseHook
+    If UsePreTranslateMsg = True Then Call FlexPreTranslateMsgReleaseHook
     
     #End If
     
@@ -22760,7 +22760,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me) Else Call FlexPreTranslateMsgActivate(hWnd)
+        If UsePreTranslateMsg = False Then Call ActivateIPAO(Me) Else Call FlexPreTranslateMsgActivate(hWnd)
         
         #Else
         
@@ -22772,7 +22772,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO Else Call FlexPreTranslateMsgDeActivate
+        If UsePreTranslateMsg = False Then Call DeActivateIPAO Else Call FlexPreTranslateMsgDeActivate
         
         #Else
         
@@ -23712,7 +23712,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me) Else Call FlexPreTranslateMsgActivate(hWnd)
+        If UsePreTranslateMsg = False Then Call ActivateIPAO(Me) Else Call FlexPreTranslateMsgActivate(hWnd)
         
         #Else
         
@@ -23724,7 +23724,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO Else Call FlexPreTranslateMsgDeActivate
+        If UsePreTranslateMsg = False Then Call DeActivateIPAO Else Call FlexPreTranslateMsgDeActivate
         
         #Else
         
@@ -24100,7 +24100,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call ActivateIPAO(Me) Else Call FlexPreTranslateMsgActivate(hWnd)
+        If UsePreTranslateMsg = False Then Call ActivateIPAO(Me) Else Call FlexPreTranslateMsgActivate(hWnd)
         
         #Else
         
@@ -24112,7 +24112,7 @@ Select Case wMsg
         
         #If ImplementPreTranslateMsg = True Then
         
-        If VBFlexGridUsePreTranslateMsg = False Then Call DeActivateIPAO Else Call FlexPreTranslateMsgDeActivate
+        If UsePreTranslateMsg = False Then Call DeActivateIPAO Else Call FlexPreTranslateMsgDeActivate
         
         #Else
         
