@@ -747,6 +747,8 @@ With ComboDirectionAfterReturn
 .ItemData(.NewIndex) = FlexDirectionAfterReturnLeft
 .AddItem FlexDirectionAfterReturnRight & " - Right"
 .ItemData(.NewIndex) = FlexDirectionAfterReturnRight
+.AddItem FlexDirectionAfterReturnEdit & " - Edit"
+.ItemData(.NewIndex) = FlexDirectionAfterReturnEdit
 End With
 With ComboWrapCellBehavior
 .AddItem FlexWrapNone & " - None"

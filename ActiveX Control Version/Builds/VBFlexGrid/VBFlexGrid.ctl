@@ -72,7 +72,7 @@ Private FlexWordWrapNone, FlexWordBreak, FlexSingleLine, FlexEndEllipsis, FlexPa
 Private FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearMovable, FlexClearFrozen, FlexClearSelection, FlexClearClip
 Private FlexClearEverything, FlexClearText, FlexClearFormatting, FlexClearTag
 Private FlexTabControls, FlexTabCells, FlexTabNext
-Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
+Private FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight, FlexDirectionAfterReturnEdit
 Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
 Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellChecked, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort, FlexCellTextDisplay, FlexCellTextHidden, FlexCellHasCustomFormatting, FlexCellHasTag, FlexCellTag
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
@@ -84,7 +84,7 @@ Private FlexClipboardActionCopy, FlexClipboardActionCut, FlexClipboardActionPast
 Private FlexFindMatchExact, FlexFindMatchPartial, FlexFindMatchStartsWith, FlexFindMatchEndsWith
 Private FlexFindDirectionDown, FlexFindDirectionUp, FlexFindDirectionRight, FlexFindDirectionLeft
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
-Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace, FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4, FlexEditReasonComboCueAltUpDown
+Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace, FlexEditReasonReturn, FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4, FlexEditReasonComboCueAltUpDown
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
 Private FlexComboCueHidden, FlexComboCueNone, FlexComboCueDropDown, FlexComboCueButton, FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
 Private FlexComboModeNone, FlexComboModeDropDown, FlexComboModeEditable, FlexComboModeButton, FlexComboModeCalendar
@@ -335,6 +335,7 @@ FlexDirectionAfterReturnUp = 1
 FlexDirectionAfterReturnDown = 2
 FlexDirectionAfterReturnLeft = 3
 FlexDirectionAfterReturnRight = 4
+FlexDirectionAfterReturnEdit = 5
 End Enum
 Public Enum FlexWrapCellBehaviorConstants
 FlexWrapNone = 0
@@ -442,6 +443,7 @@ FlexEditReasonSpace = 2
 FlexEditReasonKeyPress = 3
 FlexEditReasonDblClick = 4
 FlexEditReasonBackSpace = 5
+FlexEditReasonReturn = 6
 FlexEditReasonComboCueClick = 10
 FlexEditReasonComboCueDblClick = 11
 FlexEditReasonComboCueF4 = 12
@@ -4850,7 +4852,7 @@ End Property
 
 Public Property Let DirectionAfterReturn(ByVal Value As FlexDirectionAfterReturnConstants)
 Select Case Value
-    Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight
+    Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnUp, FlexDirectionAfterReturnDown, FlexDirectionAfterReturnLeft, FlexDirectionAfterReturnRight, FlexDirectionAfterReturnEdit
         PropDirectionAfterReturn = Value
     Case Else
         Err.Raise 380
@@ -5778,11 +5780,12 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     VBFlexGridEditAlreadyValidated = False
     SendMessage VBFlexGridEditHandle, EM_SETSEL, 0, ByVal -1&
     If Not (dwStyle And ES_READONLY) = ES_READONLY Then
-        If Reason = FlexEditReasonSpace Then
-            SendMessage VBFlexGridEditHandle, EM_SETSEL, -1, ByVal -1&
-        ElseIf Reason = FlexEditReasonBackSpace Then
-            SendMessage VBFlexGridEditHandle, EM_REPLACESEL, 1, ByVal StrPtr("")
-        End If
+        Select Case Reason
+            Case FlexEditReasonSpace, FlexEditReasonReturn
+                SendMessage VBFlexGridEditHandle, EM_SETSEL, -1, ByVal -1&
+            Case FlexEditReasonBackSpace
+                SendMessage VBFlexGridEditHandle, EM_REPLACESEL, 1, ByVal StrPtr("")
+        End Select
     End If
     If ComboButtonWidth > 0 Then
         dwStyle = WS_CHILD Or SS_OWNERDRAW Or SS_NOTIFY
@@ -18867,7 +18870,10 @@ Select Case KeyCode
     Case vbKeyTab
         If PropTabBehavior = FlexTabControls Then Exit Sub
     Case vbKeyReturn
-        If PropDirectionAfterReturn = FlexDirectionAfterReturnNone Then Exit Sub
+        Select Case PropDirectionAfterReturn
+            Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnEdit
+                Exit Sub
+        End Select
     Case Else
         Exit Sub
 End Select
@@ -23118,6 +23124,14 @@ Select Case wMsg
                             If VBFlexGridIncrementalSearch.SearchString = vbNullString Then
                                 If GetShiftStateFromMsg() = 0 Then
                                     If CreateEdit(FlexEditReasonBackSpace) = True Then Exit Function
+                                End If
+                            End If
+                        Case vbKeyReturn
+                            If PropDirectionAfterReturn = FlexDirectionAfterReturnEdit Then
+                                If VBFlexGridIncrementalSearch.SearchString = vbNullString Then
+                                    If GetShiftStateFromMsg() = 0 Then
+                                        If CreateEdit(FlexEditReasonReturn) = True Then Exit Function
+                                    End If
                                 End If
                             End If
                         Case vbKeyF4
