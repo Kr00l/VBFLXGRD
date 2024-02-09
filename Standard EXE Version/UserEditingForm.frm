@@ -59,7 +59,7 @@ Begin VB.Form UserEditingForm
       End
    End
    Begin VB.Frame Frame2 
-      Caption         =   "Edit on return key (by code)"
+      Caption         =   "Edit on return key"
       Height          =   1335
       Left            =   3120
       TabIndex        =   6
@@ -257,12 +257,6 @@ VBFlexGrid1.ColComboItems(COL_COMBOBUTTON) = vbNullString
 VBFlexGrid1.AutoSize 0, VBFlexGrid1.Cols - 1, FlexAutoSizeModeColWidth, FlexAutoSizeScopeAll
 End Sub
 
-Private Sub VBFlexGrid1_KeyDown(KeyCode As Integer, Shift As Integer)
-If Option5.Value = True Then
-    If KeyCode = vbKeyReturn And Shift = 0 Then VBFlexGrid1.StartEdit
-End If
-End Sub
-
 Private Sub VBFlexGrid1_DividerDblClick(ByVal Row As Long, ByVal Col As Long)
 If Row = -1 Then
     VBFlexGrid1.AutoSize Col, , FlexAutoSizeModeColWidth, , , , CBool(VBFlexGrid1.ClipMode = FlexClipModeExcludeHidden)
@@ -432,6 +426,14 @@ Select Case VBFlexGrid1.EditCol
             VBFlexGrid1.CancelEdit
         End If
 End Select
+End Sub
+
+Private Sub Option4_Click()
+VBFlexGrid1.DirectionAfterReturn = FlexDirectionAfterReturnNone
+End Sub
+
+Private Sub Option5_Click()
+VBFlexGrid1.DirectionAfterReturn = FlexDirectionAfterReturnEdit
 End Sub
 
 Private Sub Option8_Click()

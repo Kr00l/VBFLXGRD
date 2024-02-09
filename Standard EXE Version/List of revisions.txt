@@ -1,5 +1,11 @@
 List of revisions:
 
+09-Feb-2024
+- Included enum FlexDirectionAfterReturnEdit/FlexEditReasonReturn.
+  By this the edit mode is initiated by the return key, but only when shift state is 0.
+  It is intentionality included in the DirectionAfterReturn property to not
+  change default behavior and it's logical because you can either move the cursor or start edit mode, but not both.
+
 02-Feb-2024
 - Space/BackSpace key now only invoke cell editing when shift state is 0.
 - Space key now only invoke cell checkbox check when shift state is 0.
