@@ -668,7 +668,7 @@ End Sub
 
 Private Sub Command21_Click()
 PropDragRowColActive = Not PropDragRowColActive
-MsgBox "DragRowCol mode is '" & PropDragRowColActive & "'"
+MsgBox "DragRowCol mode is '" & PropDragRowColActive & "'." & IIf(PropDragRowColActive, vbLf & "Start dragging while holding down the ALT key.", "")
 End Sub
 
 Private Sub VBFlexGrid1_OLEStartDrag(Data As DataObject, AllowedEffects As Long)
@@ -726,6 +726,8 @@ If State = vbOver Then
     End If
 ElseIf State = vbLeave Then
     If PropDragRowDragging = True Then
+        VBFlexGrid1.DropHighlight = -1
+    ElseIf PropDragColDragging = True Then
         VBFlexGrid1.DropHighlight = -1
     ElseIf PropInsertRowDragging = True Then
         VBFlexGrid1.InsertMark = -1
@@ -790,7 +792,7 @@ End Sub
 
 Private Sub VBFlexGrid1_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
 With VBFlexGrid1
-If PropDragRowColActive = True Then
+If PropDragRowColActive = True And (Shift And vbAltMask) = vbAltMask Then
     .HitTest X, Y
     If .HitResult = FlexHitResultCell Then
         If .HitCol < .FixedCols And .HitRow >= .FixedRows Then
