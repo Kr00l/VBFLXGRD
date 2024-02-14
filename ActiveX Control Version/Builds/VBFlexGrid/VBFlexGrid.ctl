@@ -20343,50 +20343,52 @@ Select Case PropSelectionMode
                 End If
         End Select
 End Select
-If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFixedCols - 1) Then
-    Dim HTI As THITTESTINFO, Pos As Long
-    Pos = GetMessagePos()
-    HTI.PT.X = Get_X_lParam(Pos)
-    HTI.PT.Y = Get_Y_lParam(Pos)
-    ScreenToClient VBFlexGridHandle, HTI.PT
-    Call GetHitTestInfo(HTI)
-    Select Case PropSelectionMode
-        Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-            If VBFlexGridCaptureRow > (PropFixedRows - 1) Or PropAllowBigSelection = False Then
-                If HTI.MouseRow > (PropFixedRows - 1) Then
-                    .RowSel = HTI.MouseRow
+If VBFlexGridCaptureDividerDrag = False Then
+    If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFixedCols - 1) Then
+        Dim HTI As THITTESTINFO, Pos As Long
+        Pos = GetMessagePos()
+        HTI.PT.X = Get_X_lParam(Pos)
+        HTI.PT.Y = Get_Y_lParam(Pos)
+        ScreenToClient VBFlexGridHandle, HTI.PT
+        Call GetHitTestInfo(HTI)
+        Select Case PropSelectionMode
+            Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+                If VBFlexGridCaptureRow > (PropFixedRows - 1) Or PropAllowBigSelection = False Then
+                    If HTI.MouseRow > (PropFixedRows - 1) Then
+                        .RowSel = HTI.MouseRow
+                    Else
+                        .RowSel = .TopRow
+                    End If
                 Else
-                    .RowSel = .TopRow
+                    .RowSel = (PropRows - 1)
                 End If
-            Else
-                .RowSel = (PropRows - 1)
-            End If
-            If VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
-                If HTI.MouseCol > (PropFixedCols - 1) Then
-                    .ColSel = HTI.MouseCol
+                If VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
+                    If HTI.MouseCol > (PropFixedCols - 1) Then
+                        .ColSel = HTI.MouseCol
+                    Else
+                        .ColSel = .LeftCol
+                    End If
                 Else
-                    .ColSel = .LeftCol
+                    .ColSel = (PropCols - 1)
                 End If
-            Else
-                .ColSel = (PropCols - 1)
-            End If
-        Case FlexSelectionModeByRow
-            If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
-                If HTI.MouseRow > (PropFixedRows - 1) Then
-                    .RowSel = HTI.MouseRow
-                Else
-                    .RowSel = .TopRow
+            Case FlexSelectionModeByRow
+                If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
+                    If HTI.MouseRow > (PropFixedRows - 1) Then
+                        .RowSel = HTI.MouseRow
+                    Else
+                        .RowSel = .TopRow
+                    End If
                 End If
-            End If
-        Case FlexSelectionModeByColumn
-            If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
-                If HTI.MouseCol > (PropFixedCols - 1) Then
-                    .ColSel = HTI.MouseCol
-                Else
-                    .ColSel = .LeftCol
+            Case FlexSelectionModeByColumn
+                If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
+                    If HTI.MouseCol > (PropFixedCols - 1) Then
+                        .ColSel = HTI.MouseCol
+                    Else
+                        .ColSel = .LeftCol
+                    End If
                 End If
-            End If
-    End Select
+        End Select
+    End If
 End If
 Call SetRowColParams(RCP)
 End With
