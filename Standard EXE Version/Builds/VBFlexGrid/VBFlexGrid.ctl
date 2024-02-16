@@ -1623,7 +1623,7 @@ Private Const WM_NCMOUSEMOVE As Long = &HA0
 Private Const WM_NCMOUSELEAVE As Long = &H2A2
 Private Const WM_DRAWITEM As Long = &H2B, ODT_COMBOBOX As Long = &H3, ODT_BUTTON As Long = &H4, ODT_STATIC As Long = &H5
 Private Const WM_USER As Long = &H400
-Private Const UM_ENDINCREMENTALSEARCH As Long = (WM_USER + 400)
+Private Const UM_ENDINCREMENTALSEARCH As Long = (WM_USER + 1000)
 Private Const TTM_ADDTOOLA As Long = (WM_USER + 4)
 Private Const TTM_ADDTOOLW As Long = (WM_USER + 50)
 Private Const TTM_ADDTOOL As Long = TTM_ADDTOOLW
@@ -1798,7 +1798,7 @@ Private PropDataSource As MSDATASRC.DataSource, PropDataMember As MSDATASRC.Data
 
 #If ImplementPreTranslateMsg = True Then
 
-Private Const UM_PRETRANSLATEMSG As Long = (WM_USER + 333)
+Private Const UM_PRETRANSLATEMSG As Long = (WM_USER + 1100)
 Private UsePreTranslateMsg As Boolean
 
 #End If
