@@ -203,7 +203,7 @@ Private Declare Function UnhookWindowsHookEx Lib "user32" (ByVal hHook As Long) 
 Private Declare Function CallNextHookEx Lib "user32" (ByVal hHook As Long, ByVal nCode As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 #End If
 Private Const WM_USER As Long = &H400
-Private Const UM_PRETRANSLATEMSG As Long = (WM_USER + 333)
+Private Const UM_PRETRANSLATEMSG As Long = (WM_USER + 1100)
 Private FlexPreTranslateMsgHookHandle As LongPtr
 Private FlexPreTranslateMsgHwnd As LongPtr, FlexPreTranslateMsgCount As Long
 
