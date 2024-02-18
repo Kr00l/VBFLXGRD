@@ -22475,7 +22475,11 @@ If VBFlexGridComboListHandle <> NULL_PTR Then
     CopyMemory ByVal VarPtr(XY), ByVal VarPtr(P), 8
     Index = LBItemFromPt(VBFlexGridComboListHandle, XY, 0)
     If Not Index = LB_ERR Then
-        If Index <> SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&) Then SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, Index, ByVal 0&
+        If SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&) > 0 Then
+            If Index <> SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&) Then SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, Index, ByVal 0&
+        Else
+            SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, -1, ByVal 0&
+        End If
     End If
     ComboListSelFromPt = Index
 End If
@@ -24091,6 +24095,7 @@ Select Case wMsg
         SetCapture hWnd
     Case WM_LBUTTONDOWN, WM_LBUTTONDBLCLK
         If Not ComboListSelFromPt(Get_X_lParam(lParam), Get_Y_lParam(lParam)) = LB_ERR Then
+            If SendMessage(hWnd, LB_GETCOUNT, 0, ByVal 0&) = 0 Then Exit Function
             Call ComboListCommitSel
             If VBFlexGridComboModeActive = FlexComboModeDropDown Then
                 Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
