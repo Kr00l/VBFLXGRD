@@ -21216,7 +21216,7 @@ Const IDT_AUTOSCROLL As LongPtr = 1
 #Else
 Const IDT_AUTOSCROLL As Long = 1
 #End If
-Dim Msg As TMSG, Pos As Long, HTI As THITTESTINFO, Dragging As Boolean, NoDrop As Boolean, AutoScroll As Boolean, Success As Boolean, SplitterRect As RECT, hDC As LongPtr, hBmpOld As LongPtr
+Dim Msg As TMSG, Pos As Long, HTI As THITTESTINFO, ButtonUp As Boolean, Dragging As Boolean, NoDrop As Boolean, AutoScroll As Boolean, SplitterRect As RECT, hDC As LongPtr, hBmpOld As LongPtr
 Do
     While PeekMessage(Msg, NULL_PTR, 0, 0, PM_REMOVE) <> 0
         Select Case Msg.Message
@@ -21225,7 +21225,7 @@ Do
                 PostQuitMessage Msg.wParam
                 Exit Do
             Case WM_TIMER
-                If Msg.wParam = IDT_AUTOSCROLL Then
+                If Msg.hWnd = VBFlexGridHandle And Msg.wParam = IDT_AUTOSCROLL Then
                     Pos = GetMessagePos()
                     P.X = Get_X_lParam(Pos)
                     P.Y = Get_Y_lParam(Pos)
@@ -21369,10 +21369,10 @@ Do
                         End If
                         Call RedrawGrid
                     Case WM_LBUTTONUP
-                        Success = CBool((Button And vbLeftButton) <> 0)
+                        ButtonUp = CBool((Button And vbLeftButton) <> 0)
                         ReleaseCapture
                     Case WM_RBUTTONUP
-                        Success = CBool((Button And vbRightButton) <> 0)
+                        ButtonUp = CBool((Button And vbRightButton) <> 0)
                         ReleaseCapture
                     Case WM_MOUSEWHEEL, WM_MOUSEHWHEEL
                     Case Else
@@ -21448,7 +21448,7 @@ Do
     WaitMessage
 Loop
 If AutoScroll = True Then KillTimer VBFlexGridHandle, IDT_AUTOSCROLL
-If Success = True Then DoDragRowCol = TrackIndex
+If ButtonUp = True And Dragging = True And NoDrop = False Then DoDragRowCol = TrackIndex
 VBFlexGridDoDragRow = -1
 VBFlexGridDoDragCol = -1
 VBFlexGridDoDragRowCol = False
