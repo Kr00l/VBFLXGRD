@@ -423,6 +423,19 @@ Public Function FlexGetSplitterBrush() As Long
 FlexGetSplitterBrush = FlexSplitterBrush
 End Function
 
+#If VBA7 Then
+Public Function FlexGetDragCursor(ByVal IDC As Long) As LongPtr
+#Else
+Public Function FlexGetDragCursor(ByVal IDC As Long) As Long
+#End If
+Dim hLib As LongPtr
+hLib = LoadLibrary(StrPtr("ole32.dll"))
+If hLib <> NULL_PTR Then
+    FlexGetDragCursor = LoadCursor(hLib, IDC)
+    FreeLibrary hLib
+End If
+End Function
+
 Private Function FlexWindowProc(ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
 Dim lCustData As LongPtr
 Select Case wMsg
