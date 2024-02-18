@@ -1,5 +1,9 @@
 List of revisions:
 
+18-Feb-2024
+- Combo list locked (not clickable) when it has no items.
+  This avoids release of mouse capture when clicking inside a no items drop-down list. Just like a ComboBox does.
+
 09-Feb-2024
 - Included enum FlexDirectionAfterReturnEdit/FlexEditReasonReturn.
   By this the edit mode is initiated by the return key, but only when shift state is 0.
