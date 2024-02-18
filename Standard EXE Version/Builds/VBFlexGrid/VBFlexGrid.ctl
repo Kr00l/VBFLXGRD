@@ -1068,6 +1068,7 @@ Attribute OLEStartDrag.VB_Description = "Occurs when an OLE drag/drop operation 
 #If VBA7 Then
 Private Declare PtrSafe Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare PtrSafe Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
+Private Declare PtrSafe Sub PostQuitMessage Lib "user32" (ByVal nExitCode As Long)
 Private Declare PtrSafe Sub DragAcceptFiles Lib "shell32" (ByVal hWnd As LongPtr, ByVal fAccept As Long)
 Private Declare PtrSafe Sub DragFinish Lib "shell32" (ByVal hDrop As LongPtr)
 Private Declare PtrSafe Sub VariantInit Lib "oleaut32" (ByRef pvarg As Any)
@@ -1083,6 +1084,8 @@ Private Declare PtrSafe Function SysReAllocString Lib "oleaut32" (ByVal pbString
 Private Declare PtrSafe Function LCMapString Lib "kernel32" Alias "LCMapStringW" (ByVal LCID As Long, ByVal dwMapFlags As Long, ByVal lpSrcStr As LongPtr, ByVal cchSrcStr As Long, ByVal lpDestStr As LongPtr, ByVal cchDestStr As Long) As Long
 Private Declare PtrSafe Function lstrcmp Lib "kernel32" Alias "lstrcmpW" (ByVal lpString1 As LongPtr, ByVal lpString2 As LongPtr) As Long
 Private Declare PtrSafe Function lstrcmpi Lib "kernel32" Alias "lstrcmpiW" (ByVal lpString1 As LongPtr, ByVal lpString2 As LongPtr) As Long
+Private Declare PtrSafe Function DispatchMessage Lib "user32" Alias "DispatchMessageW" (ByRef lpMsg As TMSG) As LongPtr
+Private Declare PtrSafe Function WaitMessage Lib "user32" () As Long
 Private Declare PtrSafe Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByRef lParam As Any) As LongPtr
 Private Declare PtrSafe Function PeekMessage Lib "user32" Alias "PeekMessageW" (ByRef lpMsg As TMSG, ByVal hWnd As LongPtr, ByVal wMsgFilterMin As Long, ByVal wMsgFilterMax As Long, ByVal wRemoveMsg As Long) As Long
 Private Declare PtrSafe Function PostMessage Lib "user32" Alias "PostMessageW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByRef lParam As Any) As LongPtr
@@ -1193,11 +1196,14 @@ Private Declare PtrSafe Function ReleaseCapture Lib "user32" () As Long
 Private Declare PtrSafe Function ImageList_GetIconSize Lib "comctl32" (ByVal hImageList As LongPtr, ByRef CX As Long, ByRef CY As Long) As Long
 Private Declare PtrSafe Function ImageList_GetImageCount Lib "comctl32" (ByVal hImageList As LongPtr) As Long
 Private Declare PtrSafe Function ImageList_Draw Lib "comctl32" (ByVal hImageList As LongPtr, ByVal ImgIndex As Long, ByVal hDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal fStyle As Long) As Long
+Private Declare PtrSafe Function SetTimer Lib "user32" (ByVal hWnd As LongPtr, ByVal nIDEvent As LongPtr, ByVal uElapse As Long, ByVal lpTimerFunc As LongPtr) As LongPtr
+Private Declare PtrSafe Function KillTimer Lib "user32" (ByVal hWnd As LongPtr, ByVal nIDEvent As LongPtr) As Long
 Private Declare PtrSafe Function DragQueryFile Lib "shell32" Alias "DragQueryFileW" (ByVal hDrop As LongPtr, ByVal iFile As Long, ByVal lpszFile As LongPtr, ByVal cch As Long) As Long
 Private Declare PtrSafe Function DragQueryPoint Lib "shell32" (ByVal hDrop As LongPtr, ByRef lpPoint As POINTAPI) As Long
 #Else
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
+Private Declare Sub PostQuitMessage Lib "user32" (ByVal nExitCode As Long)
 Private Declare Sub DragAcceptFiles Lib "shell32" (ByVal hWnd As Long, ByVal fAccept As Long)
 Private Declare Sub DragFinish Lib "shell32" (ByVal hDrop As Long)
 Private Declare Sub VariantInit Lib "oleaut32" (ByRef pvarg As Any)
@@ -1213,6 +1219,8 @@ Private Declare Function SysReAllocString Lib "oleaut32" (ByVal pbString As Long
 Private Declare Function LCMapString Lib "kernel32" Alias "LCMapStringW" (ByVal LCID As Long, ByVal dwMapFlags As Long, ByVal lpSrcStr As Long, ByVal cchSrcStr As Long, ByVal lpDestStr As Long, ByVal cchDestStr As Long) As Long
 Private Declare Function lstrcmp Lib "kernel32" Alias "lstrcmpW" (ByVal lpString1 As Long, ByVal lpString2 As Long) As Long
 Private Declare Function lstrcmpi Lib "kernel32" Alias "lstrcmpiW" (ByVal lpString1 As Long, ByVal lpString2 As Long) As Long
+Private Declare Function DispatchMessage Lib "user32" Alias "DispatchMessageW" (ByRef lpMsg As TMSG) As Long
+Private Declare Function WaitMessage Lib "user32" () As Long
 Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
 Private Declare Function PeekMessage Lib "user32" Alias "PeekMessageW" (ByRef lpMsg As TMSG, ByVal hWnd As Long, ByVal wMsgFilterMin As Long, ByVal wMsgFilterMax As Long, ByVal wRemoveMsg As Long) As Long
 Private Declare Function PostMessage Lib "user32" Alias "PostMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
@@ -1318,6 +1326,8 @@ Private Declare Function ReleaseCapture Lib "user32" () As Long
 Private Declare Function ImageList_GetIconSize Lib "comctl32" (ByVal hImageList As Long, ByRef CX As Long, ByRef CY As Long) As Long
 Private Declare Function ImageList_GetImageCount Lib "comctl32" (ByVal hImageList As Long) As Long
 Private Declare Function ImageList_Draw Lib "comctl32" (ByVal hImageList As Long, ByVal ImgIndex As Long, ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByVal fStyle As Long) As Long
+Private Declare Function SetTimer Lib "user32" (ByVal hWnd As Long, ByVal nIDEvent As Long, ByVal uElapse As Long, ByVal lpTimerFunc As Long) As Long
+Private Declare Function KillTimer Lib "user32" (ByVal hWnd As Long, ByVal nIDEvent As Long) As Long
 Private Declare Function DragQueryFile Lib "shell32" Alias "DragQueryFileW" (ByVal hDrop As Long, ByVal iFile As Long, ByVal lpszFile As Long, ByVal cch As Long) As Long
 Private Declare Function DragQueryPoint Lib "shell32" (ByVal hDrop As Long, ByRef lpPoint As POINTAPI) As Long
 #End If
@@ -1446,6 +1456,8 @@ Private Const SM_CXBORDER As Long = 5
 Private Const SM_CYBORDER As Long = 6
 Private Const SM_CXEDGE As Long = 45
 Private Const SM_CYEDGE As Long = 46
+Private Const SM_CXDRAG As Long = 68
+Private Const SM_CYDRAG As Long = 69
 Private Const SM_XVIRTUALSCREEN As Long = 76
 Private Const SM_YVIRTUALSCREEN As Long = 77
 Private Const SM_CXVIRTUALSCREEN As Long = 78
@@ -1607,6 +1619,8 @@ Private Const WM_SETFONT As Long = &H30
 Private Const WM_GETFONT As Long = &H31
 Private Const WM_SETREDRAW As Long = &HB
 Private Const WM_SIZE As Long = &H5
+Private Const WM_QUIT As Long = &H12
+Private Const WM_TIMER As Long = &H113
 Private Const WM_SETCURSOR As Long = &H20
 Private Const WM_CTLCOLOREDIT As Long = &H133
 Private Const WM_CTLCOLORSTATIC As Long = &H138
@@ -1623,7 +1637,8 @@ Private Const WM_NCMOUSEMOVE As Long = &HA0
 Private Const WM_NCMOUSELEAVE As Long = &H2A2
 Private Const WM_DRAWITEM As Long = &H2B, ODT_COMBOBOX As Long = &H3, ODT_BUTTON As Long = &H4, ODT_STATIC As Long = &H5
 Private Const WM_USER As Long = &H400
-Private Const UM_ENDINCREMENTALSEARCH As Long = (WM_USER + 1000)
+Private Const UM_CAPTURECHANGED As Long = (WM_USER + 1000)
+Private Const UM_ENDINCREMENTALSEARCH As Long = (WM_USER + 1001)
 Private Const TTM_ADDTOOLA As Long = (WM_USER + 4)
 Private Const TTM_ADDTOOLW As Long = (WM_USER + 50)
 Private Const TTM_ADDTOOL As Long = TTM_ADDTOOLW
@@ -1710,6 +1725,8 @@ Private VBFlexGridUniformRowHeight As Long
 Private VBFlexGridRow As Long, VBFlexGridCol As Long
 Private VBFlexGridRowSel As Long, VBFlexGridColSel As Long
 Private VBFlexGridTopRow As Long, VBFlexGridLeftCol As Long
+Private VBFlexGridDoDragRow As Long, VBFlexGridDoDragCol As Long
+Private VBFlexGridDoDragRowCol As Boolean
 Private VBFlexGridCapturePoint As POINTAPI
 Private VBFlexGridCaptureRow As Long, VBFlexGridCaptureCol As Long
 Private VBFlexGridCaptureHitResult As FlexHitResultConstants
@@ -2061,6 +2078,9 @@ With VBFlexGridDefaultColInfo
 .FixedCheckBoxAlignment = -1
 End With
 VBFlexGridUniformRowHeight = -1
+VBFlexGridDoDragRow = -1
+VBFlexGridDoDragCol = -1
+VBFlexGridDoDragRowCol = False
 VBFlexGridCaptureRow = -1
 VBFlexGridCaptureCol = -1
 VBFlexGridCaptureHitResult = FlexHitResultNoWhere
@@ -7166,6 +7186,26 @@ Attribute HitResult.VB_Description = "Returns the result returned from the last 
 Attribute HitResult.VB_MemberFlags = "400"
 HitResult = VBFlexGridHitResult
 End Property
+
+Public Function DragRow(ByVal Index As Long) As Long
+Attribute DragRow.VB_Description = "Begins a drag operation used to rearrange rows by dragging the specified row with the mouse to a new position."
+If (Index < PropFixedRows Or Index > (PropRows - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+If VBFlexGridDoDragRowCol = False Then
+    DragRow = DoDragRowCol(Index, -1)
+Else
+    Err.Raise 5
+End If
+End Function
+
+Public Function DragCol(ByVal Index As Long) As Long
+Attribute DragCol.VB_Description = "Begins a drag operation used to rearrange columns by dragging the specified column with the mouse to a new position."
+If (Index < PropFixedCols Or Index > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+If VBFlexGridDoDragRowCol = False Then
+    DragCol = DoDragRowCol(-1, Index)
+Else
+    Err.Raise 5
+End If
+End Function
 
 Public Property Get DropHighlight() As Long
 Attribute DropHighlight.VB_Description = "Returns/sets the row or column which is used to highlight the target of a drag/drop operation."
@@ -15114,6 +15154,17 @@ If ComboCueWidth > 0 Then
     Call ComboButtonDraw(iRow, iCol, DIS)
     SetViewportOrgEx DIS.hDC, P.X, P.Y, P
 End If
+If VBFlexGridDoDragRowCol = True Then
+    If VBFlexGridDoDragRow > -1 Then
+        If iRow = VBFlexGridDoDragRow Then
+            If iCol < PropFixedCols Then InvertRect hDC, CellRect: Exit Sub
+        End If
+    ElseIf VBFlexGridDoDragCol > -1 Then
+        If iCol = VBFlexGridDoDragCol Then
+            If iRow < PropFixedRows Then InvertRect hDC, CellRect: Exit Sub
+        End If
+    End If
+End If
 If VBFlexGridDropHighlight > -1 Then
     If VBFlexGridDropHighlightMode = FlexDropTargetModeByRow Then
         If iRow = VBFlexGridDropHighlight Then
@@ -21114,6 +21165,296 @@ Call SetRowColParams(RCP)
 End With
 End Sub
 
+Public Function DoDragRowCol(ByVal Row As Long, ByVal Col As Long) As Long
+If Row > -1 Then DoDragRowCol = Row Else If Col > -1 Then DoDragRowCol = Col
+If VBFlexGridHandle = NULL_PTR Then Exit Function
+Dim Button As Integer
+Button = GetMouseState()
+If (Button And vbLeftButton) = 0 And (Button And vbRightButton) = 0 Then Exit Function
+Dim P As POINTAPI, DX As Long, DY As Long, DragRect As RECT, WndRect As RECT, TrackIndex As Long, dwStyle As Long, dwExStyle As Long
+GetCursorPos P
+ScreenToClient VBFlexGridHandle, P
+DX = GetSystemMetrics(SM_CXDRAG)
+DY = GetSystemMetrics(SM_CYDRAG)
+DragRect.Left = P.X - DX
+DragRect.Right = P.X + DX
+DragRect.Top = P.Y - DY
+DragRect.Bottom = P.Y + DY
+GetWindowRect VBFlexGridHandle, WndRect
+MapWindowPoints HWND_DESKTOP, VBFlexGridHandle, WndRect, 2
+TrackIndex = DoDragRowCol
+dwStyle = GetWindowLong(VBFlexGridHandle, GWL_STYLE)
+dwExStyle = GetWindowLong(VBFlexGridHandle, GWL_EXSTYLE)
+Dim i As Long, CY1 As Long, CY2 As Long, CX1 As Long, CX2 As Long
+If Row > -1 Then
+    For i = 0 To ((PropFixedRows + PropFrozenRows) - 1)
+        CY1 = CY1 + GetRowHeight(i)
+    Next i
+    If (dwStyle And WS_HSCROLL) = WS_HSCROLL Then CY2 = GetSystemMetrics(SM_CYHSCROLL)
+ElseIf Col > -1 Then
+    For i = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+        CX1 = CX1 + GetColWidth(i)
+    Next i
+    If (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+        If (dwExStyle And WS_EX_LEFTSCROLLBAR) = WS_EX_LEFTSCROLLBAR Then
+            CX1 = CX1 + GetSystemMetrics(SM_CXVSCROLL)
+        Else
+            CX2 = GetSystemMetrics(SM_CXVSCROLL)
+        End If
+    End If
+End If
+SetCapture VBFlexGridHandle
+VBFlexGridDoDragRow = -1
+VBFlexGridDoDragCol = -1
+VBFlexGridDoDragRowCol = True
+Const PM_REMOVE As Long = &H1
+Const WM_KEYFIRST As Long = &H100, WM_KEYLAST As Long = &H108
+Const WM_MOUSEFIRST As Long = &H200, WM_MOUSELAST As Long = &H20E
+Const IDC_NODROP As Long = 1, IDC_MOVE As Long = 2
+#If VBA7 Then
+Const IDT_AUTOSCROLL As LongPtr = 1
+#Else
+Const IDT_AUTOSCROLL As Long = 1
+#End If
+Dim Msg As TMSG, Pos As Long, HTI As THITTESTINFO, Dragging As Boolean, NoDrop As Boolean, AutoScroll As Boolean, Success As Boolean, SplitterRect As RECT, hDC As LongPtr, hBmpOld As LongPtr
+Do
+    While PeekMessage(Msg, NULL_PTR, 0, 0, PM_REMOVE) <> 0
+        Select Case Msg.Message
+            Case WM_QUIT
+                ' Post the quit message to the outer message loop.
+                PostQuitMessage Msg.wParam
+                Exit Do
+            Case WM_TIMER
+                If Msg.wParam = IDT_AUTOSCROLL Then
+                    Pos = GetMessagePos()
+                    P.X = Get_X_lParam(Pos)
+                    P.Y = Get_Y_lParam(Pos)
+                    ScreenToClient VBFlexGridHandle, P
+                    LSet HTI.PT = P
+                    Call GetHitTestInfo(HTI)
+                    If Row > -1 Then
+                        If HTI.MouseRow >= PropFixedRows Then
+                            TrackIndex = HTI.MouseRow
+                        Else
+                            TrackIndex = PropFixedRows
+                        End If
+                    ElseIf Col > -1 Then
+                        If HTI.MouseCol >= PropFixedCols Then
+                            TrackIndex = HTI.MouseCol
+                        Else
+                            TrackIndex = PropFixedCols
+                        End If
+                    End If
+                    If NoDrop = False Then
+                        If Row > -1 Then
+                            If (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+                                If P.Y < ((16 * PixelsPerDIP_Y()) + CY1) Then
+                                    SendMessage VBFlexGridHandle, WM_VSCROLL, SB_LINEUP, ByVal 0&
+                                    AutoScroll = True
+                                ElseIf (UserControl.ScaleHeight - P.Y) < ((16 * PixelsPerDIP_Y()) + CY2) Then
+                                    SendMessage VBFlexGridHandle, WM_VSCROLL, SB_LINEDOWN, ByVal 0&
+                                    AutoScroll = True
+                                Else
+                                    AutoScroll = False
+                                End If
+                            End If
+                        ElseIf Col > -1 Then
+                            If (dwStyle And WS_HSCROLL) = WS_HSCROLL Then
+                                If P.X < ((16 * PixelsPerDIP_X()) + CX1) Then
+                                    SendMessage VBFlexGridHandle, WM_HSCROLL, SB_LINELEFT, ByVal 0&
+                                    AutoScroll = True
+                                ElseIf (UserControl.ScaleWidth - P.X) < ((16 * PixelsPerDIP_X()) + CX2) Then
+                                    SendMessage VBFlexGridHandle, WM_HSCROLL, SB_LINERIGHT, ByVal 0&
+                                    AutoScroll = True
+                                Else
+                                    AutoScroll = False
+                                End If
+                            End If
+                        End If
+                    Else
+                        AutoScroll = False
+                    End If
+                    If AutoScroll = True Then
+                        SetTimer VBFlexGridHandle, IDT_AUTOSCROLL, 50, NULL_PTR
+                    Else
+                        KillTimer VBFlexGridHandle, IDT_AUTOSCROLL
+                    End If
+                    Call RedrawGrid
+                Else
+                    DispatchMessage Msg
+                End If
+            Case WM_KEYFIRST To WM_KEYLAST
+                Select Case Msg.Message
+                    Case WM_KEYDOWN
+                        If (CLng(Msg.wParam) And &HFF&) = vbKeyEscape Then ReleaseCapture
+                End Select
+            Case WM_MOUSEFIRST To WM_MOUSELAST
+                Select Case Msg.Message
+                    Case WM_MOUSEMOVE
+                        P.X = Get_X_lParam(Msg.lParam)
+                        P.Y = Get_Y_lParam(Msg.lParam)
+                        If Dragging = False Then
+                            If PtInRect(DragRect, P.X, P.Y) = 0 Then
+                                Dragging = True
+                                If PtInRect(WndRect, P.X, P.Y) <> 0 Then
+                                    SetCursor FlexGetDragCursor(IDC_MOVE)
+                                Else
+                                    SetCursor FlexGetDragCursor(IDC_NODROP)
+                                    NoDrop = True
+                                End If
+                                VBFlexGridDoDragRow = Row
+                                VBFlexGridDoDragCol = Col
+                            End If
+                        Else
+                            LSet HTI.PT = P
+                            Call GetHitTestInfo(HTI)
+                            If Row > -1 Then
+                                If HTI.MouseRow >= PropFixedRows Then
+                                    TrackIndex = HTI.MouseRow
+                                Else
+                                    TrackIndex = PropFixedRows
+                                End If
+                            ElseIf Col > -1 Then
+                                If HTI.MouseCol >= PropFixedCols Then
+                                    TrackIndex = HTI.MouseCol
+                                Else
+                                    TrackIndex = PropFixedCols
+                                End If
+                            End If
+                            If NoDrop = False Then
+                                If PtInRect(WndRect, P.X, P.Y) = 0 Then
+                                    SetCursor FlexGetDragCursor(IDC_NODROP)
+                                    NoDrop = True
+                                End If
+                            Else
+                                If PtInRect(WndRect, P.X, P.Y) <> 0 Then
+                                    SetCursor FlexGetDragCursor(IDC_MOVE)
+                                    NoDrop = False
+                                End If
+                            End If
+                            If NoDrop = False Then
+                                If Row > -1 Then
+                                    If (dwStyle And WS_VSCROLL) = WS_VSCROLL Then
+                                        If P.Y < ((16 * PixelsPerDIP_Y()) + CY1) Then
+                                            SendMessage VBFlexGridHandle, WM_VSCROLL, SB_LINEUP, ByVal 0&
+                                            AutoScroll = True
+                                        ElseIf (UserControl.ScaleHeight - P.Y) < ((16 * PixelsPerDIP_Y()) + CY2) Then
+                                            SendMessage VBFlexGridHandle, WM_VSCROLL, SB_LINEDOWN, ByVal 0&
+                                            AutoScroll = True
+                                        Else
+                                            AutoScroll = False
+                                        End If
+                                    End If
+                                ElseIf Col > -1 Then
+                                    If (dwStyle And WS_HSCROLL) = WS_HSCROLL Then
+                                        If P.X < ((16 * PixelsPerDIP_X()) + CX1) Then
+                                            SendMessage VBFlexGridHandle, WM_HSCROLL, SB_LINELEFT, ByVal 0&
+                                            AutoScroll = True
+                                        ElseIf (UserControl.ScaleWidth - P.X) < ((16 * PixelsPerDIP_X()) + CX2) Then
+                                            SendMessage VBFlexGridHandle, WM_HSCROLL, SB_LINERIGHT, ByVal 0&
+                                            AutoScroll = True
+                                        Else
+                                            AutoScroll = False
+                                        End If
+                                    End If
+                                End If
+                            Else
+                                AutoScroll = False
+                            End If
+                            If AutoScroll = True Then
+                                SetTimer VBFlexGridHandle, IDT_AUTOSCROLL, 50, NULL_PTR
+                            Else
+                                KillTimer VBFlexGridHandle, IDT_AUTOSCROLL
+                            End If
+                        End If
+                        Call RedrawGrid
+                    Case WM_LBUTTONUP
+                        Success = CBool((Button And vbLeftButton) <> 0)
+                        ReleaseCapture
+                    Case WM_RBUTTONUP
+                        Success = CBool((Button And vbRightButton) <> 0)
+                        ReleaseCapture
+                    Case WM_MOUSEWHEEL, WM_MOUSEHWHEEL
+                    Case Else
+                        ReleaseCapture
+                End Select
+            Case UM_CAPTURECHANGED
+                Exit Do
+            Case WM_PAINT
+                DispatchMessage Msg
+                If Msg.hWnd = VBFlexGridHandle And Msg.wParam = 0 Then
+                    If Dragging = True And NoDrop = False Then
+                        P.X = 0
+                        P.Y = 0
+                        If Row > -1 Then
+                            If TrackIndex >= (PropFixedRows + PropFrozenRows) Then
+                                For i = 0 To ((PropFixedRows + PropFrozenRows) - 1)
+                                    P.Y = P.Y + GetRowHeight(i)
+                                Next i
+                                For i = VBFlexGridTopRow To (TrackIndex - 1)
+                                    P.Y = P.Y + GetRowHeight(i)
+                                Next i
+                            Else
+                                For i = 0 To (PropFixedRows - 1)
+                                    P.Y = P.Y + GetRowHeight(i)
+                                Next i
+                                For i = PropFixedRows To (TrackIndex - 1)
+                                    P.Y = P.Y + GetRowHeight(i)
+                                Next i
+                            End If
+                        ElseIf Col > -1 Then
+                            If TrackIndex >= (PropFixedCols + PropFrozenCols) Then
+                                For i = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+                                    P.X = P.X + GetColWidth(i)
+                                Next i
+                                For i = VBFlexGridLeftCol To (TrackIndex - 1)
+                                    P.X = P.X + GetColWidth(i)
+                                Next i
+                            Else
+                                For i = 0 To (PropFixedCols - 1)
+                                    P.X = P.X + GetColWidth(i)
+                                Next i
+                                For i = PropFixedCols To (TrackIndex - 1)
+                                    P.X = P.X + GetColWidth(i)
+                                Next i
+                            End If
+                        End If
+                        LSet SplitterRect = VBFlexGridClientRect
+                        With SplitterRect
+                        If Row > -1 Then
+                            .Top = P.Y - 1
+                            .Bottom = P.Y + 1
+                        ElseIf Col > -1 Then
+                            .Left = P.X - 1
+                            .Right = P.X + 1
+                        End If
+                        End With
+                        hDC = GetDC(VBFlexGridHandle)
+                        If hDC <> NULL_PTR Then
+                            hBmpOld = SelectObject(hDC, FlexGetSplitterBrush())
+                            With SplitterRect
+                            PatBlt hDC, .Left, .Top, .Right - .Left, .Bottom - .Top, vbPatInvert
+                            End With
+                            SelectObject hDC, hBmpOld
+                            ReleaseDC VBFlexGridHandle, hDC
+                            hDC = NULL_PTR
+                        End If
+                    End If
+                End If
+            Case Else
+                DispatchMessage Msg
+        End Select
+    Wend
+    WaitMessage
+Loop
+If AutoScroll = True Then KillTimer VBFlexGridHandle, IDT_AUTOSCROLL
+If Success = True Then DoDragRowCol = TrackIndex
+VBFlexGridDoDragRow = -1
+VBFlexGridDoDragCol = -1
+VBFlexGridDoDragRowCol = False
+Call RedrawGrid
+End Function
+
 Private Sub StartIncrementalSearch(ByVal CharCode As Long)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
 If VBFlexGridIncrementalSearch.CancellationPending = True Then Exit Sub
@@ -23376,6 +23717,7 @@ Select Case wMsg
             If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then Call CancelIncrementalSearch
         End If
     Case WM_CAPTURECHANGED
+        If VBFlexGridDoDragRowCol = True Then PostMessage hWnd, UM_CAPTURECHANGED, wParam, ByVal lParam
         VBFlexGridCapturePoint.X = 0
         VBFlexGridCapturePoint.Y = 0
         VBFlexGridCaptureRow = -1
