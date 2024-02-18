@@ -328,8 +328,7 @@ Private Const CLSID_StandardFontPage As String = "{7EBDAAE0-8120-11CF-899F-00AA0
 Private PropCellBackColor As OLE_COLOR, PropCellForeColor As OLE_COLOR
 Private PropCellFont As StdFont
 Attribute PropCellFont.VB_VarHelpID = -1
-Private PropDragRowColActive As Boolean, PropDragRowColX As Single, PropDragRowColY As Single
-Private PropDragRowDragging As Boolean, PropDragColDragging As Boolean
+Private PropDragRowColActive As Boolean
 Private PropInsertRowDragging As Boolean
 
 Public Property Get CellBackColor() As OLE_COLOR
@@ -684,9 +683,7 @@ End If
 Dim DataString As String
 DataString = VarToStr(Data.GetData(vbCFRTF))
 If DataString = VBFlexGrid1.Name Or DataString = Picture2.Name Then
-    If PropDragRowDragging = True Or PropDragColDragging = True Then
-        Effect = vbDropEffectMove
-    ElseIf PropInsertRowDragging = True Then
+    If PropInsertRowDragging = True Then
         Effect = vbDropEffectCopy Or vbDropEffectMove
     Else
         Effect = vbDropEffectNone
@@ -697,23 +694,7 @@ Else
     Exit Sub
 End If
 If State = vbOver Then
-    If PropDragRowDragging = True Then
-        With VBFlexGrid1
-        If .MouseRow >= .FixedRows Then
-            .DropHighlight = .MouseRow
-        Else
-            .DropHighlight = .FixedRows
-        End If
-        End With
-    ElseIf PropDragColDragging = True Then
-        With VBFlexGrid1
-        If .MouseCol >= .FixedCols Then
-            .DropHighlight = .MouseCol
-        Else
-            .DropHighlight = .FixedCols
-        End If
-        End With
-    ElseIf PropInsertRowDragging = True Then
+    If PropInsertRowDragging = True Then
         Dim HitInsertMark As Long, After As Boolean
         With VBFlexGrid1
         HitInsertMark = .HitTestInsertMark(X, Y, After)
@@ -725,13 +706,7 @@ If State = vbOver Then
         End With
     End If
 ElseIf State = vbLeave Then
-    If PropDragRowDragging = True Then
-        VBFlexGrid1.DropHighlight = -1
-    ElseIf PropDragColDragging = True Then
-        VBFlexGrid1.DropHighlight = -1
-    ElseIf PropInsertRowDragging = True Then
-        VBFlexGrid1.InsertMark = -1
-    End If
+    If PropInsertRowDragging = True Then VBFlexGrid1.InsertMark = -1
 End If
 End Sub
 
@@ -740,35 +715,7 @@ If Data.GetFormat(vbCFRTF) = False Then Exit Sub
 Dim DataString As String
 DataString = VarToStr(Data.GetData(vbCFRTF))
 If DataString = VBFlexGrid1.Name Or DataString = Picture2.Name Then
-    If PropDragRowDragging = True Then
-        With VBFlexGrid1
-        If .MouseRow >= .FixedRows Then
-            .RowPosition(.Row) = .MouseRow
-            .Col = .FixedCols
-            .Row = .MouseRow
-        Else
-            .RowPosition(.Row) = .FixedRows
-            .Col = .FixedCols
-            .Row = .FixedRows
-        End If
-        .DropHighlight = -1
-        End With
-        PropDragRowDragging = False
-    ElseIf PropDragColDragging = True Then
-        With VBFlexGrid1
-        If .MouseCol >= .FixedCols Then
-            .ColPosition(.Col) = .MouseCol
-            .Col = .MouseCol
-            .Row = .FixedRows
-        Else
-            .ColPosition(.Col) = .FixedCols
-            .Col = .FixedCols
-            .Row = .FixedRows
-        End If
-        .DropHighlight = -1
-        End With
-        PropDragColDragging = False
-    ElseIf PropInsertRowDragging = True Then
+    If PropInsertRowDragging = True Then
         Dim HitInsertMark As Long, After As Boolean
         With VBFlexGrid1
         HitInsertMark = .HitTestInsertMark(X, Y, After)
@@ -784,52 +731,19 @@ If DataString = VBFlexGrid1.Name Or DataString = Picture2.Name Then
 End If
 End Sub
 
-Private Sub VBFlexGrid1_OLECompleteDrag(Effect As Long)
-PropDragRowDragging = False
-PropDragColDragging = False
-VBFlexGrid1.OLEDragDropScrollOrientation = FlexScrollOrientationBoth
-End Sub
-
-Private Sub VBFlexGrid1_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub VBFlexGrid1_BeforeMouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single, Cancel As Boolean)
 With VBFlexGrid1
-If PropDragRowColActive = True And (Shift And vbAltMask) = vbAltMask Then
+If PropDragRowColActive = True And Button = vbLeftButton And (Shift And vbAltMask) = vbAltMask Then
     .HitTest X, Y
     If .HitResult = FlexHitResultCell Then
         If .HitCol < .FixedCols And .HitRow >= .FixedRows Then
-            PropDragRowDragging = True
-            PropDragRowColX = X
-            PropDragRowColY = Y
+            VBFlexGrid1.RowPosition(.HitRow) = VBFlexGrid1.DragRow(.HitRow)
+            Cancel = True
         ElseIf .HitCol >= .FixedCols And .HitRow < .FixedRows Then
-            PropDragColDragging = True
-            PropDragRowColX = X
-            PropDragRowColY = Y
+            VBFlexGrid1.ColPosition(.HitCol) = VBFlexGrid1.DragCol(.HitCol)
+            Cancel = True
         End If
     End If
 End If
 End With
-End Sub
-
-Private Sub VBFlexGrid1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
-If PropDragRowDragging = True And (PropDragRowColX <> X Or PropDragRowColY <> Y) Then
-    With VBFlexGrid1
-    .Col = 0
-    .Row = .MouseRow
-    .DropHighlightMode = FlexDropTargetModeByRow
-    .OLEDragDropScrollOrientation = FlexScrollOrientationVertical
-    .OLEDrag
-    End With
-ElseIf PropDragColDragging = True And (PropDragRowColX <> X Or PropDragRowColY <> Y) Then
-    With VBFlexGrid1
-    .Col = .MouseCol
-    .Row = 0
-    .DropHighlightMode = FlexDropTargetModeByColumn
-    .OLEDragDropScrollOrientation = FlexScrollOrientationHorizontal
-    .OLEDrag
-    End With
-End If
-End Sub
-
-Private Sub VBFlexGrid1_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
-PropDragRowDragging = False
-PropDragColDragging = False
 End Sub
