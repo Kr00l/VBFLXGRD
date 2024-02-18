@@ -4,7 +4,7 @@ List of revisions:
 - Included the DragRow/DragCol function used to rearrange rows/cols by dragging the specified row/col with the mouse to a new position.
   To note is that this is NOT an OLE drag/drop operation and the function will enter a modal message loop to just return the new moved position.
   Example code: .RowPosition(i) = .DragRow(i)
-  The demo project is updated to use this new internal function.
+  The demo project is updated to use this new function.
 - Combo list locked (not clickable) when it has no items.
   This avoids release of mouse capture when clicking inside a no items drop-down list. Just like a ComboBox does.
 
