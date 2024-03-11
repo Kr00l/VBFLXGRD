@@ -83,6 +83,7 @@ Private FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection, FlexClipPasteMo
 Private FlexClipboardActionCopy, FlexClipboardActionCut, FlexClipboardActionPaste, FlexClipboardActionDelete
 Private FlexFindMatchExact, FlexFindMatchPartial, FlexFindMatchStartsWith, FlexFindMatchEndsWith
 Private FlexFindDirectionDown, FlexFindDirectionUp, FlexFindDirectionRight, FlexFindDirectionLeft
+Private FlexLookupConvValue, FlexLookupConvKey
 Private FlexIMEModeNoControl, FlexIMEModeOn, FlexIMEModeOff, FlexIMEModeDisable, FlexIMEModeHiragana, FlexIMEModeKatakana, FlexIMEModeKatakanaHalf, FlexIMEModeAlphaFull, FlexIMEModeAlpha, FlexIMEModeHangulFull, FlexIMEModeHangul
 Private FlexEditReasonCode, FlexEditReasonF2, FlexEditReasonSpace, FlexEditReasonKeyPress, FlexEditReasonDblClick, FlexEditReasonBackSpace, FlexEditReasonReturn, FlexEditReasonComboCueClick, FlexEditReasonComboCueDblClick, FlexEditReasonComboCueF4, FlexEditReasonComboCueAltUpDown
 Private FlexEditCloseModeCode, FlexEditCloseModeLostFocus, FlexEditCloseModeEscape, FlexEditCloseModeReturn, FlexEditCloseModeTab, FlexEditCloseModeShiftTab, FlexEditCloseModeNavigationKey
@@ -422,6 +423,10 @@ FlexFindDirectionDown = 0
 FlexFindDirectionUp = 1
 FlexFindDirectionRight = 2
 FlexFindDirectionLeft = 3
+End Enum
+Public Enum FlexLookupConvConstants
+FlexLookupConvValue = 0
+FlexLookupConvKey = 1
 End Enum
 Public Enum FlexIMEModeConstants
 FlexIMEModeNoControl = 0
@@ -12195,6 +12200,42 @@ If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then E
 Dim Pixels As Long
 Pixels = GetTextSize(Row, Col, Text).CY
 If Pixels > 0 Then TextHeight = UserControl.ScaleY(Pixels, vbPixels, vbTwips)
+End Function
+
+Public Function LookupConv(ByVal Text As String, ByVal Conversion As FlexLookupConvConstants, Optional ByVal Col As Long = -1) As String
+Attribute LookupConv.VB_Description = "Returns a converted lookup of the current or a specified column."
+Select Case Conversion
+    Case FlexLookupConvValue, FlexLookupConvKey
+    Case Else
+        Err.Raise 380
+End Select
+If Col < -1 Then Err.Raise 380
+If Col = -1 Then Col = VBFlexGridCol
+If Col < 0 Or Col > (PropCols - 1) Then Err.Raise Number:=381, Description:="Subscript out of range"
+With VBFlexGridColsInfo(Col)
+If .Lookup.Count > 0 Then
+    Dim i As Long
+    If Conversion = FlexLookupConvValue Then
+        Dim Hash As Long
+        Hash = CalcHash(Text)
+        For i = 0 To (.Lookup.Count - 1)
+            If .Lookup.Items(i).Hash = Hash Then
+                If StrComp(.Lookup.Items(i).Key, Text, vbTextCompare) = 0 Then
+                    LookupConv = .Lookup.Items(i).Value
+                    Exit For
+                End If
+            End If
+        Next i
+    ElseIf Conversion = FlexLookupConvKey Then
+        For i = 0 To (.Lookup.Count - 1)
+            If StrComp(.Lookup.Items(i).Value, Text) = 0 Then
+                LookupConv = .Lookup.Items(i).Key
+                Exit For
+            End If
+        Next i
+    End If
+End If
+End With
 End Function
 
 Public Property Get Picture() As IPictureDisp
