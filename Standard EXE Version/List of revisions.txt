@@ -1,5 +1,9 @@
 List of revisions:
 
+11-Mar-2024
+- Included the LookupConv function which returns a converted lookup string of the current or a specified column.
+  Use either FlexLookupConvValue or FlexLookupConvKey. (new enum)
+
 18-Feb-2024
 - Included the DragRow/DragCol function used to rearrange rows/cols by dragging the specified row/col with the mouse to a new position.
   To note is that this is NOT an OLE drag/drop operation and the function will enter a modal message loop to just return the new moved position.
