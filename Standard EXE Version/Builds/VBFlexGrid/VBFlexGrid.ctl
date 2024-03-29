@@ -69,6 +69,7 @@ Private FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
 Private FlexPictureTypeColor, FlexPictureTypeMonochrome
 Private FlexEllipsisFormatNone, FlexEllipsisFormatEnd, FlexEllipsisFormatPath, FlexEllipsisFormatWord
 Private FlexWordWrapNone, FlexWordBreak, FlexSingleLine, FlexEndEllipsis, FlexPathEllipsis, FlexWordEllipsis, FlexWordBreakEndEllipsis, FlexWordBreakPathEllipsis, FlexWordBreakWordEllipsis, FlexSingleLineEndEllipsis, FlexSingleLinePathEllipsis, FlexSingleLineWordEllipsis
+Private FlexMimicTextBoxOn, FlexMimicTextBoxOff
 Private FlexClearEverywhere, FlexClearFixed, FlexClearScrollable, FlexClearMovable, FlexClearFrozen, FlexClearSelection, FlexClearClip
 Private FlexClearEverything, FlexClearText, FlexClearFormatting, FlexClearTag
 Private FlexTabControls, FlexTabCells, FlexTabNext
@@ -309,6 +310,10 @@ FlexWordBreakWordEllipsis = 8
 FlexSingleLineEndEllipsis = 9
 FlexSingleLinePathEllipsis = 10
 FlexSingleLineWordEllipsis = 11
+End Enum
+Public Enum FlexMimicTextBoxConstants
+FlexMimicTextBoxOn = 0
+FlexMimicTextBoxOff = 1
 End Enum
 Public Enum FlexClearWhereConstants
 FlexClearEverywhere = 0
@@ -880,6 +885,8 @@ FixedAlignment As FlexAlignmentConstants
 ImageList As TIMAGELIST
 WordWrapOption As FlexWordWrapOptions
 WordWrapOptionFixed As FlexWordWrapOptions
+MimicTextBox As FlexMimicTextBoxConstants
+MimicTextBoxFixed As FlexMimicTextBoxConstants
 Sort As FlexSortConstants
 SortArrow As FlexSortArrowConstants
 SortArrowAlignment As FlexLeftRightAlignmentConstants
@@ -1487,6 +1494,7 @@ Private Const DT_VCENTER As Long = &H4
 Private Const DT_BOTTOM As Long = &H8
 Private Const DT_WORDBREAK As Long = &H10
 Private Const DT_SINGLELINE As Long = &H20
+Private Const DT_EDITCONTROL As Long = &H2000
 Private Const DT_PATH_ELLIPSIS As Long = &H4000
 Private Const DT_END_ELLIPSIS As Long = &H8000&
 Private Const DT_WORD_ELLIPSIS As Long = &H40000
@@ -1892,6 +1900,7 @@ Private PropWordWrap As Boolean
 Private PropSingleLine As Boolean
 Private PropEllipsisFormat As FlexEllipsisFormatConstants
 Private PropEllipsisFormatFixed As FlexEllipsisFormatConstants
+Private PropMimicTextBox As Boolean
 Private PropRedraw As Boolean
 Private PropDoubleBuffer As Boolean
 Private PropTabBehavior As FlexTabBehaviorConstants
@@ -2075,6 +2084,8 @@ With VBFlexGridDefaultColInfo
 .FixedAlignment = -1
 .WordWrapOption = -1
 .WordWrapOptionFixed = -1
+.MimicTextBox = -1
+.MimicTextBoxFixed = -1
 .SortArrowAlignment = FlexLeftRightAlignmentRight
 .SortArrowColor = -1
 .ComboButtonAlignment = -1
@@ -2221,6 +2232,7 @@ PropWordWrap = False
 PropSingleLine = False
 PropEllipsisFormat = FlexEllipsisFormatNone
 PropEllipsisFormatFixed = FlexEllipsisFormatNone
+PropMimicTextBox = False
 PropRedraw = True
 PropDoubleBuffer = True
 PropTabBehavior = FlexTabControls
@@ -2334,6 +2346,7 @@ PropWordWrap = .ReadProperty("WordWrap", False)
 PropSingleLine = .ReadProperty("SingleLine", False)
 PropEllipsisFormat = .ReadProperty("EllipsisFormat", FlexEllipsisFormatNone)
 PropEllipsisFormatFixed = .ReadProperty("EllipsisFormatFixed", FlexEllipsisFormatNone)
+PropMimicTextBox = .ReadProperty("MimicTextBox", False)
 PropRedraw = .ReadProperty("Redraw", True)
 PropDoubleBuffer = .ReadProperty("DoubleBuffer", True)
 PropTabBehavior = .ReadProperty("TabBehavior", FlexTabControls)
@@ -2443,6 +2456,7 @@ With PropBag
 .WriteProperty "SingleLine", PropSingleLine, False
 .WriteProperty "EllipsisFormat", PropEllipsisFormat, FlexEllipsisFormatNone
 .WriteProperty "EllipsisFormatFixed", PropEllipsisFormatFixed, FlexEllipsisFormatNone
+.WriteProperty "MimicTextBox", PropMimicTextBox, False
 .WriteProperty "Redraw", PropRedraw, True
 .WriteProperty "DoubleBuffer", PropDoubleBuffer, True
 .WriteProperty "TabBehavior", PropTabBehavior, FlexTabControls
@@ -4747,6 +4761,17 @@ Select Case Value
 End Select
 Call RedrawGrid
 UserControl.PropertyChanged "EllipsisFormatFixed"
+End Property
+
+Public Property Get MimicTextBox() As Boolean
+Attribute MimicTextBox.VB_Description = "Returns/sets a value that determines whether or not to mimic the text-displaying characteristics of a multiline text box. This includes to break on characters instead on words. This is only meaningful if the word wrap property is set to true."
+MimicTextBox = PropMimicTextBox
+End Property
+
+Public Property Let MimicTextBox(ByVal Value As Boolean)
+PropMimicTextBox = Value
+Call RedrawGrid
+UserControl.PropertyChanged "MimicTextBox"
 End Property
 
 Public Property Get Redraw() As Boolean
@@ -7592,7 +7617,7 @@ Else
     Else
         For i = 0 To (PropRows - 1)
             With VBFlexGridCells.Rows(i).RowInfo
-            If (.State And RWIS_NOSIZING) = 0 Then .State = .State Or CLIS_NOSIZING
+            If (.State And RWIS_NOSIZING) = 0 Then .State = .State Or RWIS_NOSIZING
             End With
         Next i
     End If
@@ -8284,6 +8309,72 @@ Else
     Dim i As Long
     For i = 0 To (PropCols - 1)
         VBFlexGridColsInfo(i).WordWrapOptionFixed = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get ColMimicTextBox(ByVal Index As Long) As FlexMimicTextBoxConstants
+Attribute ColMimicTextBox.VB_Description = "Returns/sets a value that determines whether or not to mimic the text-displaying characteristics of a multiline text box for the specified column. This includes to break on characters instead on words. This is only meaningful if the word wrap property is set to true."
+Attribute ColMimicTextBox.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If VBFlexGridColsInfo(Index).MimicTextBox = -1 Then
+    If PropMimicTextBox = True Then
+        ColMimicTextBox = FlexMimicTextBoxOn
+    Else
+        ColMimicTextBox = FlexMimicTextBoxOff
+    End If
+Else
+    ColMimicTextBox = VBFlexGridColsInfo(Index).MimicTextBox
+End If
+End Property
+
+Public Property Let ColMimicTextBox(ByVal Index As Long, ByVal Value As FlexMimicTextBoxConstants)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Select Case Value
+    Case -1, FlexMimicTextBoxOn, FlexMimicTextBoxOff
+    Case Else
+        Err.Raise 380
+End Select
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).MimicTextBox = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).MimicTextBox = Value
+    Next i
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get ColMimicTextBoxFixed(ByVal Index As Long) As FlexMimicTextBoxConstants
+Attribute ColMimicTextBoxFixed.VB_Description = "Returns/sets a value that determines whether or not to mimic the text-displaying characteristics of a multiline text box for the specified column. This includes to break on characters instead on words. This is only meaningful if the word wrap property is set to true."
+Attribute ColMimicTextBoxFixed.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If VBFlexGridColsInfo(Index).MimicTextBoxFixed = -1 Then
+    If PropMimicTextBox = True Then
+        ColMimicTextBoxFixed = FlexMimicTextBoxOn
+    Else
+        ColMimicTextBoxFixed = FlexMimicTextBoxOff
+    End If
+Else
+    ColMimicTextBoxFixed = VBFlexGridColsInfo(Index).MimicTextBoxFixed
+End If
+End Property
+
+Public Property Let ColMimicTextBoxFixed(ByVal Index As Long, ByVal Value As FlexMimicTextBoxConstants)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Select Case Value
+    Case -1, FlexMimicTextBoxOn, FlexMimicTextBoxOff
+    Case Else
+        Err.Raise 380
+End Select
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).MimicTextBoxFixed = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).MimicTextBoxFixed = Value
     Next i
 End If
 Call RedrawGrid
@@ -15112,6 +15203,11 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
                 DrawFlags = DrawFlags Or DT_SINGLELINE Or DT_WORD_ELLIPSIS
         End Select
     End If
+    If VBFlexGridColsInfo(iCol).MimicTextBoxFixed = -1 Then
+        If PropMimicTextBox = True Then DrawFlags = DrawFlags Or DT_EDITCONTROL
+    Else
+        If VBFlexGridColsInfo(iCol).MimicTextBoxFixed = FlexMimicTextBoxOn Then DrawFlags = DrawFlags Or DT_EDITCONTROL
+    End If
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
         Select Case Alignment
@@ -15800,6 +15896,11 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
             Case FlexSingleLineWordEllipsis
                 DrawFlags = DrawFlags Or DT_SINGLELINE Or DT_WORD_ELLIPSIS
         End Select
+    End If
+    If VBFlexGridColsInfo(iCol).MimicTextBox = -1 Then
+        If PropMimicTextBox = True Then DrawFlags = DrawFlags Or DT_EDITCONTROL
+    Else
+        If VBFlexGridColsInfo(iCol).MimicTextBox = FlexMimicTextBoxOn Then DrawFlags = DrawFlags Or DT_EDITCONTROL
     End If
     If Not (DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
         Dim CalcRect As RECT, Height As Long, Result As Long
@@ -17026,6 +17127,19 @@ If hDC <> NULL_PTR Then
             End If
         End If
         ' Ellipsis format will be ignored.
+        If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
+            If VBFlexGridColsInfo(iCol).MimicTextBox = -1 Then
+                If PropMimicTextBox = True Then DrawFlags = DrawFlags Or DT_EDITCONTROL
+            Else
+                If VBFlexGridColsInfo(iCol).MimicTextBox = FlexMimicTextBoxOn Then DrawFlags = DrawFlags Or DT_EDITCONTROL
+            End If
+        Else
+            If VBFlexGridColsInfo(iCol).MimicTextBoxFixed = -1 Then
+                If PropMimicTextBox = True Then DrawFlags = DrawFlags Or DT_EDITCONTROL
+            Else
+                If VBFlexGridColsInfo(iCol).MimicTextBoxFixed = FlexMimicTextBoxOn Then DrawFlags = DrawFlags Or DT_EDITCONTROL
+            End If
+        End If
         If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
             Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
             Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
@@ -18018,6 +18132,19 @@ If hDC <> NULL_PTR Then
         End If
     End If
     ' Ellipsis format will be ignored.
+    If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
+        If VBFlexGridColsInfo(iCol).MimicTextBox = -1 Then
+            If PropMimicTextBox = True Then DrawFlags = DrawFlags Or DT_EDITCONTROL
+        Else
+            If VBFlexGridColsInfo(iCol).MimicTextBox = FlexMimicTextBoxOn Then DrawFlags = DrawFlags Or DT_EDITCONTROL
+        End If
+    Else
+        If VBFlexGridColsInfo(iCol).MimicTextBoxFixed = -1 Then
+            If PropMimicTextBox = True Then DrawFlags = DrawFlags Or DT_EDITCONTROL
+        Else
+            If VBFlexGridColsInfo(iCol).MimicTextBoxFixed = FlexMimicTextBoxOn Then DrawFlags = DrawFlags Or DT_EDITCONTROL
+        End If
+    End If
     If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSortArrows And iRow < PropFixedRows Then
         Dim SortArrowCalcSize As SIZEAPI, SortArrowDrawSize As SIZEAPI, SortArrowClientSize As SIZEAPI
         Call GetColSortArrowMetrics(hDC, SortArrowCalcSize, SortArrowDrawSize, SortArrowClientSize)
