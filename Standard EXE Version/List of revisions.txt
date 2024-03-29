@@ -1,5 +1,11 @@
 List of revisions:
 
+29-Mar-2024
+- Included the MimicTextBox and ColMimicTextBox/ColMimicTextBoxFixed property. (Defaults to False)
+  DT_EDITCONTROL will mimic the text-displaying characteristics of a multiline text box. This includes to break on characters instead on words.
+  This is only meaningful if the word wrap property is set to true.
+  The main benefit is to have no drawing difference anymore when editing a cell.
+
 11-Mar-2024
 - Included the LookupConv function which returns a converted lookup string of the current or a specified column.
   Use either FlexLookupConvValue or FlexLookupConvKey. (new enum)
