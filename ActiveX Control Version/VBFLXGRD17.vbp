@@ -22,7 +22,7 @@ Description="VB FlexGrid Control 1.7"
 CompatibleMode="0"
 MajorVer=1
 MinorVer=7
-RevisionVer=28
+RevisionVer=29
 AutoIncrementVer=0
 ServerSupportFiles=0
 CondComp="VBFLXGRD_OCX = 1"
