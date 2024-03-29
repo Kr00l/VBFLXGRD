@@ -9,6 +9,15 @@ Begin VB.PropertyPage PPVBFlexGridStyle
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   8820
    ScaleWidth      =   6450
+   Begin VB.CheckBox CheckMimicTextBox 
+      Alignment       =   1  'Right Justify
+      Caption         =   "MimicTextBox"
+      Height          =   285
+      Left            =   120
+      TabIndex        =   32
+      Top             =   4155
+      Width           =   1770
+   End
    Begin VB.ComboBox ComboBestFitMode 
       Height          =   315
       Left            =   1680
@@ -57,8 +66,8 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Left            =   1680
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   33
-      Top             =   4200
+      TabIndex        =   34
+      Top             =   4560
       Width           =   4515
    End
    Begin VB.ComboBox ComboEllipsisFormatFixed 
@@ -182,8 +191,8 @@ Begin VB.PropertyPage PPVBFlexGridStyle
       Caption         =   "FormatString:"
       Height          =   240
       Left            =   120
-      TabIndex        =   32
-      Top             =   4200
+      TabIndex        =   33
+      Top             =   4560
       Width           =   1530
    End
    Begin VB.Label LabelEllipsisFormatFixed 
@@ -450,6 +459,7 @@ With PropertyPage.SelectedControls(0)
 .FixGridLineOffsets = CBool(CheckFixGridLineOffsets.Value = vbChecked)
 .MirrorAlignGeneral = CBool(CheckMirrorAlignGeneral.Value = vbChecked)
 .WordWrap = CBool(CheckWordWrap.Value = vbChecked)
+.MimicTextBox = CBool(CheckMimicTextBox.Value = vbChecked)
 .FormatString = TextFormatString.Text
 End With
 Call PropertyPage_SelectionChanged
@@ -527,6 +537,7 @@ CheckFixGridLineOffsets.Value = IIf(.FixGridLineOffsets = True, vbChecked, vbUnc
 CheckMirrorAlignGeneral.Value = IIf(.MirrorAlignGeneral = True, vbChecked, vbUnchecked)
 CheckWordWrap.Value = IIf(.WordWrap = True, vbChecked, vbUnchecked)
 CheckSingleLine.Value = IIf(.SingleLine = True, vbChecked, vbUnchecked)
+CheckMimicTextBox.Value = IIf(.MimicTextBox = True, vbChecked, vbUnchecked)
 TextFormatString.Text = .FormatString
 End With
 FreezeChanged = False
@@ -782,6 +793,11 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckSingleLine_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckMimicTextBox_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
