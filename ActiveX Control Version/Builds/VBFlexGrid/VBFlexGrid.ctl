@@ -21390,7 +21390,7 @@ Do
         Select Case Msg.Message
             Case WM_QUIT
                 ' Post the quit message to the outer message loop.
-                PostQuitMessage Msg.wParam
+                PostQuitMessage CLng(Msg.wParam)
                 Exit Do
             Case WM_TIMER
                 If Msg.hWnd = VBFlexGridHandle And Msg.wParam = IDT_AUTOSCROLL Then
