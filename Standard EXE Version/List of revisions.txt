@@ -1,5 +1,8 @@
 List of revisions:
 
+11-Apr-2024
+- Return key will be forwarded according to DirectionAfterReturn property after editing. (like as the TabBehavior property)
+
 29-Mar-2024
 - Included the MimicTextBox and ColMimicTextBox/ColMimicTextBoxFixed property. (Defaults to False)
   DT_EDITCONTROL will mimic the text-displaying characteristics of a multiline text box. This includes to break on characters instead on words.
