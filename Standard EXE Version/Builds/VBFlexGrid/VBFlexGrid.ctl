@@ -24306,11 +24306,23 @@ Select Case wMsg
                                     Call ComboListCommitSel
                                     Call ComboShowDropDown(False, FlexComboDropDownReasonKeyboard)
                                     DestroyEdit False, FlexEditCloseModeReturn
+                                    Select Case PropDirectionAfterReturn
+                                        Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnEdit
+                                        Case Else
+                                            PostMessage VBFlexGridHandle, wMsg, wParam, ByVal 0&
+                                    End Select
                                     Exit Function
                                 End If
                             End If
                             If GetShiftStateFromMsg() = 0 Then
-                                If DestroyEdit(False, FlexEditCloseModeReturn) = True Then Exit Function
+                                If DestroyEdit(False, FlexEditCloseModeReturn) = True Then
+                                    Select Case PropDirectionAfterReturn
+                                        Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnEdit
+                                        Case Else
+                                            PostMessage VBFlexGridHandle, wMsg, wParam, ByVal 0&
+                                    End Select
+                                    Exit Function
+                                End If
                             Else
                                 PostMessage hWnd, WM_CHAR, vbKeyReturn, ByVal 0&
                             End If
@@ -24665,6 +24677,11 @@ Select Case wMsg
                     Call ComboCalendarCommitSel
                     Call ComboShowDropDown(False, FlexComboDropDownReasonKeyboard)
                     DestroyEdit False, FlexEditCloseModeReturn
+                    Select Case PropDirectionAfterReturn
+                        Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnEdit
+                        Case Else
+                            PostMessage VBFlexGridHandle, wMsg, wParam, ByVal 0&
+                    End Select
                     Exit Function
                 Case vbKeyTab
                     If PropTabBehavior <> FlexTabControls Then
