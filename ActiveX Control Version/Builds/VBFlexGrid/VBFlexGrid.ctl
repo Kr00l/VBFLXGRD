@@ -24305,27 +24305,34 @@ Select Case wMsg
                                 If ComboButtonGetState(ODS_SELECTED) = True Then
                                     Call ComboListCommitSel
                                     Call ComboShowDropDown(False, FlexComboDropDownReasonKeyboard)
-                                    DestroyEdit False, FlexEditCloseModeReturn
-                                    Select Case PropDirectionAfterReturn
-                                        Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnEdit
-                                        Case Else
-                                            PostMessage VBFlexGridHandle, wMsg, wParam, ByVal 0&
-                                    End Select
+                                    If DestroyEdit(False, FlexEditCloseModeReturn) = True Then
+                                        Select Case PropDirectionAfterReturn
+                                            Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnEdit
+                                            Case Else
+                                                Select Case GetShiftStateFromMsg()
+                                                    Case 0, vbShiftMask
+                                                        PostMessage VBFlexGridHandle, wMsg, wParam, ByVal 0&
+                                                End Select
+                                        End Select
+                                    End If
                                     Exit Function
                                 End If
                             End If
-                            If GetShiftStateFromMsg() = 0 Then
-                                If DestroyEdit(False, FlexEditCloseModeReturn) = True Then
-                                    Select Case PropDirectionAfterReturn
-                                        Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnEdit
-                                        Case Else
-                                            PostMessage VBFlexGridHandle, wMsg, wParam, ByVal 0&
-                                    End Select
-                                    Exit Function
-                                End If
-                            Else
-                                PostMessage hWnd, WM_CHAR, vbKeyReturn, ByVal 0&
-                            End If
+                            Select Case GetShiftStateFromMsg()
+                                Case 0
+                                    If DestroyEdit(False, FlexEditCloseModeReturn) = True Then
+                                        Select Case PropDirectionAfterReturn
+                                            Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnEdit
+                                            Case Else
+                                                PostMessage VBFlexGridHandle, wMsg, wParam, ByVal 0&
+                                        End Select
+                                        Exit Function
+                                    End If
+                                Case vbShiftMask
+                                    PostMessage hWnd, WM_CHAR, 13, ByVal 0& ' Carriage return
+                                Case vbCtrlMask
+                                    PostMessage hWnd, WM_CHAR, 10, ByVal 0& ' Linefeed
+                            End Select
                         Case vbKeyTab
                             If PropTabBehavior <> FlexTabControls Then
                                 Select Case GetShiftStateFromMsg()
@@ -24676,12 +24683,16 @@ Select Case wMsg
                 Case vbKeyReturn
                     Call ComboCalendarCommitSel
                     Call ComboShowDropDown(False, FlexComboDropDownReasonKeyboard)
-                    DestroyEdit False, FlexEditCloseModeReturn
-                    Select Case PropDirectionAfterReturn
-                        Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnEdit
-                        Case Else
-                            PostMessage VBFlexGridHandle, wMsg, wParam, ByVal 0&
-                    End Select
+                    If DestroyEdit(False, FlexEditCloseModeReturn) = True Then
+                        Select Case PropDirectionAfterReturn
+                            Case FlexDirectionAfterReturnNone, FlexDirectionAfterReturnEdit
+                            Case Else
+                                Select Case GetShiftStateFromMsg()
+                                    Case 0, vbShiftMask
+                                        PostMessage VBFlexGridHandle, wMsg, wParam, ByVal 0&
+                                End Select
+                        End Select
+                    End If
                     Exit Function
                 Case vbKeyTab
                     If PropTabBehavior <> FlexTabControls Then
