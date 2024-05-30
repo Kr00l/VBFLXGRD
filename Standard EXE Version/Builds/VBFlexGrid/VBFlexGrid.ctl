@@ -21235,19 +21235,27 @@ End If
 Select Case PropSelectionMode
     Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
         If VBFlexGridCaptureRow > (PropFixedRows - 1) Or PropAllowBigSelection = False Then
-            If HTI.MouseRow > ((PropFixedRows + PropFrozenRows) - 1) Then
+            If HTI.MouseRow > ((PropFixedRows + PropFrozenRows) - 1) And Y >= 0 Then
                 .RowSel = HTI.MouseRow
             Else
                 If .RowSel > (PropFixedRows + PropFrozenRows) Then
-                    .RowSel = .RowSel - 1
+                    HTI.PT.Y = Y
+                    For i = 0 To ((PropFixedRows + PropFrozenRows) - 1)
+                        HTI.PT.Y = HTI.PT.Y - GetRowHeight(i)
+                    Next i
+                    For i = (VBFlexGridTopRow - 1) To PropFixedRows Step -1
+                        HTI.PT.Y = HTI.PT.Y + GetRowHeight(i)
+                        If HTI.PT.Y >= 0 Then Exit For
+                    Next i
+                    If i > (PropFixedRows - 1) Then .RowSel = i Else .RowSel = PropFixedRows
                 ElseIf HTI.MouseRow > (PropFixedRows - 1) Then
                     .RowSel = HTI.MouseRow
                 ElseIf .RowSel > PropFixedRows Then
-                    .RowSel = .RowSel - 1
+                    .RowSel = PropFixedRows
                 End If
             End If
             If .TopRow > .RowSel Then
-                If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel
+                If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel Else .TopRow = PropFixedRows + PropFrozenRows
             Else
                 RowsPerPage = GetRowsPerPage(.TopRow)
                 If .RowSel > (.TopRow + RowsPerPage - 1) Then
@@ -21259,19 +21267,27 @@ Select Case PropSelectionMode
             .RowSel = (PropRows - 1)
         End If
         If VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
-            If HTI.MouseCol > ((PropFixedCols + PropFrozenCols) - 1) Then
+            If HTI.MouseCol > ((PropFixedCols + PropFrozenCols) - 1) And X >= 0 Then
                 .ColSel = HTI.MouseCol
             Else
                 If .ColSel > (PropFixedCols + PropFrozenCols) Then
-                    .ColSel = .ColSel - 1
+                    HTI.PT.X = X
+                    For i = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+                        HTI.PT.X = HTI.PT.X - GetColWidth(i)
+                    Next i
+                    For i = (VBFlexGridLeftCol - 1) To PropFixedCols Step -1
+                        HTI.PT.X = HTI.PT.X + GetColWidth(i)
+                        If HTI.PT.X >= 0 Then Exit For
+                    Next i
+                    If i > (PropFixedCols - 1) Then .ColSel = i Else .ColSel = PropFixedCols
                 ElseIf HTI.MouseCol > (PropFixedCols - 1) Then
                     .ColSel = HTI.MouseCol
                 ElseIf .ColSel > PropFixedCols Then
-                    .ColSel = .ColSel - 1
+                    .ColSel = PropFixedCols
                 End If
             End If
             If .LeftCol > .ColSel Then
-                If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
+                If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel Else .LeftCol = PropFixedCols + PropFrozenCols
             Else
                 ColsPerPage = GetColsPerPage(.LeftCol)
                 If .ColSel > (.LeftCol + ColsPerPage - 1) Then
@@ -21284,19 +21300,27 @@ Select Case PropSelectionMode
         End If
     Case FlexSelectionModeByRow
         If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
-            If HTI.MouseRow > ((PropFixedRows + PropFrozenRows) - 1) Then
+            If HTI.MouseRow > ((PropFixedRows + PropFrozenRows) - 1) And Y >= 0 Then
                 .RowSel = HTI.MouseRow
             Else
                 If .RowSel > (PropFixedRows + PropFrozenRows) Then
-                    .RowSel = .RowSel - 1
+                    HTI.PT.Y = Y
+                    For i = 0 To ((PropFixedRows + PropFrozenRows) - 1)
+                        HTI.PT.Y = HTI.PT.Y - GetRowHeight(i)
+                    Next i
+                    For i = (VBFlexGridTopRow - 1) To PropFixedRows Step -1
+                        HTI.PT.Y = HTI.PT.Y + GetRowHeight(i)
+                        If HTI.PT.Y >= 0 Then Exit For
+                    Next i
+                    If i > (PropFixedRows - 1) Then .RowSel = i Else .RowSel = PropFixedRows
                 ElseIf HTI.MouseRow > (PropFixedRows - 1) Then
                     .RowSel = HTI.MouseRow
                 ElseIf .RowSel > PropFixedRows Then
-                    .RowSel = .RowSel - 1
+                    .RowSel = PropFixedRows
                 End If
             End If
             If .TopRow > .RowSel Then
-                If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel
+                If .RowSel >= (PropFixedRows + PropFrozenRows) Then .TopRow = .RowSel Else .TopRow = PropFixedRows + PropFrozenRows
             Else
                 RowsPerPage = GetRowsPerPage(.TopRow)
                 If .RowSel > (.TopRow + RowsPerPage - 1) Then
@@ -21307,19 +21331,27 @@ Select Case PropSelectionMode
         End If
     Case FlexSelectionModeByColumn
         If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
-            If HTI.MouseCol > ((PropFixedCols + PropFrozenCols) - 1) Then
+            If HTI.MouseCol > ((PropFixedCols + PropFrozenCols) - 1) And X >= 0 Then
                 .ColSel = HTI.MouseCol
             Else
                 If .ColSel > (PropFixedCols + PropFrozenCols) Then
-                    .ColSel = .ColSel - 1
+                    HTI.PT.X = X
+                    For i = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+                        HTI.PT.X = HTI.PT.X - GetColWidth(i)
+                    Next i
+                    For i = (VBFlexGridLeftCol - 1) To PropFixedCols Step -1
+                        HTI.PT.X = HTI.PT.X + GetColWidth(i)
+                        If HTI.PT.X >= 0 Then Exit For
+                    Next i
+                    If i > (PropFixedCols - 1) Then .ColSel = i Else .ColSel = PropFixedCols
                 ElseIf HTI.MouseCol > (PropFixedCols - 1) Then
                     .ColSel = HTI.MouseCol
                 ElseIf .ColSel > PropFixedCols Then
-                    .ColSel = .ColSel - 1
+                    .ColSel = PropFixedCols
                 End If
             End If
             If .LeftCol > .ColSel Then
-                If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel
+                If .ColSel >= (PropFixedCols + PropFrozenCols) Then .LeftCol = .ColSel Else .LeftCol = PropFixedCols + PropFrozenCols
             Else
                 ColsPerPage = GetColsPerPage(.LeftCol)
                 If .ColSel > (.LeftCol + ColsPerPage - 1) Then
