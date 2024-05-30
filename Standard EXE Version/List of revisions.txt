@@ -1,5 +1,12 @@
 List of revisions:
 
+30-May-2024
+- Improvement in the "capture mouse move" scroll.
+  The "down" and "right" scroll build up acceleration due to MouseRow/MouseCol.
+  However, the "up" and "left" scroll was too simple and just did a single line scroll.
+  Now the number of lines are calculated based on the distance and edge of fixed rows/cols.
+  So, all directions behave and feel now the same for the user.
+
 11-Apr-2024
 - Return key will be forwarded according to DirectionAfterReturn property after editing. (like as the TabBehavior property)
 
