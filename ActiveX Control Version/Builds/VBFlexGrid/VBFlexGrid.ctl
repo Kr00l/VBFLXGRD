@@ -21243,7 +21243,7 @@ Select Case PropSelectionMode
                     For i = 0 To ((PropFixedRows + PropFrozenRows) - 1)
                         HTI.PT.Y = HTI.PT.Y - GetRowHeight(i)
                     Next i
-                    For i = (VBFlexGridTopRow - 1) To PropFixedRows Step -1
+                    For i = (.RowSel - 1) To PropFixedRows Step -1
                         HTI.PT.Y = HTI.PT.Y + GetRowHeight(i)
                         If HTI.PT.Y >= 0 Then Exit For
                     Next i
@@ -21275,7 +21275,7 @@ Select Case PropSelectionMode
                     For i = 0 To ((PropFixedCols + PropFrozenCols) - 1)
                         HTI.PT.X = HTI.PT.X - GetColWidth(i)
                     Next i
-                    For i = (VBFlexGridLeftCol - 1) To PropFixedCols Step -1
+                    For i = (.ColSel - 1) To PropFixedCols Step -1
                         HTI.PT.X = HTI.PT.X + GetColWidth(i)
                         If HTI.PT.X >= 0 Then Exit For
                     Next i
@@ -21308,7 +21308,7 @@ Select Case PropSelectionMode
                     For i = 0 To ((PropFixedRows + PropFrozenRows) - 1)
                         HTI.PT.Y = HTI.PT.Y - GetRowHeight(i)
                     Next i
-                    For i = (VBFlexGridTopRow - 1) To PropFixedRows Step -1
+                    For i = (.RowSel - 1) To PropFixedRows Step -1
                         HTI.PT.Y = HTI.PT.Y + GetRowHeight(i)
                         If HTI.PT.Y >= 0 Then Exit For
                     Next i
@@ -21339,7 +21339,7 @@ Select Case PropSelectionMode
                     For i = 0 To ((PropFixedCols + PropFrozenCols) - 1)
                         HTI.PT.X = HTI.PT.X - GetColWidth(i)
                     Next i
-                    For i = (VBFlexGridLeftCol - 1) To PropFixedCols Step -1
+                    For i = (.ColSel - 1) To PropFixedCols Step -1
                         HTI.PT.X = HTI.PT.X + GetColWidth(i)
                         If HTI.PT.X >= 0 Then Exit For
                     Next i
