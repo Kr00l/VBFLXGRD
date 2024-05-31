@@ -20562,6 +20562,7 @@ Select Case PropSelectionMode
                 End If
         End Select
 End Select
+Call SetRowColParams(RCP)
 If VBFlexGridCaptureDividerDrag = False Then
     If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFixedCols - 1) Then
         Dim HTI As THITTESTINFO, Pos As Long
@@ -20570,46 +20571,51 @@ If VBFlexGridCaptureDividerDrag = False Then
         HTI.PT.Y = Get_Y_lParam(Pos)
         ScreenToClient VBFlexGridHandle, HTI.PT
         Call GetHitTestInfo(HTI)
+        .Mask = RCPM_ROWSEL Or RCPM_COLSEL
+        .Flags = 0
+        .Message = WM_MOUSEMOVE
+        .RowSel = VBFlexGridRowSel
+        .ColSel = VBFlexGridColSel
         Select Case PropSelectionMode
             Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
                 If VBFlexGridCaptureRow > (PropFixedRows - 1) Or PropAllowBigSelection = False Then
-                    If HTI.MouseRow > (PropFixedRows - 1) Then
+                    If HTI.MouseRow > ((PropFixedRows + PropFrozenRows) - 1) And HTI.PT.Y >= 0 Then
                         .RowSel = HTI.MouseRow
                     Else
-                        .RowSel = .TopRow
+                        .RowSel = VBFlexGridTopRow
                     End If
-                Else
+                ElseIf PropSelectionMode <> FlexSelectionModeFreeByRow Then
                     .RowSel = (PropRows - 1)
                 End If
                 If VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
-                    If HTI.MouseCol > (PropFixedCols - 1) Then
+                    If HTI.MouseCol > ((PropFixedCols + PropFrozenCols) - 1) And HTI.PT.X >= 0 Then
                         .ColSel = HTI.MouseCol
                     Else
-                        .ColSel = .LeftCol
+                        .ColSel = VBFlexGridLeftCol
                     End If
-                Else
+                ElseIf PropSelectionMode <> FlexSelectionModeFreeByColumn Then
                     .ColSel = (PropCols - 1)
                 End If
             Case FlexSelectionModeByRow
                 If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
-                    If HTI.MouseRow > (PropFixedRows - 1) Then
+                    If HTI.MouseRow > ((PropFixedRows + PropFrozenRows) - 1) And HTI.PT.Y >= 0 Then
                         .RowSel = HTI.MouseRow
                     Else
-                        .RowSel = .TopRow
+                        .RowSel = VBFlexGridTopRow
                     End If
                 End If
             Case FlexSelectionModeByColumn
                 If VBFlexGridCaptureRow > (PropFixedRows - 1) Or VBFlexGridCaptureCol > (PropFixedCols - 1) Or PropAllowBigSelection = False Then
-                    If HTI.MouseCol > (PropFixedCols - 1) Then
+                    If HTI.MouseCol > ((PropFixedCols + PropFrozenCols) - 1) And HTI.PT.X >= 0 Then
                         .ColSel = HTI.MouseCol
                     Else
-                        .ColSel = .LeftCol
+                        .ColSel = VBFlexGridLeftCol
                     End If
                 End If
         End Select
+        Call SetRowColParams(RCP)
     End If
 End If
-Call SetRowColParams(RCP)
 End With
 End Sub
 
