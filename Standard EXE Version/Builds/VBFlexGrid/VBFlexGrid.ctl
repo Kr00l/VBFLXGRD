@@ -939,6 +939,12 @@ CancellationPending As Boolean
 NoLostFocus As Boolean
 Time As Long
 End Type
+Private Type TFORMATRANGE
+hDC As LongPtr
+hDCTarget As LongPtr
+RC As RECT
+RCPage As RECT
+End Type
 Public Event Click()
 Attribute Click.VB_Description = "Occurs when the user presses and then releases a mouse button over an object."
 Attribute Click.VB_UserMemId = -600
@@ -1650,6 +1656,7 @@ Private Const WM_NCMOUSEMOVE As Long = &HA0
 Private Const WM_NCMOUSELEAVE As Long = &H2A2
 Private Const WM_DRAWITEM As Long = &H2B, ODT_COMBOBOX As Long = &H3, ODT_BUTTON As Long = &H4, ODT_STATIC As Long = &H5
 Private Const WM_USER As Long = &H400
+Private Const VP_FORMATRANGE As Long = (WM_USER + 125), VP_YES As Long = 456654
 Private Const UM_CAPTURECHANGED As Long = (WM_USER + 1000)
 Private Const UM_ENDINCREMENTALSEARCH As Long = (WM_USER + 1001)
 Private Const TTM_ADDTOOLA As Long = (WM_USER + 4)
@@ -12342,14 +12349,14 @@ If VBFlexGridHandle <> NULL_PTR Then
             Dim RC As RECT, iRow As Long, iCol As Long
             With RC
             .Top = 0
-            For iRow = 0 To (PropFixedRows - 1)
+            For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
                 .Bottom = .Bottom + GetRowHeight(iRow)
             Next iRow
             For iRow = VBFlexGridTopRow To (PropRows - 1)
                 .Bottom = .Bottom + GetRowHeight(iRow)
             Next iRow
             .Left = 0
-            For iCol = 0 To (PropFixedCols - 1)
+            For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
                 .Right = .Right + GetColWidth(iCol)
             Next iCol
             For iCol = VBFlexGridLeftCol To (PropCols - 1)
@@ -21371,6 +21378,23 @@ Call SetRowColParams(RCP)
 End With
 End Sub
 
+Private Function ProcessFormatRange(ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
+If wParam <> 0 Then
+    ProcessFormatRange = 0 ' VP_YES
+    Exit Function
+End If
+If lParam = 0 Then
+    ' Reset
+    ProcessFormatRange = 0
+    Exit Function
+End If
+Dim pFormatRange As TFORMATRANGE
+CopyMemory ByVal VarPtr(pFormatRange), ByVal lParam, LenB(pFormatRange)
+' WIP
+ProcessFormatRange = 1 ' Continue
+ProcessFormatRange = -1 ' End
+End Function
+
 Public Function DoDragRowCol(ByVal Row As Long, ByVal Col As Long) As Long
 If Row > -1 Then DoDragRowCol = Row Else If Col > -1 Then DoDragRowCol = Col
 If VBFlexGridHandle = NULL_PTR Then Exit Function
@@ -24132,6 +24156,9 @@ Select Case wMsg
             WindowProcControl = 1
             Exit Function
         End If
+    Case VP_FORMATRANGE
+        WindowProcControl = ProcessFormatRange(wParam, lParam)
+        Exit Function
     
     #If ImplementPreTranslateMsg = True Then
     
