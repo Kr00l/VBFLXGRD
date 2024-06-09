@@ -575,6 +575,23 @@ Private Type SIZEAPI
 CX As Long
 CY As Long
 End Type
+Private Type BITMAPINFOHEADER
+BISize As Long
+BIWidth As Long
+BIHeight As Long
+BIPlanes As Integer
+BIBitCount As Integer
+BICompression As Long
+BISizeImage As Long
+BIXPelsPerMeter As Long
+BIYPelsPerMeter As Long
+BIClrUsed As Long
+BIClrImportant As Long
+End Type
+Private Type BITMAPINFO
+BMIHeader As BITMAPINFOHEADER
+BMIColors(0 To 255) As Long
+End Type
 Private Type TRACKMOUSEEVENTSTRUCT
 cbSize As Long
 dwFlags As Long
@@ -1180,6 +1197,7 @@ Private Declare PtrSafe Function SetTextColor Lib "gdi32" (ByVal hDC As LongPtr,
 Private Declare PtrSafe Function SetBkColor Lib "gdi32" (ByVal hDC As LongPtr, ByVal crColor As Long) As Long
 Private Declare PtrSafe Function GetTextExtentPoint32 Lib "gdi32" Alias "GetTextExtentPoint32W" (ByVal hDC As LongPtr, ByVal lpsz As LongPtr, ByVal cbString As Long, ByRef lpSize As SIZEAPI) As Long
 Private Declare PtrSafe Function GetDC Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
+Private Declare PtrSafe Function GetDeviceCaps Lib "gdi32" (ByVal hDC As LongPtr, ByVal nIndex As Long) As Long
 Private Declare PtrSafe Function GetWindowDC Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
 Private Declare PtrSafe Function GetDCEx Lib "user32" (ByVal hWnd As LongPtr, ByVal hRgnClip As LongPtr, ByVal fdwOptions As Long) As LongPtr
 Private Declare PtrSafe Function ReleaseDC Lib "user32" (ByVal hWnd As LongPtr, ByVal hDC As LongPtr) As Long
@@ -1195,6 +1213,11 @@ Private Declare PtrSafe Function SetTextAlign Lib "gdi32" (ByVal hDC As LongPtr,
 Private Declare PtrSafe Function SetLayout Lib "gdi32" (ByVal hDC As LongPtr, ByVal dwLayout As Long) As Long
 Private Declare PtrSafe Function BitBlt Lib "gdi32" (ByVal hDestDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hSrcDC As LongPtr, ByVal XSrc As Long, ByVal YSrc As Long, ByVal dwRop As Long) As Long
 Private Declare PtrSafe Function PatBlt Lib "gdi32" (ByVal hDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal dwRop As Long) As Long
+Private Declare PtrSafe Function SetStretchBltMode Lib "gdi32" (ByVal hDC As LongPtr, ByVal nStretchMode As Long) As Long
+Private Declare PtrSafe Function SetBrushOrgEx Lib "gdi32" (ByVal hDC As LongPtr, ByVal nXOrg As Long, ByVal nYOrg As Long, ByRef lpPoint As Any) As Long
+Private Declare PtrSafe Function StretchBlt Lib "gdi32" (ByVal hDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hSrcDC As LongPtr, ByVal XSrc As Long, ByVal YSrc As Long, ByVal nSrcWidth As Long, ByVal nSrcHeight As Long, ByVal dwRop As Long) As Long
+Private Declare PtrSafe Function GetDIBits Lib "gdi32" (ByVal hDC As LongPtr, ByVal hBmp As LongPtr, ByVal nStartScan As Long, ByVal nNumScans As Long, ByVal lpBits As LongPtr, ByRef pBitmapInfo As BITMAPINFO, ByVal wUsage As Long) As Long
+Private Declare PtrSafe Function StretchDIBits Lib "gdi32" (ByVal hDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal XSrc As Long, ByVal YSrc As Long, ByVal nSrcWidth As Long, ByVal nSrcHeight As Long, ByVal lpBits As LongPtr, ByRef pBitmapInfo As BITMAPINFO, ByVal wUsage As Long, ByVal dwRop As Long) As Long
 Private Declare PtrSafe Function CreateCompatibleDC Lib "gdi32" (ByVal hDC As LongPtr) As LongPtr
 Private Declare PtrSafe Function CreateCompatibleBitmap Lib "gdi32" (ByVal hDC As LongPtr, ByVal nWidth As Long, ByVal nHeight As Long) As LongPtr
 Private Declare PtrSafe Function DeleteDC Lib "gdi32" (ByVal hDC As LongPtr) As Long
@@ -1310,6 +1333,7 @@ Private Declare Function SetTextColor Lib "gdi32" (ByVal hDC As Long, ByVal crCo
 Private Declare Function SetBkColor Lib "gdi32" (ByVal hDC As Long, ByVal crColor As Long) As Long
 Private Declare Function GetTextExtentPoint32 Lib "gdi32" Alias "GetTextExtentPoint32W" (ByVal hDC As Long, ByVal lpsz As Long, ByVal cbString As Long, ByRef lpSize As SIZEAPI) As Long
 Private Declare Function GetDC Lib "user32" (ByVal hWnd As Long) As Long
+Private Declare Function GetDeviceCaps Lib "gdi32" (ByVal hDC As Long, ByVal nIndex As Long) As Long
 Private Declare Function GetWindowDC Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function GetDCEx Lib "user32" (ByVal hWnd As Long, ByVal hRgnClip As Long, ByVal fdwOptions As Long) As Long
 Private Declare Function ReleaseDC Lib "user32" (ByVal hWnd As Long, ByVal hDC As Long) As Long
@@ -1325,6 +1349,11 @@ Private Declare Function SetTextAlign Lib "gdi32" (ByVal hDC As Long, ByVal fMod
 Private Declare Function SetLayout Lib "gdi32" (ByVal hDC As Long, ByVal dwLayout As Long) As Long
 Private Declare Function BitBlt Lib "gdi32" (ByVal hDestDC As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hSrcDC As Long, ByVal XSrc As Long, ByVal YSrc As Long, ByVal dwRop As Long) As Long
 Private Declare Function PatBlt Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal dwRop As Long) As Long
+Private Declare Function SetStretchBltMode Lib "gdi32" (ByVal hDC As Long, ByVal nStretchMode As Long) As Long
+Private Declare Function SetBrushOrgEx Lib "gdi32" (ByVal hDC As Long, ByVal nXOrg As Long, ByVal nYOrg As Long, ByRef lpPoint As Any) As Long
+Private Declare Function StretchBlt Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hSrcDC As Long, ByVal XSrc As Long, ByVal YSrc As Long, ByVal nSrcWidth As Long, ByVal nSrcHeight As Long, ByVal dwRop As Long) As Long
+Private Declare Function GetDIBits Lib "gdi32" (ByVal hDC As Long, ByVal hBmp As Long, ByVal nStartScan As Long, ByVal nNumScans As Long, ByVal lpBits As Long, ByRef pBitmapInfo As BITMAPINFO, ByVal wUsage As Long) As Long
+Private Declare Function StretchDIBits Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal XSrc As Long, ByVal YSrc As Long, ByVal nSrcWidth As Long, ByVal nSrcHeight As Long, ByVal lpBits As Long, ByRef pBitmapInfo As BITMAPINFO, ByVal wUsage As Long, ByVal dwRop As Long) As Long
 Private Declare Function CreateCompatibleDC Lib "gdi32" (ByVal hDC As Long) As Long
 Private Declare Function CreateCompatibleBitmap Lib "gdi32" (ByVal hDC As Long, ByVal nWidth As Long, ByVal nHeight As Long) As Long
 Private Declare Function DeleteDC Lib "gdi32" (ByVal hDC As Long) As Long
@@ -1452,6 +1481,11 @@ Private Const PS_DASH As Long = 1
 Private Const PS_DOT As Long = 2
 Private Const PS_INSIDEFRAME As Long = 6
 Private Const NULL_BRUSH As Long = 5
+Private Const STRETCH_HALFTONE As Long = 4
+Private Const DIB_RGB_COLORS As Long = 0
+Private Const LOGPIXELSX As Long = 88
+Private Const LOGPIXELSY As Long = 90
+Private Const RASTERCAPS As Long = 38, RC_STRETCHBLT As Long = &H800
 Private Const SB_HORZ As Long = 0
 Private Const SB_VERT As Long = 1
 Private Const SB_LINELEFT As Long = 0
@@ -21395,20 +21429,103 @@ End With
 End Sub
 
 Private Function ProcessFormatRange(ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
+Static RowOffset As Long, ColOffset As Long
 If wParam <> 0 Then
-    ProcessFormatRange = 0 ' VP_YES
+    ProcessFormatRange = VP_YES
     Exit Function
 End If
 If lParam = 0 Then
-    ' Reset
+    RowOffset = 0
+    ColOffset = 0
     ProcessFormatRange = 0
     Exit Function
 End If
 Dim pFormatRange As TFORMATRANGE
 CopyMemory ByVal VarPtr(pFormatRange), ByVal lParam, LenB(pFormatRange)
-' WIP
-ProcessFormatRange = 1 ' Continue
-ProcessFormatRange = -1 ' End
+If pFormatRange.hDCTarget = NULL_PTR Then pFormatRange.hDCTarget = pFormatRange.hDC
+If pFormatRange.hDC = NULL_PTR Then
+    ProcessFormatRange = 0
+    Exit Function
+End If
+Dim Scale_X As Double, Scale_Y As Double, CXMax As Long, CYMax As Long
+Scale_X = GetDeviceCaps(pFormatRange.hDCTarget, LOGPIXELSX) / DPI_X()
+Scale_Y = GetDeviceCaps(pFormatRange.hDCTarget, LOGPIXELSY) / DPI_Y()
+CXMax = (pFormatRange.RC.Right - pFormatRange.RC.Left) / Scale_X
+CYMax = (pFormatRange.RC.Bottom - pFormatRange.RC.Top) / Scale_Y
+Dim iRow As Long, iCol As Long, CX As Long, CY As Long, CellRange As TCELLRANGE
+For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+    CX = CX + GetColWidth(iCol)
+Next iCol
+For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
+    CY = CY + GetRowHeight(iRow)
+Next iRow
+CellRange.LeftCol = ((PropFixedCols + PropFrozenCols) + ColOffset)
+CellRange.TopRow = ((PropFixedRows + PropFrozenRows) + RowOffset)
+For iRow = ((PropFixedRows + PropFrozenRows) + RowOffset) To (PropRows - 1)
+    CY = CY + GetRowHeight(iRow)
+    If CY >= CYMax Then Exit For
+Next iRow
+If iRow = ((PropFixedRows + PropFrozenRows) + RowOffset) Then iRow = iRow + 1
+For iCol = ((PropFixedCols + PropFrozenCols) + ColOffset) To (PropCols - 1)
+    CX = CX + GetColWidth(iCol)
+    If CX >= CXMax Then Exit For
+Next iCol
+If iCol = ((PropFixedCols + PropFrozenCols) + ColOffset) Then iCol = iCol + 1
+CellRange.RightCol = iCol - 1
+CellRange.BottomRow = iRow - 1
+ColOffset = iCol - (PropFixedCols + PropFrozenCols)
+If iRow > (PropRows - 1) And iCol > (PropCols - 1) Then ProcessFormatRange = -1 Else ProcessFormatRange = 1
+If iCol > (PropCols - 1) Then
+    RowOffset = iRow - (PropFixedRows + PropFrozenRows)
+    ColOffset = 0
+End If
+Dim hDCBmp As LongPtr
+Dim hBmp As LongPtr, hBmpOld As LongPtr
+hDCBmp = CreateCompatibleDC(pFormatRange.hDCTarget)
+If hDCBmp <> NULL_PTR Then
+    Dim RC As RECT
+    With RC
+    .Top = 0
+    For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
+        .Bottom = .Bottom + GetRowHeight(iRow)
+    Next iRow
+    For iRow = CellRange.TopRow To CellRange.BottomRow
+        .Bottom = .Bottom + GetRowHeight(iRow)
+    Next iRow
+    .Left = 0
+    For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+        .Right = .Right + GetColWidth(iCol)
+    Next iCol
+    For iCol = CellRange.LeftCol To CellRange.RightCol
+        .Right = .Right + GetColWidth(iCol)
+    Next iCol
+    End With
+    hBmp = CreateCompatibleBitmap(pFormatRange.hDCTarget, RC.Right - RC.Left, RC.Bottom - RC.Top)
+    If hBmp <> NULL_PTR Then
+        hBmpOld = SelectObject(hDCBmp, hBmp)
+        Call DrawGrid(hDCBmp, NULL_PTR, True, True, VarPtr(CellRange))
+        If RC.Bottom > CYMax Then RC.Bottom = CYMax
+        If RC.Right > CXMax Then RC.Right = CXMax
+        Dim OldStretchBltMode As Long
+        OldStretchBltMode = SetStretchBltMode(pFormatRange.hDC, STRETCH_HALFTONE)
+        SetBrushOrgEx pFormatRange.hDC, 0, 0, ByVal NULL_PTR
+        If (GetDeviceCaps(pFormatRange.hDCTarget, RASTERCAPS) And RC_STRETCHBLT) = RC_STRETCHBLT Then
+            StretchBlt pFormatRange.hDC, pFormatRange.RC.Left, pFormatRange.RC.Top, (RC.Right - RC.Left) * Scale_X, (RC.Bottom - RC.Top) * Scale_Y, hDCBmp, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top, vbSrcCopy
+            SelectObject hDCBmp, hBmpOld
+        Else
+            ' hBmp must not be selected into a device context when the application calls GetDIBits.
+            SelectObject hDCBmp, hBmpOld
+            Dim pBitmapInfo As BITMAPINFO, pBits() As Byte
+            pBitmapInfo.BMIHeader.BISize = LenB(pBitmapInfo.BMIHeader)
+            If GetDIBits(pFormatRange.hDCTarget, hBmp, 0, 0, NULL_PTR, pBitmapInfo, DIB_RGB_COLORS) <> 0 Then
+                ReDim pBits(0 To ((pBitmapInfo.BMIHeader.BISizeImage / pBitmapInfo.BMIHeader.BIHeight) - 1), 0 To (pBitmapInfo.BMIHeader.BIHeight - 1)) As Byte
+                If GetDIBits(pFormatRange.hDCTarget, hBmp, 0, pBitmapInfo.BMIHeader.BIHeight, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS) > 0 Then StretchDIBits pFormatRange.hDC, pFormatRange.RC.Left, pFormatRange.RC.Top, (RC.Right - RC.Left) * Scale_X, (RC.Bottom - RC.Top) * Scale_Y, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS, vbSrcCopy
+            End If
+        End If
+        If OldStretchBltMode <> STRETCH_HALFTONE Then SetStretchBltMode pFormatRange.hDC, OldStretchBltMode
+    End If
+    DeleteDC hDCBmp
+End If
 End Function
 
 Public Function DoDragRowCol(ByVal Row As Long, ByVal Col As Long) As Long
