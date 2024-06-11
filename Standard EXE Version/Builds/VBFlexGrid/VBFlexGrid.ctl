@@ -2945,6 +2945,18 @@ End Property
 Public Property Set DataSource(ByVal Value As MSDATASRC.DataSource)
 Set PropDataSource = Value
 If VBFlexGridDesignMode = False Then
+    
+    #If ImplementFlexDataSource = True Then
+    
+    If Not VBFlexGridFlexDataSource Is Nothing Then
+        Set VBFlexGridFlexDataSource = Nothing
+        Set VBFlexGridFlexDataSource2 = Nothing
+        VBFlexGridFlexDataSourceFlags = 0
+        Call RedrawGrid
+    End If
+    
+    #End If
+    
     If Not PropDataSource Is Nothing Then
         If PropRecordset Is Nothing Then Set PropRecordset = CreateObject("ADODB.Recordset")
         With PropRecordset
@@ -2955,6 +2967,7 @@ If VBFlexGridDesignMode = False Then
             If .RecordCount > -1 Then ' The cursor type of the Recordset affects whether the number of records can be determined.
                 Me.Rows = PropFixedRows + .RecordCount
                 Me.Cols = PropFixedCols + .Fields.Count
+                Me.Clear
                 Dim iRow As Long, iCol As Long
                 If PropFixedRows > 0 Then
                     For iCol = 0 To (PropFixedCols - 1)
