@@ -21476,12 +21476,12 @@ CellRange.LeftCol = ((PropFixedCols + PropFrozenCols) + ColOffset)
 CellRange.TopRow = ((PropFixedRows + PropFrozenRows) + RowOffset)
 For iRow = ((PropFixedRows + PropFrozenRows) + RowOffset) To (PropRows - 1)
     CY = CY + GetRowHeight(iRow)
-    If CY >= CYMax Then Exit For
+    If CY > CYMax Then Exit For
 Next iRow
 If iRow = ((PropFixedRows + PropFrozenRows) + RowOffset) Then iRow = iRow + 1
 For iCol = ((PropFixedCols + PropFrozenCols) + ColOffset) To (PropCols - 1)
     CX = CX + GetColWidth(iCol)
-    If CX >= CXMax Then Exit For
+    If CX > CXMax Then Exit For
 Next iCol
 If iCol = ((PropFixedCols + PropFrozenCols) + ColOffset) Then iCol = iCol + 1
 CellRange.RightCol = iCol - 1
@@ -21517,13 +21517,16 @@ If hDCBmp <> NULL_PTR Then
     If hBmp <> NULL_PTR Then
         hBmpOld = SelectObject(hDCBmp, hBmp)
         Call DrawGrid(hDCBmp, NULL_PTR, True, True, VarPtr(CellRange))
-        If RC.Bottom > CYMax Then RC.Bottom = CYMax
-        If RC.Right > CXMax Then RC.Right = CXMax
+        Dim Scale_Width As Long, Scale_Height As Long
+        Scale_Width = (RC.Right - RC.Left) * Scale_X
+        Scale_Height = (RC.Bottom - RC.Top) * Scale_Y
+        If Scale_Width > (pFormatRange.RC.Right - pFormatRange.RC.Left) Then Scale_Width = pFormatRange.RC.Right - pFormatRange.RC.Left
+        If Scale_Height > (pFormatRange.RC.Bottom - pFormatRange.RC.Top) Then Scale_Height = pFormatRange.RC.Bottom - pFormatRange.RC.Top
         Dim OldStretchBltMode As Long
         OldStretchBltMode = SetStretchBltMode(pFormatRange.hDC, STRETCH_HALFTONE)
         SetBrushOrgEx pFormatRange.hDC, 0, 0, ByVal NULL_PTR
         If (GetDeviceCaps(pFormatRange.hDC, RASTERCAPS) And RC_STRETCHBLT) = RC_STRETCHBLT Then
-            StretchBlt pFormatRange.hDC, pFormatRange.RC.Left, pFormatRange.RC.Top, (RC.Right - RC.Left) * Scale_X, (RC.Bottom - RC.Top) * Scale_Y, hDCBmp, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top, vbSrcCopy
+            StretchBlt pFormatRange.hDC, pFormatRange.RC.Left, pFormatRange.RC.Top, Scale_Width, Scale_Height, hDCBmp, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top, vbSrcCopy
             SelectObject hDCBmp, hBmpOld
         Else
             ' hBmp must not be selected into a device context when the application calls GetDIBits.
@@ -21532,7 +21535,7 @@ If hDCBmp <> NULL_PTR Then
             pBitmapInfo.BMIHeader.BISize = LenB(pBitmapInfo.BMIHeader)
             If GetDIBits(pFormatRange.hDC, hBmp, 0, 0, NULL_PTR, pBitmapInfo, DIB_RGB_COLORS) <> 0 Then
                 ReDim pBits(0 To ((pBitmapInfo.BMIHeader.BISizeImage / pBitmapInfo.BMIHeader.BIHeight) - 1), 0 To (pBitmapInfo.BMIHeader.BIHeight - 1)) As Byte
-                If GetDIBits(pFormatRange.hDC, hBmp, 0, pBitmapInfo.BMIHeader.BIHeight, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS) > 0 Then StretchDIBits pFormatRange.hDC, pFormatRange.RC.Left, pFormatRange.RC.Top, (RC.Right - RC.Left) * Scale_X, (RC.Bottom - RC.Top) * Scale_Y, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS, vbSrcCopy
+                If GetDIBits(pFormatRange.hDC, hBmp, 0, pBitmapInfo.BMIHeader.BIHeight, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS) > 0 Then StretchDIBits pFormatRange.hDC, pFormatRange.RC.Left, pFormatRange.RC.Top, Scale_Width, Scale_Height, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS, vbSrcCopy
             End If
         End If
         If OldStretchBltMode <> STRETCH_HALFTONE Then SetStretchBltMode pFormatRange.hDC, OldStretchBltMode
