@@ -1,5 +1,9 @@
 List of revisions:
 
+11-Jun-2024
+- Invoke .Clear after row/col setup on set of .DataSource. (like MS(H)FlexGrid)
+- Remove .FlexDataSource when setting .DataSource. (like vsFlexGrid)
+
 09-Jun-2024
 - Support of the VP_FORMATRANGE message. (like MS(H)FlexGrid and vsFlexGrid)
   This allows for easy rendering for page print (and multi-page) incl. print preview.
