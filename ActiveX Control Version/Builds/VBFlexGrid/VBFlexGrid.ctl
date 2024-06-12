@@ -6976,7 +6976,13 @@ Else
         LSet VBFlexGridCells.Rows(i).RowInfo = VBFlexGridDefaultRowInfo
     Next i
 End If
-Call RedrawGrid
+Dim RCP As TROWCOLPARAMS
+With RCP
+.Mask = RCPM_TOPROW
+.Flags = RCPF_CHECKTOPROW Or RCPF_FORCETOPROWMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.TopRow = VBFlexGridTopRow
+Call SetRowColParams(RCP)
+End With
 End Sub
 
 Public Sub ClearColInfo(ByVal Index As Long)
@@ -6991,7 +6997,18 @@ Else
         LSet VBFlexGridColsInfo(i) = VBFlexGridDefaultColInfo
     Next i
 End If
-Call RedrawGrid
+If Index > -1 And VBFlexGridExtendLastCol > -1 Then
+    If Index >= VBFlexGridExtendLastCol Then VBFlexGridExtendLastCol = GetExtendLastCol()
+Else
+    VBFlexGridExtendLastCol = GetExtendLastCol()
+End If
+Dim RCP As TROWCOLPARAMS
+With RCP
+.Mask = RCPM_LEFTCOL
+.Flags = RCPF_CHECKLEFTCOL Or RCPF_FORCELEFTCOLMASK Or RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
+.LeftCol = VBFlexGridLeftCol
+Call SetRowColParams(RCP)
+End With
 End Sub
 
 Public Property Get Row() As Long
@@ -7897,7 +7914,7 @@ Else
         End If
     Next i
 End If
-If VBFlexGridExtendLastCol > -1 Then
+If Index > -1 And VBFlexGridExtendLastCol > -1 Then
     If Index >= VBFlexGridExtendLastCol Then VBFlexGridExtendLastCol = GetExtendLastCol()
 Else
     VBFlexGridExtendLastCol = GetExtendLastCol()
@@ -7966,7 +7983,7 @@ Else
         Next i
     End If
 End If
-If VBFlexGridExtendLastCol > -1 Then
+If Index > -1 And VBFlexGridExtendLastCol > -1 Then
     If Index >= VBFlexGridExtendLastCol Then VBFlexGridExtendLastCol = GetExtendLastCol()
 Else
     VBFlexGridExtendLastCol = GetExtendLastCol()
@@ -21544,7 +21561,7 @@ If hDCBmp <> NULL_PTR Then
 End If
 End Function
 
-Public Function DoDragRowCol(ByVal Row As Long, ByVal Col As Long) As Long
+Private Function DoDragRowCol(ByVal Row As Long, ByVal Col As Long) As Long
 If Row > -1 Then DoDragRowCol = Row Else If Col > -1 Then DoDragRowCol = Col
 If VBFlexGridHandle = NULL_PTR Then Exit Function
 Dim Button As Integer
