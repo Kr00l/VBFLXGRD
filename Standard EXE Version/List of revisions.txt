@@ -1,5 +1,8 @@
 List of revisions:
 
+18-Jun-2024
+- Optimized the TextArray property.
+
 11-Jun-2024
 - Invoke .Clear after row/col setup on set of .DataSource. (like MS(H)FlexGrid)
 - Remove .FlexDataSource when setting .DataSource. (like vsFlexGrid)
