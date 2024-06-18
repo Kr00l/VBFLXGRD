@@ -9473,16 +9473,16 @@ Public Property Get TextArray(ByVal Index As Long) As String
 Attribute TextArray.VB_Description = "Returns/sets the text contents of an arbitrary cell (single subscript)."
 Attribute TextArray.VB_MemberFlags = "400"
 If (Index < 0 Or Index > ((PropRows * PropCols) - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
-Dim RetVal As Double
-RetVal = Index / PropCols
-Call GetCellText(Fix(RetVal), ((RetVal - Fix(RetVal)) * PropCols), TextArray)
+Dim RetVal As Long
+RetVal = Index \ PropCols
+Call GetCellText(RetVal, Index - (RetVal * PropCols), TextArray)
 End Property
 
 Public Property Let TextArray(ByVal Index As Long, ByVal Value As String)
 If (Index < 0 Or Index > ((PropRows * PropCols) - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
-Dim RetVal As Double
-RetVal = Index / PropCols
-Call SetCellText(Fix(RetVal), ((RetVal - Fix(RetVal)) * PropCols), Value)
+Dim RetVal As Long
+RetVal = Index \ PropCols
+Call SetCellText(RetVal, Index - (RetVal * PropCols), Value)
 Call RedrawGrid
 End Property
 
