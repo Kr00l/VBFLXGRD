@@ -11940,7 +11940,7 @@ If VBFlexGridInsertMarkMode = FlexDropTargetModeByRow Then
                 End If
             End If
         Next i
-        If HitTestInsertMark <= (PropRows - 1) Then After = CBool(P.Y > (.Top + (GetRowHeight(HitTestInsertMark) / 2)))
+        If HitTestInsertMark <= (PropRows - 1) Then After = CBool(P.Y > (.Top + (GetRowHeight(HitTestInsertMark) \ 2)))
     End If
 ElseIf VBFlexGridInsertMarkMode = FlexDropTargetModeByColumn Then
     If P.X >= 0 Then
@@ -11954,7 +11954,7 @@ ElseIf VBFlexGridInsertMarkMode = FlexDropTargetModeByColumn Then
                 End If
             End If
         Next i
-        If HitTestInsertMark <= (PropCols - 1) Then After = CBool(P.X > (.Left + (GetColWidth(HitTestInsertMark) / 2)))
+        If HitTestInsertMark <= (PropCols - 1) Then After = CBool(P.X > (.Left + (GetColWidth(HitTestInsertMark) \ 2)))
     End If
 End If
 End With
@@ -13290,22 +13290,22 @@ If Not PropWallPaper Is Nothing Then
         WallPaperTop = WallPaperRect.Top
         Select Case PropWallPaperAlignment
             Case FlexWallPaperAlignmentLeftCenter
-                WallPaperOffsetY = (((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight) / 2)
+                WallPaperOffsetY = (((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight) \ 2)
             Case FlexWallPaperAlignmentLeftBottom
                 WallPaperOffsetY = ((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight)
             Case FlexWallPaperAlignmentCenterTop
-                WallPaperOffsetX = (((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth) / 2)
+                WallPaperOffsetX = (((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth) \ 2)
             Case FlexWallPaperAlignmentCenterCenter
-                WallPaperOffsetX = (((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth) / 2)
-                WallPaperOffsetY = (((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight) / 2)
+                WallPaperOffsetX = (((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth) \ 2)
+                WallPaperOffsetY = (((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight) \ 2)
             Case FlexWallPaperAlignmentCenterBottom
-                WallPaperOffsetX = (((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth) / 2)
+                WallPaperOffsetX = (((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth) \ 2)
                 WallPaperOffsetY = ((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight)
             Case FlexWallPaperAlignmentRightTop
                 WallPaperOffsetX = ((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth)
             Case FlexWallPaperAlignmentRightCenter
                 WallPaperOffsetX = ((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth)
-                WallPaperOffsetY = (((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight) / 2)
+                WallPaperOffsetY = (((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight) \ 2)
             Case FlexWallPaperAlignmentRightBottom
                 WallPaperOffsetX = ((WallPaperRect.Right - WallPaperRect.Left) - WallPaperWidth)
                 WallPaperOffsetY = ((WallPaperRect.Bottom - WallPaperRect.Top) - WallPaperHeight)
@@ -14887,22 +14887,22 @@ If Not .Picture Is Nothing Then
         PictureTop = PictureRect.Top
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftCenterNoOverlap
-                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) \ 2)
             Case FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftBottomNoOverlap
                 PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
             Case FlexPictureAlignmentCenterTop
-                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) \ 2)
             Case FlexPictureAlignmentCenterCenter
-                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
-                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) \ 2)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) \ 2)
             Case FlexPictureAlignmentCenterBottom
-                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) \ 2)
                 PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
             Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightTopNoOverlap
                 PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
             Case FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightCenterNoOverlap
                 PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
-                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) \ 2)
             Case FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightBottomNoOverlap
                 PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
                 PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
@@ -14968,22 +14968,22 @@ If VBFlexGridColsInfo(iCol).ImageList.Handle <> NULL_PTR Then
         ImageTop = ImageRect.Top
         Select Case ImageAlignment
             Case FlexAlignmentLeftCenter
-                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) \ 2)
             Case FlexAlignmentLeftBottom
                 ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
             Case FlexAlignmentCenterTop, FlexAlignmentGeneralTop
-                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) \ 2)
             Case FlexAlignmentCenterCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
-                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
-                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) \ 2)
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) \ 2)
             Case FlexAlignmentCenterBottom, FlexAlignmentGeneralBottom
-                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) \ 2)
                 ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
             Case FlexAlignmentRightTop
                 ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
             Case FlexAlignmentRightCenter
                 ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
-                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) \ 2)
             Case FlexAlignmentRightBottom
                 ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
                 ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
@@ -15016,22 +15016,22 @@ If Checked > -1 Then
     End If
     Select Case CheckBoxAlignment
         Case FlexCheckBoxAlignmentLeftCenter
-            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
         Case FlexCheckBoxAlignmentLeftBottom
             CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
         Case FlexCheckBoxAlignmentCenterTop
-            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
         Case FlexCheckBoxAlignmentCenterCenter
-            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
-            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
         Case FlexCheckBoxAlignmentCenterBottom
-            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
             CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
         Case FlexCheckBoxAlignmentRightTop
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
         Case FlexCheckBoxAlignmentRightCenter
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
-            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
         Case FlexCheckBoxAlignmentRightBottom
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
             CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
@@ -15155,7 +15155,7 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSor
         Dim SortArrowVSpace As Long
         Select Case Alignment
             Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
-                SortArrowVSpace = (((TextRect.Bottom - TextRect.Top) - SortArrowClientSize.CY) / 2)
+                SortArrowVSpace = (((TextRect.Bottom - TextRect.Top) - SortArrowClientSize.CY) \ 2)
             Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom, FlexAlignmentGeneralBottom
                 SortArrowVSpace = ((TextRect.Bottom - TextRect.Top) - SortArrowClientSize.CY)
         End Select
@@ -15163,15 +15163,15 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSor
         Select Case VBFlexGridColsInfo(iCol).SortArrow
             Case FlexSortArrowAscending
                 If VBFlexGridColsInfo(iCol).SortArrowAlignment = FlexLeftRightAlignmentRight Then
-                    SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowCalcSize.CX / 2)
-                    SortArrowPoints(0).Y = TextRect.Top + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) / 2)
+                    SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowCalcSize.CX \ 2)
+                    SortArrowPoints(0).Y = TextRect.Top + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) \ 2)
                     SortArrowPoints(1).X = (TextRect.Right - 1) - SortArrowCalcSize.CX
                     SortArrowPoints(1).Y = SortArrowPoints(0).Y + SortArrowCalcSize.CY
                     SortArrowPoints(2).X = (TextRect.Right - 1)
                     SortArrowPoints(2).Y = SortArrowPoints(0).Y + SortArrowCalcSize.CY
                 ElseIf VBFlexGridColsInfo(iCol).SortArrowAlignment = FlexLeftRightAlignmentLeft Then
-                    SortArrowPoints(0).X = TextRect.Left + (SortArrowCalcSize.CX / 2)
-                    SortArrowPoints(0).Y = TextRect.Top + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) / 2)
+                    SortArrowPoints(0).X = TextRect.Left + (SortArrowCalcSize.CX \ 2)
+                    SortArrowPoints(0).Y = TextRect.Top + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) \ 2)
                     SortArrowPoints(1).X = TextRect.Left + SortArrowCalcSize.CX
                     SortArrowPoints(1).Y = SortArrowPoints(0).Y + SortArrowCalcSize.CY
                     SortArrowPoints(2).X = TextRect.Left
@@ -15179,15 +15179,15 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSor
                 End If
             Case FlexSortArrowDescending
                 If VBFlexGridColsInfo(iCol).SortArrowAlignment = FlexLeftRightAlignmentRight Then
-                    SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowCalcSize.CX / 2)
-                    SortArrowPoints(0).Y = TextRect.Top + SortArrowCalcSize.CY + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) / 2)
+                    SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowCalcSize.CX \ 2)
+                    SortArrowPoints(0).Y = TextRect.Top + SortArrowCalcSize.CY + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) \ 2)
                     SortArrowPoints(1).X = (TextRect.Right - 1) - SortArrowCalcSize.CX
                     SortArrowPoints(1).Y = SortArrowPoints(0).Y - SortArrowCalcSize.CY
                     SortArrowPoints(2).X = (TextRect.Right - 1)
                     SortArrowPoints(2).Y = SortArrowPoints(0).Y - SortArrowCalcSize.CY
                 ElseIf VBFlexGridColsInfo(iCol).SortArrowAlignment = FlexLeftRightAlignmentLeft Then
-                    SortArrowPoints(0).X = TextRect.Left + (SortArrowCalcSize.CX / 2)
-                    SortArrowPoints(0).Y = TextRect.Top + SortArrowCalcSize.CY + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) / 2)
+                    SortArrowPoints(0).X = TextRect.Left + (SortArrowCalcSize.CX \ 2)
+                    SortArrowPoints(0).Y = TextRect.Top + SortArrowCalcSize.CY + ((SortArrowClientSize.CY - SortArrowCalcSize.CY) \ 2)
                     SortArrowPoints(1).X = TextRect.Left + SortArrowCalcSize.CX
                     SortArrowPoints(1).Y = SortArrowPoints(0).Y - SortArrowCalcSize.CY
                     SortArrowPoints(2).X = TextRect.Left
@@ -15301,7 +15301,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
             Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
                 LSet CalcRect = TextRect
                 Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
-                Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
+                Result = (((TextRect.Bottom - TextRect.Top) - Height) \ 2)
             Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom, FlexAlignmentGeneralBottom
                 LSet CalcRect = TextRect
                 Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
@@ -15662,22 +15662,22 @@ If Not .Picture Is Nothing Then
         PictureTop = PictureRect.Top
         Select Case .PictureAlignment
             Case FlexPictureAlignmentLeftCenter, FlexPictureAlignmentLeftCenterNoOverlap
-                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) \ 2)
             Case FlexPictureAlignmentLeftBottom, FlexPictureAlignmentLeftBottomNoOverlap
                 PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
             Case FlexPictureAlignmentCenterTop
-                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) \ 2)
             Case FlexPictureAlignmentCenterCenter
-                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
-                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) \ 2)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) \ 2)
             Case FlexPictureAlignmentCenterBottom
-                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) / 2)
+                PictureOffsetX = (((PictureRect.Right - PictureRect.Left) - PictureWidth) \ 2)
                 PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
             Case FlexPictureAlignmentRightTop, FlexPictureAlignmentRightTopNoOverlap
                 PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
             Case FlexPictureAlignmentRightCenter, FlexPictureAlignmentRightCenterNoOverlap
                 PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
-                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) / 2)
+                PictureOffsetY = (((PictureRect.Bottom - PictureRect.Top) - PictureHeight) \ 2)
             Case FlexPictureAlignmentRightBottom, FlexPictureAlignmentRightBottomNoOverlap
                 PictureOffsetX = ((PictureRect.Right - PictureRect.Left) - PictureWidth)
                 PictureOffsetY = ((PictureRect.Bottom - PictureRect.Top) - PictureHeight)
@@ -15739,22 +15739,22 @@ If VBFlexGridColsInfo(iCol).ImageList.Handle <> NULL_PTR Then
         ImageTop = ImageRect.Top
         Select Case ImageAlignment
             Case FlexAlignmentLeftCenter
-                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) \ 2)
             Case FlexAlignmentLeftBottom
                 ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
             Case FlexAlignmentCenterTop, FlexAlignmentGeneralTop
-                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) \ 2)
             Case FlexAlignmentCenterCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
-                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
-                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) \ 2)
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) \ 2)
             Case FlexAlignmentCenterBottom, FlexAlignmentGeneralBottom
-                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) / 2)
+                ImageOffsetX = (((ImageRect.Right - ImageRect.Left) - ImageWidth) \ 2)
                 ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
             Case FlexAlignmentRightTop
                 ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
             Case FlexAlignmentRightCenter
                 ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
-                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) / 2)
+                ImageOffsetY = (((ImageRect.Bottom - ImageRect.Top) - ImageHeight) \ 2)
             Case FlexAlignmentRightBottom
                 ImageOffsetX = ((ImageRect.Right - ImageRect.Left) - ImageWidth)
                 ImageOffsetY = ((ImageRect.Bottom - ImageRect.Top) - ImageHeight)
@@ -15784,22 +15784,22 @@ If Checked > -1 Then
     End If
     Select Case CheckBoxAlignment
         Case FlexCheckBoxAlignmentLeftCenter
-            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
         Case FlexCheckBoxAlignmentLeftBottom
             CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
         Case FlexCheckBoxAlignmentCenterTop
-            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
         Case FlexCheckBoxAlignmentCenterCenter
-            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
-            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
         Case FlexCheckBoxAlignmentCenterBottom
-            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
             CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
         Case FlexCheckBoxAlignmentRightTop
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
         Case FlexCheckBoxAlignmentRightCenter
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
-            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+            CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
         Case FlexCheckBoxAlignmentRightBottom
             CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
             CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
@@ -15995,7 +15995,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
             Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
                 LSet CalcRect = TextRect
                 Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
-                Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
+                Result = (((TextRect.Bottom - TextRect.Top) - Height) \ 2)
             Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom, FlexAlignmentGeneralBottom
                 LSet CalcRect = TextRect
                 Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
@@ -17590,22 +17590,22 @@ If iRowHit > -1 And iColHit > -1 Then
         End If
         Select Case CheckBoxAlignment
             Case FlexCheckBoxAlignmentLeftCenter
-                CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+                CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
             Case FlexCheckBoxAlignmentLeftBottom
                 CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
             Case FlexCheckBoxAlignmentCenterTop
-                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
             Case FlexCheckBoxAlignmentCenterCenter
-                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
-                CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
+                CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
             Case FlexCheckBoxAlignmentCenterBottom
-                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+                CheckBoxOffsetX = (((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
                 CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
             Case FlexCheckBoxAlignmentRightTop
                 CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
             Case FlexCheckBoxAlignmentRightCenter
                 CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
-                CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) / 2)
+                CheckBoxOffsetY = (((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize) \ 2)
             Case FlexCheckBoxAlignmentRightBottom
                 CheckBoxOffsetX = ((CheckBoxRect.Right - CheckBoxRect.Left) - VBFlexGridPixelMetrics.CheckBoxSize)
                 CheckBoxOffsetY = ((CheckBoxRect.Bottom - CheckBoxRect.Top) - VBFlexGridPixelMetrics.CheckBoxSize)
@@ -17954,11 +17954,11 @@ If iCol > 0 Then
     Else
         ' Rectangle is not wide enough to include the spacing.
         If (VBFlexGridColsInfo(iColLeft).State And CLIS_NOSIZING) = 0 And (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then
-            RC.Left = RC.Left + ((RC.Right - RC.Left) / 2)
+            RC.Left = RC.Left + ((RC.Right - RC.Left) \ 2)
             RC.Right = RC.Left ' Remainder
         Else
-            If (VBFlexGridColsInfo(iColLeft).State And CLIS_NOSIZING) = 0 Then RC.Left = RC.Left + ((RC.Right - RC.Left) / 2)
-            If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then RC.Right = RC.Right - ((RC.Right - RC.Left) / 2)
+            If (VBFlexGridColsInfo(iColLeft).State And CLIS_NOSIZING) = 0 Then RC.Left = RC.Left + ((RC.Right - RC.Left) \ 2)
+            If (VBFlexGridColsInfo(iCol).State And CLIS_NOSIZING) = 0 Then RC.Right = RC.Right - ((RC.Right - RC.Left) \ 2)
         End If
     End If
 ElseIf iCol > -1 Then
@@ -17982,11 +17982,11 @@ If iRow > 0 Then
     Else
         ' Rectangle is not wide enough to include the spacing.
         If (VBFlexGridCells.Rows(iRowTop).RowInfo.State And RWIS_NOSIZING) = 0 And (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then
-            RC.Top = RC.Top + ((RC.Bottom - RC.Top) / 2)
+            RC.Top = RC.Top + ((RC.Bottom - RC.Top) \ 2)
             RC.Bottom = RC.Top ' Remainder
         Else
-            If (VBFlexGridCells.Rows(iRowTop).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Top = RC.Top + ((RC.Bottom - RC.Top) / 2)
-            If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Bottom = RC.Bottom - ((RC.Bottom - RC.Top) / 2)
+            If (VBFlexGridCells.Rows(iRowTop).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Top = RC.Top + ((RC.Bottom - RC.Top) \ 2)
+            If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_NOSIZING) = 0 Then RC.Bottom = RC.Bottom - ((RC.Bottom - RC.Top) \ 2)
         End If
     End If
 ElseIf iRow > -1 Then
@@ -18246,7 +18246,7 @@ If hDC <> NULL_PTR Then
     Select Case Alignment
         Case FlexAlignmentLeftCenter, FlexAlignmentCenterCenter, FlexAlignmentRightCenter, FlexAlignmentGeneral, FlexAlignmentGeneralCenter
             Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
-            Result = (((TextRect.Bottom - TextRect.Top) - Height) / 2)
+            Result = (((TextRect.Bottom - TextRect.Top) - Height) \ 2)
             ' DT_VCENTER not applicable to apply here in case of DT_SINGLELINE.
         Case FlexAlignmentLeftBottom, FlexAlignmentCenterBottom, FlexAlignmentRightBottom, FlexAlignmentGeneralBottom
             Height = DrawText(hDC, StrPtr(Text), -1, CalcRect, DrawFlags Or DT_CALCRECT)
@@ -18264,7 +18264,7 @@ If hDC <> NULL_PTR Then
     End If
     If HiddenText = True Then .Flags = .Flags Or LBLI_HIDDEN
     If (DrawFlags And DT_CENTER) = DT_CENTER Then
-        Result = (((TextRect.Right - TextRect.Left) - (CalcRect.Right - CalcRect.Left)) / 2)
+        Result = (((TextRect.Right - TextRect.Left) - (CalcRect.Right - CalcRect.Left)) \ 2)
         CalcRect.Left = CalcRect.Left + Result
         CalcRect.Right = CalcRect.Right + Result
     ElseIf (DrawFlags And DT_RIGHT) = DT_RIGHT Then
@@ -21086,7 +21086,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                         .PT.Y = .PT.Y + GetRowHeight(i)
                     Next i
                 End If
-                If Y > (.PT.Y + (GetRowHeight(.MouseRow) / 2)) Then
+                If Y > (.PT.Y + (GetRowHeight(.MouseRow) \ 2)) Then
                     iRow = iRow + 1
                     .MouseRow = .MouseRow + 1
                 End If
@@ -21107,7 +21107,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                         .PT.X = .PT.X + GetColWidth(i)
                     Next i
                 End If
-                If X > (.PT.X + (GetColWidth(.MouseCol) / 2)) Then
+                If X > (.PT.X + (GetColWidth(.MouseCol) \ 2)) Then
                     iCol = iCol + 1
                     .MouseCol = .MouseCol + 1
                 End If
@@ -21261,7 +21261,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                         Next i
                     End If
                     If .MouseRow < (PropRows - 1) Then
-                        If Y > (.PT.Y + (GetRowHeight(.MouseRow) / 2)) Then .PT.Y = .PT.Y + GetRowHeight(.MouseRow)
+                        If Y > (.PT.Y + (GetRowHeight(.MouseRow) \ 2)) Then .PT.Y = .PT.Y + GetRowHeight(.MouseRow)
                     End If
                 End If
                 If VBFlexGridCaptureDividerCol > -1 Then
@@ -21281,7 +21281,7 @@ If VBFlexGridCaptureDividerDrag = True Then
                         Next i
                     End If
                     If .MouseCol < (PropCols - 1) Then
-                        If X > (.PT.X + (GetColWidth(.MouseCol) / 2)) Then .PT.X = .PT.X + GetColWidth(.MouseCol)
+                        If X > (.PT.X + (GetColWidth(.MouseCol) \ 2)) Then .PT.X = .PT.X + GetColWidth(.MouseCol)
                     End If
                 End If
                 ' VBFlexGridDividerDragOffset is not applicable as PT has fixed coordinates.
@@ -22063,7 +22063,7 @@ If Not InvertText = vbNullString Then
     InvertResult = DrawText(hDC, StrPtr(Left$(InvertText, Pos)), -1, RCInvert, DrawFlags Or DT_CALCRECT)
     DrawText hDC, StrPtr(InvertText), -1, RCInvertText, DrawFlags Or DT_CALCRECT
     If (DrawFlags And DT_CENTER) = DT_CENTER Then
-        InvertOffset = (((TextRect.Right - TextRect.Left) - (RCInvertText.Right - RCInvertText.Left)) / 2)
+        InvertOffset = (((TextRect.Right - TextRect.Left) - (RCInvertText.Right - RCInvertText.Left)) \ 2)
         RCInvert.Left = RCInvert.Left + InvertOffset
         RCInvert.Right = RCInvert.Right + InvertOffset
     ElseIf (DrawFlags And DT_RIGHT) = DT_RIGHT Then
@@ -22195,7 +22195,7 @@ If GetTextMetrics(hDC, TM) <> 0 Then
     CalcSize.CX = TM.TMAveCharWidth
     If CalcSize.CX < 3 Then CalcSize.CX = 3
     If CalcSize.CX Mod 2 Then CalcSize.CX = CalcSize.CX + 1
-    CalcSize.CY = CalcSize.CX / 2
+    CalcSize.CY = CalcSize.CX \ 2
     DrawSize.CX = CalcSize.CX + 1
     DrawSize.CY = CalcSize.CY + 1
     ClientSize.CX = DrawSize.CX + VBFlexGridPixelMetrics.CellTextWidthPadding
@@ -23124,10 +23124,10 @@ OldBkMode = SetBkMode(hDC, 1)
 OldTextAlign = SetTextAlign(hDC, TA_CENTER Or TA_BASELINE)
 hFontOld = SelectObject(hDC, GetStockObject(SYSTEM_FONT))
 With ContentRect
-X = .Left + ((.Right - .Left) / 2)
+X = .Left + ((.Right - .Left) \ 2)
 Y = .Bottom
 GetTextExtentPoint32 hDC, ByVal StrPtr("."), 1, Size
-Result = (((.Bottom - .Top) - (Size.CY / 2)) / 2)
+Result = (((.Bottom - .Top) - (Size.CY \ 2)) \ 2)
 If Result > 0 Then Y = Y - Result
 End With
 ' The system font is not scaled on higher DPI's.
@@ -23163,8 +23163,8 @@ If Picture.Handle <> NULL_PTR Then
     Dim CX As Long, CY As Long, X As Long, Y As Long
     CX = CHimetricToPixel_X(Picture.Width)
     CY = CHimetricToPixel_Y(Picture.Height)
-    X = ContentRect.Left + ((ContentRect.Right - ContentRect.Left - CX) / 2)
-    Y = ContentRect.Top + ((ContentRect.Bottom - ContentRect.Top - CY) / 2)
+    X = ContentRect.Left + ((ContentRect.Right - ContentRect.Left - CX) \ 2)
+    Y = ContentRect.Top + ((ContentRect.Bottom - ContentRect.Top - CY) \ 2)
     Call RenderPicture(Picture, hDC, X, Y, CX, CY, RenderFlag)
     If hRgnOld <> NULL_PTR Then
         ExtSelectClipRgn hDC, hRgnOld, RGN_COPY
