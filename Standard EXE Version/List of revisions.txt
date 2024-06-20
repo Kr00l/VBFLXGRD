@@ -1,5 +1,8 @@
 List of revisions:
 
+20-Jun-2024
+- Use of integer division \ instead of double division / where applicable.
+
 18-Jun-2024
 - Optimized the TextArray property.
 
