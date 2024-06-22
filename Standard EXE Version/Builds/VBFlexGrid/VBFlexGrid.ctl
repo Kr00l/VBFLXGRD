@@ -21551,7 +21551,7 @@ If hDCBmp <> NULL_PTR Then
             Dim pBitmapInfo As BITMAPINFO, pBits() As Byte
             pBitmapInfo.BMIHeader.BISize = LenB(pBitmapInfo.BMIHeader)
             If GetDIBits(pFormatRange.hDC, hBmp, 0, 0, NULL_PTR, pBitmapInfo, DIB_RGB_COLORS) <> 0 Then
-                ReDim pBits(0 To ((pBitmapInfo.BMIHeader.BISizeImage / pBitmapInfo.BMIHeader.BIHeight) - 1), 0 To (pBitmapInfo.BMIHeader.BIHeight - 1)) As Byte
+                ReDim pBits(0 To ((pBitmapInfo.BMIHeader.BISizeImage \ pBitmapInfo.BMIHeader.BIHeight) - 1), 0 To (pBitmapInfo.BMIHeader.BIHeight - 1)) As Byte
                 If GetDIBits(pFormatRange.hDC, hBmp, 0, pBitmapInfo.BMIHeader.BIHeight, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS) > 0 Then StretchDIBits pFormatRange.hDC, pFormatRange.RC.Left, pFormatRange.RC.Top, Scale_Width, Scale_Height, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS, vbSrcCopy
             End If
         End If
@@ -23806,7 +23806,7 @@ Select Case wMsg
             WheelDelta = WheelDelta + HiWord(CLng(wParam))
             If Abs(WheelDelta) >= 120 Then
                 Dim WheelDeltaPerLine As Long
-                WheelDeltaPerLine = (WheelDelta / VBFlexGridWheelScrollLines)
+                WheelDeltaPerLine = (WheelDelta \ VBFlexGridWheelScrollLines)
                 If Sgn(WheelDelta) = -1 Then
                     While WheelDelta <= WheelDeltaPerLine
                         SendMessage hWnd, WM_VSCROLL, MakeDWord(SB_LINEDOWN, 0), ByVal 0&
