@@ -614,7 +614,7 @@ CX = Bmp.BMWidth
 If pIconInfo.hBMColor <> NULL_PTR Then
     CY = Bmp.BMHeight
 Else
-    CY = Bmp.BMHeight / 2
+    CY = Bmp.BMHeight \ 2
 End If
 If pIconInfo.hBMColor <> NULL_PTR Then DeleteObject pIconInfo.hBMColor
 If pIconInfo.hBMMask <> NULL_PTR Then DeleteObject pIconInfo.hBMMask
