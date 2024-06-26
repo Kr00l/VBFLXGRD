@@ -66,7 +66,7 @@ Private FlexRowSizingModeIndividual, FlexRowSizingModeAll, FlexRowSizingModeUnif
 Private FlexMergeCellsNever, FlexMergeCellsFree, FlexMergeCellsRestrictRows, FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll, FlexMergeCellsFixedOnly
 Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending, FlexSortCustomText
 Private FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
-Private FlexPictureTypeColor, FlexPictureTypeMonochrome
+Private FlexPictureTypeColor, FlexPictureTypeMonochrome, FlexPictureTypeEnhMetafile
 Private FlexEllipsisFormatNone, FlexEllipsisFormatEnd, FlexEllipsisFormatPath, FlexEllipsisFormatWord
 Private FlexWordWrapNone, FlexWordBreak, FlexSingleLine, FlexEndEllipsis, FlexPathEllipsis, FlexWordEllipsis, FlexWordBreakEndEllipsis, FlexWordBreakPathEllipsis, FlexWordBreakWordEllipsis, FlexSingleLineEndEllipsis, FlexSingleLinePathEllipsis, FlexSingleLineWordEllipsis
 Private FlexMimicTextBoxOn, FlexMimicTextBoxOff
@@ -290,6 +290,7 @@ End Enum
 Public Enum FlexPictureTypeConstants
 FlexPictureTypeColor = 0
 FlexPictureTypeMonochrome = 1
+FlexPictureTypeEnhMetafile = 2
 End Enum
 Public Enum FlexEllipsisFormatConstants
 FlexEllipsisFormatNone = 0
@@ -779,7 +780,8 @@ Flags As Long
 RC As RECT
 DrawFlags As Long
 End Type
-Private Const DRAWINFO_FLAG_WALLPAPER As Long = &H1
+Private Const DRAWINFO_FLAG_METADC As Long = &H1
+Private Const DRAWINFO_FLAG_WALLPAPER As Long = &H2
 Private Type TDRAWINFO
 SelRange As TCELLRANGE
 GridLinePoints(0 To 5) As POINTAPI
@@ -1201,6 +1203,8 @@ Private Declare PtrSafe Function GetDeviceCaps Lib "gdi32" (ByVal hDC As LongPtr
 Private Declare PtrSafe Function GetWindowDC Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
 Private Declare PtrSafe Function GetDCEx Lib "user32" (ByVal hWnd As LongPtr, ByVal hRgnClip As LongPtr, ByVal fdwOptions As Long) As LongPtr
 Private Declare PtrSafe Function ReleaseDC Lib "user32" (ByVal hWnd As LongPtr, ByVal hDC As LongPtr) As Long
+Private Declare PtrSafe Function SaveDC Lib "gdi32" (ByVal hDC As LongPtr) As Long
+Private Declare PtrSafe Function RestoreDC Lib "gdi32" (ByVal hDC As LongPtr, ByVal nSavedDC As Long) As Long
 Private Declare PtrSafe Function GetTextMetrics Lib "gdi32" Alias "GetTextMetricsW" (ByVal hDC As LongPtr, ByRef lpMetrics As TEXTMETRIC) As Long
 Private Declare PtrSafe Function GetDoubleClickTime Lib "user32" () As Long
 Private Declare PtrSafe Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As Long
@@ -1241,6 +1245,10 @@ Private Declare PtrSafe Function SetTimer Lib "user32" (ByVal hWnd As LongPtr, B
 Private Declare PtrSafe Function KillTimer Lib "user32" (ByVal hWnd As LongPtr, ByVal nIDEvent As LongPtr) As Long
 Private Declare PtrSafe Function DragQueryFile Lib "shell32" Alias "DragQueryFileW" (ByVal hDrop As LongPtr, ByVal iFile As Long, ByVal lpszFile As LongPtr, ByVal cch As Long) As Long
 Private Declare PtrSafe Function DragQueryPoint Lib "shell32" (ByVal hDrop As LongPtr, ByRef lpPoint As POINTAPI) As Long
+Private Declare PtrSafe Function CreateEnhMetaFile Lib "gdi32" Alias "CreateEnhMetaFileW" (ByVal hDC As LongPtr, ByVal lpFileName As LongPtr, ByRef lpRect As RECT, ByVal lpDescription As LongPtr) As LongPtr
+Private Declare PtrSafe Function CloseEnhMetaFile Lib "gdi32" (ByVal hDC As LongPtr) As LongPtr
+Private Declare PtrSafe Function PlayEnhMetaFile Lib "gdi32" (ByVal hDC As LongPtr, ByVal hEMF As LongPtr, ByRef lpRect As RECT) As Long
+Private Declare PtrSafe Function DeleteEnhMetaFile Lib "gdi32" (ByVal hEMF As LongPtr) As Long
 #Else
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, ByRef Source As Any, ByVal Length As Long)
 Private Declare Sub ZeroMemory Lib "kernel32" Alias "RtlZeroMemory" (ByRef Destination As Any, ByVal Length As Long)
@@ -1337,6 +1345,8 @@ Private Declare Function GetDeviceCaps Lib "gdi32" (ByVal hDC As Long, ByVal nIn
 Private Declare Function GetWindowDC Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function GetDCEx Lib "user32" (ByVal hWnd As Long, ByVal hRgnClip As Long, ByVal fdwOptions As Long) As Long
 Private Declare Function ReleaseDC Lib "user32" (ByVal hWnd As Long, ByVal hDC As Long) As Long
+Private Declare Function SaveDC Lib "gdi32" (ByVal hDC As Long) As Long
+Private Declare Function RestoreDC Lib "gdi32" (ByVal hDC As Long, ByVal nSavedDC As Long) As Long
 Private Declare Function GetTextMetrics Lib "gdi32" Alias "GetTextMetricsW" (ByVal hDC As Long, ByRef lpMetrics As TEXTMETRIC) As Long
 Private Declare Function GetDoubleClickTime Lib "user32" () As Long
 Private Declare Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As Long
@@ -1377,6 +1387,10 @@ Private Declare Function SetTimer Lib "user32" (ByVal hWnd As Long, ByVal nIDEve
 Private Declare Function KillTimer Lib "user32" (ByVal hWnd As Long, ByVal nIDEvent As Long) As Long
 Private Declare Function DragQueryFile Lib "shell32" Alias "DragQueryFileW" (ByVal hDrop As Long, ByVal iFile As Long, ByVal lpszFile As Long, ByVal cch As Long) As Long
 Private Declare Function DragQueryPoint Lib "shell32" (ByVal hDrop As Long, ByRef lpPoint As POINTAPI) As Long
+Private Declare Function CreateEnhMetaFile Lib "gdi32" Alias "CreateEnhMetaFileW" (ByVal hDC As Long, ByVal lpFileName As Long, ByRef lpRect As RECT, ByVal lpDescription As Long) As Long
+Private Declare Function CloseEnhMetaFile Lib "gdi32" (ByVal hDC As Long) As Long
+Private Declare Function PlayEnhMetaFile Lib "gdi32" (ByVal hDC As Long, ByVal hEMF As Long, ByRef lpRect As RECT) As Long
+Private Declare Function DeleteEnhMetaFile Lib "gdi32" (ByVal hEMF As Long) As Long
 #End If
 
 #If ImplementThemedControls = True Then
@@ -1483,6 +1497,10 @@ Private Const PS_INSIDEFRAME As Long = 6
 Private Const NULL_BRUSH As Long = 5
 Private Const STRETCH_HALFTONE As Long = 4
 Private Const DIB_RGB_COLORS As Long = 0
+Private Const HORZSIZE As Long = 4
+Private Const VERTSIZE As Long = 6
+Private Const HORZRES As Long = 8
+Private Const VERTRES As Long = 10
 Private Const LOGPIXELSX As Long = 88
 Private Const LOGPIXELSY As Long = 90
 Private Const RASTERCAPS As Long = 38, RC_STRETCHBLT As Long = &H800
@@ -2546,9 +2564,9 @@ If PropDoubleBuffer = True Then
                 PatBlt VBFlexGridDoubleBufferDC, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight, vbPatCopy
                 SelectObject VBFlexGridDoubleBufferDC, Brush
             End If
-            Call DrawGrid(VBFlexGridDoubleBufferDC, NULL_PTR, True)
+            Call DrawGrid(VBFlexGridDoubleBufferDC, False, NULL_PTR, True)
         Else
-            Call DrawGrid(VBFlexGridDoubleBufferDC, hRgn, False)
+            Call DrawGrid(VBFlexGridDoubleBufferDC, False, hRgn, False)
             If hRgn <> NULL_PTR Then ExtSelectClipRgn UserControl.hDC, hRgn, RGN_COPY
         End If
         BitBlt UserControl.hDC, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight, VBFlexGridDoubleBufferDC, 0, 0, vbSrcCopy
@@ -2558,7 +2576,7 @@ If PropDoubleBuffer = True Then
         End If
     End If
 Else
-    Call DrawGrid(UserControl.hDC, NULL_PTR, True)
+    Call DrawGrid(UserControl.hDC, False, NULL_PTR, True)
 End If
 If PropRightToLeft = True And PropRightToLeftLayout = True Then SetLayout UserControl.hDC, OldLayout
 End Sub
@@ -4724,7 +4742,7 @@ End Property
 
 Public Property Let PictureType(ByVal Value As FlexPictureTypeConstants)
 Select Case Value
-    Case FlexPictureTypeColor, FlexPictureTypeMonochrome
+    Case FlexPictureTypeColor, FlexPictureTypeMonochrome, FlexPictureTypeEnhMetafile
         PropPictureType = Value
     Case Else
         Err.Raise 380
@@ -12404,41 +12422,56 @@ Public Property Get Picture() As IPictureDisp
 Attribute Picture.VB_Description = "Returns a picture of the flex grid control, suitable for printing, saving to disk, copying to the clipboard, or assigning to a different control."
 Attribute Picture.VB_MemberFlags = "400"
 If VBFlexGridHandle <> NULL_PTR Then
-    Dim hDC As LongPtr, hDCBmp As LongPtr
-    Dim hBmp As LongPtr, hBmpOld As LongPtr
+    Dim hDC As LongPtr
     hDC = GetDC(VBFlexGridHandle)
     If hDC <> NULL_PTR Then
-        hDCBmp = CreateCompatibleDC(hDC)
-        If hDCBmp <> NULL_PTR Then
-            Dim RC As RECT, iRow As Long, iCol As Long
-            With RC
-            .Top = 0
-            For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
-                .Bottom = .Bottom + GetRowHeight(iRow)
-            Next iRow
-            For iRow = VBFlexGridTopRow To (PropRows - 1)
-                .Bottom = .Bottom + GetRowHeight(iRow)
-            Next iRow
-            .Left = 0
-            For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
-                .Right = .Right + GetColWidth(iCol)
-            Next iCol
-            For iCol = VBFlexGridLeftCol To (PropCols - 1)
-                .Right = .Right + GetColWidth(iCol)
-            Next iCol
-            End With
-            If PropPictureType = FlexPictureTypeColor Then
-                hBmp = CreateCompatibleBitmap(hDC, RC.Right - RC.Left, RC.Bottom - RC.Top)
-            ElseIf PropPictureType = FlexPictureTypeMonochrome Then
-                hBmp = CreateCompatibleBitmap(hDCBmp, RC.Right - RC.Left, RC.Bottom - RC.Top)
+        Dim RC As RECT, iRow As Long, iCol As Long
+        With RC
+        .Top = 0
+        For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
+            .Bottom = .Bottom + GetRowHeight(iRow)
+        Next iRow
+        For iRow = VBFlexGridTopRow To (PropRows - 1)
+            .Bottom = .Bottom + GetRowHeight(iRow)
+        Next iRow
+        .Left = 0
+        For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+            .Right = .Right + GetColWidth(iCol)
+        Next iCol
+        For iCol = VBFlexGridLeftCol To (PropCols - 1)
+            .Right = .Right + GetColWidth(iCol)
+        Next iCol
+        End With
+        If PropPictureType <> FlexPictureTypeEnhMetafile Then
+            Dim hDCBmp As LongPtr
+            Dim hBmp As LongPtr, hBmpOld As LongPtr
+            hDCBmp = CreateCompatibleDC(hDC)
+            If hDCBmp <> NULL_PTR Then
+                If PropPictureType = FlexPictureTypeColor Then
+                    hBmp = CreateCompatibleBitmap(hDC, RC.Right - RC.Left, RC.Bottom - RC.Top)
+                ElseIf PropPictureType = FlexPictureTypeMonochrome Then
+                    hBmp = CreateCompatibleBitmap(hDCBmp, RC.Right - RC.Left, RC.Bottom - RC.Top)
+                End If
+                If hBmp <> NULL_PTR Then
+                    hBmpOld = SelectObject(hDCBmp, hBmp)
+                    Call DrawGrid(hDCBmp, False, NULL_PTR, True, True)
+                    Set Picture = PictureFromHandle(hBmp, vbPicTypeBitmap)
+                    SelectObject hDCBmp, hBmpOld
+                End If
+                DeleteDC hDCBmp
             End If
-            If hBmp <> NULL_PTR Then
-                hBmpOld = SelectObject(hDCBmp, hBmp)
-                Call DrawGrid(hDCBmp, NULL_PTR, True, True)
-                Set Picture = PictureFromHandle(hBmp, vbPicTypeBitmap)
-                SelectObject hDCBmp, hBmpOld
+        Else
+            Dim EnhMetaRect As RECT, EnhMetaDC As LongPtr, hEMF As LongPtr
+            EnhMetaRect.Left = (RC.Left * GetDeviceCaps(hDC, HORZSIZE) * 100) / GetDeviceCaps(hDC, HORZRES)
+            EnhMetaRect.Top = (RC.Top * GetDeviceCaps(hDC, VERTSIZE) * 100) / GetDeviceCaps(hDC, VERTRES)
+            EnhMetaRect.Right = (RC.Right * GetDeviceCaps(hDC, HORZSIZE) * 100) / GetDeviceCaps(hDC, HORZRES)
+            EnhMetaRect.Bottom = (RC.Bottom * GetDeviceCaps(hDC, VERTSIZE) * 100) / GetDeviceCaps(hDC, VERTRES)
+            EnhMetaDC = CreateEnhMetaFile(hDC, NULL_PTR, EnhMetaRect, NULL_PTR)
+            If EnhMetaDC <> NULL_PTR Then
+                Call DrawGrid(EnhMetaDC, True, NULL_PTR, True, True)
+                hEMF = CloseEnhMetaFile(EnhMetaDC)
             End If
-            DeleteDC hDCBmp
+            If hEMF <> NULL_PTR Then Set Picture = PictureFromHandle(hEMF, vbPicTypeEMetafile)
         End If
         ReleaseDC VBFlexGridHandle, hDC
     End If
@@ -13231,7 +13264,7 @@ If VBFlexGridHandle <> NULL_PTR And VBFlexGridNoRedraw = False Then
 End If
 End Sub
 
-Private Sub DrawGrid(ByVal hDC As LongPtr, ByRef hRgn As LongPtr, ByVal NoRgn As Boolean, Optional ByVal NoClip As Boolean, Optional ByVal lpCellRange As LongPtr)
+Private Sub DrawGrid(ByVal hDC As LongPtr, ByVal MetaDC As Boolean, ByRef hRgn As LongPtr, ByVal NoRgn As Boolean, Optional ByVal NoClip As Boolean, Optional ByVal lpCellRange As LongPtr)
 If VBFlexGridNoRedraw = True And hDC <> NULL_PTR Then
     If NoRgn = False Then hRgn = CreateRectRgn(0, 0, 0, 0)
     Exit Sub
@@ -13243,7 +13276,7 @@ Dim iRow As Long, iCol As Long, FixedCX As Long, FixedCY As Long, FrozenCX As Lo
 Dim CellRange As TCELLRANGE, CellRect As RECT, GridRect As RECT
 Dim OldBkMode As Long, hFontOld As LongPtr, Brush As LongPtr
 Call GetSelRangeStruct(VBFlexGridDrawInfo.SelRange)
-VBFlexGridDrawInfo.Flags = 0
+If MetaDC = False Then VBFlexGridDrawInfo.Flags = 0 Else VBFlexGridDrawInfo.Flags = DRAWINFO_FLAG_METADC
 For iCol = 0 To (PropFixedCols - 1)
     FixedCX = FixedCX + GetColWidth(iCol)
 Next iCol
@@ -14792,27 +14825,29 @@ Call GetCellFmtg(iRow, iCol, CFM_TEXTSTYLE Or CFM_ALIGNMENT Or CFM_PICTURE Or CF
 With CellFmtg
 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
-    ComboCue = GetComboCueActive(iRow, iCol)
-    If ComboCue > FlexComboCueNone Then
-        ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
-        If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
-        If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
-            ComboCueAlignment = VBFlexGridComboButtonAlignment
-        Else
-            ComboCueAlignment = VBFlexGridColsInfo(iCol).ComboButtonAlignment
+    If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) = 0 Then
+        ComboCue = GetComboCueActive(iRow, iCol)
+        If ComboCue > FlexComboCueNone Then
+            ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
+            If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
+            If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
+                ComboCueAlignment = VBFlexGridComboButtonAlignment
+            Else
+                ComboCueAlignment = VBFlexGridColsInfo(iCol).ComboButtonAlignment
+            End If
+            Select Case ComboCue
+                Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
+                    ComboCueCtlType = ODT_COMBOBOX
+                Case FlexComboCueButton, FlexComboCueDisabledButton
+                    ComboCueCtlType = ODT_BUTTON
+            End Select
+            Select Case ComboCue
+                Case FlexComboCueDropDown, FlexComboCueButton
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
+                Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+                    ComboCueItemState = ODS_DISABLED
+            End Select
         End If
-        Select Case ComboCue
-            Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
-                ComboCueCtlType = ODT_COMBOBOX
-            Case FlexComboCueButton, FlexComboCueDisabledButton
-                ComboCueCtlType = ODT_BUTTON
-        End Select
-        Select Case ComboCue
-            Case FlexComboCueDropDown, FlexComboCueButton
-                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
-            Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
-                ComboCueItemState = ODS_DISABLED
-        End Select
     End If
 End If
 Dim Text As String, TextRect As RECT, HiddenText As Boolean
@@ -15040,7 +15075,11 @@ If Checked > -1 Then
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
-    Call DrawCellCheckBox(hDC, CheckBoxRect, CellRect, Text, iRow, iCol, Checked)
+    If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) = 0 Then
+        Call DrawCellCheckBox(hDC, CheckBoxRect, CellRect, Text, iRow, iCol, Checked)
+    Else
+        Call DrawCellCheckBoxMetaDC(hDC, CheckBoxRect, CellRect, Text, iRow, iCol, Checked)
+    End If
     Select Case CheckBoxAlignment
         Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
@@ -15218,6 +15257,7 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSor
     End If
 End If
 If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
+    If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) <> 0 Then SaveDC hDC
     Dim TextStyle As FlexTextStyleConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyleFixed
@@ -15350,6 +15390,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
             SetRect TextRect, TextRect.Left - 1, TextRect.Top - 1, TextRect.Right - 1, TextRect.Bottom - 1
     End Select
     DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+    If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) <> 0 Then RestoreDC hDC, -1
     If (iRow = VBFlexGridIncrementalSearch.Row And iCol = VBFlexGridIncrementalSearch.Col) Then Call DrawIncrementalSearch(hDC, Text, TextRect, DrawFlags)
 End If
 SetTextColor hDC, OldTextColor
@@ -15557,27 +15598,29 @@ Call GetCellFmtg(iRow, iCol, CFM_TEXTSTYLE Or CFM_ALIGNMENT Or CFM_PICTURE Or CF
 With CellFmtg
 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants, ComboCueCtlType As Long, ComboCueItemState As Long
 If PropAllowUserEditing = True Then
-    ComboCue = GetComboCueActive(iRow, iCol)
-    If ComboCue > FlexComboCueNone Then
-        ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
-        If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
-        If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
-            ComboCueAlignment = VBFlexGridComboButtonAlignment
-        Else
-            ComboCueAlignment = VBFlexGridColsInfo(iCol).ComboButtonAlignment
+    If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) = 0 Then
+        ComboCue = GetComboCueActive(iRow, iCol)
+        If ComboCue > FlexComboCueNone Then
+            ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
+            If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
+            If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
+                ComboCueAlignment = VBFlexGridComboButtonAlignment
+            Else
+                ComboCueAlignment = VBFlexGridColsInfo(iCol).ComboButtonAlignment
+            End If
+            Select Case ComboCue
+                Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
+                    ComboCueCtlType = ODT_COMBOBOX
+                Case FlexComboCueButton, FlexComboCueDisabledButton
+                    ComboCueCtlType = ODT_BUTTON
+            End Select
+            Select Case ComboCue
+                Case FlexComboCueDropDown, FlexComboCueButton
+                    If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
+                Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
+                    ComboCueItemState = ODS_DISABLED
+            End Select
         End If
-        Select Case ComboCue
-            Case FlexComboCueDropDown, FlexComboCueDisabledDropDown
-                ComboCueCtlType = ODT_COMBOBOX
-            Case FlexComboCueButton, FlexComboCueDisabledButton
-                ComboCueCtlType = ODT_BUTTON
-        End Select
-        Select Case ComboCue
-            Case FlexComboCueDropDown, FlexComboCueButton
-                If VBFlexGridHotRow = iRow And VBFlexGridHotCol = iCol And VBFlexGridHotHitResult = FlexHitResultComboCue Then ComboCueItemState = ODS_HOTLIGHT
-            Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
-                ComboCueItemState = ODS_DISABLED
-        End Select
     End If
 End If
 Dim Text As String, TextRect As RECT, HiddenText As Boolean
@@ -15808,7 +15851,11 @@ If Checked > -1 Then
     If CheckBoxOffsetY > 0 Then CheckBoxRect.Top = CheckBoxRect.Top + CheckBoxOffsetY
     CheckBoxRect.Right = CheckBoxRect.Left + VBFlexGridPixelMetrics.CheckBoxSize
     CheckBoxRect.Bottom = CheckBoxRect.Top + VBFlexGridPixelMetrics.CheckBoxSize
-    Call DrawCellCheckBox(hDC, CheckBoxRect, CellRect, Text, iRow, iCol, Checked)
+    If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) = 0 Then
+        Call DrawCellCheckBox(hDC, CheckBoxRect, CellRect, Text, iRow, iCol, Checked)
+    Else
+        Call DrawCellCheckBoxMetaDC(hDC, CheckBoxRect, CellRect, Text, iRow, iCol, Checked)
+    End If
     Select Case CheckBoxAlignment
         Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
             TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
@@ -15907,6 +15954,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
     End With
 End If
 If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
+    If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) <> 0 Then SaveDC hDC
     Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
     If .TextStyle = -1 Then
         TextStyle = PropTextStyle
@@ -16044,6 +16092,7 @@ If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bott
             SetRect TextRect, TextRect.Left - 1, TextRect.Top - 1, TextRect.Right - 1, TextRect.Bottom - 1
     End Select
     DrawText hDC, StrPtr(Text), -1, TextRect, DrawFlags
+    If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) <> 0 Then RestoreDC hDC, -1
     If (iRow = VBFlexGridIncrementalSearch.Row And iCol = VBFlexGridIncrementalSearch.Col) Then Call DrawIncrementalSearch(hDC, Text, TextRect, DrawFlags)
 End If
 SetTextColor hDC, OldTextColor
@@ -21509,55 +21558,86 @@ If iCol > (PropCols - 1) Then
     RowOffset = iRow - (PropFixedRows + PropFrozenRows)
     ColOffset = 0
 End If
-Dim hDCBmp As LongPtr
-Dim hBmp As LongPtr, hBmpOld As LongPtr
-hDCBmp = CreateCompatibleDC(pFormatRange.hDC)
-If hDCBmp <> NULL_PTR Then
-    Dim RC As RECT
-    With RC
-    .Top = 0
-    For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
-        .Bottom = .Bottom + GetRowHeight(iRow)
-    Next iRow
-    For iRow = CellRange.TopRow To CellRange.BottomRow
-        .Bottom = .Bottom + GetRowHeight(iRow)
-    Next iRow
-    .Left = 0
-    For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
-        .Right = .Right + GetColWidth(iCol)
-    Next iCol
-    For iCol = CellRange.LeftCol To CellRange.RightCol
-        .Right = .Right + GetColWidth(iCol)
-    Next iCol
-    End With
-    hBmp = CreateCompatibleBitmap(pFormatRange.hDC, RC.Right - RC.Left, RC.Bottom - RC.Top)
-    If hBmp <> NULL_PTR Then
-        hBmpOld = SelectObject(hDCBmp, hBmp)
-        Call DrawGrid(hDCBmp, NULL_PTR, True, True, VarPtr(CellRange))
-        Dim Scale_Width As Long, Scale_Height As Long
-        Scale_Width = (RC.Right - RC.Left) * Scale_X
-        Scale_Height = (RC.Bottom - RC.Top) * Scale_Y
-        If Scale_Width > (pFormatRange.RC.Right - pFormatRange.RC.Left) Then Scale_Width = pFormatRange.RC.Right - pFormatRange.RC.Left
-        If Scale_Height > (pFormatRange.RC.Bottom - pFormatRange.RC.Top) Then Scale_Height = pFormatRange.RC.Bottom - pFormatRange.RC.Top
-        Dim OldStretchBltMode As Long
-        OldStretchBltMode = SetStretchBltMode(pFormatRange.hDC, STRETCH_HALFTONE)
-        SetBrushOrgEx pFormatRange.hDC, 0, 0, ByVal NULL_PTR
-        If (GetDeviceCaps(pFormatRange.hDC, RASTERCAPS) And RC_STRETCHBLT) = RC_STRETCHBLT Then
-            StretchBlt pFormatRange.hDC, pFormatRange.RC.Left, pFormatRange.RC.Top, Scale_Width, Scale_Height, hDCBmp, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top, vbSrcCopy
-            SelectObject hDCBmp, hBmpOld
-        Else
-            ' hBmp must not be selected into a device context when the application calls GetDIBits.
-            SelectObject hDCBmp, hBmpOld
-            Dim pBitmapInfo As BITMAPINFO, pBits() As Byte
-            pBitmapInfo.BMIHeader.BISize = LenB(pBitmapInfo.BMIHeader)
-            If GetDIBits(pFormatRange.hDC, hBmp, 0, 0, NULL_PTR, pBitmapInfo, DIB_RGB_COLORS) <> 0 Then
-                ReDim pBits(0 To ((pBitmapInfo.BMIHeader.BISizeImage \ pBitmapInfo.BMIHeader.BIHeight) - 1), 0 To (pBitmapInfo.BMIHeader.BIHeight - 1)) As Byte
-                If GetDIBits(pFormatRange.hDC, hBmp, 0, pBitmapInfo.BMIHeader.BIHeight, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS) > 0 Then StretchDIBits pFormatRange.hDC, pFormatRange.RC.Left, pFormatRange.RC.Top, Scale_Width, Scale_Height, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS, vbSrcCopy
-            End If
+Dim RC As RECT
+With RC
+.Top = 0
+For iRow = 0 To ((PropFixedRows + PropFrozenRows) - 1)
+    .Bottom = .Bottom + GetRowHeight(iRow)
+Next iRow
+For iRow = CellRange.TopRow To CellRange.BottomRow
+    .Bottom = .Bottom + GetRowHeight(iRow)
+Next iRow
+.Left = 0
+For iCol = 0 To ((PropFixedCols + PropFrozenCols) - 1)
+    .Right = .Right + GetColWidth(iCol)
+Next iCol
+For iCol = CellRange.LeftCol To CellRange.RightCol
+    .Right = .Right + GetColWidth(iCol)
+Next iCol
+End With
+Dim Scaled_Width As Long, Scaled_Height As Long
+Scaled_Width = (RC.Right - RC.Left) * Scale_X
+Scaled_Height = (RC.Bottom - RC.Top) * Scale_Y
+If Scaled_Width > (pFormatRange.RC.Right - pFormatRange.RC.Left) Then Scaled_Width = pFormatRange.RC.Right - pFormatRange.RC.Left
+If Scaled_Height > (pFormatRange.RC.Bottom - pFormatRange.RC.Top) Then Scaled_Height = pFormatRange.RC.Bottom - pFormatRange.RC.Top
+If PropPictureType <> FlexPictureTypeEnhMetafile Then
+    Dim hDCBmp As LongPtr
+    Dim hBmp As LongPtr, hBmpOld As LongPtr
+    hDCBmp = CreateCompatibleDC(pFormatRange.hDC)
+    If hDCBmp <> NULL_PTR Then
+        If PropPictureType = FlexPictureTypeColor Then
+            hBmp = CreateCompatibleBitmap(pFormatRange.hDC, RC.Right - RC.Left, RC.Bottom - RC.Top)
+        ElseIf PropPictureType = FlexPictureTypeMonochrome Then
+            hBmp = CreateCompatibleBitmap(hDCBmp, RC.Right - RC.Left, RC.Bottom - RC.Top)
         End If
-        If OldStretchBltMode <> STRETCH_HALFTONE Then SetStretchBltMode pFormatRange.hDC, OldStretchBltMode
+        If hBmp <> NULL_PTR Then
+            hBmpOld = SelectObject(hDCBmp, hBmp)
+            Call DrawGrid(hDCBmp, False, NULL_PTR, True, True, VarPtr(CellRange))
+            Dim OldStretchBltMode As Long
+            OldStretchBltMode = SetStretchBltMode(pFormatRange.hDC, STRETCH_HALFTONE)
+            SetBrushOrgEx pFormatRange.hDC, 0, 0, ByVal NULL_PTR
+            If (GetDeviceCaps(pFormatRange.hDC, RASTERCAPS) And RC_STRETCHBLT) = RC_STRETCHBLT Then
+                StretchBlt pFormatRange.hDC, pFormatRange.RC.Left, pFormatRange.RC.Top, Scaled_Width, Scaled_Height, hDCBmp, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top, vbSrcCopy
+                SelectObject hDCBmp, hBmpOld
+            Else
+                ' hBmp must not be selected into a device context when the application calls GetDIBits.
+                SelectObject hDCBmp, hBmpOld
+                Dim pBitmapInfo As BITMAPINFO, pBits() As Byte
+                pBitmapInfo.BMIHeader.BISize = LenB(pBitmapInfo.BMIHeader)
+                If GetDIBits(pFormatRange.hDC, hBmp, 0, 0, NULL_PTR, pBitmapInfo, DIB_RGB_COLORS) <> 0 Then
+                    ReDim pBits(0 To ((pBitmapInfo.BMIHeader.BISizeImage \ pBitmapInfo.BMIHeader.BIHeight) - 1), 0 To (pBitmapInfo.BMIHeader.BIHeight - 1)) As Byte
+                    If GetDIBits(pFormatRange.hDC, hBmp, 0, pBitmapInfo.BMIHeader.BIHeight, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS) > 0 Then StretchDIBits pFormatRange.hDC, pFormatRange.RC.Left, pFormatRange.RC.Top, Scaled_Width, Scaled_Height, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top, VarPtr(pBits(0, 0)), pBitmapInfo, DIB_RGB_COLORS, vbSrcCopy
+                End If
+            End If
+            If OldStretchBltMode <> STRETCH_HALFTONE Then SetStretchBltMode pFormatRange.hDC, OldStretchBltMode
+            DeleteObject hBmp
+        End If
+        DeleteDC hDCBmp
     End If
-    DeleteDC hDCBmp
+Else
+    Dim hDC As LongPtr
+    If VBFlexGridHandle <> NULL_PTR Then hDC = GetDC(VBFlexGridHandle)
+    If hDC <> NULL_PTR Then
+        Dim EnhMetaRect As RECT, EnhMetaDC As LongPtr, hEMF As LongPtr
+        EnhMetaRect.Left = (RC.Left * GetDeviceCaps(hDC, HORZSIZE) * 100) / GetDeviceCaps(hDC, HORZRES)
+        EnhMetaRect.Top = (RC.Top * GetDeviceCaps(hDC, VERTSIZE) * 100) / GetDeviceCaps(hDC, VERTRES)
+        EnhMetaRect.Right = (RC.Right * GetDeviceCaps(hDC, HORZSIZE) * 100) / GetDeviceCaps(hDC, HORZRES)
+        EnhMetaRect.Bottom = (RC.Bottom * GetDeviceCaps(hDC, VERTSIZE) * 100) / GetDeviceCaps(hDC, VERTRES)
+        EnhMetaDC = CreateEnhMetaFile(hDC, NULL_PTR, EnhMetaRect, NULL_PTR)
+        If EnhMetaDC <> NULL_PTR Then
+            Call DrawGrid(EnhMetaDC, True, NULL_PTR, True, True, VarPtr(CellRange))
+            hEMF = CloseEnhMetaFile(EnhMetaDC)
+        End If
+        If hEMF <> NULL_PTR Then
+            EnhMetaRect.Left = pFormatRange.RC.Left
+            EnhMetaRect.Top = pFormatRange.RC.Top
+            EnhMetaRect.Right = pFormatRange.RC.Left + Scaled_Width
+            EnhMetaRect.Bottom = pFormatRange.RC.Top + Scaled_Height
+            PlayEnhMetaFile pFormatRange.hDC, hEMF, EnhMetaRect
+            DeleteEnhMetaFile hEMF
+        End If
+        ReleaseDC VBFlexGridHandle, hDC
+    End If
 End If
 End Function
 
@@ -22024,6 +22104,7 @@ End Sub
 
 Private Sub DrawIncrementalSearch(ByVal hDC As LongPtr, ByRef Text As String, ByRef TextRect As RECT, ByVal DrawFlags As Long, Optional ByRef SearchOffset As Long)
 If hDC = NULL_PTR Then Exit Sub
+If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) <> 0 Then SaveDC hDC
 Dim RCInvert As RECT, RCInvertText As RECT, InvertText As String, InvertResult As Long, InvertOffset As Long
 LSet RCInvert = TextRect
 LSet RCInvertText = TextRect
@@ -22091,6 +22172,7 @@ Else
     Text = vbNullString
     SearchOffset = 0
 End If
+If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) <> 0 Then RestoreDC hDC, -1
 With RCInvert
 If .Left < TextRect.Left Then .Left = TextRect.Left
 If .Top < TextRect.Top Then .Top = TextRect.Top
@@ -22212,6 +22294,7 @@ End Sub
 
 Private Sub DrawColSortArrow(ByVal hDC As LongPtr, ByVal Color As Long, ByRef P() As POINTAPI, ByRef ClipRgn As RECT)
 If hDC = NULL_PTR Then Exit Sub
+If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) <> 0 Then SaveDC hDC
 Dim hRgn As LongPtr, hRgnOld As LongPtr
 hRgn = CreateRectRgn(ClipRgn.Left, ClipRgn.Top, ClipRgn.Right, ClipRgn.Bottom)
 If hRgn <> NULL_PTR Then
@@ -22258,6 +22341,7 @@ If hRgn <> NULL_PTR Then
     DeleteObject hRgn
     hRgn = NULL_PTR
 End If
+If (VBFlexGridDrawInfo.Flags And DRAWINFO_FLAG_METADC) <> 0 Then RestoreDC hDC, -1
 End Sub
 
 Private Sub DrawCellCheckBox(ByVal hDC As LongPtr, ByRef RC As RECT, ByRef ClipRect As RECT, ByRef Text As String, ByVal iRow As Long, ByVal iCol As Long, ByVal Checked As Integer)
@@ -22408,6 +22492,31 @@ End If
 If hRgn <> NULL_PTR Then
     DeleteObject hRgn
     hRgn = NULL_PTR
+End If
+End Sub
+
+Private Sub DrawCellCheckBoxMetaDC(ByVal hDC As LongPtr, ByRef RC As RECT, ByRef ClipRect As RECT, ByRef Text As String, ByVal iRow As Long, ByVal iCol As Long, ByVal Checked As Integer)
+If hDC = NULL_PTR Then Exit Sub
+Dim hDCBmp As LongPtr
+Dim hBmp As LongPtr, hBmpOld As LongPtr
+hDCBmp = CreateCompatibleDC(hDC)
+If hDCBmp <> NULL_PTR Then
+    hBmp = CreateCompatibleBitmap(hDC, RC.Right - RC.Left, RC.Bottom - RC.Top)
+    If hBmp <> NULL_PTR Then
+        hBmpOld = SelectObject(hDCBmp, hBmp)
+        Dim RCBmp As RECT, hRgn As LongPtr
+        SetRect RCBmp, 0, 0, RC.Right - RC.Left, RC.Bottom - RC.Top
+        Call DrawCellCheckBox(hDCBmp, RCBmp, RCBmp, Text, iRow, iCol, Checked)
+        SaveDC hDC
+        hRgn = CreateRectRgn(ClipRect.Left, ClipRect.Top, ClipRect.Right, ClipRect.Bottom)
+        If hRgn <> NULL_PTR Then ExtSelectClipRgn hDC, hRgn, RGN_COPY
+        BitBlt hDC, RC.Left, RC.Top, RC.Right - RC.Left, RC.Bottom - RC.Top, hDCBmp, 0, 0, vbSrcCopy
+        RestoreDC hDC, -1
+        If hRgn <> NULL_PTR Then DeleteObject hRgn
+        SelectObject hDCBmp, hBmpOld
+        DeleteObject hBmp
+    End If
+    DeleteDC hDCBmp
 End If
 End Sub
 
@@ -23681,9 +23790,9 @@ Select Case wMsg
                 If VBFlexGridDoubleBufferDC <> NULL_PTR And VBFlexGridDoubleBufferBmp <> NULL_PTR Then
                     If .fErase <> 0 Then
                         If VBFlexGridBackColorBkgBrush <> NULL_PTR Then FillRect VBFlexGridDoubleBufferDC, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
-                        Call DrawGrid(VBFlexGridDoubleBufferDC, NULL_PTR, True)
+                        Call DrawGrid(VBFlexGridDoubleBufferDC, False, NULL_PTR, True)
                     Else
-                        Call DrawGrid(VBFlexGridDoubleBufferDC, hRgn, False)
+                        Call DrawGrid(VBFlexGridDoubleBufferDC, False, hRgn, False)
                         If hRgn <> NULL_PTR Then ExtSelectClipRgn hDC, hRgn, RGN_COPY
                     End If
                     With PS.RCPaint
@@ -23696,13 +23805,13 @@ Select Case wMsg
                 End If
             Else
                 If .fErase <> 0 Then
-                    Call DrawGrid(hDC, hRgn, False)
+                    Call DrawGrid(hDC, False, hRgn, False)
                     If hRgn <> NULL_PTR Then
                         ExtSelectClipRgn hDC, hRgn, RGN_DIFF
                         If VBFlexGridBackColorBkgBrush <> NULL_PTR Then FillRect hDC, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
                     End If
                 Else
-                    Call DrawGrid(hDC, NULL_PTR, True)
+                    Call DrawGrid(hDC, False, NULL_PTR, True)
                 End If
                 If hRgn <> NULL_PTR Then
                     ExtSelectClipRgn hDC, NULL_PTR, RGN_COPY
@@ -23728,7 +23837,7 @@ Select Case wMsg
                     If SendMessage(hWnd, WM_ERASEBKGND, hDCBmp, ByVal 0&) = 0 Then
                         If VBFlexGridBackColorBkgBrush <> NULL_PTR Then FillRect hDCBmp, VBFlexGridClientRect, VBFlexGridBackColorBkgBrush
                     End If
-                    Call DrawGrid(hDCBmp, NULL_PTR, True)
+                    Call DrawGrid(hDCBmp, False, NULL_PTR, True)
                     BitBlt wParam, 0, 0, VBFlexGridClientRect.Right - VBFlexGridClientRect.Left, VBFlexGridClientRect.Bottom - VBFlexGridClientRect.Top, hDCBmp, 0, 0, vbSrcCopy
                     SelectObject hDCBmp, hBmpOld
                     DeleteObject hBmp
