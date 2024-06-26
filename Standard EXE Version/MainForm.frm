@@ -597,7 +597,7 @@ End Sub
 
 Private Sub Command7_Click()
 Clipboard.Clear
-Clipboard.SetData VBFlexGrid1.Picture, vbCFBitmap
+Clipboard.SetData VBFlexGrid1.Picture, IIf(VBFlexGrid1.PictureType <> FlexPictureTypeEnhMetafile, vbCFBitmap, vbCFEMetafile)
 MsgBox "You can now paste this printscreen with Ctrl+V in MS Paint for example.", vbInformation + vbOKOnly
 End Sub
 
