@@ -404,6 +404,8 @@ With ComboPictureType
 .ItemData(.NewIndex) = FlexPictureTypeColor
 .AddItem FlexPictureTypeMonochrome & " - Monochrome"
 .ItemData(.NewIndex) = FlexPictureTypeMonochrome
+.AddItem FlexPictureTypeEnhMetafile & " - EnhMetafile"
+.ItemData(.NewIndex) = FlexPictureTypeEnhMetafile
 End With
 With ComboEllipsisFormat
 .AddItem FlexEllipsisFormatNone & " - None"
