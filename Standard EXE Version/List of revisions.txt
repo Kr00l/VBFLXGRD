@@ -1,5 +1,8 @@
 List of revisions:
 
+27-Jun-2024
+- Bugfix on the WallPaper property related to the .Picture property and VP_FORMATRANGE message.
+
 26-Jun-2024
 - Included enum FlexPictureTypeEnhMetafile for the PictureType property.
   This enables much better results on Printer.PaintPicture on the .Picture property. (vbPicTypeEMetafile)
