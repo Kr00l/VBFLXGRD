@@ -13308,10 +13308,30 @@ End If
 OldBkMode = SetBkMode(hDC, 1)
 If Not PropWallPaper Is Nothing Then
     If PropWallPaper.Handle <> NULL_PTR Then
-        FillRect hDC, VBFlexGridClientRect, VBFlexGridBackColorBrush
+        Dim WallPaperBackgroundRect As RECT, WallPaperNoClipRect As RECT
+        With WallPaperBackgroundRect
+        .Left = 0
+        .Top = 0
+        .Right = FixedCX
+        For iCol = CellRange.LeftCol To CellRange.RightCol
+            .Right = .Right + GetColWidth(iCol)
+        Next iCol
+        .Bottom = FixedCY
+        For iRow = CellRange.TopRow To CellRange.BottomRow
+            .Bottom = .Bottom + GetRowHeight(iRow)
+        Next iRow
+        SetRect WallPaperNoClipRect, FixedCX, FixedCY, .Right, .Bottom
+        If .Right < VBFlexGridClientRect.Right Then .Right = VBFlexGridClientRect.Right
+        If .Bottom < VBFlexGridClientRect.Bottom Then .Bottom = VBFlexGridClientRect.Bottom
+        End With
+        FillRect hDC, WallPaperBackgroundRect, VBFlexGridBackColorBrush
         Dim WallPaperRect As RECT, WallPaperWidth As Long, WallPaperHeight As Long
         Dim WallPaperLeft As Long, WallPaperTop As Long, WallPaperOffsetX As Long, WallPaperOffsetY As Long
-        SetRect WallPaperRect, FixedCX, FixedCY, VBFlexGridClientRect.Right, VBFlexGridClientRect.Bottom
+        If NoClip = False Then
+            SetRect WallPaperRect, FixedCX, FixedCY, VBFlexGridClientRect.Right, VBFlexGridClientRect.Bottom
+        Else
+            LSet WallPaperRect = WallPaperNoClipRect
+        End If
         If PropWallPaperAlignment <> FlexWallPaperAlignmentStretch Then
             WallPaperWidth = CHimetricToPixel_X(PropWallPaper.Width)
             WallPaperHeight = CHimetricToPixel_Y(PropWallPaper.Height)
@@ -13345,6 +13365,12 @@ If Not PropWallPaper Is Nothing Then
         End Select
         If WallPaperOffsetX > 0 Then WallPaperLeft = WallPaperLeft + WallPaperOffsetX
         If WallPaperOffsetY > 0 Then WallPaperTop = WallPaperTop + WallPaperOffsetY
+        Dim hRgnWallPaper As LongPtr
+        hRgnWallPaper = CreateRectRgn(WallPaperRect.Left, WallPaperRect.Top, WallPaperRect.Right, WallPaperRect.Bottom)
+        If hRgnWallPaper <> NULL_PTR Then
+            SaveDC hDC
+            ExtSelectClipRgn hDC, hRgnWallPaper, RGN_COPY
+        End If
         If PropWallPaperAlignment <> FlexWallPaperAlignmentTile Then
             Call RenderPicture(PropWallPaper, hDC, WallPaperLeft, WallPaperTop, WallPaperWidth, WallPaperHeight, VBFlexGridWallPaperRenderFlag)
         Else
@@ -13356,6 +13382,11 @@ If Not PropWallPaper Is Nothing Then
                 WallPaperLeft = WallPaperLeft + WallPaperWidth
                 WallPaperTop = WallPaperRect.Top
             Loop While WallPaperLeft < WallPaperRect.Right
+        End If
+        If hRgnWallPaper <> NULL_PTR Then
+            RestoreDC hDC, -1
+            DeleteObject hRgnWallPaper
+            hRgnWallPaper = NULL_PTR
         End If
         VBFlexGridDrawInfo.Flags = VBFlexGridDrawInfo.Flags Or DRAWINFO_FLAG_WALLPAPER
     End If
