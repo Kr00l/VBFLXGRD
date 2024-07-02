@@ -56,7 +56,7 @@ Private FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn
 Private FlexFillStyleSingle, FlexFillStyleRepeat
 Private FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus
 Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy, FlexFocusRectFlat
-Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
+Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots, FlexGridLineFlatHorz, FlexGridLineInsetHorz, FlexGridLineRaisedHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz, FlexGridLineFlatVert, FlexGridLineInsetVert, FlexGridLineRaisedVert, FlexGridLineDashesVert, FlexGridLineDotsVert
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
 Private FlexHitResultNoWhere, FlexHitResultCell, FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight, FlexHitResultComboCue, FlexHitResultComboCueDisabled, FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
 Private FlexDropTargetModeByRow, FlexDropTargetModeByColumn
@@ -190,6 +190,16 @@ FlexGridLineInset = 2
 FlexGridLineRaised = 3
 FlexGridLineDashes = 4
 FlexGridLineDots = 5
+FlexGridLineFlatHorz = 6
+FlexGridLineInsetHorz = 7
+FlexGridLineRaisedHorz = 8
+FlexGridLineDashesHorz = 9
+FlexGridLineDotsHorz = 10
+FlexGridLineFlatVert = 11
+FlexGridLineInsetVert = 12
+FlexGridLineRaisedVert = 13
+FlexGridLineDashesVert = 14
+FlexGridLineDotsVert = 15
 End Enum
 Public Enum FlexTextStyleConstants
 FlexTextStyleFlat = 0
@@ -4510,12 +4520,12 @@ End Property
 
 Public Property Let GridLines(ByVal Value As FlexGridLineConstants)
 Select Case Value
-    Case FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
+    Case FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots, FlexGridLineFlatHorz, FlexGridLineInsetHorz, FlexGridLineRaisedHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz, FlexGridLineFlatVert, FlexGridLineInsetVert, FlexGridLineRaisedVert, FlexGridLineDashesVert, FlexGridLineDotsVert
         PropGridLines = Value
         Select Case Value
-            Case FlexGridLineDashes
+            Case FlexGridLineDashes, FlexGridLineDashesHorz, FlexGridLineDashesVert
                 VBFlexGridPenStyle = PS_DASH
-            Case FlexGridLineDots
+            Case FlexGridLineDots, FlexGridLineDotsHorz, FlexGridLineDotsVert
                 VBFlexGridPenStyle = PS_DOT
             Case Else
                 VBFlexGridPenStyle = PS_SOLID
@@ -4538,12 +4548,12 @@ End Property
 
 Public Property Let GridLinesFixed(ByVal Value As FlexGridLineConstants)
 Select Case Value
-    Case FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
+    Case FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots, FlexGridLineFlatHorz, FlexGridLineInsetHorz, FlexGridLineRaisedHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz, FlexGridLineFlatVert, FlexGridLineInsetVert, FlexGridLineRaisedVert, FlexGridLineDashesVert, FlexGridLineDotsVert
         PropGridLinesFixed = Value
         Select Case Value
-            Case FlexGridLineDashes
+            Case FlexGridLineDashes, FlexGridLineDashesHorz, FlexGridLineDashesVert
                 VBFlexGridFixedPenStyle = PS_DASH
-            Case FlexGridLineDots
+            Case FlexGridLineDots, FlexGridLineDotsHorz, FlexGridLineDotsVert
                 VBFlexGridFixedPenStyle = PS_DOT
             Case Else
                 VBFlexGridFixedPenStyle = PS_SOLID
@@ -4570,12 +4580,12 @@ End Property
 
 Public Property Let GridLinesFrozen(ByVal Value As FlexGridLineConstants)
 Select Case Value
-    Case FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots
+    Case FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots, FlexGridLineFlatHorz, FlexGridLineInsetHorz, FlexGridLineRaisedHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz, FlexGridLineFlatVert, FlexGridLineInsetVert, FlexGridLineRaisedVert, FlexGridLineDashesVert, FlexGridLineDotsVert
         PropGridLinesFrozen = Value
         Select Case Value
-            Case FlexGridLineDashes
+            Case FlexGridLineDashes, FlexGridLineDashesHorz, FlexGridLineDashesVert
                 VBFlexGridFrozenPenStyle = PS_DASH
-            Case FlexGridLineDots
+            Case FlexGridLineDots, FlexGridLineDotsHorz, FlexGridLineDotsVert
                 VBFlexGridFrozenPenStyle = PS_DOT
             Case Else
                 VBFlexGridFrozenPenStyle = PS_SOLID
@@ -5467,18 +5477,18 @@ If VBFlexGridHandle <> NULL_PTR Then
     VBFlexGridBackColorSelBrush = CreateSolidBrush(WinColor(PropBackColorSel))
     If PropFocusRect = FlexFocusRectFlat Then VBFlexGridFocusRectPen = CreatePen(PS_INSIDEFRAME, GetFocusRectWidth(), WinColor(PropBackColorSel))
     Select Case PropGridLines
-        Case FlexGridLineDashes
+        Case FlexGridLineDashes, FlexGridLineDashesHorz, FlexGridLineDashesVert
             VBFlexGridPenStyle = PS_DASH
-        Case FlexGridLineDots
+        Case FlexGridLineDots, FlexGridLineDotsHorz, FlexGridLineDotsVert
             VBFlexGridPenStyle = PS_DOT
         Case Else
             VBFlexGridPenStyle = PS_SOLID
     End Select
     VBFlexGridGridLinePen = CreatePen(VBFlexGridPenStyle, PropGridLineWidth, WinColor(PropGridColor))
     Select Case PropGridLinesFixed
-        Case FlexGridLineDashes
+        Case FlexGridLineDashes, FlexGridLineDashesHorz, FlexGridLineDashesVert
             VBFlexGridFixedPenStyle = PS_DASH
-        Case FlexGridLineDots
+        Case FlexGridLineDots, FlexGridLineDotsHorz, FlexGridLineDotsVert
             VBFlexGridFixedPenStyle = PS_DOT
         Case Else
             VBFlexGridFixedPenStyle = PS_SOLID
@@ -5489,9 +5499,9 @@ If VBFlexGridHandle <> NULL_PTR Then
         VBFlexGridGridLineFixedPen = CreatePen(VBFlexGridFixedPenStyle, PropGridLineWidthFixed, WinColor(PropGridColorFixed))
     End If
     Select Case PropGridLinesFrozen
-        Case FlexGridLineDashes
+        Case FlexGridLineDashes, FlexGridLineDashesHorz, FlexGridLineDashesVert
             VBFlexGridFrozenPenStyle = PS_DASH
-        Case FlexGridLineDots
+        Case FlexGridLineDots, FlexGridLineDotsHorz, FlexGridLineDotsVert
             VBFlexGridFrozenPenStyle = PS_DOT
         Case Else
             VBFlexGridFrozenPenStyle = PS_SOLID
@@ -14683,6 +14693,66 @@ If PropFrozenRows > 0 Or PropFrozenCols > 0 Then
                 VBFlexGridDrawInfo.GridLinePoints(1).X = VBFlexGridDrawInfo.GridLinePoints(1).X + 1
                 Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
             End If
+        Case FlexGridLineFlatHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz
+            If PropFrozenRows > 0 Then
+                hPenOld = SelectObject(hDC, VBFlexGridGridLineFrozenPen)
+                VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = (FixedCY + FrozenCY) - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).X = .Right
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = (FixedCY + FrozenCY) - 1
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+            End If
+        Case FlexGridLineInsetHorz, FlexGridLineRaisedHorz
+            If PropFrozenRows > 0 Then
+                If PropGridLinesFrozen = FlexGridLineInsetHorz Then
+                    hPenOld = SelectObject(hDC, VBFlexGridGridLineBlackPen)
+                ElseIf PropGridLinesFrozen = FlexGridLineRaisedHorz Then
+                    hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
+                End If
+                VBFlexGridDrawInfo.GridLinePoints(0).X = .Left
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = (FixedCY + FrozenCY) - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).X = .Right
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = (FixedCY + FrozenCY) - 1
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+                If PropGridLinesFrozen = FlexGridLineInsetHorz Then
+                    SelectObject hDC, VBFlexGridGridLineWhitePen
+                ElseIf PropGridLinesFrozen = FlexGridLineRaisedHorz Then
+                    SelectObject hDC, VBFlexGridGridLineBlackPen
+                End If
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = VBFlexGridDrawInfo.GridLinePoints(0).Y + 1
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = VBFlexGridDrawInfo.GridLinePoints(1).Y + 1
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+            End If
+        Case FlexGridLineFlatVert, FlexGridLineDashesVert, FlexGridLineDotsVert
+            If PropFrozenCols > 0 Then
+                hPenOld = SelectObject(hDC, VBFlexGridGridLineFrozenPen)
+                VBFlexGridDrawInfo.GridLinePoints(0).X = (FixedCX + FrozenCX) - 1
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(1).X = (FixedCX + FrozenCX) - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+            End If
+        Case FlexGridLineInsetVert, FlexGridLineRaisedVert
+            If PropFrozenCols > 0 Then
+                If PropGridLinesFrozen = FlexGridLineInsetVert Then
+                    hPenOld = SelectObject(hDC, VBFlexGridGridLineBlackPen)
+                ElseIf PropGridLinesFrozen = FlexGridLineRaisedVert Then
+                    hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
+                End If
+                VBFlexGridDrawInfo.GridLinePoints(0).X = (FixedCX + FrozenCX) - 1
+                VBFlexGridDrawInfo.GridLinePoints(0).Y = .Top
+                VBFlexGridDrawInfo.GridLinePoints(1).X = (FixedCX + FrozenCX) - 1
+                VBFlexGridDrawInfo.GridLinePoints(1).Y = .Bottom
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+                If PropGridLinesFrozen = FlexGridLineInsetVert Then
+                    SelectObject hDC, VBFlexGridGridLineWhitePen
+                ElseIf PropGridLinesFrozen = FlexGridLineRaisedVert Then
+                    SelectObject hDC, VBFlexGridGridLineBlackPen
+                End If
+                VBFlexGridDrawInfo.GridLinePoints(0).X = VBFlexGridDrawInfo.GridLinePoints(0).X + 1
+                VBFlexGridDrawInfo.GridLinePoints(1).X = VBFlexGridDrawInfo.GridLinePoints(1).X + 1
+                Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+            End If
     End Select
 End If
 If hPenOld <> NULL_PTR Then
@@ -15180,6 +15250,46 @@ Select Case PropGridLinesFixed
             SelectObject hDC, VBFlexGridGridLineBlackPen
         End If
         Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(3), 3
+    Case FlexGridLineFlatHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz
+        hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
+        VBFlexGridDrawInfo.GridLinePoints(1).X = VBFlexGridDrawInfo.GridLinePoints(1).X + 1
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+        VBFlexGridDrawInfo.GridLinePoints(1).X = VBFlexGridDrawInfo.GridLinePoints(1).X - 1
+    Case FlexGridLineInsetHorz, FlexGridLineRaisedHorz
+        If PropGridLinesFixed = FlexGridLineInsetHorz Then
+            hPenOld = SelectObject(hDC, VBFlexGridGridLineBlackPen)
+        ElseIf PropGridLinesFixed = FlexGridLineRaisedHorz Then
+            hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
+        End If
+        VBFlexGridDrawInfo.GridLinePoints(1).X = VBFlexGridDrawInfo.GridLinePoints(1).X + 1
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+        VBFlexGridDrawInfo.GridLinePoints(1).X = VBFlexGridDrawInfo.GridLinePoints(1).X - 1
+        If PropGridLinesFixed = FlexGridLineInsetHorz Then
+            SelectObject hDC, VBFlexGridGridLineWhitePen
+        ElseIf PropGridLinesFixed = FlexGridLineRaisedHorz Then
+            SelectObject hDC, VBFlexGridGridLineBlackPen
+        End If
+        VBFlexGridDrawInfo.GridLinePoints(3).X = VBFlexGridDrawInfo.GridLinePoints(3).X + 1
+        VBFlexGridDrawInfo.GridLinePoints(4).X = VBFlexGridDrawInfo.GridLinePoints(4).X - 1
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(3), 2
+        VBFlexGridDrawInfo.GridLinePoints(3).X = VBFlexGridDrawInfo.GridLinePoints(3).X - 1
+        VBFlexGridDrawInfo.GridLinePoints(4).X = VBFlexGridDrawInfo.GridLinePoints(4).X + 1
+    Case FlexGridLineFlatVert, FlexGridLineDashesVert, FlexGridLineDotsVert
+        hPenOld = SelectObject(hDC, VBFlexGridGridLineFixedPen)
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(1), 2
+    Case FlexGridLineInsetVert, FlexGridLineRaisedVert
+        If PropGridLinesFixed = FlexGridLineInsetVert Then
+            hPenOld = SelectObject(hDC, VBFlexGridGridLineBlackPen)
+        ElseIf PropGridLinesFixed = FlexGridLineRaisedVert Then
+            hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
+        End If
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(1), 2
+        If PropGridLinesFixed = FlexGridLineInsetVert Then
+            SelectObject hDC, VBFlexGridGridLineWhitePen
+        ElseIf PropGridLinesFixed = FlexGridLineRaisedVert Then
+            SelectObject hDC, VBFlexGridGridLineBlackPen
+        End If
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(4), 2
 End Select
 If hPenOld <> NULL_PTR Then
     SelectObject hDC, hPenOld
@@ -15979,6 +16089,46 @@ Select Case PropGridLines
             SelectObject hDC, VBFlexGridGridLineBlackPen
         End If
         Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(3), 3
+    Case FlexGridLineFlatHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz
+        hPenOld = SelectObject(hDC, VBFlexGridGridLinePen)
+        VBFlexGridDrawInfo.GridLinePoints(1).X = VBFlexGridDrawInfo.GridLinePoints(1).X + 1
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+        VBFlexGridDrawInfo.GridLinePoints(1).X = VBFlexGridDrawInfo.GridLinePoints(1).X - 1
+    Case FlexGridLineInsetHorz, FlexGridLineRaisedHorz
+        If PropGridLines = FlexGridLineInsetHorz Then
+            hPenOld = SelectObject(hDC, VBFlexGridGridLineBlackPen)
+        ElseIf PropGridLines = FlexGridLineRaisedHorz Then
+            hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
+        End If
+        VBFlexGridDrawInfo.GridLinePoints(1).X = VBFlexGridDrawInfo.GridLinePoints(1).X + 1
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(0), 2
+        VBFlexGridDrawInfo.GridLinePoints(1).X = VBFlexGridDrawInfo.GridLinePoints(1).X - 1
+        If PropGridLines = FlexGridLineInsetHorz Then
+            SelectObject hDC, VBFlexGridGridLineWhitePen
+        ElseIf PropGridLines = FlexGridLineRaisedHorz Then
+            SelectObject hDC, VBFlexGridGridLineBlackPen
+        End If
+        VBFlexGridDrawInfo.GridLinePoints(3).X = VBFlexGridDrawInfo.GridLinePoints(3).X + 1
+        VBFlexGridDrawInfo.GridLinePoints(4).X = VBFlexGridDrawInfo.GridLinePoints(4).X - 1
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(3), 2
+        VBFlexGridDrawInfo.GridLinePoints(3).X = VBFlexGridDrawInfo.GridLinePoints(3).X - 1
+        VBFlexGridDrawInfo.GridLinePoints(4).X = VBFlexGridDrawInfo.GridLinePoints(4).X + 1
+    Case FlexGridLineFlatVert, FlexGridLineDashesVert, FlexGridLineDotsVert
+        hPenOld = SelectObject(hDC, VBFlexGridGridLinePen)
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(1), 2
+    Case FlexGridLineInsetVert, FlexGridLineRaisedVert
+        If PropGridLines = FlexGridLineInsetVert Then
+            hPenOld = SelectObject(hDC, VBFlexGridGridLineBlackPen)
+        ElseIf PropGridLines = FlexGridLineRaisedVert Then
+            hPenOld = SelectObject(hDC, VBFlexGridGridLineWhitePen)
+        End If
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(1), 2
+        If PropGridLines = FlexGridLineInsetVert Then
+            SelectObject hDC, VBFlexGridGridLineWhitePen
+        ElseIf PropGridLines = FlexGridLineRaisedVert Then
+            SelectObject hDC, VBFlexGridGridLineBlackPen
+        End If
+        Polyline hDC, VBFlexGridDrawInfo.GridLinePoints(4), 2
 End Select
 If hPenOld <> NULL_PTR Then
     SelectObject hDC, hPenOld
@@ -17492,6 +17642,36 @@ If PropFixGridLineOffsets = True Then
             .LeftTop.CY = 1
             .RightBottom.CX = 0
             .RightBottom.CY = 0
+        Case FlexGridLineFlatHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz
+            .LeftTop.CX = 0
+            .LeftTop.CY = 0
+            .RightBottom.CX = 0
+            .RightBottom.CY = 1
+        Case FlexGridLineInsetHorz
+            .LeftTop.CX = 0
+            .LeftTop.CY = 0
+            .RightBottom.CX = 0
+            .RightBottom.CY = 1
+        Case FlexGridLineRaisedHorz
+            .LeftTop.CX = 0
+            .LeftTop.CY = 1
+            .RightBottom.CX = 0
+            .RightBottom.CY = 0
+        Case FlexGridLineFlatVert, FlexGridLineDashesVert, FlexGridLineDotsVert
+            .LeftTop.CX = 0
+            .LeftTop.CY = 0
+            .RightBottom.CX = 1
+            .RightBottom.CY = 0
+        Case FlexGridLineInsetVert
+            .LeftTop.CX = 0
+            .LeftTop.CY = 0
+            .RightBottom.CX = 1
+            .RightBottom.CY = 0
+        Case FlexGridLineRaisedVert
+            .LeftTop.CX = 1
+            .LeftTop.CY = 0
+            .RightBottom.CX = 0
+            .RightBottom.CY = 0
     End Select
     If PropSheetBorder = True Or PropFrozenRows > 0 Or PropFrozenCols > 0 Then
         Dim MergedRange As TCELLRANGE
@@ -17518,6 +17698,18 @@ If PropFixGridLineOffsets = True Then
                             If .RightBottom.CY < 1 Then .RightBottom.CY = 1
                         Case FlexGridLineRaised
                             ' Void
+                        Case FlexGridLineFlatHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz
+                            If .RightBottom.CY < 1 Then .RightBottom.CY = 1
+                        Case FlexGridLineInsetHorz
+                            If .RightBottom.CY < 1 Then .RightBottom.CY = 1
+                        Case FlexGridLineRaisedHorz
+                            ' Void
+                        Case FlexGridLineFlatVert, FlexGridLineDashesVert, FlexGridLineDotsVert
+                            ' Void
+                        Case FlexGridLineInsetVert
+                            ' Void
+                        Case FlexGridLineRaisedVert
+                            ' Void
                     End Select
             End Select
             Select Case GetFrozenRow(True)
@@ -17531,6 +17723,18 @@ If PropFixGridLineOffsets = True Then
                             ' Void
                         Case FlexGridLineRaised
                             If .LeftTop.CY < 1 Then .LeftTop.CY = 1
+                        Case FlexGridLineFlatHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz
+                            ' Void
+                        Case FlexGridLineInsetHorz
+                            ' Void
+                        Case FlexGridLineRaisedHorz
+                            If .LeftTop.CY < 1 Then .LeftTop.CY = 1
+                        Case FlexGridLineFlatVert, FlexGridLineDashesVert, FlexGridLineDotsVert
+                            ' Void
+                        Case FlexGridLineInsetVert
+                            ' Void
+                        Case FlexGridLineRaisedVert
+                            ' Void
                     End Select
             End Select
         End If
@@ -17546,6 +17750,18 @@ If PropFixGridLineOffsets = True Then
                             If .RightBottom.CX < 1 Then .RightBottom.CX = 1
                         Case FlexGridLineRaised
                             ' Void
+                        Case FlexGridLineFlatHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz
+                            ' Void
+                        Case FlexGridLineInsetHorz
+                            ' Void
+                        Case FlexGridLineRaisedHorz
+                            ' Void
+                        Case FlexGridLineFlatVert, FlexGridLineDashesVert, FlexGridLineDotsVert
+                            If .RightBottom.CX < 1 Then .RightBottom.CX = 1
+                        Case FlexGridLineInsetVert
+                            If .RightBottom.CX < 1 Then .RightBottom.CX = 1
+                        Case FlexGridLineRaisedVert
+                            ' Void
                     End Select
             End Select
             Select Case GetFrozenCol(True)
@@ -17558,6 +17774,18 @@ If PropFixGridLineOffsets = True Then
                         Case FlexGridLineInset
                             ' Void
                         Case FlexGridLineRaised
+                            If .LeftTop.CX < 1 Then .LeftTop.CX = 1
+                        Case FlexGridLineFlatHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz
+                            ' Void
+                        Case FlexGridLineInsetHorz
+                            ' Void
+                        Case FlexGridLineRaisedHorz
+                            ' Void
+                        Case FlexGridLineFlatVert, FlexGridLineDashesVert, FlexGridLineDotsVert
+                            ' Void
+                        Case FlexGridLineInsetVert
+                            ' Void
+                        Case FlexGridLineRaisedVert
                             If .LeftTop.CX < 1 Then .LeftTop.CX = 1
                     End Select
             End Select

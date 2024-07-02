@@ -322,6 +322,26 @@ With ComboGridLines
 .ItemData(.NewIndex) = FlexGridLineDashes
 .AddItem FlexGridLineDots & " - Dots"
 .ItemData(.NewIndex) = FlexGridLineDots
+.AddItem FlexGridLineFlatHorz & " - FlatHorz"
+.ItemData(.NewIndex) = FlexGridLineFlatHorz
+.AddItem FlexGridLineInsetHorz & " - InsetHorz"
+.ItemData(.NewIndex) = FlexGridLineInsetHorz
+.AddItem FlexGridLineRaisedHorz & " - RaisedHorz"
+.ItemData(.NewIndex) = FlexGridLineRaisedHorz
+.AddItem FlexGridLineDashesHorz & " - DashesHorz"
+.ItemData(.NewIndex) = FlexGridLineDashesHorz
+.AddItem FlexGridLineDotsHorz & " - DotsHorz"
+.ItemData(.NewIndex) = FlexGridLineDotsHorz
+.AddItem FlexGridLineFlatVert & " - FlatVert"
+.ItemData(.NewIndex) = FlexGridLineFlatVert
+.AddItem FlexGridLineInsetVert & " - InsetVert"
+.ItemData(.NewIndex) = FlexGridLineInsetVert
+.AddItem FlexGridLineRaisedVert & " - RaisedVert"
+.ItemData(.NewIndex) = FlexGridLineRaisedVert
+.AddItem FlexGridLineDashesVert & " - DashesVert"
+.ItemData(.NewIndex) = FlexGridLineDashesVert
+.AddItem FlexGridLineDotsVert & " - DotsVert"
+.ItemData(.NewIndex) = FlexGridLineDotsVert
 End With
 With ComboGridLinesFixed
 .AddItem FlexGridLineNone & " - None"
@@ -336,6 +356,26 @@ With ComboGridLinesFixed
 .ItemData(.NewIndex) = FlexGridLineDashes
 .AddItem FlexGridLineDots & " - Dots"
 .ItemData(.NewIndex) = FlexGridLineDots
+.AddItem FlexGridLineFlatHorz & " - FlatHorz"
+.ItemData(.NewIndex) = FlexGridLineFlatHorz
+.AddItem FlexGridLineInsetHorz & " - InsetHorz"
+.ItemData(.NewIndex) = FlexGridLineInsetHorz
+.AddItem FlexGridLineRaisedHorz & " - RaisedHorz"
+.ItemData(.NewIndex) = FlexGridLineRaisedHorz
+.AddItem FlexGridLineDashesHorz & " - DashesHorz"
+.ItemData(.NewIndex) = FlexGridLineDashesHorz
+.AddItem FlexGridLineDotsHorz & " - DotsHorz"
+.ItemData(.NewIndex) = FlexGridLineDotsHorz
+.AddItem FlexGridLineFlatVert & " - FlatVert"
+.ItemData(.NewIndex) = FlexGridLineFlatVert
+.AddItem FlexGridLineInsetVert & " - InsetVert"
+.ItemData(.NewIndex) = FlexGridLineInsetVert
+.AddItem FlexGridLineRaisedVert & " - RaisedVert"
+.ItemData(.NewIndex) = FlexGridLineRaisedVert
+.AddItem FlexGridLineDashesVert & " - DashesVert"
+.ItemData(.NewIndex) = FlexGridLineDashesVert
+.AddItem FlexGridLineDotsVert & " - DotsVert"
+.ItemData(.NewIndex) = FlexGridLineDotsVert
 End With
 With ComboGridLinesFrozen
 .AddItem FlexGridLineNone & " - None"
@@ -350,6 +390,26 @@ With ComboGridLinesFrozen
 .ItemData(.NewIndex) = FlexGridLineDashes
 .AddItem FlexGridLineDots & " - Dots"
 .ItemData(.NewIndex) = FlexGridLineDots
+.AddItem FlexGridLineFlatHorz & " - FlatHorz"
+.ItemData(.NewIndex) = FlexGridLineFlatHorz
+.AddItem FlexGridLineInsetHorz & " - InsetHorz"
+.ItemData(.NewIndex) = FlexGridLineInsetHorz
+.AddItem FlexGridLineRaisedHorz & " - RaisedHorz"
+.ItemData(.NewIndex) = FlexGridLineRaisedHorz
+.AddItem FlexGridLineDashesHorz & " - DashesHorz"
+.ItemData(.NewIndex) = FlexGridLineDashesHorz
+.AddItem FlexGridLineDotsHorz & " - DotsHorz"
+.ItemData(.NewIndex) = FlexGridLineDotsHorz
+.AddItem FlexGridLineFlatVert & " - FlatVert"
+.ItemData(.NewIndex) = FlexGridLineFlatVert
+.AddItem FlexGridLineInsetVert & " - InsetVert"
+.ItemData(.NewIndex) = FlexGridLineInsetVert
+.AddItem FlexGridLineRaisedVert & " - RaisedVert"
+.ItemData(.NewIndex) = FlexGridLineRaisedVert
+.AddItem FlexGridLineDashesVert & " - DashesVert"
+.ItemData(.NewIndex) = FlexGridLineDashesVert
+.AddItem FlexGridLineDotsVert & " - DotsVert"
+.ItemData(.NewIndex) = FlexGridLineDotsVert
 End With
 With ComboTextStyle
 .AddItem FlexTextStyleFlat & " - Flat"
