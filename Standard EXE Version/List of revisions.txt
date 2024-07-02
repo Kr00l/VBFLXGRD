@@ -1,5 +1,8 @@
 List of revisions:
 
+02-Jul-2024
+- Included Horz/Vert enum variants for the GridLines/GridLinesFixed/GridLinesFrozen property.
+
 27-Jun-2024
 - Bugfix on the WallPaper property related to the .Picture property and VP_FORMATRANGE message.
 
