@@ -1,5 +1,9 @@
 List of revisions:
 
+19-Jul-2024
+- The width of the combo drop-down list now auto-fits.
+  Changing the width via SetWindowPos on EditSetupWindow event will continue to work as it fires after initial setup.
+
 02-Jul-2024
 - Included Horz/Vert enum variants for the GridLines/GridLinesFixed/GridLinesFrozen property.
 
