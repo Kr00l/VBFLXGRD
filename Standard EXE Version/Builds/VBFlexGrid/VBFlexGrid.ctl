@@ -1208,7 +1208,6 @@ Private Declare PtrSafe Function SetWindowPos Lib "user32" (ByVal hWnd As LongPt
 Private Declare PtrSafe Function SetTextColor Lib "gdi32" (ByVal hDC As LongPtr, ByVal crColor As Long) As Long
 Private Declare PtrSafe Function SetBkColor Lib "gdi32" (ByVal hDC As LongPtr, ByVal crColor As Long) As Long
 Private Declare PtrSafe Function GetTextExtentPoint32 Lib "gdi32" Alias "GetTextExtentPoint32W" (ByVal hDC As LongPtr, ByVal lpsz As LongPtr, ByVal cbString As Long, ByRef lpSize As SIZEAPI) As Long
-Private Declare PtrSafe Function GetTabbedTextExtent Lib "user32" Alias "GetTabbedTextExtentW" (ByVal hDC As LongPtr, ByVal lpsz As LongPtr, ByVal cbString As Long, ByVal nTabPositions As Long, ByVal lpnTabStopPositions As LongPtr) As Long
 Private Declare PtrSafe Function GetDC Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
 Private Declare PtrSafe Function GetDeviceCaps Lib "gdi32" (ByVal hDC As LongPtr, ByVal nIndex As Long) As Long
 Private Declare PtrSafe Function GetWindowDC Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
@@ -1350,7 +1349,6 @@ Private Declare Function SetWindowPos Lib "user32" (ByVal hWnd As Long, ByVal hW
 Private Declare Function SetTextColor Lib "gdi32" (ByVal hDC As Long, ByVal crColor As Long) As Long
 Private Declare Function SetBkColor Lib "gdi32" (ByVal hDC As Long, ByVal crColor As Long) As Long
 Private Declare Function GetTextExtentPoint32 Lib "gdi32" Alias "GetTextExtentPoint32W" (ByVal hDC As Long, ByVal lpsz As Long, ByVal cbString As Long, ByRef lpSize As SIZEAPI) As Long
-Private Declare Function GetTabbedTextExtent Lib "user32" Alias "GetTabbedTextExtentW" (ByVal hDC As Long, ByVal lpsz As Long, ByVal cbString As Long, ByVal nTabPositions As Long, ByVal lpnTabStopPositions As Long) As Long
 Private Declare Function GetDC Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function GetDeviceCaps Lib "gdi32" (ByVal hDC As Long, ByVal nIndex As Long) As Long
 Private Declare Function GetWindowDC Lib "user32" (ByVal hWnd As Long) As Long
@@ -1614,7 +1612,6 @@ Private Const LB_GETITEMHEIGHT As Long = &H1A1
 Private Const LB_FINDSTRINGEXACT As Long = &H1A2
 Private Const LBS_NOTIFY As Long = &H1
 Private Const LBS_SORT As Long = &H2
-Private Const LBS_USETABSTOPS As Long = &H80
 Private Const LBN_SELCHANGE As Long = 1
 Private Const MCM_FIRST As Long = &H1000
 Private Const MCM_GETCURSEL As Long = (MCM_FIRST + 1)
@@ -5958,11 +5955,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                                     Temp = Mid$(ComboItems, Pos2 + 1)
                                 End If
                                 SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, Index, ByVal StrPtr(Temp)
-                                If (dwStyle And LBS_USETABSTOPS) = 0 Then
-                                    GetTextExtentPoint32 hDC, ByVal StrPtr(Temp), Len(Temp), Size
-                                Else
-                                    Size.CX = LoWord(GetTabbedTextExtent(hDC, StrPtr(Temp), Len(Temp), 0, NULL_PTR))
-                                End If
+                                GetTextExtentPoint32 hDC, ByVal StrPtr(Temp), Len(Temp), Size
                                 If Size.CX > CX Then CX = Size.CX
                                 Pos2 = Pos1
                                 Index = Index + 1
