@@ -967,6 +967,15 @@ CancellationPending As Boolean
 NoLostFocus As Boolean
 Time As Long
 End Type
+Private Type TCOMBOMULTICOLUMNITEM
+Count As Long
+SubItems() As String
+End Type
+Private Type TCOMBOMULTICOLUMN
+MaxCount As Long
+MaxWidths() As Long
+Items() As TCOMBOMULTICOLUMNITEM
+End Type
 Private Type TFORMATRANGE
 hDC As LongPtr
 hDCTarget As LongPtr
@@ -1192,6 +1201,7 @@ Private Declare PtrSafe Function DrawFocusRect Lib "user32" (ByVal hDC As LongPt
 Private Declare PtrSafe Function DrawFrameControl Lib "user32" (ByVal hDC As LongPtr, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
 Private Declare PtrSafe Function DrawText Lib "user32" Alias "DrawTextW" (ByVal hDC As LongPtr, ByVal lpchText As LongPtr, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long) As Long
 Private Declare PtrSafe Function DrawTextEx Lib "user32" Alias "DrawTextExW" (ByVal hDC As LongPtr, ByVal lpchText As LongPtr, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long, ByRef lpDrawTextParams As Any) As Long
+Private Declare PtrSafe Function TextOut Lib "gdi32" Alias "TextOutW" (ByVal hDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal lpString As LongPtr, ByVal nCount As Long) As Long
 Private Declare PtrSafe Function ExtTextOut Lib "gdi32" Alias "ExtTextOutW" (ByVal hDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal wOptions As Long, ByRef lpRect As Any, ByVal lpString As LongPtr, ByVal nCount As Long, ByVal lpDX As LongPtr) As Long
 Private Declare PtrSafe Function DeleteObject Lib "gdi32" (ByVal hObject As LongPtr) As Long
 Private Declare PtrSafe Function SelectObject Lib "gdi32" (ByVal hDC As LongPtr, ByVal hObject As LongPtr) As LongPtr
@@ -1338,6 +1348,7 @@ Private Declare Function DrawFocusRect Lib "user32" (ByVal hDC As Long, ByRef lp
 Private Declare Function DrawFrameControl Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
 Private Declare Function DrawText Lib "user32" Alias "DrawTextW" (ByVal hDC As Long, ByVal lpchText As Long, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long) As Long
 Private Declare Function DrawTextEx Lib "user32" Alias "DrawTextExW" (ByVal hDC As Long, ByVal lpchText As Long, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long, ByRef lpDrawTextParams As Any) As Long
+Private Declare Function TextOut Lib "gdi32" Alias "TextOutW" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByVal lpString As Long, ByVal nCount As Long) As Long
 Private Declare Function ExtTextOut Lib "gdi32" Alias "ExtTextOutW" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByVal wOptions As Long, ByRef lpRect As Any, ByVal lpString As Long, ByVal nCount As Long, ByVal lpDX As Long) As Long
 Private Declare Function DeleteObject Lib "gdi32" (ByVal hObject As Long) As Long
 Private Declare Function SelectObject Lib "gdi32" (ByVal hDC As Long, ByVal hObject As Long) As Long
@@ -1477,6 +1488,8 @@ Private Const HWND_DESKTOP As Long = &H0
 #End If
 Private Const COLOR_WINDOW As Long = 5
 Private Const COLOR_WINDOWTEXT As Long = 8
+Private Const COLOR_HIGHLIGHT As Long = 13
+Private Const COLOR_HIGHLIGHTTEXT As Long = 14
 Private Const COLOR_GRAYTEXT As Long = 17
 Private Const COLOR_BTNTEXT As Long = 18
 Private Const COLOR_HOTLIGHT As Long = 26
@@ -1566,8 +1579,10 @@ Private Const DT_WORD_ELLIPSIS As Long = &H40000
 Private Const DT_CALCRECT As Long = &H400
 Private Const ETO_OPAQUE As Long = 2
 Private Const ETO_CLIPPED As Long = 4
-Private Const TA_CENTER As Long = 6
-Private Const TA_BASELINE As Long = 24
+Private Const TA_RTLREADING As Long = &H100
+Private Const TA_RIGHT As Long = &H2
+Private Const TA_CENTER As Long = &H6
+Private Const TA_BASELINE As Long = &H18
 Private Const GWL_STYLE As Long = (-16)
 Private Const GWL_EXSTYLE As Long = (-20)
 Private Const GWL_USERDATA As Long = (-21)
@@ -1608,10 +1623,13 @@ Private Const LB_GETCURSEL As Long = &H188
 Private Const LB_GETTEXT As Long = &H189
 Private Const LB_GETTEXTLEN As Long = &H18A
 Private Const LB_GETCOUNT As Long = &H18B
+Private Const LB_SETITEMHEIGHT As Long = &H1A0
 Private Const LB_GETITEMHEIGHT As Long = &H1A1
 Private Const LB_FINDSTRINGEXACT As Long = &H1A2
 Private Const LBS_NOTIFY As Long = &H1
 Private Const LBS_SORT As Long = &H2
+Private Const LBS_OWNERDRAWFIXED As Long = &H10
+Private Const LBS_HASSTRINGS As Long = &H40
 Private Const LBN_SELCHANGE As Long = 1
 Private Const MCM_FIRST As Long = &H1000
 Private Const MCM_GETCURSEL As Long = (MCM_FIRST + 1)
@@ -1713,7 +1731,7 @@ Private Const WM_NCHITTEST As Long = &H84, HTCLIENT As Long = 1, HTHSCROLL As Lo
 Private Const WM_NCPAINT As Long = &H85
 Private Const WM_NCMOUSEMOVE As Long = &HA0
 Private Const WM_NCMOUSELEAVE As Long = &H2A2
-Private Const WM_DRAWITEM As Long = &H2B, ODT_COMBOBOX As Long = &H3, ODT_BUTTON As Long = &H4, ODT_STATIC As Long = &H5
+Private Const WM_DRAWITEM As Long = &H2B, ODT_LISTBOX As Long = &H2, ODT_COMBOBOX As Long = &H3, ODT_BUTTON As Long = &H4, ODT_STATIC As Long = &H5
 Private Const WM_USER As Long = &H400
 Private Const VP_FORMATRANGE As Long = (WM_USER + 125), VP_YES As Long = 456654
 Private Const UM_CAPTURECHANGED As Long = (WM_USER + 1000)
@@ -1854,6 +1872,7 @@ Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
 Private VBFlexGridComboButtonWidth As Long
 Private VBFlexGridComboItems As String
 Private VBFlexGridComboBoxRect As RECT
+Private VBFlexGridComboMultiColumn As TCOMBOMULTICOLUMN
 Private VBFlexGridComboCalendarRegistered As Boolean
 Private VBFlexGridCheckBoxDrawMode As FlexCheckBoxDrawModeConstants
 Private VBFlexGridWheelScrollLines As Long
@@ -5931,6 +5950,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
             Select Case VBFlexGridComboModeActive
                 Case FlexComboModeDropDown, FlexComboModeEditable
                     dwStyle = WS_POPUP Or WS_BORDER Or LBS_NOTIFY Or LBS_SORT Or WS_VSCROLL Or WS_HSCROLL
+                    If InStr(ComboItems, vbTab) > 0 Then dwStyle = dwStyle Or LBS_OWNERDRAWFIXED Or LBS_HASSTRINGS
                     dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
                     If ComboButtonAlignment = FlexLeftRightAlignmentLeft Then dwExStyle = dwExStyle Or WS_EX_RIGHT Or WS_EX_LEFTSCROLLBAR
                     If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
@@ -5938,30 +5958,87 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                     SetRect VBFlexGridComboBoxRect, CellRangeRect.Left, CellRangeRect.Top, CellRangeRect.Right, CellRangeRect.Bottom
                     LSet WndRect = VBFlexGridComboBoxRect
                     MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
+                    With VBFlexGridComboMultiColumn
+                    .MaxCount = 0
+                    Erase .MaxWidths()
+                    Erase .Items()
+                    End With
                     VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), NULL_PTR, dwStyle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, NULL_PTR, App.hInstance, ByVal NULL_PTR)
                     If VBFlexGridComboListHandle <> NULL_PTR Then
                         SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
-                        Dim CX As Long
-                        If StrPtr(ComboItems) <> NULL_PTR Then
-                            Dim hDC As LongPtr, Size As SIZEAPI
-                            hDC = GetDC(VBFlexGridComboListHandle)
-                            SelectObject hDC, hFont
-                            Dim Pos1 As Long, Pos2 As Long, Temp As String, Index As Long
-                            Do
-                                Pos1 = InStr(Pos1 + 1, ComboItems, "|")
-                                If Pos1 > 0 Then
-                                    Temp = Mid$(ComboItems, Pos2 + 1, Pos1 - Pos2 - 1)
-                                Else
-                                    Temp = Mid$(ComboItems, Pos2 + 1)
-                                End If
-                                SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, Index, ByVal StrPtr(Temp)
-                                GetTextExtentPoint32 hDC, ByVal StrPtr(Temp), Len(Temp), Size
-                                If Size.CX > CX Then CX = Size.CX
-                                Pos2 = Pos1
-                                Index = Index + 1
-                            Loop Until Pos1 = 0
-                            ReleaseDC VBFlexGridComboListHandle, hDC
+                        Dim hDC As LongPtr, Size As SIZEAPI, CX As Long
+                        hDC = GetDC(VBFlexGridComboListHandle)
+                        SelectObject hDC, hFont
+                        If (dwStyle And LBS_OWNERDRAWFIXED) = LBS_OWNERDRAWFIXED Then
+                            Dim TM As TEXTMETRIC
+                            If GetTextMetrics(hDC, TM) <> 0 Then SendMessage VBFlexGridComboListHandle, LB_SETITEMHEIGHT, 0, ByVal TM.TMHeight
                         End If
+                        If StrPtr(ComboItems) <> NULL_PTR Then
+                            Dim Pos1 As Long, Pos2 As Long, Temp As String, Index As Long
+                            If Not (dwStyle And LBS_OWNERDRAWFIXED) = LBS_OWNERDRAWFIXED Then
+                                Do
+                                    Pos1 = InStr(Pos1 + 1, ComboItems, "|")
+                                    If Pos1 > 0 Then
+                                        Temp = Mid$(ComboItems, Pos2 + 1, Pos1 - Pos2 - 1)
+                                    Else
+                                        Temp = Mid$(ComboItems, Pos2 + 1)
+                                    End If
+                                    SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, Index, ByVal StrPtr(Temp)
+                                    GetTextExtentPoint32 hDC, ByVal StrPtr(Temp), Len(Temp), Size
+                                    If Size.CX > CX Then CX = Size.CX
+                                    Pos2 = Pos1
+                                    Index = Index + 1
+                                Loop Until Pos1 = 0
+                            Else
+                                With VBFlexGridComboMultiColumn
+                                Dim Pos3 As Long, Pos4 As Long, SubTemp As String, SubIndex As Long
+                                Do
+                                    Pos1 = InStr(Pos1 + 1, ComboItems, "|")
+                                    If Pos1 > 0 Then
+                                        Temp = Mid$(ComboItems, Pos2 + 1, Pos1 - Pos2 - 1)
+                                    Else
+                                        Temp = Mid$(ComboItems, Pos2 + 1)
+                                    End If
+                                    ReDim Preserve VBFlexGridComboMultiColumn.Items(0 To Index) As TCOMBOMULTICOLUMNITEM
+                                    Do
+                                        Pos3 = InStr(Pos3 + 1, Temp, vbTab)
+                                        If Pos3 > 0 Then
+                                            SubTemp = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - 1)
+                                        Else
+                                            SubTemp = Mid$(Temp, Pos4 + 1)
+                                        End If
+                                        If (SubIndex + 1) > .MaxCount Then
+                                            .MaxCount = SubIndex + 1
+                                            ReDim Preserve .MaxWidths(0 To (.MaxCount - 1)) As Long
+                                        End If
+                                        If SubIndex > 0 Then
+                                            With .Items(Index)
+                                            If SubIndex > .Count Then
+                                                .Count = SubIndex
+                                                ReDim Preserve .SubItems(0 To (SubIndex - 1)) As String
+                                                .SubItems(SubIndex - 1) = SubTemp
+                                            End If
+                                            End With
+                                        End If
+                                        If SubIndex = 0 Then SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, Index, ByVal StrPtr(SubTemp)
+                                        GetTextExtentPoint32 hDC, ByVal StrPtr(SubTemp), Len(SubTemp), Size
+                                        If Size.CX > .MaxWidths(SubIndex) Then .MaxWidths(SubIndex) = Size.CX
+                                        Pos4 = Pos3
+                                        SubIndex = SubIndex + 1
+                                    Loop Until Pos3 = 0
+                                    Pos2 = Pos1
+                                    Pos4 = 0
+                                    Index = Index + 1
+                                    SubIndex = 0
+                                Loop Until Pos1 = 0
+                                For SubIndex = 0 To (.MaxCount - 1)
+                                    If SubIndex > 0 Then CX = CX + 5
+                                    CX = CX + .MaxWidths(SubIndex)
+                                Next SubIndex
+                                End With
+                            End If
+                        End If
+                        ReleaseDC VBFlexGridComboListHandle, hDC
                         Const EDIT_MAXDROPDOWNITEMS As Integer = 9
                         Dim Count As Long, Height As Long
                         Count = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&))
@@ -22621,7 +22698,7 @@ Brush = CreateSolidBrush(Color)
 If Brush <> NULL_PTR Then OldBrush = SelectObject(hDC, Brush)
 Dim hPen As LongPtr, hPenOld As LongPtr
 hPen = CreatePen(PS_SOLID, 1, Color)
-If hPen <> 0 Then hPenOld = SelectObject(hDC, hPen)
+If hPen <> NULL_PTR Then hPenOld = SelectObject(hDC, hPen)
 Polygon hDC, P(0), 3
 If hPenOld <> NULL_PTR Then
     SelectObject hDC, hPenOld
@@ -24671,8 +24748,8 @@ Select Case wMsg
                 SetTextColor wParam, WinColor(VBFlexGridEditForeColor)
                 WindowProcControl = VBFlexGridEditBackColorBrush
             Else
-                SetBkColor wParam, WinColor(vbWindowBackground)
-                SetTextColor wParam, WinColor(vbWindowText)
+                SetBkColor wParam, GetSysColor(COLOR_WINDOW)
+                SetTextColor wParam, GetSysColor(COLOR_WINDOWTEXT)
                 WindowProcControl = GetSysColorBrush(COLOR_WINDOW)
             End If
             Exit Function
@@ -24680,11 +24757,10 @@ Select Case wMsg
     Case WM_THEMECHANGED
         VBFlexGridEnabledVisualStyles = EnabledVisualStyles()
     Case WM_DRAWITEM
-        Dim DIS As DRAWITEMSTRUCT
+        Dim DIS As DRAWITEMSTRUCT, Brush As LongPtr
         CopyMemory DIS, ByVal lParam, LenB(DIS)
         If DIS.CtlType = ODT_STATIC And DIS.CtlID = ID_COMBOBUTTONCHILD And DIS.hWndItem = VBFlexGridComboButtonHandle And VBFlexGridComboButtonHandle <> NULL_PTR Then
             DIS.ItemState = GetWindowLong(DIS.hWndItem, GWL_USERDATA)
-            Dim Brush As LongPtr
             If VBFlexGridEditBackColorBrush <> NULL_PTR Then
                 Brush = VBFlexGridEditBackColorBrush
             Else
@@ -24694,6 +24770,80 @@ Select Case wMsg
             Call ComboButtonDraw(VBFlexGridEditRow, VBFlexGridEditCol, DIS)
             WindowProcControl = 1
             Exit Function
+        ElseIf DIS.CtlType = ODT_LISTBOX And DIS.hWndItem = VBFlexGridComboListHandle And VBFlexGridComboListHandle <> NULL_PTR And DIS.ItemID > -1 Then
+            If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
+                Brush = GetSysColorBrush(COLOR_HIGHLIGHT)
+            Else
+                Brush = GetSysColorBrush(COLOR_WINDOW)
+            End If
+            FillRect DIS.hDC, DIS.RCItem, Brush
+            Dim dwExStyle As Long, TextAlign As Long, OldTextAlign As Long, OldBkMode As Long, OldTextColor As Long
+            dwExStyle = GetWindowLong(VBFlexGridComboListHandle, GWL_EXSTYLE)
+            If (dwExStyle And WS_EX_RTLREADING) = WS_EX_RTLREADING Then TextAlign = TA_RTLREADING
+            If (dwExStyle And WS_EX_RIGHT) = WS_EX_RIGHT Then TextAlign = TextAlign Or TA_RIGHT
+            If TextAlign <> 0 Then OldTextAlign = SetTextAlign(DIS.hDC, TextAlign)
+            OldBkMode = SetBkMode(DIS.hDC, 1)
+            If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
+                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+            ElseIf (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
+                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HIGHLIGHTTEXT))
+            Else
+                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_WINDOWTEXT))
+            End If
+            Dim Length As Long, Buffer As String
+            Length = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETTEXTLEN, DIS.ItemID, ByVal 0&))
+            If Not Length = LB_ERR Then
+                Buffer = String(Length, vbNullChar)
+                SendMessage VBFlexGridComboListHandle, LB_GETTEXT, DIS.ItemID, ByVal StrPtr(Buffer)
+                If (TextAlign And TA_RIGHT) = 0 Then
+                    TextOut DIS.hDC, DIS.RCItem.Left + 2, DIS.RCItem.Top, StrPtr(Buffer), Len(Buffer)
+                Else
+                    TextOut DIS.hDC, DIS.RCItem.Right - 2, DIS.RCItem.Top, StrPtr(Buffer), Len(Buffer)
+                End If
+            End If
+            With VBFlexGridComboMultiColumn
+            If .Items(DIS.ItemID).Count > 0 Then
+                Dim hPen As LongPtr, hPenOld As LongPtr, i As Long, Points(0 To 1) As POINTAPI
+                If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
+                    hPen = CreatePen(PS_SOLID, 0, GetSysColor(COLOR_HIGHLIGHTTEXT))
+                Else
+                    hPen = CreatePen(PS_SOLID, 0, GetSysColor(COLOR_GRAYTEXT))
+                End If
+                If hPen <> NULL_PTR Then hPenOld = SelectObject(DIS.hDC, hPen)
+                For i = 0 To (.Items(DIS.ItemID).Count - 1)
+                    Buffer = .Items(DIS.ItemID).SubItems(i)
+                    If (TextAlign And TA_RIGHT) = 0 Then
+                        If (i + 1) < .MaxCount Then DIS.RCItem.Left = DIS.RCItem.Left + .MaxWidths(i) + 5
+                        Points(0).X = DIS.RCItem.Left - 1
+                        Points(0).Y = DIS.RCItem.Top
+                        Points(1).X = DIS.RCItem.Left - 1
+                        Points(1).Y = DIS.RCItem.Bottom
+                        Polyline DIS.hDC, Points(0), 2
+                        TextOut DIS.hDC, DIS.RCItem.Left + 2, DIS.RCItem.Top, StrPtr(Buffer), Len(Buffer)
+                    Else
+                        If (i + 1) < .MaxCount Then DIS.RCItem.Right = DIS.RCItem.Right - .MaxWidths(i) - 5
+                        Points(0).X = DIS.RCItem.Right + 1
+                        Points(0).Y = DIS.RCItem.Top
+                        Points(1).X = DIS.RCItem.Right + 1
+                        Points(1).Y = DIS.RCItem.Bottom
+                        Polyline DIS.hDC, Points(0), 2
+                        TextOut DIS.hDC, DIS.RCItem.Right - 2, DIS.RCItem.Top, StrPtr(Buffer), Len(Buffer)
+                    End If
+                Next i
+                If hPenOld <> NULL_PTR Then
+                    SelectObject hDC, hPenOld
+                    hPenOld = NULL_PTR
+                End If
+                If hPen <> NULL_PTR Then
+                    DeleteObject hPen
+                    hPen = NULL_PTR
+                End If
+            End If
+            End With
+            SetBkMode DIS.hDC, OldBkMode
+            SetTextColor DIS.hDC, OldTextColor
+            If TextAlign <> 0 Then SetTextAlign DIS.hDC, OldTextAlign
+            If (DIS.ItemState And ODS_FOCUS) = ODS_FOCUS Then DrawFocusRect DIS.hDC, DIS.RCItem
         End If
     Case VP_FORMATRANGE
         WindowProcControl = ProcessFormatRange(wParam, lParam)
