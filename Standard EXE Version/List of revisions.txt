@@ -1,5 +1,9 @@
 List of revisions:
 
+21-Jul-2024
+- Support of vbTab in the ComboItems/ColComboItems run-time property.
+  This allows for a real multi-column drop-down list. (owner-drawn)
+
 19-Jul-2024
 - The width of the combo drop-down list now auto-fits.
   Changing the width via SetWindowPos on EditSetupWindow event will continue to work as it fires after initial setup.
