@@ -5958,11 +5958,6 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                     SetRect VBFlexGridComboBoxRect, CellRangeRect.Left, CellRangeRect.Top, CellRangeRect.Right, CellRangeRect.Bottom
                     LSet WndRect = VBFlexGridComboBoxRect
                     MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, WndRect, 2
-                    With VBFlexGridComboMultiColumn
-                    .MaxCount = 0
-                    Erase .MaxWidths()
-                    Erase .Items()
-                    End With
                     VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), NULL_PTR, dwStyle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, NULL_PTR, App.hInstance, ByVal NULL_PTR)
                     If VBFlexGridComboListHandle <> NULL_PTR Then
                         SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
@@ -5999,7 +5994,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                                     Else
                                         Temp = Mid$(ComboItems, Pos2 + 1)
                                     End If
-                                    ReDim Preserve VBFlexGridComboMultiColumn.Items(0 To Index) As TCOMBOMULTICOLUMNITEM
+                                    ReDim Preserve .Items(0 To Index) As TCOMBOMULTICOLUMNITEM
                                     Do
                                         Pos3 = InStr(Pos3 + 1, Temp, vbTab)
                                         If Pos3 > 0 Then
@@ -6238,6 +6233,11 @@ End If
 VBFlexGridEditRow = -1
 VBFlexGridEditCol = -1
 VBFlexGridComboModeActive = FlexComboModeNone
+If VBFlexGridComboMultiColumn.MaxCount > 0 Then
+    VBFlexGridComboMultiColumn.MaxCount = 0
+    Erase VBFlexGridComboMultiColumn.MaxWidths()
+    Erase VBFlexGridComboMultiColumn.Items()
+End If
 If Discard = False And VBFlexGridEditTextChanged = True Then
     RaiseEvent AfterEdit(Row, Col, True)
 Else
@@ -22697,7 +22697,7 @@ Dim Brush As LongPtr, OldBrush As LongPtr
 Brush = CreateSolidBrush(Color)
 If Brush <> NULL_PTR Then OldBrush = SelectObject(hDC, Brush)
 Dim hPen As LongPtr, hPenOld As LongPtr
-hPen = CreatePen(PS_SOLID, 1, Color)
+hPen = CreatePen(PS_SOLID, 0, Color)
 If hPen <> NULL_PTR Then hPenOld = SelectObject(hDC, hPen)
 Polygon hDC, P(0), 3
 If hPenOld <> NULL_PTR Then
@@ -24803,7 +24803,7 @@ Select Case wMsg
             End If
             With VBFlexGridComboMultiColumn
             If .Items(DIS.ItemID).Count > 0 Then
-                Dim hPen As LongPtr, hPenOld As LongPtr, i As Long, Points(0 To 1) As POINTAPI
+                Dim hPen As LongPtr, hPenOld As LongPtr, i As Long, LinePoints(0 To 1) As POINTAPI
                 If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
                     hPen = CreatePen(PS_SOLID, 0, GetSysColor(COLOR_HIGHLIGHTTEXT))
                 Else
@@ -24814,19 +24814,19 @@ Select Case wMsg
                     Buffer = .Items(DIS.ItemID).SubItems(i)
                     If (TextAlign And TA_RIGHT) = 0 Then
                         If (i + 1) < .MaxCount Then DIS.RCItem.Left = DIS.RCItem.Left + .MaxWidths(i) + 5
-                        Points(0).X = DIS.RCItem.Left - 1
-                        Points(0).Y = DIS.RCItem.Top
-                        Points(1).X = DIS.RCItem.Left - 1
-                        Points(1).Y = DIS.RCItem.Bottom
-                        Polyline DIS.hDC, Points(0), 2
+                        LinePoints(0).X = DIS.RCItem.Left - 1
+                        LinePoints(0).Y = DIS.RCItem.Top
+                        LinePoints(1).X = DIS.RCItem.Left - 1
+                        LinePoints(1).Y = DIS.RCItem.Bottom
+                        Polyline DIS.hDC, LinePoints(0), 2
                         TextOut DIS.hDC, DIS.RCItem.Left + 2, DIS.RCItem.Top, StrPtr(Buffer), Len(Buffer)
                     Else
                         If (i + 1) < .MaxCount Then DIS.RCItem.Right = DIS.RCItem.Right - .MaxWidths(i) - 5
-                        Points(0).X = DIS.RCItem.Right + 1
-                        Points(0).Y = DIS.RCItem.Top
-                        Points(1).X = DIS.RCItem.Right + 1
-                        Points(1).Y = DIS.RCItem.Bottom
-                        Polyline DIS.hDC, Points(0), 2
+                        LinePoints(0).X = DIS.RCItem.Right + 1
+                        LinePoints(0).Y = DIS.RCItem.Top
+                        LinePoints(1).X = DIS.RCItem.Right + 1
+                        LinePoints(1).Y = DIS.RCItem.Bottom
+                        Polyline DIS.hDC, LinePoints(0), 2
                         TextOut DIS.hDC, DIS.RCItem.Right - 2, DIS.RCItem.Top, StrPtr(Buffer), Len(Buffer)
                     End If
                 Next i
@@ -24844,6 +24844,8 @@ Select Case wMsg
             SetTextColor DIS.hDC, OldTextColor
             If TextAlign <> 0 Then SetTextAlign DIS.hDC, OldTextAlign
             If (DIS.ItemState And ODS_FOCUS) = ODS_FOCUS Then DrawFocusRect DIS.hDC, DIS.RCItem
+            WindowProcControl = 1
+            Exit Function
         End If
     Case VP_FORMATRANGE
         WindowProcControl = ProcessFormatRange(wParam, lParam)
