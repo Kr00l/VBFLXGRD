@@ -1,5 +1,9 @@
 List of revisions:
 
+23-Jul-2024
+- Included the ComboHeader/ColComboHeader run-time property.
+  This allows to define a header for the multi-column drop-down list.
+
 21-Jul-2024
 - Support of vbTab in the ComboItems/ColComboItems run-time property.
   This allows for a real multi-column drop-down list. (owner-drawn)

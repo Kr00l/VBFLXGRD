@@ -245,6 +245,7 @@ For i = 1 To 10
 Next i
 VBFlexGrid1.ColComboMode(COL_COMBODROPDOWN) = FlexComboModeDropDown
 VBFlexGrid1.ColComboItems(COL_COMBODROPDOWN) = ComboItems ' "Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
+VBFlexGrid1.ColComboHeader(COL_COMBODROPDOWN) = "Name" & vbTab & "Info 1" & vbTab & "Info 2"
 VBFlexGrid1.ColLookup(COL_COMBODROPDOWN) = ";NULL|0;|1;Arnold|2;Bob|3;Charlie|4;David|5;Elena|6;Felix|7;Greg|8;Hanna|9;Ivan|10;Jacob"
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
     VBFlexGrid1.TextMatrix(i, COL_COMBODROPDOWN) = "1" ' Arnold
@@ -253,6 +254,7 @@ For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
 Next i
 VBFlexGrid1.ColComboMode(COL_COMBOEDITABLE) = FlexComboModeEditable
 VBFlexGrid1.ColComboItems(COL_COMBOEDITABLE) = ComboItems ' "Arnold|Bob|Charlie|David|Elena|Felix|Greg|Hanna|Ivan|Jacob"
+VBFlexGrid1.ColComboHeader(COL_COMBOEDITABLE) = "Name" & vbTab & "Info 1" & vbTab & "Info 2"
 For i = VBFlexGrid1.FixedRows To VBFlexGrid1.Rows - 1 - 2 Step 3
     VBFlexGrid1.TextMatrix(i, COL_COMBOEDITABLE) = "Arnold"
     VBFlexGrid1.TextMatrix(i + 1, COL_COMBOEDITABLE) = "Bob"
