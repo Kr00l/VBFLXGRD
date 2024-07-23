@@ -6006,15 +6006,13 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                                             .MaxCount = SubIndex + 1
                                             ReDim Preserve .MaxWidths(0 To (.MaxCount - 1)) As Long
                                         End If
-                                        If SubIndex > 0 Then
-                                            With .Items(Index)
-                                            If SubIndex > .Count Then
-                                                .Count = SubIndex
-                                                ReDim Preserve .SubItems(0 To (SubIndex - 1)) As String
-                                                .SubItems(SubIndex - 1) = SubTemp
-                                            End If
-                                            End With
+                                        With .Items(Index)
+                                        If SubIndex > .Count Then
+                                            .Count = SubIndex
+                                            ReDim Preserve .SubItems(0 To (.Count - 1)) As String
+                                            .SubItems(SubIndex - 1) = SubTemp
                                         End If
+                                        End With
                                         If SubIndex = 0 Then SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, Index, ByVal StrPtr(SubTemp)
                                         GetTextExtentPoint32 hDC, ByVal StrPtr(SubTemp), Len(SubTemp), Size
                                         If Size.CX > .MaxWidths(SubIndex) Then .MaxWidths(SubIndex) = Size.CX
@@ -25259,7 +25257,6 @@ Select Case wMsg
                     WindowProcEdit = HTCLIENT
                 Else
                     WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
-                    If WindowProcEdit = 0 Then WindowProcEdit = HTBORDER
                 End If
                 Exit Function
             Case WM_NCPAINT
