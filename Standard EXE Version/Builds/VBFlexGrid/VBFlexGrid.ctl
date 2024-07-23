@@ -926,6 +926,7 @@ ComboButtonPictureRenderFlag As Integer
 ComboButtonAlignment As Integer ' As FlexLeftRightAlignmentConstants
 ComboButtonWidth As Long
 ComboItems As String
+ComboHeader As String
 CheckBoxAlignment As FlexCheckBoxAlignmentConstants
 FixedCheckBoxAlignment As FlexCheckBoxAlignmentConstants
 Lookup As TLOOKUP
@@ -971,10 +972,15 @@ Private Type TCOMBOMULTICOLUMNITEM
 Count As Long
 SubItems() As String
 End Type
+Private Type TCOMBOMULTICOLUMNHEADER
+Count As Long
+Items() As String
+End Type
 Private Type TCOMBOMULTICOLUMN
 MaxCount As Long
 MaxWidths() As Long
 Items() As TCOMBOMULTICOLUMNITEM
+Header As TCOMBOMULTICOLUMNHEADER
 End Type
 Private Type TFORMATRANGE
 hDC As LongPtr
@@ -1490,6 +1496,7 @@ Private Const COLOR_WINDOW As Long = 5
 Private Const COLOR_WINDOWTEXT As Long = 8
 Private Const COLOR_HIGHLIGHT As Long = 13
 Private Const COLOR_HIGHLIGHTTEXT As Long = 14
+Private Const COLOR_BTNFACE As Long = 15
 Private Const COLOR_GRAYTEXT As Long = 17
 Private Const COLOR_BTNTEXT As Long = 18
 Private Const COLOR_HOTLIGHT As Long = 26
@@ -1630,6 +1637,7 @@ Private Const LBS_NOTIFY As Long = &H1
 Private Const LBS_SORT As Long = &H2
 Private Const LBS_OWNERDRAWFIXED As Long = &H10
 Private Const LBS_HASSTRINGS As Long = &H40
+Private Const LBS_NOINTEGRALHEIGHT As Long = &H100
 Private Const LBN_SELCHANGE As Long = 1
 Private Const MCM_FIRST As Long = &H1000
 Private Const MCM_GETCURSEL As Long = (MCM_FIRST + 1)
@@ -1871,6 +1879,7 @@ Private VBFlexGridComboButtonAlignment As FlexRightToLeftModeConstants
 Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
 Private VBFlexGridComboButtonWidth As Long
 Private VBFlexGridComboItems As String
+Private VBFlexGridComboHeader As String
 Private VBFlexGridComboBoxRect As RECT
 Private VBFlexGridComboMultiColumn As TCOMBOMULTICOLUMN
 Private VBFlexGridComboCalendarRegistered As Boolean
@@ -5822,7 +5831,7 @@ If (dwStyle And WS_DLGFRAME) = WS_DLGFRAME Then dwStyle = dwStyle And Not WS_DLG
 If (dwExStyle And WS_EX_STATICEDGE) = WS_EX_STATICEDGE Then dwExStyle = dwExStyle And Not WS_EX_STATICEDGE
 If (dwExStyle And WS_EX_CLIENTEDGE) = WS_EX_CLIENTEDGE Then dwExStyle = dwExStyle And Not WS_EX_CLIENTEDGE
 If (dwExStyle And WS_EX_WINDOWEDGE) = WS_EX_WINDOWEDGE Then dwExStyle = dwExStyle And Not WS_EX_WINDOWEDGE
-Dim CellRangeRect As RECT, EditRect As RECT, ComboItems As String, ComboButtonWidth As Long, ComboButtonAlignment As FlexLeftRightAlignmentConstants
+Dim CellRangeRect As RECT, EditRect As RECT, ComboItems As String, ComboHeader As String, ComboButtonWidth As Long, ComboButtonAlignment As FlexLeftRightAlignmentConstants
 Call GetMergedRangeStruct(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditMergedRange)
 Call GetGridLineOffsetsStruct(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditGridLineOffsets)
 Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
@@ -5836,9 +5845,11 @@ End With
 If VBFlexGridColsInfo(VBFlexGridEditCol).ComboMode <> FlexComboModeNone Then
     VBFlexGridComboModeActive = VBFlexGridColsInfo(VBFlexGridEditCol).ComboMode
     ComboItems = VBFlexGridColsInfo(VBFlexGridEditCol).ComboItems
+    ComboHeader = VBFlexGridColsInfo(VBFlexGridEditCol).ComboHeader
 ElseIf VBFlexGridComboMode <> FlexComboModeNone Then
     VBFlexGridComboModeActive = VBFlexGridComboMode
     ComboItems = VBFlexGridComboItems
+    ComboHeader = VBFlexGridComboHeader
 End If
 If VBFlexGridComboModeActive <> FlexComboModeNone Then
     ComboButtonWidth = GetComboButtonWidth(VBFlexGridEditCol, FlexComboCueNone)
@@ -5950,7 +5961,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
             Select Case VBFlexGridComboModeActive
                 Case FlexComboModeDropDown, FlexComboModeEditable
                     dwStyle = WS_POPUP Or WS_BORDER Or LBS_NOTIFY Or LBS_SORT Or WS_VSCROLL Or WS_HSCROLL
-                    If InStr(ComboItems, vbTab) > 0 Then dwStyle = dwStyle Or LBS_OWNERDRAWFIXED Or LBS_HASSTRINGS
+                    If InStr(ComboItems, vbTab) > 0 Then dwStyle = dwStyle Or LBS_OWNERDRAWFIXED Or LBS_HASSTRINGS Or LBS_NOINTEGRALHEIGHT
                     dwExStyle = WS_EX_TOOLWINDOW Or WS_EX_TOPMOST
                     If ComboButtonAlignment = FlexLeftRightAlignmentLeft Then dwExStyle = dwExStyle Or WS_EX_RIGHT Or WS_EX_LEFTSCROLLBAR
                     If VBFlexGridRTLReading = True Then dwExStyle = dwExStyle Or WS_EX_RTLREADING
@@ -6006,15 +6017,13 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                                             .MaxCount = SubIndex + 1
                                             ReDim Preserve .MaxWidths(0 To (.MaxCount - 1)) As Long
                                         End If
-                                        If SubIndex > 0 Then
-                                            With .Items(Index)
-                                            If SubIndex > .Count Then
-                                                .Count = SubIndex
-                                                ReDim Preserve .SubItems(0 To (SubIndex - 1)) As String
-                                                .SubItems(SubIndex - 1) = SubTemp
-                                            End If
-                                            End With
+                                        With .Items(Index)
+                                        If SubIndex > .Count Then
+                                            .Count = SubIndex
+                                            ReDim Preserve .SubItems(0 To (.Count - 1)) As String
+                                            .SubItems(SubIndex - 1) = SubTemp
                                         End If
+                                        End With
                                         If SubIndex = 0 Then SendMessage VBFlexGridComboListHandle, LB_INSERTSTRING, Index, ByVal StrPtr(SubTemp)
                                         GetTextExtentPoint32 hDC, ByVal StrPtr(SubTemp), Len(SubTemp), Size
                                         If Size.CX > .MaxWidths(SubIndex) Then .MaxWidths(SubIndex) = Size.CX
@@ -6026,6 +6035,32 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                                     Index = Index + 1
                                     SubIndex = 0
                                 Loop Until Pos1 = 0
+                                If Not ComboHeader = vbNullString Then
+                                    Index = 0
+                                    Do
+                                        Pos1 = InStr(Pos1 + 1, ComboHeader, vbTab)
+                                        If Pos1 > 0 Then
+                                            Temp = Mid$(ComboHeader, Pos2 + 1, Pos1 - Pos2 - 1)
+                                        Else
+                                            Temp = Mid$(ComboHeader, Pos2 + 1)
+                                        End If
+                                        If (Index + 1) > .MaxCount Then
+                                            .MaxCount = Index + 1
+                                            ReDim Preserve .MaxWidths(0 To (.MaxCount - 1)) As Long
+                                        End If
+                                        With .Header
+                                        If (Index + 1) > .Count Then
+                                            .Count = Index + 1
+                                            ReDim Preserve .Items(0 To (.Count - 1)) As String
+                                            .Items(Index) = Temp
+                                        End If
+                                        End With
+                                        GetTextExtentPoint32 hDC, ByVal StrPtr(Temp), Len(Temp), Size
+                                        If Size.CX > .MaxWidths(Index) Then .MaxWidths(Index) = Size.CX
+                                        Pos2 = Pos1
+                                        Index = Index + 1
+                                    Loop Until Pos1 = 0
+                                End If
                                 For SubIndex = 0 To (.MaxCount - 1)
                                     If SubIndex > 0 Then CX = CX + 5
                                     CX = CX + .MaxWidths(SubIndex)
@@ -6044,7 +6079,11 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                                 Count = EDIT_MAXDROPDOWNITEMS
                                 CX = CX + GetSystemMetrics(SM_CXVSCROLL)
                         End Select
-                        Height = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETITEMHEIGHT, 0, ByVal 0&)) * Count
+                        If VBFlexGridComboMultiColumn.Header.Count = 0 Then
+                            Height = CLng(SendMessage(VBFlexGridComboListHandle, LB_GETITEMHEIGHT, 0, ByVal 0&)) * Count
+                        Else
+                            Height = (CLng(SendMessage(VBFlexGridComboListHandle, LB_GETITEMHEIGHT, 0, ByVal 0&)) * (Count + 1)) + 1
+                        End If
                         If (CX + 6) > (WndRect.Right - WndRect.Left) Then WndRect.Right = WndRect.Left + (CX + 6)
                         MoveWindow VBFlexGridComboListHandle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, Height + 2, 0
                         SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, SendMessage(VBFlexGridComboListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Text)), ByVal 0&
@@ -6109,6 +6148,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     If VBFlexGridComboListHandle <> NULL_PTR Then Call FlexSetSubclass(VBFlexGridComboListHandle, Me, 4)
     If VBFlexGridComboCalendarHandle <> NULL_PTR Then Call FlexSetSubclass(VBFlexGridComboCalendarHandle, Me, 5)
     SetWindowPos VBFlexGridEditHandle, NULL_PTR, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_FRAMECHANGED
+    If VBFlexGridComboListHandle <> NULL_PTR And VBFlexGridComboMultiColumn.Header.Count > 0 Then SetWindowPos VBFlexGridComboListHandle, NULL_PTR, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_FRAMECHANGED
     RaiseEvent EditSetupWindow(VBFlexGridEditBackColor, VBFlexGridEditForeColor)
     VBFlexGridEditBackColorBrush = CreateSolidBrush(WinColor(VBFlexGridEditBackColor))
     ShowWindow VBFlexGridEditHandle, SW_SHOW
@@ -6233,11 +6273,17 @@ End If
 VBFlexGridEditRow = -1
 VBFlexGridEditCol = -1
 VBFlexGridComboModeActive = FlexComboModeNone
-If VBFlexGridComboMultiColumn.MaxCount > 0 Then
-    VBFlexGridComboMultiColumn.MaxCount = 0
-    Erase VBFlexGridComboMultiColumn.MaxWidths()
-    Erase VBFlexGridComboMultiColumn.Items()
+With VBFlexGridComboMultiColumn
+If .MaxCount > 0 Then
+    .MaxCount = 0
+    Erase .MaxWidths()
+    Erase .Items()
+    With .Header
+    .Count = 0
+    Erase .Items()
+    End With
 End If
+End With
 If Discard = False And VBFlexGridEditTextChanged = True Then
     RaiseEvent AfterEdit(Row, Col, True)
 Else
@@ -8826,6 +8872,25 @@ Else
     Dim i As Long
     For i = 0 To (PropCols - 1)
         VBFlexGridColsInfo(i).ComboItems = Value
+    Next i
+End If
+End Property
+
+Public Property Get ColComboHeader(ByVal Index As Long) As String
+Attribute ColComboHeader.VB_Description = "Returns/sets the header to be used for the multi-column drop-down list when editing a cell for the specified column. To define a multi-column list, seperate columns with tab characters."
+Attribute ColComboHeader.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColComboHeader = VBFlexGridColsInfo(Index).ComboHeader
+End Property
+
+Public Property Let ColComboHeader(ByVal Index As Long, ByVal Value As String)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).ComboHeader = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).ComboHeader = Value
     Next i
 End If
 End Property
@@ -13045,6 +13110,16 @@ End Property
 
 Public Property Let ComboItems(ByVal Value As String)
 VBFlexGridComboItems = Value
+End Property
+
+Public Property Get ComboHeader() As String
+Attribute ComboHeader.VB_Description = "Returns/sets the header to be used for the multi-column drop-down list when editing a cell. To define a multi-column list, seperate columns with tab characters."
+Attribute ComboHeader.VB_MemberFlags = "400"
+ComboHeader = VBFlexGridComboHeader
+End Property
+
+Public Property Let ComboHeader(ByVal Value As String)
+VBFlexGridComboHeader = Value
 End Property
 
 Public Property Get ComboList(ByVal Index As Long) As String
@@ -24807,7 +24882,7 @@ Select Case wMsg
                 If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
                     hPen = CreatePen(PS_SOLID, 0, GetSysColor(COLOR_HIGHLIGHTTEXT))
                 Else
-                    hPen = CreatePen(PS_SOLID, 0, GetSysColor(COLOR_GRAYTEXT))
+                    hPen = CreatePen(PS_SOLID, 0, &HC0C0C0)
                 End If
                 If hPen <> NULL_PTR Then hPenOld = SelectObject(DIS.hDC, hPen)
                 For i = 0 To (.Items(DIS.ItemID).Count - 1)
@@ -25259,7 +25334,6 @@ Select Case wMsg
                     WindowProcEdit = HTCLIENT
                 Else
                     WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
-                    If WindowProcEdit = 0 Then WindowProcEdit = HTBORDER
                 End If
                 Exit Function
             Case WM_NCPAINT
@@ -25396,6 +25470,107 @@ Select Case wMsg
             Case Else
                 Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
         End Select
+    Case WM_NCCALCSIZE, WM_NCHITTEST, WM_NCPAINT
+        If VBFlexGridComboMultiColumn.Header.Count > 0 Then
+            Dim RC As RECT
+            Select Case wMsg
+                Case WM_NCCALCSIZE
+                    WindowProcComboList = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
+                    ' The NCCALCSIZE_PARAMS struct is not necessary because only the first rectangle is adjusted.
+                    ' If wParam is 1 or not, the treatment is the same.
+                    CopyMemory RC, ByVal lParam, LenB(RC)
+                    RC.Top = RC.Top + CLng(SendMessage(hWnd, LB_GETITEMHEIGHT, 0, ByVal 0&)) + 1
+                    CopyMemory ByVal lParam, RC, LenB(RC)
+                    WindowProcComboList = 0
+                    Exit Function
+                Case WM_NCHITTEST
+                    GetWindowRect hWnd, RC
+                    DefWindowProc hWnd, WM_NCCALCSIZE, 0, ByVal VarPtr(RC)
+                    If PtInRect(RC, Get_X_lParam(lParam), Get_Y_lParam(lParam)) <> 0 Then
+                        WindowProcComboList = HTCLIENT
+                    Else
+                        WindowProcComboList = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
+                    End If
+                    Exit Function
+                Case WM_NCPAINT
+                    Dim hDC As LongPtr
+                    If wParam = 1 Then ' Alias for entire window
+                        hDC = GetWindowDC(hWnd)
+                    Else
+                        hDC = GetDCEx(hWnd, wParam, DCX_WINDOW Or DCX_INTERSECTRGN Or DCX_USESTYLE)
+                    End If
+                    If hDC <> NULL_PTR Then
+                        Dim Brush As LongPtr
+                        Brush = GetSysColorBrush(COLOR_BTNFACE)
+                        Dim WndRect As RECT
+                        GetWindowRect hWnd, WndRect
+                        RC.Left = 1
+                        RC.Right = (WndRect.Right - WndRect.Left) - 1
+                        RC.Top = 1
+                        RC.Bottom = 1 + CLng(SendMessage(hWnd, LB_GETITEMHEIGHT, 0, ByVal 0&))
+                        FillRect hDC, RC, Brush
+                        Dim dwExStyle As Long, TextAlign As Long, OldTextAlign As Long, OldBkMode As Long, OldTextColor As Long
+                        dwExStyle = GetWindowLong(hWnd, GWL_EXSTYLE)
+                        If (dwExStyle And WS_EX_RTLREADING) = WS_EX_RTLREADING Then TextAlign = TA_RTLREADING
+                        If (dwExStyle And WS_EX_RIGHT) = WS_EX_RIGHT Then TextAlign = TextAlign Or TA_RIGHT
+                        If TextAlign <> 0 Then OldTextAlign = SetTextAlign(hDC, TextAlign)
+                        OldBkMode = SetBkMode(hDC, 1)
+                        If IsWindowEnabled(hWnd) <> 0 Then
+                            OldTextColor = SetTextColor(hDC, GetSysColor(COLOR_BTNTEXT))
+                        Else
+                            OldTextColor = SetTextColor(hDC, GetSysColor(COLOR_GRAYTEXT))
+                        End If
+                        Dim hFontOld As LongPtr, hPen As LongPtr, hPenOld As LongPtr, i As Long, LinePoints(0 To 1) As POINTAPI
+                        hFontOld = SelectObject(hDC, SendMessage(hWnd, WM_GETFONT, 0, ByVal 0&))
+                        hPen = CreatePen(PS_SOLID, 0, vbBlack)
+                        If hPen <> NULL_PTR Then hPenOld = SelectObject(hDC, hPen)
+                        LinePoints(0).X = RC.Left
+                        LinePoints(0).Y = RC.Bottom
+                        LinePoints(1).X = RC.Right
+                        LinePoints(1).Y = RC.Bottom
+                        Polyline hDC, LinePoints(0), 2
+                        With VBFlexGridComboMultiColumn
+                        For i = 0 To (.Header.Count - 1)
+                            If (TextAlign And TA_RIGHT) = 0 Then
+                                If i > 0 And i < .Header.Count Then RC.Left = RC.Left + .MaxWidths(i - 1) + 5
+                                LinePoints(0).X = RC.Left - 1
+                                LinePoints(0).Y = RC.Top
+                                LinePoints(1).X = RC.Left - 1
+                                LinePoints(1).Y = RC.Bottom
+                                Polyline hDC, LinePoints(0), 2
+                                TextOut hDC, RC.Left + 2, RC.Top, StrPtr(.Header.Items(i)), Len(.Header.Items(i))
+                            Else
+                                If i > 0 And i < .Header.Count Then RC.Right = RC.Right - .MaxWidths(i - 1) - 5
+                                LinePoints(0).X = RC.Right + 1
+                                LinePoints(0).Y = RC.Top
+                                LinePoints(1).X = RC.Right + 1
+                                LinePoints(1).Y = RC.Bottom
+                                Polyline hDC, LinePoints(0), 2
+                                TextOut hDC, RC.Right - 2, RC.Top, StrPtr(.Header.Items(i)), Len(.Header.Items(i))
+                            End If
+                        Next i
+                        End With
+                        If hPenOld <> NULL_PTR Then
+                            SelectObject hDC, hPenOld
+                            hPenOld = NULL_PTR
+                        End If
+                        If hPen <> NULL_PTR Then
+                            DeleteObject hPen
+                            hPen = NULL_PTR
+                        End If
+                        If hFontOld <> NULL_PTR Then
+                            SelectObject hDC, hFontOld
+                            hFontOld = NULL_PTR
+                        End If
+                        SetBkMode hDC, OldBkMode
+                        SetTextColor hDC, OldTextColor
+                        If TextAlign <> 0 Then SetTextAlign hDC, OldTextAlign
+                        ReleaseDC hWnd, hDC
+                    End If
+                    WindowProcComboList = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
+                    Exit Function
+            End Select
+        End If
 End Select
 WindowProcComboList = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
 End Function
