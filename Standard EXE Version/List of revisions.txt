@@ -1,5 +1,9 @@
 List of revisions:
 
+24-Jul-2024
+- Included the ComboBoundColumn/ColComboBoundColumn run-time property.
+  This defines the column which will be bound to the text box for the multi-column drop-down list.
+
 23-Jul-2024
 - Included the ComboHeader/ColComboHeader run-time property.
   This allows to define a header for the multi-column drop-down list.
