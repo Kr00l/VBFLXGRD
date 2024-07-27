@@ -927,8 +927,8 @@ ComboButtonAlignment As Integer ' As FlexLeftRightAlignmentConstants
 ComboButtonWidth As Long
 ComboItems As String
 ComboHeader As String
-ComboBoundColumn As Integer
-CheckBoxAlignment As Integer ' FlexCheckBoxAlignmentConstants
+ComboBoundColumn As Long
+CheckBoxAlignment As FlexCheckBoxAlignmentConstants
 FixedCheckBoxAlignment As FlexCheckBoxAlignmentConstants
 Lookup As TLOOKUP
 Format As String
@@ -978,7 +978,7 @@ MaxCount As Long
 MaxWidths() As Long
 Items() As TCOMBOMULTICOLUMNITEM
 Header As TCOMBOMULTICOLUMNITEM
-BoundColumn As Integer
+BoundColumn As Long
 End Type
 Private Type TFORMATRANGE
 hDC As LongPtr
@@ -1880,7 +1880,7 @@ Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
 Private VBFlexGridComboButtonWidth As Long
 Private VBFlexGridComboItems As String
 Private VBFlexGridComboHeader As String
-Private VBFlexGridComboBoundColumn As Integer
+Private VBFlexGridComboBoundColumn As Long
 Private VBFlexGridComboBoxRect As RECT
 Private VBFlexGridComboMultiColumn As TCOMBOMULTICOLUMN
 Private VBFlexGridComboCalendarRegistered As Boolean
@@ -5832,7 +5832,7 @@ If (dwStyle And WS_DLGFRAME) = WS_DLGFRAME Then dwStyle = dwStyle And Not WS_DLG
 If (dwExStyle And WS_EX_STATICEDGE) = WS_EX_STATICEDGE Then dwExStyle = dwExStyle And Not WS_EX_STATICEDGE
 If (dwExStyle And WS_EX_CLIENTEDGE) = WS_EX_CLIENTEDGE Then dwExStyle = dwExStyle And Not WS_EX_CLIENTEDGE
 If (dwExStyle And WS_EX_WINDOWEDGE) = WS_EX_WINDOWEDGE Then dwExStyle = dwExStyle And Not WS_EX_WINDOWEDGE
-Dim CellRangeRect As RECT, EditRect As RECT, ComboItems As String, ComboHeader As String, ComboBoundColumn As Integer, ComboButtonWidth As Long, ComboButtonAlignment As FlexLeftRightAlignmentConstants
+Dim CellRangeRect As RECT, EditRect As RECT, ComboItems As String, ComboHeader As String, ComboBoundColumn As Long, ComboButtonWidth As Long, ComboButtonAlignment As FlexLeftRightAlignmentConstants
 Call GetMergedRangeStruct(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditMergedRange)
 Call GetGridLineOffsetsStruct(VBFlexGridEditRow, VBFlexGridEditCol, VBFlexGridEditGridLineOffsets)
 Me.CellEnsureVisible , VBFlexGridEditMergedRange.TopRow, VBFlexGridEditMergedRange.LeftCol
@@ -8898,14 +8898,14 @@ Else
 End If
 End Property
 
-Public Property Get ColComboBoundColumn(ByVal Index As Long) As Integer
+Public Property Get ColComboBoundColumn(ByVal Index As Long) As Long
 Attribute ColComboBoundColumn.VB_Description = "Returns/sets the bound column to be used for the multi-column drop-down list when editing a cell for the specified column."
 Attribute ColComboBoundColumn.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 ColComboBoundColumn = VBFlexGridColsInfo(Index).ComboBoundColumn
 End Property
 
-Public Property Let ColComboBoundColumn(ByVal Index As Long, ByVal Value As Integer)
+Public Property Let ColComboBoundColumn(ByVal Index As Long, ByVal Value As Long)
 If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 If Value < 0 Then Err.Raise 380
 If Index > -1 Then
@@ -13145,13 +13145,13 @@ Public Property Let ComboHeader(ByVal Value As String)
 VBFlexGridComboHeader = Value
 End Property
 
-Public Property Get ComboBoundColumn() As Integer
+Public Property Get ComboBoundColumn() As Long
 Attribute ComboBoundColumn.VB_Description = "Returns/sets the bound column to be used for the multi-column drop-down list when editing a cell."
 Attribute ComboBoundColumn.VB_MemberFlags = "400"
 ComboBoundColumn = VBFlexGridComboBoundColumn
 End Property
 
-Public Property Let ComboBoundColumn(ByVal Value As Integer)
+Public Property Let ComboBoundColumn(ByVal Value As Long)
 If Value < 0 Then Err.Raise 380
 VBFlexGridComboBoundColumn = Value
 End Property
