@@ -975,7 +975,7 @@ Private Type TCOMBOMULTICOLUMN
 MaxCount As Long
 MaxWidths() As Long
 Items() As TCOMBOMULTICOLUMNITEM
-BoundColumn As Integer
+BoundColumn As Long
 End Type
 Private Type TFORMATRANGE
 hDC As LongPtr
