@@ -1,5 +1,12 @@
 List of revisions:
 
+01-Aug-2024
+- Included the AlwaysAllowComboCues property with new ComboCueClick event.
+  The combo cues can then be displayed always even when AllowUserEditing = False.
+  The ComboCueClick event is fired when either AllowUserEditing = False or a user attempt to edit has been canceled.
+- Improved the ComboButtonClick event to remove any WM_LBUTTONDOWN/WM_LBUTTONDBLCLK message
+  afterwards for the combo button window only so that we can get a toggle effect on the combo button.
+
 24-Jul-2024
 - Included the ComboBoundColumn/ColComboBoundColumn run-time property.
   This defines the column which will be bound to the text box for the multi-column drop-down list.
