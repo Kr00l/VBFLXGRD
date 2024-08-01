@@ -23415,7 +23415,10 @@ End If
 End Sub
 
 Private Sub ComboButtonPerformClick()
+Static InProc As Boolean
+If InProc = True Then Exit Sub
 If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboButtonHandle <> NULL_PTR And VBFlexGridComboListHandle = NULL_PTR And VBFlexGridComboCalendarHandle = NULL_PTR Then
+    InProc = True
     Dim dwLong As Long
     dwLong = GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA)
     If Not (dwLong And ODS_DISABLED) = ODS_DISABLED Then
@@ -23426,7 +23429,13 @@ If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboButtonHandle <> NULL_PTR 
         VBFlexGridEditNoLostFocus = True
         RaiseEvent ComboButtonClick
         If VBFlexGridEditHandle <> NULL_PTR Then
-            If VBFlexGridComboButtonHandle <> NULL_PTR Then Call ComboButtonSetState(ODS_SELECTED, False)
+            If VBFlexGridComboButtonHandle <> NULL_PTR Then
+                Call ComboButtonSetState(ODS_SELECTED, False)
+                ' Remove any left mouse button down or double-click messages so that we can get a toggle effect on the combo button.
+                Dim Msg As TMSG
+                Const PM_REMOVE As Long = &H1
+                While PeekMessage(Msg, VBFlexGridComboButtonHandle, WM_LBUTTONDOWN, WM_LBUTTONDOWN, PM_REMOVE) <> 0 Or PeekMessage(Msg, VBFlexGridComboButtonHandle, WM_LBUTTONDBLCLK, WM_LBUTTONDBLCLK, PM_REMOVE) <> 0: Wend
+            End If
             SetFocusAPI VBFlexGridEditHandle
             VBFlexGridEditNoLostFocus = False
         Else
@@ -23434,6 +23443,7 @@ If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboButtonHandle <> NULL_PTR 
             SetFocusAPI UserControl.hWnd
         End If
     End If
+    InProc = False
 End If
 End Sub
 
