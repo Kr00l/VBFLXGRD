@@ -1070,6 +1070,8 @@ Public Event ComboButtonClick()
 Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to button."
 Public Event ComboButtonOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean, ByVal CtlType As Long, ByVal ItemAction As Long, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
 Attribute ComboButtonOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn combo button has changed."
+Public Event ComboCueClick(ByVal Row As Long, ByVal Col As Long, ByVal Reason As FlexEditReasonConstants)
+Attribute ComboCueClick.VB_Description = "Occurs when the user clicks on a combo cue and the attempt to edit has been canceled. Only applicable if the always allow combo cues property is set to true."
 Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
 Attribute DividerDblClick.VB_Description = "Occurs when the user double-clicked the divider on a row or a column."
 Public Event CellClick(ByVal Row As Long, ByVal Col As Long, ByVal Button As Integer)
@@ -1873,6 +1875,7 @@ Private VBFlexGridEditBackColorBrush As LongPtr
 Private VBFlexGridEditNoLostFocus As Boolean
 Private VBFlexGridComboCue As FlexComboCueConstants
 Private VBFlexGridComboCueRow As Long, VBFlexGridComboCueCol As Long
+Private VBFlexGridComboCueClickRow As Long, VBFlexGridComboCueClickCol As Long
 Private VBFlexGridComboMode As FlexComboModeConstants, VBFlexGridComboModeActive As FlexComboModeConstants
 Private VBFlexGridComboButtonPicture As IPictureDisp, VBFlexGridComboButtonPictureRenderFlag As Integer
 Private VBFlexGridComboButtonAlignment As FlexRightToLeftModeConstants
@@ -2021,6 +2024,7 @@ Private PropWallPaper As IPictureDisp
 Private PropWallPaperAlignment As FlexWallPaperAlignmentConstants
 Private PropAllowIncrementalSearch As Boolean
 Private PropAllowReaderMode As Boolean
+Private PropAlwaysAllowComboCues As Boolean
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -2225,6 +2229,8 @@ VBFlexGridEditCloseMode = -1
 VBFlexGridComboCue = FlexComboCueNone
 VBFlexGridComboCueRow = -1
 VBFlexGridComboCueCol = -1
+VBFlexGridComboCueClickRow = -1
+VBFlexGridComboCueClickCol = -1
 VBFlexGridComboMode = FlexComboModeNone
 VBFlexGridComboModeActive = FlexComboModeNone
 VBFlexGridComboButtonAlignment = FlexLeftRightAlignmentRight
@@ -2353,6 +2359,7 @@ Set PropWallPaper = Nothing
 PropWallPaperAlignment = FlexWallPaperAlignmentStretch
 PropAllowIncrementalSearch = False
 PropAllowReaderMode = False
+PropAlwaysAllowComboCues = False
 Call CreateVBFlexGrid
 End Sub
 
@@ -2467,6 +2474,7 @@ Set PropWallPaper = .ReadProperty("WallPaper", Nothing)
 PropWallPaperAlignment = .ReadProperty("WallPaperAlignment", FlexWallPaperAlignmentStretch)
 PropAllowIncrementalSearch = .ReadProperty("AllowIncrementalSearch", False)
 PropAllowReaderMode = .ReadProperty("AllowReaderMode", False)
+PropAlwaysAllowComboCues = .ReadProperty("AlwaysAllowComboCues", False)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -2577,6 +2585,7 @@ With PropBag
 .WriteProperty "WallPaperAlignment", PropWallPaperAlignment, FlexWallPaperAlignmentStretch
 .WriteProperty "AllowIncrementalSearch", PropAllowIncrementalSearch, False
 .WriteProperty "AllowReaderMode", PropAllowReaderMode, False
+.WriteProperty "AlwaysAllowComboCues", PropAlwaysAllowComboCues, False
 End With
 End Sub
 
@@ -5452,6 +5461,16 @@ End Property
 Public Property Let AllowReaderMode(ByVal Value As Boolean)
 PropAllowReaderMode = Value
 UserControl.PropertyChanged "AllowReaderMode"
+End Property
+
+Public Property Get AlwaysAllowComboCues() As Boolean
+Attribute AlwaysAllowComboCues.VB_Description = "Returns/sets a value indicating if combo cues can be displayed always. The ComboCueClick event is fired when either the allow user editing property is set to false or a user attempt to edit has been canceled."
+AlwaysAllowComboCues = PropAlwaysAllowComboCues
+End Property
+
+Public Property Let AlwaysAllowComboCues(ByVal Value As Boolean)
+PropAlwaysAllowComboCues = Value
+UserControl.PropertyChanged "AlwaysAllowComboCues"
 End Property
 
 Private Sub CreateVBFlexGrid()
@@ -15121,7 +15140,7 @@ Dim CellFmtg As TCELLFMTG
 Call GetCellFmtg(iRow, iCol, CFM_TEXTSTYLE Or CFM_ALIGNMENT Or CFM_PICTURE Or CFM_PICTURERENDERFLAG Or CFM_PICTUREALIGNMENT Or CFM_BACKCOLOR Or CFM_FORECOLOR Or CFM_FLOODPERCENT Or CFM_FLOODCOLOR Or CFM_FONT, CellFmtg)
 With CellFmtg
 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants, ComboCueCtlType As Long, ComboCueItemState As Long
-If PropAllowUserEditing = True Then
+If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
     ComboCue = GetComboCueActive(iRow, iCol)
     If ComboCue > FlexComboCueNone Then
         ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
@@ -15143,6 +15162,9 @@ If PropAllowUserEditing = True Then
             Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
                 ComboCueItemState = ODS_DISABLED
         End Select
+        If PropAlwaysAllowComboCues = True Then
+            If VBFlexGridComboCueClickRow = iRow And VBFlexGridComboCueClickCol = iCol Then ComboCueItemState = ComboCueItemState Or ODS_SELECTED
+        End If
     End If
 End If
 Dim Text As String, TextRect As RECT, HiddenText As Boolean
@@ -15957,7 +15979,7 @@ Dim CellFmtg As TCELLFMTG
 Call GetCellFmtg(iRow, iCol, CFM_TEXTSTYLE Or CFM_ALIGNMENT Or CFM_PICTURE Or CFM_PICTURERENDERFLAG Or CFM_PICTUREALIGNMENT Or CFM_BACKCOLOR Or CFM_FORECOLOR Or CFM_FLOODPERCENT Or CFM_FLOODCOLOR Or CFM_FONT, CellFmtg)
 With CellFmtg
 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants, ComboCueCtlType As Long, ComboCueItemState As Long
-If PropAllowUserEditing = True Then
+If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
     ComboCue = GetComboCueActive(iRow, iCol)
     If ComboCue > FlexComboCueNone Then
         ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
@@ -15979,6 +16001,9 @@ If PropAllowUserEditing = True Then
             Case FlexComboCueDisabledDropDown, FlexComboCueDisabledButton
                 ComboCueItemState = ODS_DISABLED
         End Select
+        If PropAlwaysAllowComboCues = True Then
+            If VBFlexGridComboCueClickRow = iRow And VBFlexGridComboCueClickCol = iCol Then ComboCueItemState = ComboCueItemState Or ODS_SELECTED
+        End If
     End If
 End If
 Dim Text As String, TextRect As RECT, HiddenText As Boolean
@@ -18060,7 +18085,7 @@ If HTI.PT.X >= 0 Then
 End If
 If iRowHit > -1 And iColHit > -1 Then
     Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
-    If PropAllowUserEditing = True Then
+    If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
         ComboCue = GetComboCueActive(iRowHit, iColHit)
         If ComboCue > FlexComboCueNone Then
             Call GetGridLineOffsetsStruct(iRowHit, iColHit, GridLineOffsets)
@@ -23518,7 +23543,10 @@ End If
 End Sub
 
 Private Sub ComboButtonPerformClick()
+Static InProc As Boolean
+If InProc = True Then Exit Sub
 If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboButtonHandle <> NULL_PTR And VBFlexGridComboListHandle = NULL_PTR And VBFlexGridComboCalendarHandle = NULL_PTR Then
+    InProc = True
     Dim dwLong As Long
     dwLong = GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA)
     If Not (dwLong And ODS_DISABLED) = ODS_DISABLED Then
@@ -23529,7 +23557,13 @@ If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboButtonHandle <> NULL_PTR 
         VBFlexGridEditNoLostFocus = True
         RaiseEvent ComboButtonClick
         If VBFlexGridEditHandle <> NULL_PTR Then
-            If VBFlexGridComboButtonHandle <> NULL_PTR Then Call ComboButtonSetState(ODS_SELECTED, False)
+            If VBFlexGridComboButtonHandle <> NULL_PTR Then
+                Call ComboButtonSetState(ODS_SELECTED, False)
+                ' Remove any left mouse button down or double-click messages so that we can get a toggle effect on the combo button.
+                Dim Msg As TMSG
+                Const PM_REMOVE As Long = &H1
+                While PeekMessage(Msg, VBFlexGridComboButtonHandle, WM_LBUTTONDOWN, WM_LBUTTONDOWN, PM_REMOVE) <> 0 Or PeekMessage(Msg, VBFlexGridComboButtonHandle, WM_LBUTTONDBLCLK, WM_LBUTTONDBLCLK, PM_REMOVE) <> 0: Wend
+            End If
             SetFocusAPI VBFlexGridEditHandle
             VBFlexGridEditNoLostFocus = False
         Else
@@ -23537,6 +23571,7 @@ If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboButtonHandle <> NULL_PTR 
             SetFocusAPI UserControl.hWnd
         End If
     End If
+    InProc = False
 End If
 End Sub
 
@@ -23807,6 +23842,37 @@ Private Sub ComboCalendarCommitST(ByRef ST As SYSTEMTIME)
 If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboCalendarHandle <> NULL_PTR Then
     Me.EditText = DateSerial(ST.wYear, ST.wMonth, ST.wDay)
     SendMessage VBFlexGridEditHandle, EM_SETSEL, 0, ByVal -1&
+End If
+End Sub
+
+Private Sub ComboCuePerformClick(ByVal Reason As FlexEditReasonConstants, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1)
+Static InProc As Boolean
+If VBFlexGridHandle = NULL_PTR Or InProc = True Then Exit Sub
+If Row = -1 Then Row = VBFlexGridRow
+If Col = -1 Then Col = VBFlexGridCol
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Exit Sub
+If VBFlexGridEditHandle = NULL_PTR And VBFlexGridComboButtonHandle = NULL_PTR And VBFlexGridComboListHandle = NULL_PTR And VBFlexGridComboCalendarHandle = NULL_PTR Then
+    InProc = True
+    VBFlexGridComboCueClickRow = Row
+    VBFlexGridComboCueClickCol = Col
+    Call RedrawGrid
+    RaiseEvent ComboCueClick(Row, Col, Reason)
+    Dim P As POINTAPI, HTI As THITTESTINFO
+    GetCursorPos P
+    ScreenToClient VBFlexGridHandle, P
+    HTI.PT.X = P.X
+    HTI.PT.Y = P.Y
+    Call GetHitTestInfo(HTI)
+    If HTI.HitRow = Row And HTI.HitCol = Col And HTI.HitResult = FlexHitResultComboCue Then
+        ' Remove any left mouse button down or double-click messages so that we can get a toggle effect on the combo cue.
+        Dim Msg As TMSG
+        Const PM_REMOVE As Long = &H1
+        While PeekMessage(Msg, VBFlexGridHandle, WM_LBUTTONDOWN, WM_LBUTTONDOWN, PM_REMOVE) <> 0 Or PeekMessage(Msg, VBFlexGridHandle, WM_LBUTTONDBLCLK, WM_LBUTTONDBLCLK, PM_REMOVE) <> 0: Wend
+    End If
+    VBFlexGridComboCueClickRow = -1
+    VBFlexGridComboCueClickCol = -1
+    Call RedrawGrid
+    InProc = False
 End If
 End Sub
 
@@ -24440,20 +24506,34 @@ Select Case wMsg
                             If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                                 Select Case GetComboCueActive(VBFlexGridRow, VBFlexGridCol)
                                     Case FlexComboCueDropDown, FlexComboCueButton
-                                        If CreateEdit(FlexEditReasonComboCueF4) = True Then Exit Function
+                                        If CreateEdit(FlexEditReasonComboCueF4) = True Then
+                                            Exit Function
+                                        ElseIf PropAlwaysAllowComboCues = True Then
+                                            Call ComboCuePerformClick(FlexEditReasonComboCueF4)
+                                        End If
                                 End Select
                             End If
                     End Select
                 Else
-                    If KeyCode = vbKeySpace Then
-                        If VBFlexGridIncrementalSearch.SearchString = vbNullString Then
-                            If GetShiftStateFromMsg() = 0 Then
-                                If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
-                                    If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
+                    Select Case KeyCode
+                        Case vbKeySpace
+                            If VBFlexGridIncrementalSearch.SearchString = vbNullString Then
+                                If GetShiftStateFromMsg() = 0 Then
+                                    If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                                        If GetCellChecked(VBFlexGridRow, VBFlexGridCol) > -1 Then Call SetCellCheck(VBFlexGridRow, VBFlexGridCol, FlexCellCheckReasonKeyboard)
+                                    End If
                                 End If
                             End If
-                        End If
-                    End If
+                        Case vbKeyF4
+                            If PropAlwaysAllowComboCues = True Then
+                                If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                                    Select Case GetComboCueActive(VBFlexGridRow, VBFlexGridCol)
+                                        Case FlexComboCueDropDown, FlexComboCueButton
+                                            Call ComboCuePerformClick(FlexEditReasonComboCueF4)
+                                    End Select
+                                End If
+                            End If
+                    End Select
                 End If
                 If PropAutoClipboard = True Then
                     If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
@@ -24500,7 +24580,20 @@ Select Case wMsg
                     If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
                         Select Case GetComboCueActive(VBFlexGridRow, VBFlexGridCol)
                             Case FlexComboCueDropDown
-                                If CreateEdit(FlexEditReasonComboCueAltUpDown) = True Then Exit Function
+                                If CreateEdit(FlexEditReasonComboCueAltUpDown) = True Then
+                                    Exit Function
+                                ElseIf PropAlwaysAllowComboCues = True Then
+                                    Call ComboCuePerformClick(FlexEditReasonComboCueAltUpDown)
+                                End If
+                        End Select
+                    End If
+                End If
+            ElseIf PropAlwaysAllowComboCues = True Then
+                If KeyCode = vbKeyUp Or KeyCode = vbKeyDown Then
+                    If VBFlexGridRow > -1 And VBFlexGridCol > -1 Then
+                        Select Case GetComboCueActive(VBFlexGridRow, VBFlexGridCol)
+                            Case FlexComboCueDropDown
+                                Call ComboCuePerformClick(FlexEditReasonComboCueAltUpDown)
                         End Select
                     End If
                 End If
@@ -24605,14 +24698,25 @@ Select Case wMsg
                 VBFlexGridCellClickCol = -1
                 If wMsg = WM_LBUTTONDOWN Then
                     If .HitResult = FlexHitResultComboCue Then
-                        Select Case PropSelectionMode
-                            Case FlexSelectionModeByRow
-                                CreateEdit FlexEditReasonComboCueClick, .HitRow
-                            Case FlexSelectionModeByColumn
-                                CreateEdit FlexEditReasonComboCueClick, , .HitCol
-                            Case Else
-                                CreateEdit FlexEditReasonComboCueClick, .HitRow, .HitCol
-                        End Select
+                        If PropAllowUserEditing = True Then
+                            Select Case PropSelectionMode
+                                Case FlexSelectionModeByRow
+                                    If CreateEdit(FlexEditReasonComboCueClick, .HitRow) = False And PropAlwaysAllowComboCues = True Then Call ComboCuePerformClick(FlexEditReasonComboCueClick, .HitRow)
+                                Case FlexSelectionModeByColumn
+                                    If CreateEdit(FlexEditReasonComboCueClick, , .HitCol) = False And PropAlwaysAllowComboCues = True Then Call ComboCuePerformClick(FlexEditReasonComboCueClick, , .HitCol)
+                                Case Else
+                                    If CreateEdit(FlexEditReasonComboCueClick, .HitRow, .HitCol) = False And PropAlwaysAllowComboCues = True Then Call ComboCuePerformClick(FlexEditReasonComboCueClick, .HitRow, .HitCol)
+                            End Select
+                        ElseIf PropAlwaysAllowComboCues = True Then
+                            Select Case PropSelectionMode
+                                Case FlexSelectionModeByRow
+                                    Call ComboCuePerformClick(FlexEditReasonComboCueClick, .HitRow)
+                                Case FlexSelectionModeByColumn
+                                    Call ComboCuePerformClick(FlexEditReasonComboCueClick, , .HitCol)
+                                Case Else
+                                    Call ComboCuePerformClick(FlexEditReasonComboCueClick, .HitRow, .HitCol)
+                            End Select
+                        End If
                     ElseIf .HitResult = FlexHitResultCheckBox Then
                         Call SetCellCheck(.HitRow, .HitCol, FlexCellCheckReasonMouse)
                     End If
@@ -25013,21 +25117,34 @@ Select Case wMsg
                     If .HitRow > (PropFixedRows - 1) And .HitCol > (PropFixedCols - 1) Then
                         Select Case PropSelectionMode
                             Case FlexSelectionModeByRow
-                                CreateEdit FlexEditReasonDblClick, .HitRow
+                                If CreateEdit(FlexEditReasonDblClick, .HitRow) = False And PropAlwaysAllowComboCues = True Then Call ComboCuePerformClick(FlexEditReasonComboCueDblClick, .HitRow)
                             Case FlexSelectionModeByColumn
-                                CreateEdit FlexEditReasonDblClick, , .HitCol
+                                If CreateEdit(FlexEditReasonDblClick, , .HitCol) = False And PropAlwaysAllowComboCues = True Then Call ComboCuePerformClick(FlexEditReasonComboCueDblClick, , .HitCol)
                             Case Else
-                                CreateEdit FlexEditReasonDblClick, .HitRow, .HitCol
+                                If CreateEdit(FlexEditReasonDblClick, .HitRow, .HitCol) = False And PropAlwaysAllowComboCues = True Then Call ComboCuePerformClick(FlexEditReasonComboCueDblClick, .HitRow, .HitCol)
                         End Select
                     End If
                 ElseIf .HitResult = FlexHitResultComboCue Then
                     Select Case PropSelectionMode
                         Case FlexSelectionModeByRow
-                            CreateEdit FlexEditReasonComboCueDblClick, .HitRow
+                            If CreateEdit(FlexEditReasonComboCueDblClick, .HitRow) = False And PropAlwaysAllowComboCues = True Then Call ComboCuePerformClick(FlexEditReasonComboCueDblClick, .HitRow)
                         Case FlexSelectionModeByColumn
-                            CreateEdit FlexEditReasonComboCueDblClick, , .HitCol
+                            If CreateEdit(FlexEditReasonComboCueDblClick, , .HitCol) = False And PropAlwaysAllowComboCues = True Then Call ComboCuePerformClick(FlexEditReasonComboCueDblClick, , .HitCol)
                         Case Else
-                            CreateEdit FlexEditReasonComboCueDblClick, .HitRow, .HitCol
+                            If CreateEdit(FlexEditReasonComboCueDblClick, .HitRow, .HitCol) = False And PropAlwaysAllowComboCues = True Then Call ComboCuePerformClick(FlexEditReasonComboCueDblClick, .HitRow, .HitCol)
+                    End Select
+                End If
+            End If
+        ElseIf PropAlwaysAllowComboCues = True Then
+            If wMsg = WM_LBUTTONDBLCLK Then
+                If .HitResult = FlexHitResultComboCue Then
+                    Select Case PropSelectionMode
+                        Case FlexSelectionModeByRow
+                            Call ComboCuePerformClick(FlexEditReasonComboCueDblClick, .HitRow)
+                        Case FlexSelectionModeByColumn
+                            Call ComboCuePerformClick(FlexEditReasonComboCueDblClick, , .HitCol)
+                        Case Else
+                            Call ComboCuePerformClick(FlexEditReasonComboCueDblClick, .HitRow, .HitCol)
                     End Select
                 End If
             End If

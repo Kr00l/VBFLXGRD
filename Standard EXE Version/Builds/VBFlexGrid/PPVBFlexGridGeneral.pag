@@ -9,6 +9,14 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   8820
    ScaleWidth      =   6450
+   Begin VB.CheckBox CheckAlwaysAllowComboCues 
+      Caption         =   "AlwaysAllowComboCues"
+      Height          =   285
+      Left            =   4200
+      TabIndex        =   74
+      Top             =   7320
+      Width           =   2160
+   End
    Begin VB.CheckBox CheckAllowReaderMode 
       Caption         =   "AllowReaderMode"
       Height          =   285
@@ -932,6 +940,7 @@ End If
 .AutoClipboard = CBool(CheckAutoClipboard.Value = vbChecked)
 .AllowIncrementalSearch = CBool(CheckAllowIncrementalSearch.Value = vbChecked)
 .AllowReaderMode = CBool(CheckAllowReaderMode.Value = vbChecked)
+.AlwaysAllowComboCues = CBool(CheckAlwaysAllowComboCues.Value = vbChecked)
 End With
 Call PropertyPage_SelectionChanged
 End Sub
@@ -1078,6 +1087,7 @@ CheckSheetBorder.Value = IIf(.SheetBorder = True, vbChecked, vbUnchecked)
 CheckAutoClipboard.Value = IIf(.AutoClipboard = True, vbChecked, vbUnchecked)
 CheckAllowIncrementalSearch.Value = IIf(.AllowIncrementalSearch = True, vbChecked, vbUnchecked)
 CheckAllowReaderMode.Value = IIf(.AllowReaderMode = True, vbChecked, vbUnchecked)
+CheckAlwaysAllowComboCues.Value = IIf(.AlwaysAllowComboCues = True, vbChecked, vbUnchecked)
 End With
 FreezeChanged = False
 End Sub
@@ -1628,6 +1638,11 @@ PropertyPage.Changed = True
 End Sub
 
 Private Sub CheckAllowReaderMode_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub CheckAlwaysAllowComboCues_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
