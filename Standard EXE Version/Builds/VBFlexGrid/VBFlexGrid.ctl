@@ -1194,7 +1194,6 @@ Private Declare PtrSafe Function GetClientRect Lib "user32" (ByVal hWnd As LongP
 Private Declare PtrSafe Function GetWindowRect Lib "user32" (ByVal hWnd As LongPtr, ByRef lpRect As RECT) As Long
 Private Declare PtrSafe Function MapWindowPoints Lib "user32" (ByVal hWndFrom As LongPtr, ByVal hWndTo As LongPtr, ByRef lppt As Any, ByVal cPoints As Long) As Long
 Private Declare PtrSafe Function SetViewportOrgEx Lib "gdi32" (ByVal hDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByRef lpPoint As POINTAPI) As Long
-Private Declare PtrSafe Function GetViewportOrgEx Lib "gdi32" (ByVal hDC As LongPtr, ByRef lpPoint As POINTAPI) As Long
 Private Declare PtrSafe Function SetRect Lib "user32" (ByRef lpRect As RECT, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare PtrSafe Function CreateSolidBrush Lib "gdi32" (ByVal crColor As Long) As LongPtr
 Private Declare PtrSafe Function CreatePen Lib "gdi32" (ByVal nPenStyle As Long, ByVal nWidth As Long, ByVal crColor As Long) As LongPtr
@@ -1254,6 +1253,7 @@ Private Declare PtrSafe Function ScreenToClient Lib "user32" (ByVal hWnd As Long
 Private Declare PtrSafe Function ClientToScreen Lib "user32" (ByVal hWnd As LongPtr, ByRef lpPoint As POINTAPI) As Long
 Private Declare PtrSafe Function SetScrollInfo Lib "user32" (ByVal hWnd As LongPtr, ByVal wBar As Long, ByRef lpScrollInfo As SCROLLINFO, ByVal fRedraw As Long) As Long
 Private Declare PtrSafe Function GetScrollInfo Lib "user32" (ByVal hWnd As LongPtr, ByVal wBar As Long, ByRef lpScrollInfo As SCROLLINFO) As Long
+Private Declare PtrSafe Function WindowFromPoint Lib "user32" (ByVal XY As Currency) As LongPtr
 Private Declare PtrSafe Function ChildWindowFromPoint Lib "user32" (ByVal hWndParent As LongPtr, ByVal XY As Currency) As LongPtr
 Private Declare PtrSafe Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hInstance As LongPtr, ByVal lpCursorName As Any) As LongPtr
 Private Declare PtrSafe Function SetCursor Lib "user32" (ByVal hCursor As LongPtr) As LongPtr
@@ -1342,7 +1342,6 @@ Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, ByRef l
 Private Declare Function GetWindowRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As RECT) As Long
 Private Declare Function MapWindowPoints Lib "user32" (ByVal hWndFrom As Long, ByVal hWndTo As Long, ByRef lppt As Any, ByVal cPoints As Long) As Long
 Private Declare Function SetViewportOrgEx Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByRef lpPoint As POINTAPI) As Long
-Private Declare Function GetViewportOrgEx Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint As POINTAPI) As Long
 Private Declare Function SetRect Lib "user32" (ByRef lpRect As RECT, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function CreateSolidBrush Lib "gdi32" (ByVal crColor As Long) As Long
 Private Declare Function CreatePen Lib "gdi32" (ByVal nPenStyle As Long, ByVal nWidth As Long, ByVal crColor As Long) As Long
@@ -1397,6 +1396,7 @@ Private Declare Function ScreenToClient Lib "user32" (ByVal hWnd As Long, ByRef 
 Private Declare Function ClientToScreen Lib "user32" (ByVal hWnd As Long, ByRef lpPoint As POINTAPI) As Long
 Private Declare Function SetScrollInfo Lib "user32" (ByVal hWnd As Long, ByVal wBar As Long, ByRef lpScrollInfo As SCROLLINFO, ByVal fRedraw As Long) As Long
 Private Declare Function GetScrollInfo Lib "user32" (ByVal hWnd As Long, ByVal wBar As Long, ByRef lpScrollInfo As SCROLLINFO) As Long
+Private Declare Function WindowFromPoint Lib "user32" (ByVal XY As Currency) As Long
 Private Declare Function ChildWindowFromPoint Lib "user32" (ByVal hWndParent As Long, ByVal XY As Currency) As Long
 Private Declare Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hInstance As Long, ByVal lpCursorName As Any) As Long
 Private Declare Function SetCursor Lib "user32" (ByVal hCursor As Long) As Long
@@ -17607,7 +17607,7 @@ If hDC <> NULL_PTR Then
         .Bottom = GetRowHeight(iRow)
         End With
         Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
-        If PropAllowUserEditing = True Then
+        If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
             ComboCue = GetComboCueActive(iRow, iCol)
             If ComboCue > FlexComboCueNone Then
                 Call GetGridLineOffsetsStruct(iRow, iCol, GridLineOffsets)
@@ -17778,7 +17778,7 @@ If hDC <> NULL_PTR Then
         Select Case PropBestFitMode
             Case FlexBestFitModeFull, FlexBestFitModeOtherText
                 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long
-                If PropAllowUserEditing = True Then
+                If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
                     ComboCue = GetComboCueActive(iRow, iCol)
                     If ComboCue > FlexComboCueNone Then ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
                 End If
@@ -18614,7 +18614,7 @@ If hDC = NULL_PTR Then
 End If
 If hDC <> NULL_PTR Then
     Dim GridLineOffsets As TGRIDLINEOFFSETS, ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment As FlexLeftRightAlignmentConstants
-    If PropAllowUserEditing = True Then
+    If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
         ComboCue = GetComboCueActive(iRow, iCol)
         If ComboCue > FlexComboCueNone Then
             Call GetGridLineOffsetsStruct(iRow, iCol, GridLineOffsets)
@@ -23747,17 +23747,15 @@ Private Sub ComboButtonDrawPicture(ByVal hDC As LongPtr, ByRef ContentRect As RE
 If hDC = NULL_PTR Then Exit Sub
 If Picture Is Nothing Then Exit Sub
 If Picture.Handle <> NULL_PTR Then
-    Dim P As POINTAPI, hRgnOld As LongPtr
-    If GetViewportOrgEx(hDC, P) <> 0 Then
-        hRgnOld = CreateRectRgn(0, 0, 0, 0)
-        If hRgnOld <> NULL_PTR Then
-            If GetClipRgn(hDC, hRgnOld) = 0 Then
-                DeleteObject hRgnOld
-                hRgnOld = NULL_PTR
-            End If
+    Dim hRgnOld As LongPtr
+    hRgnOld = CreateRectRgn(0, 0, 0, 0)
+    If hRgnOld <> NULL_PTR Then
+        If GetClipRgn(hDC, hRgnOld) = 0 Then
+            DeleteObject hRgnOld
+            hRgnOld = NULL_PTR
         End If
-        IntersectClipRect hDC, P.X + ContentRect.Left, P.Y + ContentRect.Top, P.X + ContentRect.Right, P.Y + ContentRect.Bottom
     End If
+    IntersectClipRect hDC, ContentRect.Left, ContentRect.Top, ContentRect.Right, ContentRect.Bottom
     Dim CX As Long, CY As Long, X As Long, Y As Long
     CX = CHimetricToPixel_X(Picture.Width)
     CY = CHimetricToPixel_Y(Picture.Height)
@@ -23857,17 +23855,21 @@ If VBFlexGridEditHandle = NULL_PTR And VBFlexGridComboButtonHandle = NULL_PTR An
     VBFlexGridComboCueClickCol = Col
     Call RedrawGrid
     RaiseEvent ComboCueClick(Row, Col, Reason)
-    Dim P As POINTAPI, HTI As THITTESTINFO
+    Dim P As POINTAPI, XY As Currency
     GetCursorPos P
-    ScreenToClient VBFlexGridHandle, P
-    HTI.PT.X = P.X
-    HTI.PT.Y = P.Y
-    Call GetHitTestInfo(HTI)
-    If HTI.HitRow = Row And HTI.HitCol = Col And HTI.HitResult = FlexHitResultComboCue Then
-        ' Remove any left mouse button down or double-click messages so that we can get a toggle effect on the combo cue.
-        Dim Msg As TMSG
-        Const PM_REMOVE As Long = &H1
-        While PeekMessage(Msg, VBFlexGridHandle, WM_LBUTTONDOWN, WM_LBUTTONDOWN, PM_REMOVE) <> 0 Or PeekMessage(Msg, VBFlexGridHandle, WM_LBUTTONDBLCLK, WM_LBUTTONDBLCLK, PM_REMOVE) <> 0: Wend
+    CopyMemory ByVal VarPtr(XY), ByVal VarPtr(P), 8
+    If WindowFromPoint(XY) = VBFlexGridHandle Then
+        Dim HTI As THITTESTINFO
+        ScreenToClient VBFlexGridHandle, P
+        HTI.PT.X = P.X
+        HTI.PT.Y = P.Y
+        Call GetHitTestInfo(HTI)
+        If HTI.HitRow = Row And HTI.HitCol = Col And HTI.HitResult = FlexHitResultComboCue Then
+            ' Remove any left mouse button down or double-click messages so that we can get a toggle effect on the combo cue.
+            Dim Msg As TMSG
+            Const PM_REMOVE As Long = &H1
+            While PeekMessage(Msg, VBFlexGridHandle, WM_LBUTTONDOWN, WM_LBUTTONDOWN, PM_REMOVE) <> 0 Or PeekMessage(Msg, VBFlexGridHandle, WM_LBUTTONDBLCLK, WM_LBUTTONDBLCLK, PM_REMOVE) <> 0: Wend
+        End If
     End If
     VBFlexGridComboCueClickRow = -1
     VBFlexGridComboCueClickCol = -1
