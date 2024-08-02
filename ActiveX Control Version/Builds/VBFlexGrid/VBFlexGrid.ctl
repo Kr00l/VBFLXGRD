@@ -1189,7 +1189,6 @@ Private Declare PtrSafe Function GetClientRect Lib "user32" (ByVal hWnd As LongP
 Private Declare PtrSafe Function GetWindowRect Lib "user32" (ByVal hWnd As LongPtr, ByRef lpRect As RECT) As Long
 Private Declare PtrSafe Function MapWindowPoints Lib "user32" (ByVal hWndFrom As LongPtr, ByVal hWndTo As LongPtr, ByRef lppt As Any, ByVal cPoints As Long) As Long
 Private Declare PtrSafe Function SetViewportOrgEx Lib "gdi32" (ByVal hDC As LongPtr, ByVal X As Long, ByVal Y As Long, ByRef lpPoint As POINTAPI) As Long
-Private Declare PtrSafe Function GetViewportOrgEx Lib "gdi32" (ByVal hDC As LongPtr, ByRef lpPoint As POINTAPI) As Long
 Private Declare PtrSafe Function SetRect Lib "user32" (ByRef lpRect As RECT, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare PtrSafe Function CreateSolidBrush Lib "gdi32" (ByVal crColor As Long) As LongPtr
 Private Declare PtrSafe Function CreatePen Lib "gdi32" (ByVal nPenStyle As Long, ByVal nWidth As Long, ByVal crColor As Long) As LongPtr
@@ -1337,7 +1336,6 @@ Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, ByRef l
 Private Declare Function GetWindowRect Lib "user32" (ByVal hWnd As Long, ByRef lpRect As RECT) As Long
 Private Declare Function MapWindowPoints Lib "user32" (ByVal hWndFrom As Long, ByVal hWndTo As Long, ByRef lppt As Any, ByVal cPoints As Long) As Long
 Private Declare Function SetViewportOrgEx Lib "gdi32" (ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByRef lpPoint As POINTAPI) As Long
-Private Declare Function GetViewportOrgEx Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint As POINTAPI) As Long
 Private Declare Function SetRect Lib "user32" (ByRef lpRect As RECT, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function CreateSolidBrush Lib "gdi32" (ByVal crColor As Long) As Long
 Private Declare Function CreatePen Lib "gdi32" (ByVal nPenStyle As Long, ByVal nWidth As Long, ByVal crColor As Long) As Long
@@ -23619,17 +23617,15 @@ Private Sub ComboButtonDrawPicture(ByVal hDC As LongPtr, ByRef ContentRect As RE
 If hDC = NULL_PTR Then Exit Sub
 If Picture Is Nothing Then Exit Sub
 If Picture.Handle <> NULL_PTR Then
-    Dim P As POINTAPI, hRgnOld As LongPtr
-    If GetViewportOrgEx(hDC, P) <> 0 Then
-        hRgnOld = CreateRectRgn(0, 0, 0, 0)
-        If hRgnOld <> NULL_PTR Then
-            If GetClipRgn(hDC, hRgnOld) = 0 Then
-                DeleteObject hRgnOld
-                hRgnOld = NULL_PTR
-            End If
+    Dim hRgnOld As LongPtr
+    hRgnOld = CreateRectRgn(0, 0, 0, 0)
+    If hRgnOld <> NULL_PTR Then
+        If GetClipRgn(hDC, hRgnOld) = 0 Then
+            DeleteObject hRgnOld
+            hRgnOld = NULL_PTR
         End If
-        IntersectClipRect hDC, P.X + ContentRect.Left, P.Y + ContentRect.Top, P.X + ContentRect.Right, P.Y + ContentRect.Bottom
     End If
+    IntersectClipRect hDC, ContentRect.Left, ContentRect.Top, ContentRect.Right, ContentRect.Bottom
     Dim CX As Long, CY As Long, X As Long, Y As Long
     CX = CHimetricToPixel_X(Picture.Width)
     CY = CHimetricToPixel_Y(Picture.Height)
