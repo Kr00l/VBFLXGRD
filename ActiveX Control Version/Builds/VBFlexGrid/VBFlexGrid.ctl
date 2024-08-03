@@ -1064,7 +1064,7 @@ Attribute ComboDropDown.VB_Description = "Occurs when the drop-down list is abou
 Public Event ComboCloseUp()
 Attribute ComboCloseUp.VB_Description = "Occurs when the drop-down list has been closed."
 Public Event ComboButtonClick()
-Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to button."
 Public Event ComboButtonOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean, ByVal CtlType As Long, ByVal ItemAction As Long, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
 Attribute ComboButtonOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn combo button has changed."
 Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
@@ -8714,7 +8714,7 @@ End If
 End Property
 
 Public Property Get ColComboButtonPicture(ByVal Index As Long) As IPictureDisp
-Attribute ColComboButtonPicture.VB_Description = "Returns/sets the combo button picture for the specified column. Only applicable if the combo button draw mode property is set to 0 - Normal and the combo mode property is set to 3 - Button."
+Attribute ColComboButtonPicture.VB_Description = "Returns/sets the combo button picture for the specified column. Only applicable if the combo button draw mode property is set to normal and the combo mode property is set to button."
 Attribute ColComboButtonPicture.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 Set ColComboButtonPicture = VBFlexGridColsInfo(Index).ComboButtonPicture
@@ -8784,7 +8784,7 @@ End If
 End Property
 
 Public Property Get ColComboButtonWidth(ByVal Index As Long) As Long
-Attribute ColComboButtonWidth.VB_Description = "Returns/sets the combo button width in twips for the specified column. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ColComboButtonWidth.VB_Description = "Returns/sets the combo button width in twips for the specified column. Only applicable if the combo mode property is set to button."
 Attribute ColComboButtonWidth.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 If VBFlexGridColsInfo(Index).ComboButtonWidth = -1 Then
@@ -9298,7 +9298,7 @@ Call RedrawGrid
 End Property
 
 Public Property Get MergeRow(ByVal Index As Long) As Boolean
-Attribute MergeRow.VB_Description = "Returns/sets which columns or rows should have their contents merged when the merge cells property is set to a value other than 0 - Never."
+Attribute MergeRow.VB_Description = "Returns/sets which columns or rows should have their contents merged when the merge cells property is set to a value other than 0 (never)."
 Attribute MergeRow.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
 MergeRow = CBool((VBFlexGridCells.Rows(Index).RowInfo.State And RWIS_MERGE) = RWIS_MERGE)
@@ -9317,7 +9317,7 @@ Call RedrawGrid
 End Property
 
 Public Property Get MergeCol(ByVal Index As Long) As Boolean
-Attribute MergeCol.VB_Description = "Returns/sets which columns or rows should have their contents merged when the merge cells property is set to a value other than 0 - Never."
+Attribute MergeCol.VB_Description = "Returns/sets which columns or rows should have their contents merged when the merge cells property is set to a value other than 0 (never)."
 Attribute MergeCol.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 MergeCol = CBool((VBFlexGridColsInfo(Index).State And CLIS_MERGE) = CLIS_MERGE)
@@ -12902,7 +12902,7 @@ End If
 End Property
 
 Public Property Get ComboButtonPicture() As IPictureDisp
-Attribute ComboButtonPicture.VB_Description = "Returns/sets the combo button picture. Only applicable if the combo button draw mode property is set to 0 - Normal and the combo mode property is set to 3 - Button."
+Attribute ComboButtonPicture.VB_Description = "Returns/sets the combo button picture. Only applicable if the combo button draw mode property is set to normal and the combo mode property is set to button."
 Attribute ComboButtonPicture.VB_MemberFlags = "400"
 Set ComboButtonPicture = VBFlexGridComboButtonPicture
 End Property
@@ -12955,7 +12955,7 @@ End Select
 End Property
 
 Public Property Get ComboButtonWidth() As Long
-Attribute ComboButtonWidth.VB_Description = "Returns/sets the combo button width in twips. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ComboButtonWidth.VB_Description = "Returns/sets the combo button width in twips. Only applicable if the combo mode property is set to button."
 Attribute ComboButtonWidth.VB_MemberFlags = "400"
 If VBFlexGridComboButtonWidth = -1 Then
     ComboButtonWidth = UserControl.ScaleX(VBFlexGridPixelMetrics.ComboButtonWidth, vbPixels, vbTwips)
@@ -12974,7 +12974,7 @@ End If
 End Property
 
 Public Property Get ComboButtonClientWidth() As Long
-Attribute ComboButtonClientWidth.VB_Description = "Returns the combo button client width in twips. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ComboButtonClientWidth.VB_Description = "Returns the combo button client width in twips. Only applicable if the combo mode property is set to button."
 Attribute ComboButtonClientWidth.VB_MemberFlags = "400"
 If VBFlexGridHandle <> NULL_PTR Then
     Dim RC As RECT, Theme As LongPtr
@@ -13000,7 +13000,7 @@ End If
 End Property
 
 Public Property Get ComboButtonNonClientWidth() As Long
-Attribute ComboButtonNonClientWidth.VB_Description = "Returns the combo button non-client width in twips. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ComboButtonNonClientWidth.VB_Description = "Returns the combo button non-client width in twips. Only applicable if the combo mode property is set to button."
 Attribute ComboButtonNonClientWidth.VB_MemberFlags = "400"
 If VBFlexGridHandle <> NULL_PTR Then
     Dim RC As RECT, Theme As LongPtr
@@ -13021,7 +13021,7 @@ End If
 End Property
 
 Public Property Get ComboButtonNonClientHeight() As Long
-Attribute ComboButtonNonClientHeight.VB_Description = "Returns the combo button non-client height in twips. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ComboButtonNonClientHeight.VB_Description = "Returns the combo button non-client height in twips. Only applicable if the combo mode property is set to button."
 Attribute ComboButtonNonClientHeight.VB_MemberFlags = "400"
 If VBFlexGridHandle <> NULL_PTR Then
     Dim RC As RECT, Theme As LongPtr
