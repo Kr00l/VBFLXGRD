@@ -1067,9 +1067,11 @@ Attribute ComboDropDown.VB_Description = "Occurs when the drop-down list is abou
 Public Event ComboCloseUp()
 Attribute ComboCloseUp.VB_Description = "Occurs when the drop-down list has been closed."
 Public Event ComboButtonClick()
-Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to button."
+Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to 3 - Button."
 Public Event ComboButtonOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean, ByVal CtlType As Long, ByVal ItemAction As Long, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
 Attribute ComboButtonOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn combo button has changed."
+Public Event ComboButtonPictureCallback(ByVal Row As Long, ByVal Col As Long, ByRef Picture As IPictureDisp, ByRef Handled As Boolean)
+Attribute ComboButtonPictureCallback.VB_Description = "Occurs after the background of an combo button has been drawn and before the content is drawn. This is a request to provide an combo button picture. Only applicable if the combo button draw mode property is set to 0 - Normal and the combo mode property is set to 3 - Button."
 Public Event ComboCueClick(ByVal Row As Long, ByVal Col As Long, ByVal Reason As FlexEditReasonConstants)
 Attribute ComboCueClick.VB_Description = "Occurs when the user clicks on a combo cue and the attempt to edit has been canceled. Only applicable if the always allow combo cues property is set to true."
 Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
@@ -23589,7 +23591,7 @@ If VBFlexGridComboButtonDrawMode <> FlexComboButtonDrawModeNormal Then
     Handled = Not Cancel
 End If
 If Handled = False Then
-    Dim Theme As LongPtr, OldTextColor As Long
+    Dim Theme As LongPtr, OldTextColor As Long, Picture As IPictureDisp
     
     #If ImplementThemedControls = True Then
     
@@ -23649,20 +23651,25 @@ If Handled = False Then
             If IsThemeBackgroundPartiallyTransparent(Theme, ButtonPart, ButtonState) <> 0 Then DrawThemeParentBackground DIS.hWndItem, DIS.hDC, DIS.RCItem
             DrawThemeBackground Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
             GetThemeBackgroundContentRect Theme, DIS.hDC, ButtonPart, ButtonState, DIS.RCItem, DIS.RCItem
-            If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
-                If VBFlexGridComboButtonPicture Is Nothing Then
-                    If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
-                        OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+            RaiseEvent ComboButtonPictureCallback(iRow, iCol, Picture, Handled)
+            If Handled = False Then
+                If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
+                    If VBFlexGridComboButtonPicture Is Nothing Then
+                        If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
+                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+                        Else
+                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+                        End If
+                        Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                        SetTextColor DIS.hDC, OldTextColor
                     Else
-                        OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+                        Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
                     End If
-                    Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-                    SetTextColor DIS.hDC, OldTextColor
                 Else
-                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
+                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
                 End If
-            Else
-                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
+            ElseIf Not Picture Is Nothing Then
+                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, Picture, 1)
             End If
         End If
         CloseThemeData Theme
@@ -23694,24 +23701,29 @@ If Handled = False Then
         If (DIS.ItemState And ODS_HOTLIGHT) = ODS_HOTLIGHT Then Flags = Flags Or DFCS_HOT
         DrawFrameControl DIS.hDC, DIS.RCItem, CtlType, Flags
         If CtlType = DFC_BUTTON Then
-            If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
-                If VBFlexGridComboButtonPicture Is Nothing Then
-                    If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
-                        If Not (Flags And DFCS_HOT) = DFCS_HOT Then
-                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+            RaiseEvent ComboButtonPictureCallback(iRow, iCol, Picture, Handled)
+            If Handled = False Then
+                If VBFlexGridColsInfo(iCol).ComboButtonPicture Is Nothing Then
+                    If VBFlexGridComboButtonPicture Is Nothing Then
+                        If Not (Flags And DFCS_INACTIVE) = DFCS_INACTIVE Then
+                            If Not (Flags And DFCS_HOT) = DFCS_HOT Then
+                                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_BTNTEXT))
+                            Else
+                                OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
+                            End If
                         Else
-                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_HOTLIGHT))
+                            OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
                         End If
+                        Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
+                        SetTextColor DIS.hDC, OldTextColor
                     Else
-                        OldTextColor = SetTextColor(DIS.hDC, GetSysColor(COLOR_GRAYTEXT))
+                        Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
                     End If
-                    Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
-                    SetTextColor DIS.hDC, OldTextColor
                 Else
-                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
+                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
                 End If
-            Else
-                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
+            ElseIf Not Picture Is Nothing Then
+                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, Picture, 1)
             End If
         End If
     End If
