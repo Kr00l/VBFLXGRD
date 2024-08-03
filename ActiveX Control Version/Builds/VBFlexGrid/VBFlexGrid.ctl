@@ -1064,7 +1064,7 @@ Attribute ComboDropDown.VB_Description = "Occurs when the drop-down list is abou
 Public Event ComboCloseUp()
 Attribute ComboCloseUp.VB_Description = "Occurs when the drop-down list has been closed."
 Public Event ComboButtonClick()
-Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to button."
+Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to 3 - Button."
 Public Event ComboButtonOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean, ByVal CtlType As Long, ByVal ItemAction As Long, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
 Attribute ComboButtonOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn combo button has changed."
 Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
@@ -4211,7 +4211,7 @@ UserControl.PropertyChanged "AllowSelection"
 End Property
 
 Public Property Get AllowUserEditing() As Boolean
-Attribute AllowUserEditing.VB_Description = "Returns/sets a value that determines if a user can edit the text of a cell. The control can be forced to go into editing mode using the 'start edit' method."
+Attribute AllowUserEditing.VB_Description = "Returns/sets a value that determines if a user can edit the text of a cell. The control can be forced to go into editing mode using the StartEdit method."
 AllowUserEditing = PropAllowUserEditing
 End Property
 
