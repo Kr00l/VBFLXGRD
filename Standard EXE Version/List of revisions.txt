@@ -1,5 +1,9 @@
 List of revisions:
 
+03-Aug-2024
+- Included the ComboButtonPictureCallback event where the app can provide an combo button picture.
+  The Handled parameter must be set to True to overwrite the default behavior.
+
 01-Aug-2024
 - Included the AlwaysAllowComboCues property with new ComboCueClick event.
   The combo cues can then be displayed always even when AllowUserEditing = False.
