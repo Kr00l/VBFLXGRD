@@ -1067,11 +1067,11 @@ Attribute ComboDropDown.VB_Description = "Occurs when the drop-down list is abou
 Public Event ComboCloseUp()
 Attribute ComboCloseUp.VB_Description = "Occurs when the drop-down list has been closed."
 Public Event ComboButtonClick()
-Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to 3 - Button."
+Attribute ComboButtonClick.VB_Description = "Occurs when the user clicks on a combo button. Only applicable if the combo mode property is set to button."
 Public Event ComboButtonOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean, ByVal CtlType As Long, ByVal ItemAction As Long, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
 Attribute ComboButtonOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn combo button has changed."
 Public Event ComboButtonPictureCallback(ByVal Row As Long, ByVal Col As Long, ByRef Picture As IPictureDisp, ByRef Handled As Boolean)
-Attribute ComboButtonPictureCallback.VB_Description = "Occurs after the background of an combo button has been drawn and before the content is drawn. This is a request to provide an combo button picture. Only applicable if the combo button draw mode property is set to 0 - Normal and the combo mode property is set to 3 - Button."
+Attribute ComboButtonPictureCallback.VB_Description = "Occurs after the background of an combo button has been drawn and before the content is drawn. This is a request to provide an combo button picture. Only applicable if the combo mode property is set to button."
 Public Event ComboCueClick(ByVal Row As Long, ByVal Col As Long, ByVal Reason As FlexEditReasonConstants)
 Attribute ComboCueClick.VB_Description = "Occurs when the user clicks on a combo cue and the attempt to edit has been canceled. Only applicable if the always allow combo cues property is set to true."
 Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
