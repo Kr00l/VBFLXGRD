@@ -1,7 +1,7 @@
 List of revisions:
 
-03-Aug-2024
-- Included the ComboButtonPictureCallback event where the app can provide an combo button picture.
+04-Aug-2024
+- Included the ComboButtonCustomDraw event which fires after the background has been drawn and before the content is drawn.
   The Handled parameter must be set to True to overwrite the default behavior.
 
 01-Aug-2024
