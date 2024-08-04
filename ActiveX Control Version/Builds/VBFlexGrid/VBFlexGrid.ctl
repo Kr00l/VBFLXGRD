@@ -1197,6 +1197,7 @@ Private Declare PtrSafe Function Polygon Lib "gdi32" (ByVal hDC As LongPtr, ByRe
 Private Declare PtrSafe Function Rectangle Lib "gdi32" (ByVal hDC As LongPtr, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare PtrSafe Function FillRect Lib "user32" (ByVal hDC As LongPtr, ByRef lpRect As RECT, ByVal hBrush As LongPtr) As Long
 Private Declare PtrSafe Function InvertRect Lib "user32" (ByVal hDC As LongPtr, ByRef lpRect As RECT) As Long
+Private Declare PtrSafe Function DrawState Lib "user32" Alias "DrawStateW" (ByVal hDC As LongPtr, ByVal hBrush As LongPtr, ByVal lpDrawStateProc As LongPtr, ByVal lData As LongPtr, ByVal wData As LongPtr, ByVal X As Long, ByVal Y As Long, ByVal CX As Long, ByVal CY As Long, ByVal fFlags As Long) As Long
 Private Declare PtrSafe Function DrawFocusRect Lib "user32" (ByVal hDC As LongPtr, ByRef lpRect As RECT) As Long
 Private Declare PtrSafe Function DrawFrameControl Lib "user32" (ByVal hDC As LongPtr, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
 Private Declare PtrSafe Function DrawText Lib "user32" Alias "DrawTextW" (ByVal hDC As LongPtr, ByVal lpchText As LongPtr, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long) As Long
@@ -1344,6 +1345,7 @@ Private Declare Function Polygon Lib "gdi32" (ByVal hDC As Long, ByRef lpPoint A
 Private Declare Function Rectangle Lib "gdi32" (ByVal hDC As Long, ByVal X1 As Long, ByVal Y1 As Long, ByVal X2 As Long, ByVal Y2 As Long) As Long
 Private Declare Function FillRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal hBrush As Long) As Long
 Private Declare Function InvertRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT) As Long
+Private Declare Function DrawState Lib "user32" Alias "DrawStateW" (ByVal hDC As Long, ByVal hBrush As Long, ByVal lpDrawStateProc As Long, ByVal lData As Long, ByVal wData As Long, ByVal X As Long, ByVal Y As Long, ByVal CX As Long, ByVal CY As Long, ByVal fFlags As Long) As Long
 Private Declare Function DrawFocusRect Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT) As Long
 Private Declare Function DrawFrameControl Lib "user32" (ByVal hDC As Long, ByRef lpRect As RECT, ByVal nCtlType As Long, ByVal nFlags As Long) As Long
 Private Declare Function DrawText Lib "user32" Alias "DrawTextW" (ByVal hDC As Long, ByVal lpchText As Long, ByVal nCount As Long, ByRef lpRect As RECT, ByVal uFormat As Long) As Long
@@ -1564,6 +1566,9 @@ Private Const SPI_GETFOCUSBORDERHEIGHT As Long = &H2010
 Private Const SPI_GETFOCUSBORDERWIDTH As Long = &H200E
 Private Const RGN_DIFF As Long = 4
 Private Const RGN_COPY As Long = 5
+Private Const DST_ICON As Long = &H3
+Private Const DST_BITMAP As Long = &H4
+Private Const DSS_DISABLED As Long = &H20
 Private Const DT_NOPREFIX As Long = &H800
 Private Const DT_RTLREADING As Long = &H20000
 Private Const DT_LEFT As Long = &H0
@@ -23529,10 +23534,10 @@ If Handled = False Then
                     Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
                     SetTextColor DIS.hDC, OldTextColor
                 Else
-                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
+                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, DIS.ItemState, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
                 End If
             Else
-                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
+                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, DIS.ItemState, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
             End If
         End If
         CloseThemeData Theme
@@ -23578,10 +23583,10 @@ If Handled = False Then
                     Call ComboButtonDrawEllipsis(DIS.hDC, DIS.RCItem)
                     SetTextColor DIS.hDC, OldTextColor
                 Else
-                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
+                    Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, DIS.ItemState, VBFlexGridComboButtonPicture, VBFlexGridComboButtonPictureRenderFlag)
                 End If
             Else
-                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
+                Call ComboButtonDrawPicture(DIS.hDC, DIS.RCItem, DIS.ItemState, VBFlexGridColsInfo(iCol).ComboButtonPicture, VBFlexGridColsInfo(iCol).ComboButtonPictureRenderFlag)
             End If
         End If
     End If
@@ -23613,7 +23618,7 @@ SetTextAlign hDC, OldTextAlign
 If hFontOld <> NULL_PTR Then SelectObject hDC, hFontOld
 End Sub
 
-Private Sub ComboButtonDrawPicture(ByVal hDC As LongPtr, ByRef ContentRect As RECT, ByVal Picture As IPictureDisp, ByRef RenderFlag As Integer)
+Private Sub ComboButtonDrawPicture(ByVal hDC As LongPtr, ByRef ContentRect As RECT, ByVal ItemState As Long, ByVal Picture As IPictureDisp, ByRef RenderFlag As Integer)
 If hDC = NULL_PTR Then Exit Sub
 If Picture Is Nothing Then Exit Sub
 If Picture.Handle <> NULL_PTR Then
@@ -23631,7 +23636,20 @@ If Picture.Handle <> NULL_PTR Then
     CY = CHimetricToPixel_Y(Picture.Height)
     X = ContentRect.Left + ((ContentRect.Right - ContentRect.Left - CX) \ 2)
     Y = ContentRect.Top + ((ContentRect.Bottom - ContentRect.Top - CY) \ 2)
-    Call RenderPicture(Picture, hDC, X, Y, CX, CY, RenderFlag)
+    If Not (ItemState And ODS_DISABLED) = ODS_DISABLED Then
+        Call RenderPicture(Picture, hDC, X, Y, CX, CY, RenderFlag)
+    Else
+        If Picture.Type = vbPicTypeIcon Then
+            DrawState hDC, NULL_PTR, NULL_PTR, Picture.Handle, 0, X, Y, CX, CY, DST_ICON Or DSS_DISABLED
+        Else
+            Dim hImage As LongPtr
+            hImage = BitmapHandleFromPicture(Picture, vbWhite)
+            ' The DrawState API with DSS_DISABLED will draw white as transparent.
+            ' This will ensure GIF bitmaps or metafiles are better drawn.
+            DrawState hDC, NULL_PTR, NULL_PTR, hImage, 0, X, Y, CX, CY, DST_BITMAP Or DSS_DISABLED
+            DeleteObject hImage
+        End If
+    End If
     If hRgnOld <> NULL_PTR Then
         ExtSelectClipRgn hDC, hRgnOld, RGN_COPY
         DeleteObject hRgnOld
