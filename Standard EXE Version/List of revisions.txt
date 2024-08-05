@@ -1,7 +1,10 @@
 List of revisions:
 
+05-Aug-2024
+- Included the ComboButtonMeasure event which fires when an combo button's width needs to be determined. (button only, not drop-down)
+
 04-Aug-2024
-- Included the ComboButtonCustomDraw event which fires after the background has been drawn and before the content is drawn.
+- Included the ComboButtonCustomDraw event which fires after the background has been drawn and before the content is drawn. (button only, not drop-down)
   The Handled parameter must be set to True to overwrite the default behavior.
 
 01-Aug-2024
