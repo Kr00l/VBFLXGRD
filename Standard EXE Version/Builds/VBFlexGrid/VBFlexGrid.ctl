@@ -1072,6 +1072,8 @@ Public Event ComboButtonOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByRef Ca
 Attribute ComboButtonOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn combo button has changed."
 Public Event ComboButtonCustomDraw(ByVal Row As Long, ByVal Col As Long, ByRef Handled As Boolean, ByVal CtlType As Long, ByVal ItemAction As Long, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long, ByVal ContentLeft As Long, ByVal ContentTop As Long, ByVal ContentRight As Long, ByVal ContentBottom As Long)
 Attribute ComboButtonCustomDraw.VB_Description = "Occurs after the background of an combo button has been drawn and before the content is drawn. Only applicable if the combo button draw mode property is set to normal and the combo mode property is set to button."
+Public Event ComboButtonMeasure(ByVal Row As Long, ByVal Col As Long, ByRef Width As Long)
+Attribute ComboButtonMeasure.VB_Description = "Occurs when an combo button's width needs to be determined in preparation of drawing it. Only applicable if the combo mode property is set to button."
 Public Event ComboCueClick(ByVal Row As Long, ByVal Col As Long, ByVal Reason As FlexEditReasonConstants)
 Attribute ComboCueClick.VB_Description = "Occurs when the user clicks on a combo cue and the attempt to edit has been canceled. Only applicable if the always allow combo cues property is set to true."
 Public Event DividerDblClick(ByVal Row As Long, ByVal Col As Long)
@@ -5881,7 +5883,7 @@ ElseIf VBFlexGridComboMode <> FlexComboModeNone Then
     ComboBoundColumn = VBFlexGridComboBoundColumn
 End If
 If VBFlexGridComboModeActive <> FlexComboModeNone Then
-    ComboButtonWidth = GetComboButtonWidth(VBFlexGridEditCol, FlexComboCueNone)
+    ComboButtonWidth = GetComboButtonWidth(VBFlexGridEditRow, VBFlexGridEditCol, FlexComboCueNone)
     If VBFlexGridColsInfo(VBFlexGridEditCol).ComboButtonAlignment = -1 Then
         ComboButtonAlignment = VBFlexGridComboButtonAlignment
     Else
@@ -15150,7 +15152,7 @@ Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment 
 If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
     ComboCue = GetComboCueActive(iRow, iCol)
     If ComboCue > FlexComboCueNone Then
-        ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
+        ComboCueWidth = GetComboButtonWidth(iRow, iCol, ComboCue)
         If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
         If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
             ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -15989,7 +15991,7 @@ Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long, ComboCueAlignment 
 If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
     ComboCue = GetComboCueActive(iRow, iCol)
     If ComboCue > FlexComboCueNone Then
-        ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
+        ComboCueWidth = GetComboButtonWidth(iRow, iCol, ComboCue)
         If (((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX + VBFlexGridDrawInfo.GridLineOffsets.RightBottom.CX))
         If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
             ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -16832,7 +16834,7 @@ Private Function GetFocusRectWidth() As Integer
 If PropFocusRectWidth = -1 Then GetFocusRectWidth = VBFlexGridFocusBorder.CX Else GetFocusRectWidth = PropFocusRectWidth
 End Function
 
-Private Function GetComboButtonWidth(ByVal iCol As Long, ByVal ComboCue As FlexComboCueConstants) As Long
+Private Function GetComboButtonWidth(ByVal iRow As Long, ByVal iCol As Long, ByVal ComboCue As FlexComboCueConstants) As Long
 Dim CtlType As Long
 Select Case ComboCue
     Case FlexComboCueHidden
@@ -16852,15 +16854,18 @@ End Select
 If CtlType = ODT_COMBOBOX Then
     GetComboButtonWidth = VBFlexGridPixelMetrics.ComboButtonWidth
 ElseIf CtlType = ODT_BUTTON Then
+    Dim Width As Long
     If VBFlexGridColsInfo(iCol).ComboButtonWidth = -1 Then
         If VBFlexGridComboButtonWidth = -1 Then
-            GetComboButtonWidth = VBFlexGridPixelMetrics.ComboButtonWidth
+            Width = VBFlexGridPixelMetrics.ComboButtonWidth
         Else
-            GetComboButtonWidth = VBFlexGridComboButtonWidth
+            Width = VBFlexGridComboButtonWidth
         End If
     Else
-        GetComboButtonWidth = VBFlexGridColsInfo(iCol).ComboButtonWidth
+        Width = VBFlexGridColsInfo(iCol).ComboButtonWidth
     End If
+    RaiseEvent ComboButtonMeasure(iRow, iCol, Width)
+    If Width > 0 Then GetComboButtonWidth = Width
 End If
 End Function
 
@@ -17618,7 +17623,7 @@ If hDC <> NULL_PTR Then
             ComboCue = GetComboCueActive(iRow, iCol)
             If ComboCue > FlexComboCueNone Then
                 Call GetGridLineOffsetsStruct(iRow, iCol, GridLineOffsets)
-                ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
+                ComboCueWidth = GetComboButtonWidth(iRow, iCol, ComboCue)
                 If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
                 If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
                     ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -17787,7 +17792,7 @@ If hDC <> NULL_PTR Then
                 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long
                 If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
                     ComboCue = GetComboCueActive(iRow, iCol)
-                    If ComboCue > FlexComboCueNone Then ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
+                    If ComboCue > FlexComboCueNone Then ComboCueWidth = GetComboButtonWidth(iRow, iCol, ComboCue)
                 End If
                 If ComboCueWidth > 0 Then CX = CX + ComboCueWidth
                 If Not .Picture Is Nothing Then
@@ -18096,7 +18101,7 @@ If iRowHit > -1 And iColHit > -1 Then
         ComboCue = GetComboCueActive(iRowHit, iColHit)
         If ComboCue > FlexComboCueNone Then
             Call GetGridLineOffsetsStruct(iRowHit, iColHit, GridLineOffsets)
-            ComboCueWidth = GetComboButtonWidth(iColHit, ComboCue)
+            ComboCueWidth = GetComboButtonWidth(iRowHit, iColHit, ComboCue)
             If (((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((.Right - .Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
             If VBFlexGridColsInfo(iColHit).ComboButtonAlignment = -1 Then
                 ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -18625,7 +18630,7 @@ If hDC <> NULL_PTR Then
         ComboCue = GetComboCueActive(iRow, iCol)
         If ComboCue > FlexComboCueNone Then
             Call GetGridLineOffsetsStruct(iRow, iCol, GridLineOffsets)
-            ComboCueWidth = GetComboButtonWidth(iCol, ComboCue)
+            ComboCueWidth = GetComboButtonWidth(iRow, iCol, ComboCue)
             If (((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX)) - ComboCueWidth) < 0 Then ComboCueWidth = ((CellRect.Right - CellRect.Left) - (GridLineOffsets.LeftTop.CX + GridLineOffsets.RightBottom.CX))
             If VBFlexGridColsInfo(iCol).ComboButtonAlignment = -1 Then
                 ComboCueAlignment = VBFlexGridComboButtonAlignment
@@ -23358,7 +23363,7 @@ If VBFlexGridHandle <> NULL_PTR And VBFlexGridEditHandle <> NULL_PTR Then
             SetWindowPos VBFlexGridEditHandle, NULL_PTR, EditRect.Left, EditRect.Top, (EditRect.Right - EditRect.Left), (EditRect.Bottom - EditRect.Top), SWP_NOOWNERZORDER Or SWP_NOZORDER
         Else
             Dim ComboButtonWidth As Long, ComboButtonAlignment As FlexLeftRightAlignmentConstants
-            ComboButtonWidth = GetComboButtonWidth(VBFlexGridEditCol, FlexComboCueNone)
+            ComboButtonWidth = GetComboButtonWidth(VBFlexGridEditRow, VBFlexGridEditCol, FlexComboCueNone)
             If VBFlexGridColsInfo(VBFlexGridEditCol).ComboButtonAlignment = -1 Then
                 ComboButtonAlignment = VBFlexGridComboButtonAlignment
             Else
