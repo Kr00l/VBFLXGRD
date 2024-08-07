@@ -1,7 +1,7 @@
 List of revisions:
 
 07-Aug-2024
-- Included the optional MinSize/MaxSize parameter in the AutoSize method.
+- Included the GetMetrics method.
 
 05-Aug-2024
 - Included the ComboButtonMeasure event which fires when an combo button's width needs to be determined. (button only, not drop-down)
