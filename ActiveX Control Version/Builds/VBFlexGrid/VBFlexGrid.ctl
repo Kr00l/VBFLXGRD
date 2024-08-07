@@ -949,11 +949,9 @@ Swap As TCOLS
 End Type
 Private Type TPIXELMETRICS
 DividerSpacing As SIZEAPI
-CellTextWidthPadding As Long
-CellTextHeightPadding As Long
-RowInfoHeightSpacing As Long
-ColInfoWidthSpacing As Long
-ComboButtonWidth As Long
+TextPadding As SIZEAPI
+CellSpacing As SIZEAPI
+ScrollBarSize As Long
 CheckBoxSize As Long
 End Type
 Private Type TINCREMENTALSEARCH
@@ -2143,11 +2141,11 @@ Call SetVTableHandling(Me, VTableInterfaceControl)
 With VBFlexGridPixelMetrics
 .DividerSpacing.CX = DIVIDER_SPACING_DIP * PixelsPerDIP_X()
 .DividerSpacing.CY = DIVIDER_SPACING_DIP * PixelsPerDIP_Y()
-.CellTextWidthPadding = CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()
-.CellTextHeightPadding = CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()
-.RowInfoHeightSpacing = ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()
-.ColInfoWidthSpacing = COLINFO_WIDTH_SPACING_DIP * PixelsPerDIP_X()
-.ComboButtonWidth = GetSystemMetrics(SM_CXVSCROLL)
+.TextPadding.CX = CELL_TEXT_WIDTH_PADDING_DIP * PixelsPerDIP_X()
+.TextPadding.CY = CELL_TEXT_HEIGHT_PADDING_DIP * PixelsPerDIP_Y()
+.CellSpacing.CX = COLINFO_WIDTH_SPACING_DIP * PixelsPerDIP_X()
+.CellSpacing.CY = ROWINFO_HEIGHT_SPACING_DIP * PixelsPerDIP_Y()
+.ScrollBarSize = GetSystemMetrics(SM_CXVSCROLL)
 .CheckBoxSize = (13 * PixelsPerDIP_X())
 End With
 With VBFlexGridDefaultCellFmtg
@@ -3108,7 +3106,7 @@ If hDCScreen <> NULL_PTR Then
     Dim TM As TEXTMETRIC, hFontOld As LongPtr
     If VBFlexGridFontHandle <> NULL_PTR Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontHandle)
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
-        VBFlexGridDefaultRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.RowInfoHeightSpacing
+        VBFlexGridDefaultRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.CellSpacing.CY
         VBFlexGridDefaultColWidth = VBFlexGridDefaultRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
     If hFontOld <> NULL_PTR Then SelectObject hDCScreen, hFontOld
@@ -3129,7 +3127,7 @@ If hDCScreen <> NULL_PTR Then
     Dim TM As TEXTMETRIC, hFontOld As LongPtr
     If VBFlexGridFontHandle <> NULL_PTR Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontHandle)
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
-        VBFlexGridDefaultRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.RowInfoHeightSpacing
+        VBFlexGridDefaultRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.CellSpacing.CY
         VBFlexGridDefaultColWidth = VBFlexGridDefaultRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
     If hFontOld <> NULL_PTR Then SelectObject hDCScreen, hFontOld
@@ -3169,7 +3167,7 @@ Else
         Dim TM As TEXTMETRIC, hFontOld As LongPtr
         If VBFlexGridFontFixedHandle <> NULL_PTR Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontFixedHandle)
         If GetTextMetrics(hDCScreen, TM) <> 0 Then
-            VBFlexGridDefaultFixedRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.RowInfoHeightSpacing
+            VBFlexGridDefaultFixedRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.CellSpacing.CY
             VBFlexGridDefaultFixedColWidth = VBFlexGridDefaultFixedRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
         End If
         If hFontOld <> NULL_PTR Then SelectObject hDCScreen, hFontOld
@@ -3191,7 +3189,7 @@ If hDCScreen <> NULL_PTR Then
     Dim TM As TEXTMETRIC, hFontOld As LongPtr
     If VBFlexGridFontFixedHandle <> NULL_PTR Then hFontOld = SelectObject(hDCScreen, VBFlexGridFontFixedHandle)
     If GetTextMetrics(hDCScreen, TM) <> 0 Then
-        VBFlexGridDefaultFixedRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.RowInfoHeightSpacing
+        VBFlexGridDefaultFixedRowHeight = TM.TMHeight + VBFlexGridPixelMetrics.CellSpacing.CY
         VBFlexGridDefaultFixedColWidth = VBFlexGridDefaultFixedRowHeight * RATIO_OF_ROWINFO_HEIGHT_TO_COLINFO_WIDTH
     End If
     If hFontOld <> NULL_PTR Then SelectObject hDCScreen, hFontOld
@@ -5179,7 +5177,7 @@ If Not PropFormatString = vbNullString Then
             FormatCol = PropFormatString
         End If
         Dim Pos1 As Long, Pos2 As Long, Temp As String, Spacing As Long
-        Spacing = VBFlexGridPixelMetrics.ColInfoWidthSpacing
+        Spacing = VBFlexGridPixelMetrics.CellSpacing.CX
         If Not FormatCol = vbNullString Then
             Dim iCol As Long
             Do
@@ -5925,9 +5923,9 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     End With
     SendMessage VBFlexGridEditHandle, WM_SETFONT, hFont, ByVal 0&
     If VBFlexGridRTLLayout = False Then
-        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(VBFlexGridPixelMetrics.CellTextWidthPadding - VBFlexGridEditGridLineOffsets.LeftTop.CX, VBFlexGridPixelMetrics.CellTextWidthPadding - VBFlexGridEditGridLineOffsets.RightBottom.CX)
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(VBFlexGridPixelMetrics.TextPadding.CX - VBFlexGridEditGridLineOffsets.LeftTop.CX, VBFlexGridPixelMetrics.TextPadding.CX - VBFlexGridEditGridLineOffsets.RightBottom.CX)
     Else
-        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(VBFlexGridPixelMetrics.CellTextWidthPadding - VBFlexGridEditGridLineOffsets.RightBottom.CX, VBFlexGridPixelMetrics.CellTextWidthPadding - VBFlexGridEditGridLineOffsets.LeftTop.CX)
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(VBFlexGridPixelMetrics.TextPadding.CX - VBFlexGridEditGridLineOffsets.RightBottom.CX, VBFlexGridPixelMetrics.TextPadding.CX - VBFlexGridEditGridLineOffsets.LeftTop.CX)
     End If
     SendMessage VBFlexGridEditHandle, WM_SETTEXT, 0, ByVal StrPtr(Text)
     VBFlexGridEditTextChanged = False
@@ -8793,7 +8791,7 @@ Attribute ColComboButtonWidth.VB_Description = "Returns/sets the combo button wi
 Attribute ColComboButtonWidth.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 If VBFlexGridColsInfo(Index).ComboButtonWidth = -1 Then
-    ColComboButtonWidth = UserControl.ScaleX(VBFlexGridPixelMetrics.ComboButtonWidth, vbPixels, vbTwips)
+    ColComboButtonWidth = UserControl.ScaleX(VBFlexGridPixelMetrics.ScrollBarSize, vbPixels, vbTwips)
 Else
     ColComboButtonWidth = UserControl.ScaleX(VBFlexGridColsInfo(Index).ComboButtonWidth, vbPixels, vbTwips)
 End If
@@ -12348,7 +12346,7 @@ hDC = GetDC(VBFlexGridHandle)
 Dim iRow As Long, iCol As Long, Text As String, Spacing As Long, Size As SIZEAPI, EqualSize As SIZEAPI
 Dim RowOrColScope1 As Long, RowOrColScope2 As Long
 If Mode = FlexAutoSizeModeColWidth Then
-    Spacing = VBFlexGridPixelMetrics.ColInfoWidthSpacing + CLng(UserControl.ScaleX(ExtraSpace, vbTwips, vbPixels))
+    Spacing = VBFlexGridPixelMetrics.CellSpacing.CX + CLng(UserControl.ScaleX(ExtraSpace, vbTwips, vbPixels))
     EqualSize.CX = -1
     Select Case Scope
         Case FlexAutoSizeScopeAll
@@ -12394,7 +12392,7 @@ If Mode = FlexAutoSizeModeColWidth Then
         Next iCol
     End If
 ElseIf Mode = FlexAutoSizeModeRowHeight Then
-    Spacing = VBFlexGridPixelMetrics.RowInfoHeightSpacing + CLng(UserControl.ScaleY(ExtraSpace, vbTwips, vbPixels))
+    Spacing = VBFlexGridPixelMetrics.CellSpacing.CY + CLng(UserControl.ScaleY(ExtraSpace, vbTwips, vbPixels))
     EqualSize.CY = -1
     Select Case Scope
         Case FlexAutoSizeScopeAll
@@ -12963,7 +12961,7 @@ Public Property Get ComboButtonWidth() As Long
 Attribute ComboButtonWidth.VB_Description = "Returns/sets the combo button width in twips. Only applicable if the combo mode property is set to button."
 Attribute ComboButtonWidth.VB_MemberFlags = "400"
 If VBFlexGridComboButtonWidth = -1 Then
-    ComboButtonWidth = UserControl.ScaleX(VBFlexGridPixelMetrics.ComboButtonWidth, vbPixels, vbTwips)
+    ComboButtonWidth = UserControl.ScaleX(VBFlexGridPixelMetrics.ScrollBarSize, vbPixels, vbTwips)
 Else
     ComboButtonWidth = UserControl.ScaleX(VBFlexGridComboButtonWidth, vbPixels, vbTwips)
 End If
@@ -12984,7 +12982,7 @@ Attribute ComboButtonClientWidth.VB_MemberFlags = "400"
 If VBFlexGridHandle <> NULL_PTR Then
     Dim RC As RECT, Theme As LongPtr
     If VBFlexGridComboButtonWidth = -1 Then
-        RC.Right = VBFlexGridPixelMetrics.ComboButtonWidth
+        RC.Right = VBFlexGridPixelMetrics.ScrollBarSize
     Else
         RC.Right = VBFlexGridComboButtonWidth
     End If
@@ -15049,9 +15047,9 @@ Dim Text As String, TextRect As RECT, HiddenText As Boolean
 Call GetCellText(iRow, iCol, Text)
 Call GetTextDisplay(iRow, iCol, Text)
 With TextRect
-.Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
-.Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
-.Right = CellRect.Right - VBFlexGridPixelMetrics.CellTextWidthPadding
+.Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX
+.Top = CellRect.Top + VBFlexGridPixelMetrics.TextPadding.CY
+.Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX
 If ComboCueWidth > 0 Then
     If ComboCueAlignment = FlexLeftRightAlignmentRight Then
         .Right = .Right - ComboCueWidth
@@ -15059,7 +15057,7 @@ If ComboCueWidth > 0 Then
         .Left = .Left + ComboCueWidth
     End If
 End If
-.Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
+.Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.TextPadding.CY
 End With
 Dim hFontTemp As LongPtr, hFontOld As LongPtr
 If Not .FontName = vbNullString Then
@@ -15304,9 +15302,9 @@ If Checked > -1 Then
     Call DrawCellCheckBox(hDC, CheckBoxRect, CellRect, Text, iRow, iCol, Checked)
     Select Case CheckBoxAlignment
         Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
-            TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
+            TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.TextPadding.CX
         Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
-            TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
+            TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.TextPadding.CX
     End Select
     Select Case Checked
         Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
@@ -15885,9 +15883,9 @@ Dim Text As String, TextRect As RECT, HiddenText As Boolean
 Call GetCellText(iRow, iCol, Text)
 Call GetTextDisplay(iRow, iCol, Text)
 With TextRect
-.Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
-.Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
-.Right = CellRect.Right - VBFlexGridPixelMetrics.CellTextWidthPadding
+.Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX
+.Top = CellRect.Top + VBFlexGridPixelMetrics.TextPadding.CY
+.Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX
 If ComboCueWidth > 0 Then
     If ComboCueAlignment = FlexLeftRightAlignmentRight Then
         .Right = .Right - ComboCueWidth
@@ -15895,7 +15893,7 @@ If ComboCueWidth > 0 Then
         .Left = .Left + ComboCueWidth
     End If
 End If
-.Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
+.Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.TextPadding.CY
 End With
 Dim hFontTemp As LongPtr, hFontOld As LongPtr
 If Not .FontName = vbNullString Then
@@ -16143,9 +16141,9 @@ If Checked > -1 Then
     Call DrawCellCheckBox(hDC, CheckBoxRect, CellRect, Text, iRow, iCol, Checked)
     Select Case CheckBoxAlignment
         Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
-            TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
+            TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.TextPadding.CX
         Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
-            TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
+            TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.TextPadding.CX
     End Select
     Select Case Checked
         Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
@@ -16718,11 +16716,11 @@ Select Case ComboCue
         CtlType = ODT_BUTTON
 End Select
 If CtlType = ODT_COMBOBOX Then
-    GetComboButtonWidth = VBFlexGridPixelMetrics.ComboButtonWidth
+    GetComboButtonWidth = VBFlexGridPixelMetrics.ScrollBarSize
 ElseIf CtlType = ODT_BUTTON Then
     If VBFlexGridColsInfo(iCol).ComboButtonWidth = -1 Then
         If VBFlexGridComboButtonWidth = -1 Then
-            GetComboButtonWidth = VBFlexGridPixelMetrics.ComboButtonWidth
+            GetComboButtonWidth = VBFlexGridPixelMetrics.ScrollBarSize
         Else
             GetComboButtonWidth = VBFlexGridComboButtonWidth
         End If
@@ -17497,9 +17495,9 @@ If hDC <> NULL_PTR Then
         End If
         Dim TextRect As RECT, DrawFlags As Long
         With TextRect
-        .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
-        .Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
-        .Right = CellRect.Right - VBFlexGridPixelMetrics.CellTextWidthPadding
+        .Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX
+        .Top = CellRect.Top + VBFlexGridPixelMetrics.TextPadding.CY
+        .Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX
         If ComboCueWidth > 0 Then
             If ComboCueAlignment = FlexLeftRightAlignmentRight Then
                 .Right = .Right - ComboCueWidth
@@ -17507,7 +17505,7 @@ If hDC <> NULL_PTR Then
                 .Left = .Left + ComboCueWidth
             End If
         End If
-        .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
+        .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.TextPadding.CY
         End With
         DrawFlags = DT_NOPREFIX
         If VBFlexGridRTLReading = True Then DrawFlags = DrawFlags Or DT_RTLREADING
@@ -17545,9 +17543,9 @@ If hDC <> NULL_PTR Then
             End If
             Select Case CheckBoxAlignment
                 Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
-                    TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
+                    TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.TextPadding.CX
                 Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
-                    TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
+                    TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.TextPadding.CX
             End Select
         End If
         If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
@@ -17689,7 +17687,7 @@ If hDC <> NULL_PTR Then
                     End If
                     Select Case CheckBoxAlignment
                         Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom, FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
-                            CX = CX + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
+                            CX = CX + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.TextPadding.CX
                     End Select
                 End If
         End Select
@@ -17994,9 +17992,9 @@ If iRowHit > -1 And iColHit > -1 Then
     If Checked > -1 Then
         Dim CheckBoxRect As RECT, CheckBoxAlignment As FlexCheckBoxAlignmentConstants, CheckBoxOffsetX As Long, CheckBoxOffsetY As Long
         With CheckBoxRect
-        .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
-        .Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
-        .Right = CellRect.Right - VBFlexGridPixelMetrics.CellTextWidthPadding
+        .Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX
+        .Top = CellRect.Top + VBFlexGridPixelMetrics.TextPadding.CY
+        .Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX
         If ComboCueWidth > 0 Then
             If ComboCueAlignment = FlexLeftRightAlignmentRight Then
                 .Right = .Right - ComboCueWidth
@@ -18004,7 +18002,7 @@ If iRowHit > -1 And iColHit > -1 Then
                 .Left = .Left + ComboCueWidth
             End If
         End If
-        .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
+        .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.TextPadding.CY
         End With
         Dim CellFmtg As TCELLFMTG
         Call GetCellFmtg(iRowHit, iColHit, CFM_PICTURE Or CFM_PICTUREALIGNMENT, CellFmtg)
@@ -18507,9 +18505,9 @@ If hDC <> NULL_PTR Then
     Call GetTextDisplay(iRow, iCol, Text)
     If StrPtr(Text) = NULL_PTR Then Text = ""
     With TextRect
-    .Left = CellRect.Left + VBFlexGridPixelMetrics.CellTextWidthPadding
-    .Top = CellRect.Top + VBFlexGridPixelMetrics.CellTextHeightPadding
-    .Right = CellRect.Right - VBFlexGridPixelMetrics.CellTextWidthPadding
+    .Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX
+    .Top = CellRect.Top + VBFlexGridPixelMetrics.TextPadding.CY
+    .Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX
     If ComboCueWidth > 0 Then
         If ComboCueAlignment = FlexLeftRightAlignmentRight Then
             .Right = .Right - ComboCueWidth
@@ -18517,7 +18515,7 @@ If hDC <> NULL_PTR Then
             .Left = .Left + ComboCueWidth
         End If
     End If
-    .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.CellTextHeightPadding
+    .Bottom = CellRect.Bottom - VBFlexGridPixelMetrics.TextPadding.CY
     End With
     Dim CellFmtg As TCELLFMTG
     Call GetCellFmtg(iRow, iCol, CFM_ALIGNMENT Or CFM_PICTURE Or CFM_PICTUREALIGNMENT Or CFM_FONT, CellFmtg)
@@ -18599,9 +18597,9 @@ If hDC <> NULL_PTR Then
         End If
         Select Case CheckBoxAlignment
             Case FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheckBoxAlignmentLeftBottom
-                TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.CellTextWidthPadding
+                TextRect.Left = TextRect.Left + VBFlexGridPixelMetrics.CheckBoxSize + VBFlexGridPixelMetrics.TextPadding.CX
             Case FlexCheckBoxAlignmentRightTop, FlexCheckBoxAlignmentRightCenter, FlexCheckBoxAlignmentRightBottom
-                TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.CellTextWidthPadding
+                TextRect.Right = TextRect.Right - VBFlexGridPixelMetrics.CheckBoxSize - VBFlexGridPixelMetrics.TextPadding.CX
         End Select
         Select Case Checked
             Case FlexTextAsCheckBox, FlexDisabledTextAsCheckBox
@@ -22679,7 +22677,7 @@ If GetTextMetrics(hDC, TM) <> 0 Then
     CalcSize.CY = CalcSize.CX \ 2
     DrawSize.CX = CalcSize.CX + 1
     DrawSize.CY = CalcSize.CY + 1
-    ClientSize.CX = DrawSize.CX + VBFlexGridPixelMetrics.CellTextWidthPadding
+    ClientSize.CX = DrawSize.CX + VBFlexGridPixelMetrics.TextPadding.CX
     ClientSize.CY = TM.TMHeight
 Else
     CalcSize.CX = 0
@@ -25276,8 +25274,8 @@ Select Case wMsg
                 ' The NCCALCSIZE_PARAMS struct is not necessary because only the first rectangle is adjusted.
                 ' If wParam is 1 or not, the treatment is the same.
                 CopyMemory RC, ByVal lParam, LenB(RC)
-                RC.Top = RC.Top + (VBFlexGridPixelMetrics.CellTextHeightPadding - VBFlexGridEditGridLineOffsets.LeftTop.CY)
-                RC.Bottom = RC.Bottom - (VBFlexGridPixelMetrics.CellTextHeightPadding - VBFlexGridEditGridLineOffsets.RightBottom.CY)
+                RC.Top = RC.Top + (VBFlexGridPixelMetrics.TextPadding.CY - VBFlexGridEditGridLineOffsets.LeftTop.CY)
+                RC.Bottom = RC.Bottom - (VBFlexGridPixelMetrics.TextPadding.CY - VBFlexGridEditGridLineOffsets.RightBottom.CY)
                 CopyMemory ByVal lParam, RC, LenB(RC)
                 WindowProcEdit = 0
                 Exit Function
@@ -25309,10 +25307,10 @@ Select Case wMsg
                     RC.Left = 0
                     RC.Right = (WndRect.Right - WndRect.Left)
                     RC.Top = 0
-                    RC.Bottom = RC.Top + (VBFlexGridPixelMetrics.CellTextHeightPadding - VBFlexGridEditGridLineOffsets.LeftTop.CY)
+                    RC.Bottom = RC.Top + (VBFlexGridPixelMetrics.TextPadding.CY - VBFlexGridEditGridLineOffsets.LeftTop.CY)
                     FillRect hDC, RC, Brush
                     RC.Bottom = (WndRect.Bottom - WndRect.Top)
-                    RC.Top = RC.Bottom - (VBFlexGridPixelMetrics.CellTextHeightPadding - VBFlexGridEditGridLineOffsets.RightBottom.CY)
+                    RC.Top = RC.Bottom - (VBFlexGridPixelMetrics.TextPadding.CY - VBFlexGridEditGridLineOffsets.RightBottom.CY)
                     FillRect hDC, RC, Brush
                     ReleaseDC hWnd, hDC
                 End If
