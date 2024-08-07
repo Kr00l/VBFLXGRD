@@ -100,6 +100,7 @@ Private FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheck
 Private FlexCheckBoxDrawModeNormal, FlexCheckBoxDrawModeOwnerDraw
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
 Private FlexWallPaperAlignmentLeftTop, FlexWallPaperAlignmentLeftCenter, FlexWallPaperAlignmentLeftBottom, FlexWallPaperAlignmentCenterTop, FlexWallPaperAlignmentCenterCenter, FlexWallPaperAlignmentCenterBottom, FlexWallPaperAlignmentRightTop, FlexWallPaperAlignmentRightCenter, FlexWallPaperAlignmentRightBottom, FlexWallPaperAlignmentStretch, FlexWallPaperAlignmentTile
+Private FlexMetricDividerSpacing, FlexMetricTextPadding, FlexMetricCellSpacing, FlexMetricScrollBarSize, FlexMetricCheckBoxSize
 Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoData, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText, FlexDataSourceChecked
 #End If
 Public Enum FlexOLEDropModeConstants
@@ -564,6 +565,13 @@ FlexWallPaperAlignmentRightCenter = 7
 FlexWallPaperAlignmentRightBottom = 8
 FlexWallPaperAlignmentStretch = 9
 FlexWallPaperAlignmentTile = 10
+End Enum
+Public Enum FlexMetricConstants
+FlexMetricDividerSpacing = 0
+FlexMetricTextPadding = 1
+FlexMetricCellSpacing = 2
+FlexMetricScrollBarSize = 3
+FlexMetricCheckBoxSize = 4
 End Enum
 Public Enum FlexDataSourceFlags
 FlexDataSourceUnboundFixedColumns = 1
@@ -12130,6 +12138,29 @@ Bottom = UserControl.ScaleY(.RightBottom.CY, vbPixels, vbTwips)
 End With
 End Sub
 
+Public Sub GetMetrics(ByVal Metric As FlexMetricConstants, ByRef CX As Long, ByRef CY As Long)
+Attribute GetMetrics.VB_Description = "Retrieves the metrics of the flex grid control."
+Select Case Metric
+    Case FlexMetricDividerSpacing
+        CX = UserControl.ScaleX(VBFlexGridPixelMetrics.DividerSpacing.CX, vbPixels, vbTwips)
+        CY = UserControl.ScaleY(VBFlexGridPixelMetrics.DividerSpacing.CY, vbPixels, vbTwips)
+    Case FlexMetricTextPadding
+        CX = UserControl.ScaleX(VBFlexGridPixelMetrics.TextPadding.CX, vbPixels, vbTwips)
+        CY = UserControl.ScaleY(VBFlexGridPixelMetrics.TextPadding.CY, vbPixels, vbTwips)
+    Case FlexMetricCellSpacing
+        CX = UserControl.ScaleX(VBFlexGridPixelMetrics.CellSpacing.CX, vbPixels, vbTwips)
+        CY = UserControl.ScaleY(VBFlexGridPixelMetrics.CellSpacing.CY, vbPixels, vbTwips)
+    Case FlexMetricScrollBarSize
+        CX = UserControl.ScaleX(VBFlexGridPixelMetrics.ScrollBarSize, vbPixels, vbTwips)
+        CY = UserControl.ScaleY(VBFlexGridPixelMetrics.ScrollBarSize, vbPixels, vbTwips)
+    Case FlexMetricCheckBoxSize
+        CX = UserControl.ScaleX(VBFlexGridPixelMetrics.CheckBoxSize, vbPixels, vbTwips)
+        CY = UserControl.ScaleY(VBFlexGridPixelMetrics.CheckBoxSize, vbPixels, vbTwips)
+    Case Else
+        Err.Raise 380
+End Select
+End Sub
+
 Public Sub HitTest(ByVal X As Single, ByVal Y As Single)
 Attribute HitTest.VB_Description = "A method that returns a value which indicates the element located at the specified X and Y coordinates."
 Dim HTI As THITTESTINFO
@@ -12428,7 +12459,7 @@ If Wrap = True And FindItem = -1 Then
 End If
 End Function
 
-Public Sub AutoSize(ByVal RowOrCol1 As Long, Optional ByVal RowOrCol2 As Long = -1, Optional ByVal Mode As FlexAutoSizeModeConstants, Optional ByVal Scope As FlexAutoSizeScopeConstants, Optional ByVal Equal As Boolean, Optional ByVal ExtraSpace As Long, Optional ByVal ExcludeHidden As Boolean, Optional ByVal MinSize As Long, Optional ByVal MaxSize As Long)
+Public Sub AutoSize(ByVal RowOrCol1 As Long, Optional ByVal RowOrCol2 As Long = -1, Optional ByVal Mode As FlexAutoSizeModeConstants, Optional ByVal Scope As FlexAutoSizeScopeConstants, Optional ByVal Equal As Boolean, Optional ByVal ExtraSpace As Long, Optional ByVal ExcludeHidden As Boolean)
 Attribute AutoSize.VB_Description = "Automatically sizes column widths or row heights to fit cell contents."
 If VBFlexGridHandle = NULL_PTR Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
 If RowOrCol2 < -1 Then Err.Raise 380
@@ -12448,16 +12479,13 @@ If Mode = FlexAutoSizeModeColWidth Then
 ElseIf Mode = FlexAutoSizeModeRowHeight Then
     If (RowOrCol1 < 0 Or RowOrCol1 > (PropRows - 1)) Or (RowOrCol2 < 0 Or RowOrCol2 > (PropRows - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
 End If
-If MinSize < 0 Or MaxSize < 0 Then Err.Raise 380
 Dim hDC As LongPtr
 hDC = GetDC(VBFlexGridHandle)
-Dim iRow As Long, iCol As Long, Text As String, Spacing As Long, Size As SIZEAPI, EqualSize As SIZEAPI, Min As SIZEAPI, Max As SIZEAPI
+Dim iRow As Long, iCol As Long, Text As String, Spacing As Long, Size As SIZEAPI, EqualSize As SIZEAPI
 Dim RowOrColScope1 As Long, RowOrColScope2 As Long
 If Mode = FlexAutoSizeModeColWidth Then
     Spacing = VBFlexGridPixelMetrics.CellSpacing.CX + CLng(UserControl.ScaleX(ExtraSpace, vbTwips, vbPixels))
     EqualSize.CX = -1
-    Min.CX = CLng(UserControl.ScaleX(MinSize, vbTwips, vbPixels))
-    Max.CX = CLng(UserControl.ScaleX(MaxSize, vbTwips, vbPixels))
     Select Case Scope
         Case FlexAutoSizeScopeAll
             RowOrColScope1 = 0
@@ -12486,8 +12514,6 @@ If Mode = FlexAutoSizeModeColWidth Then
                     Size.CX = GetBestWidth(iRow, iCol, Text, hDC)
                     If Size.CX > 0 Then
                         Size.CX = Size.CX + Spacing
-                        If Min.CX > 0 Then If Size.CX < Min.CX Then Size.CX = Min.CX
-                        If Max.CX > 0 Then If Size.CX > Max.CX Then Size.CX = Max.CX
                         If Size.CX > .Width Then .Width = Size.CX
                         If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
                     End If
@@ -12506,8 +12532,6 @@ If Mode = FlexAutoSizeModeColWidth Then
 ElseIf Mode = FlexAutoSizeModeRowHeight Then
     Spacing = VBFlexGridPixelMetrics.CellSpacing.CY + CLng(UserControl.ScaleY(ExtraSpace, vbTwips, vbPixels))
     EqualSize.CY = -1
-    Min.CY = CLng(UserControl.ScaleY(MinSize, vbTwips, vbPixels))
-    Max.CY = CLng(UserControl.ScaleY(MaxSize, vbTwips, vbPixels))
     Select Case Scope
         Case FlexAutoSizeScopeAll
             RowOrColScope1 = 0
@@ -12536,8 +12560,6 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
                     Size.CY = GetBestHeight(iRow, iCol, Text, hDC)
                     If Size.CY > 0 Then
                         Size.CY = Size.CY + Spacing
-                        If Min.CY > 0 Then If Size.CY < Min.CY Then Size.CY = Min.CY
-                        If Max.CY > 0 Then If Size.CY > Max.CY Then Size.CY = Max.CY
                         If Size.CY > .Height Then .Height = Size.CY
                         If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
                     End If
