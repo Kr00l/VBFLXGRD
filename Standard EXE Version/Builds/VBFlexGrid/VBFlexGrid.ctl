@@ -12430,7 +12430,7 @@ If Wrap = True And FindItem = -1 Then
 End If
 End Function
 
-Public Sub AutoSize(ByVal RowOrCol1 As Long, Optional ByVal RowOrCol2 As Long = -1, Optional ByVal Mode As FlexAutoSizeModeConstants, Optional ByVal Scope As FlexAutoSizeScopeConstants, Optional ByVal Equal As Boolean, Optional ByVal ExtraSpace As Long, Optional ByVal ExcludeHidden As Boolean)
+Public Sub AutoSize(ByVal RowOrCol1 As Long, Optional ByVal RowOrCol2 As Long = -1, Optional ByVal Mode As FlexAutoSizeModeConstants, Optional ByVal Scope As FlexAutoSizeScopeConstants, Optional ByVal Equal As Boolean, Optional ByVal ExtraSpace As Long, Optional ByVal ExcludeHidden As Boolean, Optional ByVal MinContentSize As Long, Optional ByVal MaxContentSize As Long)
 Attribute AutoSize.VB_Description = "Automatically sizes column widths or row heights to fit cell contents."
 If VBFlexGridHandle = NULL_PTR Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
 If RowOrCol2 < -1 Then Err.Raise 380
@@ -12450,13 +12450,16 @@ If Mode = FlexAutoSizeModeColWidth Then
 ElseIf Mode = FlexAutoSizeModeRowHeight Then
     If (RowOrCol1 < 0 Or RowOrCol1 > (PropRows - 1)) Or (RowOrCol2 < 0 Or RowOrCol2 > (PropRows - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
 End If
+If MinContentSize < 0 Or MaxContentSize < 0 Then Err.Raise 380
 Dim hDC As LongPtr
 hDC = GetDC(VBFlexGridHandle)
-Dim iRow As Long, iCol As Long, Text As String, Spacing As Long, Size As SIZEAPI, EqualSize As SIZEAPI
+Dim iRow As Long, iCol As Long, Text As String, Spacing As Long, Size As SIZEAPI, EqualSize As SIZEAPI, MinContent As SIZEAPI, MaxContent As SIZEAPI
 Dim RowOrColScope1 As Long, RowOrColScope2 As Long
 If Mode = FlexAutoSizeModeColWidth Then
     Spacing = VBFlexGridPixelMetrics.ColInfoWidthSpacing + CLng(UserControl.ScaleX(ExtraSpace, vbTwips, vbPixels))
     EqualSize.CX = -1
+    MinContent.CX = CLng(UserControl.ScaleX(MinContentSize, vbTwips, vbPixels))
+    MaxContent.CX = CLng(UserControl.ScaleX(MaxContentSize, vbTwips, vbPixels))
     Select Case Scope
         Case FlexAutoSizeScopeAll
             RowOrColScope1 = 0
@@ -12484,6 +12487,8 @@ If Mode = FlexAutoSizeModeColWidth Then
                     Call GetTextDisplay(iRow, iCol, Text)
                     Size.CX = GetBestWidth(iRow, iCol, Text, hDC)
                     If Size.CX > 0 Then
+                        If MinContent.CX > 0 Then If Size.CX < MinContent.CX Then Size.CX = MinContent.CX
+                        If MaxContent.CX > 0 Then If Size.CX > MaxContent.CX Then Size.CX = MaxContent.CX
                         Size.CX = Size.CX + Spacing
                         If Size.CX > .Width Then .Width = Size.CX
                         If Size.CX > EqualSize.CX Then EqualSize.CX = Size.CX
@@ -12503,6 +12508,8 @@ If Mode = FlexAutoSizeModeColWidth Then
 ElseIf Mode = FlexAutoSizeModeRowHeight Then
     Spacing = VBFlexGridPixelMetrics.RowInfoHeightSpacing + CLng(UserControl.ScaleY(ExtraSpace, vbTwips, vbPixels))
     EqualSize.CY = -1
+    MinContent.CY = CLng(UserControl.ScaleY(MinContentSize, vbTwips, vbPixels))
+    MaxContent.CY = CLng(UserControl.ScaleY(MaxContentSize, vbTwips, vbPixels))
     Select Case Scope
         Case FlexAutoSizeScopeAll
             RowOrColScope1 = 0
@@ -12530,6 +12537,8 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
                     Call GetTextDisplay(iRow, iCol, Text)
                     Size.CY = GetBestHeight(iRow, iCol, Text, hDC)
                     If Size.CY > 0 Then
+                        If MinContent.CY > 0 Then If Size.CY < MinContent.CY Then Size.CY = MinContent.CY
+                        If MaxContent.CY > 0 Then If Size.CY > MaxContent.CY Then Size.CY = MaxContent.CY
                         Size.CY = Size.CY + Spacing
                         If Size.CY > .Height Then .Height = Size.CY
                         If Size.CY > EqualSize.CY Then EqualSize.CY = Size.CY
