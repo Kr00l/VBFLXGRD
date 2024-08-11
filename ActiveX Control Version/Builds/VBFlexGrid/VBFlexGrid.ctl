@@ -24395,6 +24395,8 @@ Select Case wMsg
                                             Me.Cut
                                         Case vbKeyV
                                             Me.Paste
+                                        Case vbKeyDelete
+                                            Me.Delete
                                     End Select
                                 Case Else
                                     Select Case KeyCode
