@@ -12139,7 +12139,7 @@ End With
 End Sub
 
 Public Sub GetMetrics(ByVal Metric As FlexMetricConstants, ByRef CX As Long, ByRef CY As Long)
-Attribute GetMetrics.VB_Description = "Retrieves the metrics of the flex grid control."
+Attribute GetMetrics.VB_Description = "Retrieves the metrics in twips of the flex grid control."
 Select Case Metric
     Case FlexMetricDividerSpacing
         CX = UserControl.ScaleX(VBFlexGridPixelMetrics.DividerSpacing.CX, vbPixels, vbTwips)
@@ -24631,6 +24631,8 @@ Select Case wMsg
                                             Me.Cut
                                         Case vbKeyV
                                             Me.Paste
+                                        Case vbKeyDelete
+                                            Me.Delete
                                     End Select
                                 Case Else
                                     Select Case KeyCode
