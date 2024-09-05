@@ -12,7 +12,7 @@ Begin VB.UserControl VBFlexGrid
    ScaleHeight     =   120
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   160
-   ToolboxBitmap   =   "VBFlexGrid.ctx":005F
+   ToolboxBitmap   =   "VBFlexGrid.ctx":0072
    Begin VB.Timer TimerIncrementalSearch 
       Enabled         =   0   'False
       Left            =   0
@@ -986,6 +986,17 @@ Items() As TCOMBOMULTICOLUMNITEM
 Header As TCOMBOMULTICOLUMNITEM
 BoundColumn As Long
 End Type
+Private Type TUNDOREDOENTRY
+OldString As String
+NewString As String
+Clip As Boolean
+ClearClip As Boolean
+Row As Long
+Col As Long
+RowSel As Long
+ColSel As Long
+MergedRange As TCELLRANGE
+End Type
 Private Type TFORMATRANGE
 hDC As LongPtr
 hDCTarget As LongPtr
@@ -1924,6 +1935,10 @@ Private VBFlexGridWallPaperRenderFlag As Integer
 Private VBFlexGridIncrementalSearch As TINCREMENTALSEARCH
 Private VBFlexGridReaderModeAnchorRegistered As Boolean
 Private VBFlexGridReaderModeScroll As SIZEAPI
+Private VBFlexGridUndoQueueIndex As Long
+Private VBFlexGridUndoQueue() As TUNDOREDOENTRY
+Private VBFlexGridRedoQueueIndex As Long
+Private VBFlexGridRedoQueue() As TUNDOREDOENTRY
 
 #If ImplementFlexDataSource = True Then
 
@@ -2040,6 +2055,7 @@ Private PropWallPaperAlignment As FlexWallPaperAlignmentConstants
 Private PropAllowIncrementalSearch As Boolean
 Private PropAllowReaderMode As Boolean
 Private PropAlwaysAllowComboCues As Boolean
+Private PropUndoLimit As Long
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -2264,6 +2280,8 @@ VBFlexGridHotHitResult = FlexHitResultNoWhere
 VBFlexGridIncrementalSearch.Row = -1
 VBFlexGridIncrementalSearch.Col = -1
 VBFlexGridIncrementalSearch.Time = -1
+VBFlexGridUndoQueueIndex = -1
+VBFlexGridRedoQueueIndex = -1
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -2375,6 +2393,7 @@ PropWallPaperAlignment = FlexWallPaperAlignmentStretch
 PropAllowIncrementalSearch = False
 PropAllowReaderMode = False
 PropAlwaysAllowComboCues = False
+PropUndoLimit = 0
 Call CreateVBFlexGrid
 End Sub
 
@@ -2490,6 +2509,7 @@ PropWallPaperAlignment = .ReadProperty("WallPaperAlignment", FlexWallPaperAlignm
 PropAllowIncrementalSearch = .ReadProperty("AllowIncrementalSearch", False)
 PropAllowReaderMode = .ReadProperty("AllowReaderMode", False)
 PropAlwaysAllowComboCues = .ReadProperty("AlwaysAllowComboCues", False)
+PropUndoLimit = .ReadProperty("UndoLimit", 0)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -2601,6 +2621,7 @@ With PropBag
 .WriteProperty "AllowIncrementalSearch", PropAllowIncrementalSearch, False
 .WriteProperty "AllowReaderMode", PropAllowReaderMode, False
 .WriteProperty "AlwaysAllowComboCues", PropAlwaysAllowComboCues, False
+.WriteProperty "UndoLimit", PropUndoLimit, 0
 End With
 End Sub
 
@@ -5488,6 +5509,26 @@ PropAlwaysAllowComboCues = Value
 UserControl.PropertyChanged "AlwaysAllowComboCues"
 End Property
 
+Public Property Get UndoLimit() As Long
+Attribute UndoLimit.VB_Description = "Returns/sets the maximum number of actions that can be stored in the undo queue. A value of 0 indicates that the undo feature is disabled."
+UndoLimit = PropUndoLimit
+End Property
+
+Public Property Let UndoLimit(ByVal Value As Long)
+If Value < 0 Then
+    If VBFlexGridDesignMode = True Then
+        MsgBox "Invalid property value", vbCritical + vbOKOnly
+        Exit Property
+    Else
+        Err.Raise 380
+    End If
+End If
+PropUndoLimit = Value
+Call ResetUndo
+Call ResetRedo
+UserControl.PropertyChanged "UndoLimit"
+End Property
+
 Private Sub CreateVBFlexGrid()
 If VBFlexGridHandle <> NULL_PTR Then Exit Sub
 Call InitFlexGridCells
@@ -5580,6 +5621,10 @@ If VBFlexGridHandle <> NULL_PTR Then
     End If
     VBFlexGridGridLineWhitePen = CreatePen(PS_SOLID, 0, vbWhite)
     VBFlexGridGridLineBlackPen = CreatePen(PS_SOLID, 0, vbBlack)
+    If PropUndoLimit > 0 Then
+        ReDim VBFlexGridUndoQueue(0 To (PropUndoLimit - 1)) As TUNDOREDOENTRY
+        ReDim VBFlexGridRedoQueue(0 To (PropUndoLimit - 1)) As TUNDOREDOENTRY
+    End If
 End If
 Set Me.Font = PropFont
 Set Me.FontFixed = PropFontFixed
@@ -6250,6 +6295,22 @@ If Discard = False And VBFlexGridEditTextChanged = True Then
                 End If
             Next i
         End If
+        If PropUndoLimit > 0 Then
+            Dim UndoRedoEntry As TUNDOREDOENTRY
+            With UndoRedoEntry
+            Call GetCellText(VBFlexGridEditRow, VBFlexGridEditCol, .OldString)
+            .NewString = Text
+            .Clip = False
+            .ClearClip = False
+            .Row = VBFlexGridEditRow
+            .Col = VBFlexGridEditCol
+            .RowSel = -1
+            .ColSel = -1
+            LSet .MergedRange = VBFlexGridEditMergedRange
+            End With
+            Call AddUndo(UndoRedoEntry)
+            Call ResetRedo
+        End If
         With VBFlexGridEditMergedRange
         For iRow = .TopRow To .BottomRow
             For iCol = .LeftCol To .RightCol
@@ -6673,6 +6734,21 @@ Text = Me.Clip
 RaiseEvent BeforeClipboardAction(FlexClipboardActionCut, Text, Cancel)
 If Cancel = False Then
     Call SetClipboardText(Text)
+    If PropUndoLimit > 0 Then
+        Dim UndoRedoEntry As TUNDOREDOENTRY
+        With UndoRedoEntry
+        .OldString = Me.Clip
+        .NewString = vbNullString
+        .Clip = True
+        .ClearClip = True
+        .Row = VBFlexGridRow
+        .Col = VBFlexGridCol
+        .RowSel = VBFlexGridRowSel
+        .ColSel = VBFlexGridColSel
+        End With
+        Call AddUndo(UndoRedoEntry)
+        Call ResetRedo
+    End If
     Me.Clear FlexClearClip, FlexClearText
     Me.CellEnsureVisible
     RaiseEvent AfterClipboardAction(FlexClipboardActionCut)
@@ -6686,6 +6762,21 @@ Dim Text As String, Cancel As Boolean
 Text = GetClipboardText()
 RaiseEvent BeforeClipboardAction(FlexClipboardActionPaste, Text, Cancel)
 If Cancel = False Then
+    If PropUndoLimit > 0 Then
+        Dim UndoRedoEntry As TUNDOREDOENTRY
+        With UndoRedoEntry
+        .OldString = Me.Clip
+        .NewString = Text
+        .Clip = True
+        .ClearClip = False
+        .Row = VBFlexGridRow
+        .Col = VBFlexGridCol
+        .RowSel = VBFlexGridRowSel
+        .ColSel = VBFlexGridColSel
+        End With
+        Call AddUndo(UndoRedoEntry)
+        Call ResetRedo
+    End If
     Me.Clip = Text
     Me.CellEnsureVisible
     RaiseEvent AfterClipboardAction(FlexClipboardActionPaste)
@@ -6702,11 +6793,92 @@ Attribute Delete.VB_Description = "Deletes the current selection of the flex gri
 Dim Cancel As Boolean
 RaiseEvent BeforeClipboardAction(FlexClipboardActionDelete, vbNullString, Cancel)
 If Cancel = False Then
+    If PropUndoLimit > 0 Then
+        Dim UndoRedoEntry As TUNDOREDOENTRY
+        With UndoRedoEntry
+        .OldString = Me.Clip
+        .NewString = vbNullString
+        .Clip = True
+        .ClearClip = True
+        .Row = VBFlexGridRow
+        .Col = VBFlexGridCol
+        .RowSel = VBFlexGridRowSel
+        .ColSel = VBFlexGridColSel
+        End With
+        Call AddUndo(UndoRedoEntry)
+        Call ResetRedo
+    End If
     Me.Clear FlexClearClip, FlexClearText
     Me.CellEnsureVisible
     RaiseEvent AfterClipboardAction(FlexClipboardActionDelete)
 End If
 End Sub
+
+Public Sub Undo()
+Attribute Undo.VB_Description = "Undoes the last operation, if any."
+If VBFlexGridUndoQueueIndex > -1 Then
+    With VBFlexGridUndoQueue(VBFlexGridUndoQueueIndex)
+    Me.SelectRange .Row, .Col, .RowSel, .ColSel
+    Me.CellEnsureVisible
+    If .Clip = False Then
+        Dim iRow As Long, iCol As Long
+        For iRow = .MergedRange.TopRow To .MergedRange.BottomRow
+            For iCol = .MergedRange.LeftCol To .MergedRange.RightCol
+                Call SetCellText(iRow, iCol, .OldString)
+            Next iCol
+        Next iRow
+    Else
+        Me.Clip = .OldString
+    End If
+    End With
+    Call AddRedo(VBFlexGridUndoQueue(VBFlexGridUndoQueueIndex))
+    VBFlexGridUndoQueueIndex = VBFlexGridUndoQueueIndex - 1
+    Call RedrawGrid
+End If
+End Sub
+
+Public Function CanUndo() As Boolean
+Attribute CanUndo.VB_Description = "Determines whether there are any actions in the undo queue."
+CanUndo = CBool(VBFlexGridUndoQueueIndex > -1)
+End Function
+
+Public Sub ResetUndoQueue()
+Attribute ResetUndoQueue.VB_Description = "Resets the undo queue."
+Call ResetUndo
+Call ResetRedo
+End Sub
+
+Public Sub Redo()
+Attribute Redo.VB_Description = "Redoes the next action in the redo queue, if any."
+If VBFlexGridRedoQueueIndex > -1 Then
+    With VBFlexGridRedoQueue(VBFlexGridRedoQueueIndex)
+    Me.SelectRange .Row, .Col, .RowSel, .ColSel
+    Me.CellEnsureVisible
+    If .Clip = False Then
+        Dim iRow As Long, iCol As Long
+        For iRow = .MergedRange.TopRow To .MergedRange.BottomRow
+            For iCol = .MergedRange.LeftCol To .MergedRange.RightCol
+                Call SetCellText(iRow, iCol, .NewString)
+            Next iCol
+        Next iRow
+    Else
+        If .ClearClip = False Then
+            Me.Clip = .NewString
+        Else
+            Me.Clear FlexClearClip, FlexClearText
+        End If
+    End If
+    End With
+    Call AddUndo(VBFlexGridRedoQueue(VBFlexGridRedoQueueIndex))
+    VBFlexGridRedoQueueIndex = VBFlexGridRedoQueueIndex - 1
+    Call RedrawGrid
+End If
+End Sub
+
+Public Function CanRedo() As Boolean
+Attribute CanRedo.VB_Description = "Determines whether there are any actions in the redo queue."
+CanRedo = CBool(VBFlexGridRedoQueueIndex > -1)
+End Function
 
 Public Sub Clear(Optional ByVal Where As FlexClearWhereConstants, Optional ByVal What As FlexClearWhatConstants)
 Attribute Clear.VB_Description = "Clears the contents of the flex grid."
@@ -19780,6 +19952,52 @@ End Function
 Private Function GetIncrementalSearchTime() As Long
 If VBFlexGridIncrementalSearch.Time = -1 Then GetIncrementalSearchTime = GetDoubleClickTime() * 2 Else GetIncrementalSearchTime = VBFlexGridIncrementalSearch.Time
 End Function
+
+Private Sub AddUndo(ByRef UndoRedoEntry As TUNDOREDOENTRY)
+If PropUndoLimit > 0 Then
+    If (VBFlexGridUndoQueueIndex + 1) <= (PropUndoLimit - 1) Then
+        VBFlexGridUndoQueueIndex = VBFlexGridUndoQueueIndex + 1
+    Else
+        Dim i As Long
+        For i = 0 To (VBFlexGridUndoQueueIndex - 1)
+            LSet VBFlexGridUndoQueue(i) = VBFlexGridUndoQueue(i + 1)
+        Next i
+    End If
+    LSet VBFlexGridUndoQueue(VBFlexGridUndoQueueIndex) = UndoRedoEntry
+End If
+End Sub
+
+Private Sub ResetUndo()
+If PropUndoLimit > 0 Then
+    ReDim VBFlexGridUndoQueue(0 To (PropUndoLimit - 1)) As TUNDOREDOENTRY
+Else
+    Erase VBFlexGridUndoQueue()
+End If
+VBFlexGridUndoQueueIndex = -1
+End Sub
+
+Private Sub AddRedo(ByRef UndoRedoEntry As TUNDOREDOENTRY)
+If PropUndoLimit > 0 Then
+    If (VBFlexGridRedoQueueIndex + 1) <= (PropUndoLimit - 1) Then
+        VBFlexGridRedoQueueIndex = VBFlexGridRedoQueueIndex + 1
+    Else
+        Dim i As Long
+        For i = 0 To (VBFlexGridRedoQueueIndex - 1)
+            LSet VBFlexGridRedoQueue(i) = VBFlexGridRedoQueue(i + 1)
+        Next i
+    End If
+    LSet VBFlexGridRedoQueue(VBFlexGridRedoQueueIndex) = UndoRedoEntry
+End If
+End Sub
+
+Private Sub ResetRedo()
+If PropUndoLimit > 0 Then
+    ReDim VBFlexGridRedoQueue(0 To (PropUndoLimit - 1)) As TUNDOREDOENTRY
+Else
+    Erase VBFlexGridRedoQueue()
+End If
+VBFlexGridRedoQueueIndex = -1
+End Sub
 
 Private Sub ProcessKeyDown(ByVal KeyCode As Integer, ByVal Shift As Integer)
 If PropRows < 1 Or PropCols < 1 Then Exit Sub
