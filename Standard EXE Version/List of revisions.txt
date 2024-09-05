@@ -1,5 +1,10 @@
 List of revisions:
 
+05-Sep-2024
+- Included the Undo/Redo/ResetUndoQueue methods and CanUndo/CanRedo functions.
+  This is useful for clip operations (Cut, Paste and Delete) and for user editing.
+- Included the UndoLimit property which defaults to 0. (disabled feature)
+
 07-Aug-2024
 - Included the GetMetrics method.
 
