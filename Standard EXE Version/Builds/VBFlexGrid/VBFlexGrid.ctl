@@ -986,6 +986,7 @@ Items() As TCOMBOMULTICOLUMNITEM
 Header As TCOMBOMULTICOLUMNITEM
 BoundColumn As Long
 End Type
+Private Const MAX_QUEUE_SIZE As Long = 1000
 Private Type TUNDOREDOENTRY
 OldString As String
 NewString As String
@@ -5523,7 +5524,7 @@ If Value < 0 Then
         Err.Raise 380
     End If
 End If
-PropUndoLimit = Value
+If Value > MAX_QUEUE_SIZE Then PropUndoLimit = MAX_QUEUE_SIZE Else PropUndoLimit = Value
 Call ResetUndo
 Call ResetRedo
 UserControl.PropertyChanged "UndoLimit"
@@ -5621,10 +5622,6 @@ If VBFlexGridHandle <> NULL_PTR Then
     End If
     VBFlexGridGridLineWhitePen = CreatePen(PS_SOLID, 0, vbWhite)
     VBFlexGridGridLineBlackPen = CreatePen(PS_SOLID, 0, vbBlack)
-    If PropUndoLimit > 0 Then
-        ReDim VBFlexGridUndoQueue(0 To (PropUndoLimit - 1)) As TUNDOREDOENTRY
-        ReDim VBFlexGridRedoQueue(0 To (PropUndoLimit - 1)) As TUNDOREDOENTRY
-    End If
 End If
 Set Me.Font = PropFont
 Set Me.FontFixed = PropFontFixed
@@ -5632,6 +5629,7 @@ Me.VisualStyles = PropVisualStyles
 Me.Enabled = UserControl.Enabled
 If PropRedraw = False Then Me.Redraw = False
 Me.FormatString = PropFormatString
+Me.UndoLimit = PropUndoLimit
 Call SetScrollBars
 If VBFlexGridDesignMode = False Then
     Call FlexSetSubclass(UserControl.hWnd, Me, 6)
