@@ -1,5 +1,8 @@
 List of revisions:
 
+06-Sep-2024
+- UndoLimit now capped at 1000.
+
 05-Sep-2024
 - Included the Undo/Redo/ResetUndoQueue methods and CanUndo/CanRedo functions.
   This is useful for clip operations (Cut, Paste and Delete) and for user editing.
