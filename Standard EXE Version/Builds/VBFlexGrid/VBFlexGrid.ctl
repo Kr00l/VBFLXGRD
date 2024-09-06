@@ -986,7 +986,6 @@ Items() As TCOMBOMULTICOLUMNITEM
 Header As TCOMBOMULTICOLUMNITEM
 BoundColumn As Long
 End Type
-Private Const MAX_QUEUE_SIZE As Long = 1000
 Private Type TUNDOREDOENTRY
 OldString As String
 NewString As String
@@ -5524,7 +5523,8 @@ If Value < 0 Then
         Err.Raise 380
     End If
 End If
-If Value > MAX_QUEUE_SIZE Then PropUndoLimit = MAX_QUEUE_SIZE Else PropUndoLimit = Value
+If Value > 1000 Then Value = 1000
+PropUndoLimit = Value
 Call ResetUndo
 Call ResetRedo
 UserControl.PropertyChanged "UndoLimit"
