@@ -5629,7 +5629,7 @@ Me.VisualStyles = PropVisualStyles
 Me.Enabled = UserControl.Enabled
 If PropRedraw = False Then Me.Redraw = False
 Me.FormatString = PropFormatString
-Me.UndoLimit = PropUndoLimit
+If PropUndoLimit > 0 Then Me.UndoLimit = PropUndoLimit
 Call SetScrollBars
 If VBFlexGridDesignMode = False Then
     Call FlexSetSubclass(UserControl.hWnd, Me, 6)
