@@ -1,5 +1,8 @@
 List of revisions:
 
+13-Sep-2024
+- Bugfix in the internal GetBestWidth function related to sort arrow. (GetBestHeight not affected)
+
 06-Sep-2024
 - UndoLimit now capped at 1000.
 
