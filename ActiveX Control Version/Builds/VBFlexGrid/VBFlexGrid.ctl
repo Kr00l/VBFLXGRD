@@ -17631,6 +17631,34 @@ If hDC = NULL_PTR Then
     hDC = hDCTemp
 End If
 If hDC <> NULL_PTR Then
+    Dim CellFmtg As TCELLFMTG
+    Call GetCellFmtg(iRow, iCol, CFM_PICTURE Or CFM_PICTUREALIGNMENT Or CFM_FONT, CellFmtg)
+    With CellFmtg
+    Dim hFontTemp As LongPtr, hFontOld As LongPtr
+    If .FontName = vbNullString Then
+        If iRow > (PropFixedRows - 1) And iCol > (PropFixedCols - 1) Then
+            hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
+        Else
+            If VBFlexGridFontFixedHandle = NULL_PTR Then
+                hFontOld = SelectObject(hDC, VBFlexGridFontHandle)
+            Else
+                hFontOld = SelectObject(hDC, VBFlexGridFontFixedHandle)
+            End If
+        End If
+    Else
+        Dim TempFont As StdFont
+        Set TempFont = New StdFont
+        TempFont.Name = .FontName
+        TempFont.Size = .FontSize
+        TempFont.Bold = CBool((.FontStyle And FS_BOLD) = FS_BOLD)
+        TempFont.Italic = CBool((.FontStyle And FS_ITALIC) = FS_ITALIC)
+        TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
+        TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
+        TempFont.Charset = .FontCharset
+        hFontTemp = CreateGDIFontFromOLEFont(TempFont)
+        hFontOld = SelectObject(hDC, hFontTemp)
+        Set TempFont = Nothing
+    End If
     Dim HiddenText As Boolean, Checked As Integer
     If VBFlexGridColsInfo(iCol).ImageList.Handle <> NULL_PTR Then
         If GetImageIndex(iRow, iCol, Text) > 0 Then HiddenText = True
@@ -17645,9 +17673,6 @@ If hDC <> NULL_PTR Then
     Dim CX As Long
     If HiddenText = False Then CX = GetTextSize(iRow, iCol, Text, hDC).CX
     If PropBestFitMode <> FlexBestFitModeTextOnly Then
-        Dim CellFmtg As TCELLFMTG
-        Call GetCellFmtg(iRow, iCol, CFM_PICTURE Or CFM_PICTUREALIGNMENT, CellFmtg)
-        With CellFmtg
         Select Case PropBestFitMode
             Case FlexBestFitModeFull, FlexBestFitModeOtherText
                 Dim ComboCue As FlexComboCueConstants, ComboCueWidth As Long
@@ -17699,10 +17724,12 @@ If hDC <> NULL_PTR Then
                     CX = CX + SortArrowClientSize.CX
                 End If
         End Select
-        End With
     End If
     GetBestWidth = CX
+    If hFontOld <> NULL_PTR Then SelectObject hDC, hFontOld
+    If hFontTemp <> NULL_PTR Then DeleteObject hFontTemp
     If hDCTemp <> NULL_PTR Then ReleaseDC VBFlexGridHandle, hDCTemp
+    End With
 End If
 End Function
 
