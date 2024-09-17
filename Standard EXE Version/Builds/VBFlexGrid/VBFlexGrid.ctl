@@ -892,7 +892,7 @@ Handle As LongPtr
 Size As SIZEAPI
 End Type
 Private Type TSORTARROWMETRICS
-GlyphSize As SIZEAPI
+CalcSize As SIZEAPI
 DrawSize As SIZEAPI
 ClientSize As SIZEAPI
 End Type
@@ -15799,35 +15799,35 @@ If VBFlexGridColsInfo(iCol).SortArrow <> FlexSortArrowNone And iRow = PropRowSor
         Select Case VBFlexGridColsInfo(iCol).SortArrow
             Case FlexSortArrowAscending
                 If VBFlexGridColsInfo(iCol).SortArrowAlignment = FlexLeftRightAlignmentRight Then
-                    SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowMetrics.GlyphSize.CX \ 2)
-                    SortArrowPoints(0).Y = TextRect.Top + ((SortArrowMetrics.ClientSize.CY - SortArrowMetrics.GlyphSize.CY) \ 2)
-                    SortArrowPoints(1).X = (TextRect.Right - 1) - SortArrowMetrics.GlyphSize.CX
-                    SortArrowPoints(1).Y = SortArrowPoints(0).Y + SortArrowMetrics.GlyphSize.CY
+                    SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowMetrics.CalcSize.CX \ 2)
+                    SortArrowPoints(0).Y = TextRect.Top + ((SortArrowMetrics.ClientSize.CY - SortArrowMetrics.CalcSize.CY) \ 2)
+                    SortArrowPoints(1).X = (TextRect.Right - 1) - SortArrowMetrics.CalcSize.CX
+                    SortArrowPoints(1).Y = SortArrowPoints(0).Y + SortArrowMetrics.CalcSize.CY
                     SortArrowPoints(2).X = (TextRect.Right - 1)
-                    SortArrowPoints(2).Y = SortArrowPoints(0).Y + SortArrowMetrics.GlyphSize.CY
+                    SortArrowPoints(2).Y = SortArrowPoints(0).Y + SortArrowMetrics.CalcSize.CY
                 ElseIf VBFlexGridColsInfo(iCol).SortArrowAlignment = FlexLeftRightAlignmentLeft Then
-                    SortArrowPoints(0).X = TextRect.Left + (SortArrowMetrics.GlyphSize.CX \ 2)
-                    SortArrowPoints(0).Y = TextRect.Top + ((SortArrowMetrics.ClientSize.CY - SortArrowMetrics.GlyphSize.CY) \ 2)
-                    SortArrowPoints(1).X = TextRect.Left + SortArrowMetrics.GlyphSize.CX
-                    SortArrowPoints(1).Y = SortArrowPoints(0).Y + SortArrowMetrics.GlyphSize.CY
+                    SortArrowPoints(0).X = TextRect.Left + (SortArrowMetrics.CalcSize.CX \ 2)
+                    SortArrowPoints(0).Y = TextRect.Top + ((SortArrowMetrics.ClientSize.CY - SortArrowMetrics.CalcSize.CY) \ 2)
+                    SortArrowPoints(1).X = TextRect.Left + SortArrowMetrics.CalcSize.CX
+                    SortArrowPoints(1).Y = SortArrowPoints(0).Y + SortArrowMetrics.CalcSize.CY
                     SortArrowPoints(2).X = TextRect.Left
-                    SortArrowPoints(2).Y = SortArrowPoints(0).Y + SortArrowMetrics.GlyphSize.CY
+                    SortArrowPoints(2).Y = SortArrowPoints(0).Y + SortArrowMetrics.CalcSize.CY
                 End If
             Case FlexSortArrowDescending
                 If VBFlexGridColsInfo(iCol).SortArrowAlignment = FlexLeftRightAlignmentRight Then
-                    SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowMetrics.GlyphSize.CX \ 2)
-                    SortArrowPoints(0).Y = TextRect.Top + SortArrowMetrics.GlyphSize.CY + ((SortArrowMetrics.ClientSize.CY - SortArrowMetrics.GlyphSize.CY) \ 2)
-                    SortArrowPoints(1).X = (TextRect.Right - 1) - SortArrowMetrics.GlyphSize.CX
-                    SortArrowPoints(1).Y = SortArrowPoints(0).Y - SortArrowMetrics.GlyphSize.CY
+                    SortArrowPoints(0).X = (TextRect.Right - 1) - (SortArrowMetrics.CalcSize.CX \ 2)
+                    SortArrowPoints(0).Y = TextRect.Top + SortArrowMetrics.CalcSize.CY + ((SortArrowMetrics.ClientSize.CY - SortArrowMetrics.CalcSize.CY) \ 2)
+                    SortArrowPoints(1).X = (TextRect.Right - 1) - SortArrowMetrics.CalcSize.CX
+                    SortArrowPoints(1).Y = SortArrowPoints(0).Y - SortArrowMetrics.CalcSize.CY
                     SortArrowPoints(2).X = (TextRect.Right - 1)
-                    SortArrowPoints(2).Y = SortArrowPoints(0).Y - SortArrowMetrics.GlyphSize.CY
+                    SortArrowPoints(2).Y = SortArrowPoints(0).Y - SortArrowMetrics.CalcSize.CY
                 ElseIf VBFlexGridColsInfo(iCol).SortArrowAlignment = FlexLeftRightAlignmentLeft Then
-                    SortArrowPoints(0).X = TextRect.Left + (SortArrowMetrics.GlyphSize.CX \ 2)
-                    SortArrowPoints(0).Y = TextRect.Top + SortArrowMetrics.GlyphSize.CY + ((SortArrowMetrics.ClientSize.CY - SortArrowMetrics.GlyphSize.CY) \ 2)
-                    SortArrowPoints(1).X = TextRect.Left + SortArrowMetrics.GlyphSize.CX
-                    SortArrowPoints(1).Y = SortArrowPoints(0).Y - SortArrowMetrics.GlyphSize.CY
+                    SortArrowPoints(0).X = TextRect.Left + (SortArrowMetrics.CalcSize.CX \ 2)
+                    SortArrowPoints(0).Y = TextRect.Top + SortArrowMetrics.CalcSize.CY + ((SortArrowMetrics.ClientSize.CY - SortArrowMetrics.CalcSize.CY) \ 2)
+                    SortArrowPoints(1).X = TextRect.Left + SortArrowMetrics.CalcSize.CX
+                    SortArrowPoints(1).Y = SortArrowPoints(0).Y - SortArrowMetrics.CalcSize.CY
                     SortArrowPoints(2).X = TextRect.Left
-                    SortArrowPoints(2).Y = SortArrowPoints(0).Y - SortArrowMetrics.GlyphSize.CY
+                    SortArrowPoints(2).Y = SortArrowPoints(0).Y - SortArrowMetrics.CalcSize.CY
                 End If
         End Select
         If SortArrowVSpace > 0 Then
@@ -23088,17 +23088,17 @@ If hDC = NULL_PTR Then Exit Sub
 With SortArrowMetrics
 Dim TM As TEXTMETRIC
 If GetTextMetrics(hDC, TM) <> 0 Then
-    .GlyphSize.CX = TM.TMAveCharWidth
-    If .GlyphSize.CX < 3 Then .GlyphSize.CX = 3
-    If .GlyphSize.CX Mod 2 Then .GlyphSize.CX = .GlyphSize.CX + 1
-    .GlyphSize.CY = .GlyphSize.CX \ 2
-    .DrawSize.CX = .GlyphSize.CX + 1
-    .DrawSize.CY = .GlyphSize.CY + 1
+    .CalcSize.CX = TM.TMAveCharWidth
+    If .CalcSize.CX < 3 Then .CalcSize.CX = 3
+    If .CalcSize.CX Mod 2 Then .CalcSize.CX = .CalcSize.CX + 1
+    .CalcSize.CY = .CalcSize.CX \ 2
+    .DrawSize.CX = .CalcSize.CX + 1
+    .DrawSize.CY = .CalcSize.CY + 1
     .ClientSize.CX = .DrawSize.CX + VBFlexGridPixelMetrics.TextPadding.CX
     .ClientSize.CY = TM.TMHeight
 Else
-    .GlyphSize.CX = 0
-    .GlyphSize.CY = 0
+    .CalcSize.CX = 0
+    .CalcSize.CY = 0
     .DrawSize.CX = 0
     .DrawSize.CY = 0
     .ClientSize.CX = 0
