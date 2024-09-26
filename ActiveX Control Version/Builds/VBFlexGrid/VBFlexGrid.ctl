@@ -23757,9 +23757,9 @@ End If
 End Sub
 
 Private Sub InplaceMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TCOLS, ByVal Sort As FlexSortConstants)
-Dim Blank As TCOLS, Length As Long, Temp() As TCOLS, Cmp As Long, Dst As Long
-Dim i As Long, j As Long
-Dim Dbl1 As Double, Dbl2 As Double
+Static Blank As TCOLS, Length As Long, Temp() As TCOLS, Cmp As Long, Dst As Long
+Static i As Long, j As Long
+Static Dbl1 As Double, Dbl2 As Double
 Length = LenB(Blank)
 ReDim Temp(0 To (Middle - Left)) As TCOLS
 j = 0
@@ -23840,6 +23840,7 @@ Do While j <= UBound(Temp)
     Dst = Dst + 1
     j = j + 1
 Loop
+Erase Temp()
 End Sub
 
 Private Sub MergeSortRec(ByVal Left As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TCOLS, ByVal Sort As FlexSortConstants)
@@ -23853,8 +23854,8 @@ End If
 End Sub
 
 Private Sub InplaceIndirectMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
-Dim Blank As TINDIRECTMERGESORTDATA, Length As Long, Temp() As TINDIRECTMERGESORTDATA, Cmp As Long, Dst As Long
-Dim i As Long, j As Long
+Static Blank As TINDIRECTMERGESORTDATA, Length As Long, Temp() As TINDIRECTMERGESORTDATA, Cmp As Long, Dst As Long
+Static i As Long, j As Long
 Length = LenB(Blank)
 ReDim Temp(0 To (Middle - Left)) As TINDIRECTMERGESORTDATA
 j = 0
@@ -23883,6 +23884,7 @@ Do While j <= UBound(Temp)
     Dst = Dst + 1
     j = j + 1
 Loop
+Erase Temp()
 End Sub
 
 Private Sub IndirectMergeSortRec(ByVal Left As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
