@@ -9,6 +9,14 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    PaletteMode     =   0  'Halftone
    ScaleHeight     =   8820
    ScaleWidth      =   6450
+   Begin VB.ComboBox ComboFontQuality 
+      Height          =   315
+      Left            =   1800
+      Style           =   2  'Dropdown List
+      TabIndex        =   51
+      Top             =   7680
+      Width           =   2235
+   End
    Begin VB.TextBox TextUndoLimit 
       Height          =   315
       Left            =   1800
@@ -20,7 +28,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AlwaysAllowComboCues"
       Height          =   285
       Left            =   4200
-      TabIndex        =   67
+      TabIndex        =   69
       Top             =   6960
       Width           =   2160
    End
@@ -28,7 +36,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowReaderMode"
       Height          =   285
       Left            =   4200
-      TabIndex        =   66
+      TabIndex        =   68
       Top             =   6600
       Width           =   2160
    End
@@ -36,7 +44,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowIncrementalSearch"
       Height          =   285
       Left            =   4200
-      TabIndex        =   65
+      TabIndex        =   67
       Top             =   6240
       Width           =   2160
    End
@@ -52,7 +60,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ScrollTipFollowThumb"
       Height          =   285
       Left            =   4200
-      TabIndex        =   56
+      TabIndex        =   58
       Top             =   3000
       Width           =   2160
    End
@@ -60,7 +68,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ShowScrollTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   60
+      TabIndex        =   62
       Top             =   4440
       Width           =   2160
    End
@@ -68,7 +76,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "SheetBorder"
       Height          =   285
       Left            =   4200
-      TabIndex        =   64
+      TabIndex        =   66
       Top             =   5880
       Width           =   2160
    End
@@ -76,7 +84,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowMultiSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   52
+      TabIndex        =   54
       Top             =   1560
       Width           =   2160
    End
@@ -84,7 +92,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowScrollLock"
       Height          =   285
       Left            =   4200
-      TabIndex        =   63
+      TabIndex        =   65
       Top             =   5520
       Width           =   2160
    End
@@ -107,7 +115,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ExtendLastCol"
       Height          =   285
       Left            =   4200
-      TabIndex        =   62
+      TabIndex        =   64
       Top             =   5160
       Width           =   2160
    End
@@ -137,7 +145,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "WantReturn"
       Height          =   285
       Left            =   4200
-      TabIndex        =   61
+      TabIndex        =   63
       Top             =   4800
       Width           =   2160
    End
@@ -145,7 +153,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowUserEditing"
       Height          =   285
       Left            =   4200
-      TabIndex        =   54
+      TabIndex        =   56
       Top             =   2280
       Width           =   2160
    End
@@ -233,7 +241,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ShowLabelTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   59
+      TabIndex        =   61
       Top             =   4080
       Width           =   2160
    End
@@ -241,7 +249,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ShowInfoTips"
       Height          =   285
       Left            =   4200
-      TabIndex        =   58
+      TabIndex        =   60
       Top             =   3720
       Width           =   2160
    End
@@ -249,7 +257,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "DisableNoScroll"
       Height          =   285
       Left            =   4200
-      TabIndex        =   57
+      TabIndex        =   59
       Top             =   3360
       Width           =   2160
    End
@@ -257,7 +265,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "ScrollTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   55
+      TabIndex        =   57
       Top             =   2640
       Width           =   2160
    End
@@ -265,7 +273,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   53
+      TabIndex        =   55
       Top             =   1920
       Width           =   2160
    End
@@ -273,7 +281,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "AllowBigSelection"
       Height          =   285
       Left            =   4200
-      TabIndex        =   51
+      TabIndex        =   53
       Top             =   1200
       Width           =   2160
    End
@@ -309,7 +317,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "MouseTrack"
       Height          =   285
       Left            =   4200
-      TabIndex        =   50
+      TabIndex        =   52
       Top             =   840
       Width           =   2160
    End
@@ -353,6 +361,14 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Left            =   1800
       TabIndex        =   1
       Top             =   120
+      Width           =   1620
+   End
+   Begin VB.Label LabelFontQuality 
+      Caption         =   "FontQuality:"
+      Height          =   240
+      Left            =   120
+      TabIndex        =   50
+      Top             =   7680
       Width           =   1620
    End
    Begin VB.Label LabelUndoLimit 
@@ -757,6 +773,22 @@ With ComboWallPaperAlignment
 .AddItem FlexWallPaperAlignmentTile & " - Tile"
 .ItemData(.NewIndex) = FlexWallPaperAlignmentTile
 End With
+With ComboFontQuality
+.AddItem FlexFontQualityDefault & " - Default"
+.ItemData(.NewIndex) = FlexFontQualityDefault
+.AddItem FlexFontQualityDraft & " - Draft"
+.ItemData(.NewIndex) = FlexFontQualityDraft
+.AddItem FlexFontQualityProof & " - Proof"
+.ItemData(.NewIndex) = FlexFontQualityProof
+.AddItem FlexFontQualityNonAntiAliased & " - NonAntiAliased"
+.ItemData(.NewIndex) = FlexFontQualityNonAntiAliased
+.AddItem FlexFontQualityAntiAliased & " - AntiAliased"
+.ItemData(.NewIndex) = FlexFontQualityAntiAliased
+.AddItem FlexFontQualityClearType & " - ClearType"
+.ItemData(.NewIndex) = FlexFontQualityClearType
+.AddItem FlexFontQualityClearTypeNatural & " - ClearTypeNatural"
+.ItemData(.NewIndex) = FlexFontQualityClearTypeNatural
+End With
 End Sub
 
 Private Sub PropertyPage_ApplyChanges()
@@ -828,6 +860,7 @@ End If
 .RowSortArrows = CLng(TextRowSortArrows.Text)
 .WallPaperAlignment = ComboWallPaperAlignment.ItemData(ComboWallPaperAlignment.ListIndex)
 .UndoLimit = CLng(TextUndoLimit.Text)
+.FontQuality = ComboFontQuality.ItemData(ComboFontQuality.ListIndex)
 .MouseTrack = CBool(CheckMouseTrack.Value = vbChecked)
 .AllowBigSelection = CBool(CheckAllowBigSelection.Value = vbChecked)
 .AllowMultiSelection = CBool(CheckAllowMultiSelection.Value = vbChecked)
@@ -956,6 +989,12 @@ For i = 0 To ComboWallPaperAlignment.ListCount - 1
     End If
 Next i
 TextUndoLimit.Text = CStr(.UndoLimit)
+For i = 0 To ComboFontQuality.ListCount - 1
+    If ComboFontQuality.ItemData(i) = .FontQuality Then
+        ComboFontQuality.ListIndex = i
+        Exit For
+    End If
+Next i
 CheckMouseTrack.Value = IIf(.MouseTrack = True, vbChecked, vbUnchecked)
 CheckAllowBigSelection.Value = IIf(.AllowBigSelection = True, vbChecked, vbUnchecked)
 CheckAllowMultiSelection.Value = IIf(.AllowMultiSelection = True, vbChecked, vbUnchecked)
@@ -1387,6 +1426,11 @@ Else
 End If
 End Sub
 
+Private Sub ComboWallPaperAlignment_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
 Private Sub TextUndoLimit_GotFocus()
 If Not TextUndoLimit.SelStart = 0 Then Exit Sub
 TextUndoLimit.SelLength = Len(TextUndoLimit.Text)
@@ -1433,7 +1477,7 @@ Else
 End If
 End Sub
 
-Private Sub ComboWallPaperAlignment_Click()
+Private Sub ComboFontQuality_Click()
 If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub

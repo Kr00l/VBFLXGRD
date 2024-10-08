@@ -100,6 +100,7 @@ Private FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheck
 Private FlexCheckBoxDrawModeNormal, FlexCheckBoxDrawModeOwnerDraw
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
 Private FlexWallPaperAlignmentLeftTop, FlexWallPaperAlignmentLeftCenter, FlexWallPaperAlignmentLeftBottom, FlexWallPaperAlignmentCenterTop, FlexWallPaperAlignmentCenterCenter, FlexWallPaperAlignmentCenterBottom, FlexWallPaperAlignmentRightTop, FlexWallPaperAlignmentRightCenter, FlexWallPaperAlignmentRightBottom, FlexWallPaperAlignmentStretch, FlexWallPaperAlignmentTile
+Private FlexFontQualityDefault, FlexFontQualityDraft, FlexFontQualityProof, FlexFontQualityNonAntiAliased, FlexFontQualityAntiAliased, FlexFontQualityClearType, FlexFontQualityClearTypeNatural
 Private FlexMetricDividerSpacing, FlexMetricTextPadding, FlexMetricCellSpacing, FlexMetricScrollBarSize, FlexMetricCheckBoxSize
 Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoData, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText, FlexDataSourceChecked
 #End If
@@ -565,6 +566,15 @@ FlexWallPaperAlignmentRightCenter = 7
 FlexWallPaperAlignmentRightBottom = 8
 FlexWallPaperAlignmentStretch = 9
 FlexWallPaperAlignmentTile = 10
+End Enum
+Public Enum FlexFontQualityConstants
+FlexFontQualityDefault = 0
+FlexFontQualityDraft = 1
+FlexFontQualityProof = 2
+FlexFontQualityNonAntiAliased = 3
+FlexFontQualityAntiAliased = 4
+FlexFontQualityClearType = 5
+FlexFontQualityClearTypeNatural = 6
 End Enum
 Public Enum FlexMetricConstants
 FlexMetricDividerSpacing = 0
@@ -2060,6 +2070,7 @@ Private PropWallPaperAlignment As FlexWallPaperAlignmentConstants
 Private PropAllowIncrementalSearch As Boolean
 Private PropAllowReaderMode As Boolean
 Private PropAlwaysAllowComboCues As Boolean
+Private PropFontQuality As FlexFontQualityConstants
 Private PropUndoLimit As Long
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
@@ -2399,6 +2410,7 @@ PropAllowIncrementalSearch = False
 PropAllowReaderMode = False
 PropAlwaysAllowComboCues = False
 PropUndoLimit = 0
+PropFontQuality = FlexFontQualityDefault
 Call CreateVBFlexGrid
 End Sub
 
@@ -2515,6 +2527,7 @@ PropAllowIncrementalSearch = .ReadProperty("AllowIncrementalSearch", False)
 PropAllowReaderMode = .ReadProperty("AllowReaderMode", False)
 PropAlwaysAllowComboCues = .ReadProperty("AlwaysAllowComboCues", False)
 PropUndoLimit = .ReadProperty("UndoLimit", 0)
+PropFontQuality = .ReadProperty("FontQuality", FlexFontQualityDefault)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -2627,6 +2640,7 @@ With PropBag
 .WriteProperty "AllowReaderMode", PropAllowReaderMode, False
 .WriteProperty "AlwaysAllowComboCues", PropAlwaysAllowComboCues, False
 .WriteProperty "UndoLimit", PropUndoLimit, 0
+.WriteProperty "FontQuality", PropFontQuality, FlexFontQualityDefault
 End With
 End Sub
 
@@ -3155,7 +3169,7 @@ If NewFont Is Nothing Then Set NewFont = Ambient.Font
 Dim OldFontHandle As LongPtr
 Set PropFont = NewFont
 OldFontHandle = VBFlexGridFontHandle
-VBFlexGridFontHandle = CreateGDIFontFromOLEFont(PropFont)
+VBFlexGridFontHandle = CreateGDIFontFromOLEFont(PropFont, PropFontQuality)
 Dim hDCScreen As LongPtr
 hDCScreen = GetDC(NULL_PTR)
 If hDCScreen <> NULL_PTR Then
@@ -3176,7 +3190,7 @@ End Property
 Private Sub PropFont_FontChanged(ByVal PropertyName As String)
 Dim OldFontHandle As LongPtr
 OldFontHandle = VBFlexGridFontHandle
-VBFlexGridFontHandle = CreateGDIFontFromOLEFont(PropFont)
+VBFlexGridFontHandle = CreateGDIFontFromOLEFont(PropFont, PropFontQuality)
 Dim hDCScreen As LongPtr
 hDCScreen = GetDC(NULL_PTR)
 If hDCScreen <> NULL_PTR Then
@@ -3216,7 +3230,7 @@ If PropFontFixed Is Nothing Then
     VBFlexGridDefaultFixedRowHeight = -1
     VBFlexGridDefaultFixedColWidth = -1
 Else
-    VBFlexGridFontFixedHandle = CreateGDIFontFromOLEFont(PropFontFixed)
+    VBFlexGridFontFixedHandle = CreateGDIFontFromOLEFont(PropFontFixed, PropFontQuality)
     Dim hDCScreen As LongPtr
     hDCScreen = GetDC(NULL_PTR)
     If hDCScreen <> NULL_PTR Then
@@ -3238,7 +3252,7 @@ End Property
 Private Sub PropFontFixed_FontChanged(ByVal PropertyName As String)
 Dim OldFontHandle As LongPtr
 OldFontHandle = VBFlexGridFontFixedHandle
-VBFlexGridFontFixedHandle = CreateGDIFontFromOLEFont(PropFontFixed)
+VBFlexGridFontFixedHandle = CreateGDIFontFromOLEFont(PropFontFixed, PropFontQuality)
 Dim hDCScreen As LongPtr
 hDCScreen = GetDC(NULL_PTR)
 If hDCScreen <> NULL_PTR Then
@@ -5535,6 +5549,23 @@ Call ResetRedo
 UserControl.PropertyChanged "UndoLimit"
 End Property
 
+Public Property Get FontQuality() As FlexFontQualityConstants
+Attribute FontQuality.VB_Description = "Returns/sets the font quality."
+FontQuality = PropFontQuality
+End Property
+
+Public Property Let FontQuality(ByVal Value As FlexFontQualityConstants)
+Select Case Value
+    Case FlexFontQualityDefault, FlexFontQualityDraft, FlexFontQualityProof, FlexFontQualityNonAntiAliased, FlexFontQualityAntiAliased, FlexFontQualityClearType, FlexFontQualityClearTypeNatural
+        PropFontQuality = Value
+    Case Else
+        Err.Raise 380
+End Select
+Set Me.Font = PropFont
+Set Me.FontFixed = PropFontFixed
+UserControl.PropertyChanged "FontQuality"
+End Property
+
 Private Sub CreateVBFlexGrid()
 If VBFlexGridHandle <> NULL_PTR Then Exit Sub
 Call InitFlexGridCells
@@ -5982,7 +6013,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
         TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
         TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
         TempFont.Charset = .FontCharset
-        VBFlexGridEditTempFontHandle = CreateGDIFontFromOLEFont(TempFont)
+        VBFlexGridEditTempFontHandle = CreateGDIFontFromOLEFont(TempFont, PropFontQuality)
         hFont = VBFlexGridEditTempFontHandle
         Set TempFont = Nothing
     End If
@@ -15407,7 +15438,7 @@ If Not .FontName = vbNullString Then
     TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
     TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
     TempFont.Charset = .FontCharset
-    hFontTemp = CreateGDIFontFromOLEFont(TempFont)
+    hFontTemp = CreateGDIFontFromOLEFont(TempFont, PropFontQuality)
     hFontOld = SelectObject(hDC, hFontTemp)
     Set TempFont = Nothing
 End If
@@ -16246,7 +16277,7 @@ If Not .FontName = vbNullString Then
     TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
     TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
     TempFont.Charset = .FontCharset
-    hFontTemp = CreateGDIFontFromOLEFont(TempFont)
+    hFontTemp = CreateGDIFontFromOLEFont(TempFont, PropFontQuality)
     hFontOld = SelectObject(hDC, hFontTemp)
     Set TempFont = Nothing
 End If
@@ -17728,7 +17759,7 @@ If hDC <> NULL_PTR Then
         TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
         TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
         TempFont.Charset = .FontCharset
-        hFontTemp = CreateGDIFontFromOLEFont(TempFont)
+        hFontTemp = CreateGDIFontFromOLEFont(TempFont, PropFontQuality)
         hFontOld = SelectObject(hDC, hFontTemp)
         Set TempFont = Nothing
     End If
@@ -17798,7 +17829,7 @@ If hDC <> NULL_PTR Then
         TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
         TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
         TempFont.Charset = .FontCharset
-        hFontTemp = CreateGDIFontFromOLEFont(TempFont)
+        hFontTemp = CreateGDIFontFromOLEFont(TempFont, PropFontQuality)
         hFontOld = SelectObject(hDC, hFontTemp)
         Set TempFont = Nothing
     End If
@@ -17998,7 +18029,7 @@ If hDC <> NULL_PTR Then
         TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
         TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
         TempFont.Charset = .FontCharset
-        hFontTemp = CreateGDIFontFromOLEFont(TempFont)
+        hFontTemp = CreateGDIFontFromOLEFont(TempFont, PropFontQuality)
         hFontOld = SelectObject(hDC, hFontTemp)
         Set TempFont = Nothing
     End If
@@ -18911,7 +18942,7 @@ If hDC <> NULL_PTR Then
         TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
         TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
         TempFont.Charset = .FontCharset
-        hFontTemp = CreateGDIFontFromOLEFont(TempFont)
+        hFontTemp = CreateGDIFontFromOLEFont(TempFont, PropFontQuality)
         hFontOld = SelectObject(hDC, hFontTemp)
         Set TempFont = Nothing
     End If
@@ -23483,7 +23514,7 @@ If VBFlexGridHandle <> NULL_PTR And VBFlexGridToolTipHandle <> NULL_PTR Then
             TempFont.Strikethrough = CBool((.FontStyle And FS_STRIKEOUT) = FS_STRIKEOUT)
             TempFont.Underline = CBool((.FontStyle And FS_UNDERLINE) = FS_UNDERLINE)
             TempFont.Charset = .FontCharset
-            VBFlexGridFontToolTipHandle = CreateGDIFontFromOLEFont(TempFont)
+            VBFlexGridFontToolTipHandle = CreateGDIFontFromOLEFont(TempFont, PropFontQuality)
             Set TempFont = Nothing
         End If
         End With
