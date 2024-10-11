@@ -1,5 +1,9 @@
 List of revisions:
 
+11-Oct-2024
+- Included the ColSortMode property and the FlexSortModeConstants enum.
+  It defaults to 0 - Normal but can be changed to 1 - TextDisplay.
+
 08-Oct-2024
 - Included the FontQuality property.
   This can be convenient when using 'Microsoft Sans Serif' to have more unicode chars supported but to exactly look like 'MS Sans Serif'.
