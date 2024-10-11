@@ -65,6 +65,7 @@ Private FlexPictureAlignmentLeftTop, FlexPictureAlignmentLeftCenter, FlexPicture
 Private FlexRowSizingModeIndividual, FlexRowSizingModeAll, FlexRowSizingModeUniform
 Private FlexMergeCellsNever, FlexMergeCellsFree, FlexMergeCellsRestrictRows, FlexMergeCellsRestrictColumns, FlexMergeCellsRestrictAll, FlexMergeCellsFixedOnly
 Private FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending, FlexSortCustomText
+Private FlexSortModeNormal, FlexSortModeTextDisplay
 Private FlexVisibilityPartialOK, FlexVisibilityCompleteOnly
 Private FlexPictureTypeColor, FlexPictureTypeMonochrome, FlexPictureTypeEnhMetafile
 Private FlexEllipsisFormatNone, FlexEllipsisFormatEnd, FlexEllipsisFormatPath, FlexEllipsisFormatWord
@@ -294,6 +295,10 @@ FlexSortCurrencyDescending = 12
 FlexSortDateAscending = 13
 FlexSortDateDescending = 14
 FlexSortCustomText = 15
+End Enum
+Public Enum FlexSortModeConstants
+FlexSortModeNormal = 0
+FlexSortModeTextDisplay = 1
 End Enum
 Public Enum FlexVisibilityConstants
 FlexVisibilityPartialOK = 0
@@ -939,6 +944,7 @@ WordWrapOptionFixed As FlexWordWrapOptions
 MimicTextBox As FlexMimicTextBoxConstants
 MimicTextBoxFixed As FlexMimicTextBoxConstants
 Sort As FlexSortConstants
+SortMode As FlexSortModeConstants
 SortArrow As FlexSortArrowConstants
 SortArrowAlignment As FlexLeftRightAlignmentConstants
 SortArrowColor As Long
@@ -970,6 +976,7 @@ Rows() As TCOLS
 End Type
 Private Type TINDIRECTMERGESORTDATA
 Row As Long
+TextDisplay As String
 Swap As TCOLS
 End Type
 Private Type TPIXELMETRICS
@@ -1940,7 +1947,6 @@ Private VBFlexGridDesignMode As Boolean
 Private VBFlexGridRTLLayout As Boolean, VBFlexGridRTLReading As Boolean
 Private VBFlexGridAlignable As Boolean
 Private VBFlexGridEnabledVisualStyles As Boolean
-Private VBFlexGridSort As FlexSortConstants
 Private VBFlexGridExtendLastCol As Long
 Private VBFlexGridInvertSelection As Boolean
 Private VBFlexGridClipSeparatorCol As String, VBFlexGridClipSeparatorRow As String
@@ -4990,9 +4996,9 @@ End If
 #End If
 
 Select Case Value
+    Case FlexSortNone
+        Exit Property
     Case FlexSortNone, FlexSortGenericAscending, FlexSortGenericDescending, FlexSortNumericAscending, FlexSortNumericDescending, FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending, FlexSortStringAscending, FlexSortStringDescending, FlexSortCustom, FlexSortUseColSort, FlexSortCurrencyAscending, FlexSortCurrencyDescending, FlexSortDateAscending, FlexSortDateDescending, FlexSortCustomText
-        VBFlexGridSort = Value
-        If VBFlexGridSort = FlexSortNone Then Exit Property
         If (VBFlexGridRow < 0 Or VBFlexGridRowSel < 0) Or (VBFlexGridCol < 0 Or VBFlexGridColSel < 0) Then
             ' Error shall not be raised. Do nothing in this case.
             Exit Property
@@ -5011,13 +5017,29 @@ Select Case Value
         ' To specify the range to be sorted, set the Row and RowSel properties.
         ' Sorting is always done in a left-to-right direction. (Technically the sorting is performed from right-to-left)
         For iCol = SelRange.RightCol To SelRange.LeftCol Step -1
-            If VBFlexGridSort <> FlexSortUseColSort Then Sort = VBFlexGridSort Else Sort = VBFlexGridColsInfo(iCol).Sort
+            If Value <> FlexSortUseColSort Then Sort = Value Else Sort = VBFlexGridColsInfo(iCol).Sort
             ' MergeSort/BubbleSort are used as they are 'stable sort' algorithms.
             If Sort <> FlexSortCustom Then
-                ' MergeSort is used for automatic sorting as it is fast and reliable.
-                Call MergeSortRec(Row1, Row2, iCol, VBFlexGridCells.Rows(), Sort)
+                If VBFlexGridColsInfo(iCol).SortMode = FlexSortModeNormal Then
+                    Call MergeSortRec(Row1, Row2, iCol, VBFlexGridCells.Rows(), Sort)
+                ElseIf VBFlexGridColsInfo(iCol).SortMode = FlexSortModeTextDisplay Then
+                    Length = LenB(Blank)
+                    ReDim Data(Row1 To Row2) As TINDIRECTMERGESORTDATA
+                    For iRow = Row1 To Row2
+                        Data(iRow).TextDisplay = VBFlexGridCells.Rows(iRow).Cols(iCol).Text
+                        Call GetTextDisplay(iRow, iCol, Data(iRow).TextDisplay)
+                        CopyMemory ByVal VarPtr(Data(iRow).Swap), ByVal VarPtr(VBFlexGridCells.Rows(iRow)), Length
+                    Next iRow
+                    Call TextDisplayMergeSortRec(Row1, Row2, iCol, Data(), Sort)
+                    For iRow = Row1 To Row2
+                        CopyMemory ByVal VarPtr(VBFlexGridCells.Rows(iRow)), ByVal VarPtr(Data(iRow).Swap), Length
+                    Next iRow
+                    For iRow = Row1 To Row2
+                        ZeroMemory ByVal VarPtr(Data(iRow).Swap), Length
+                    Next iRow
+                End If
             Else
-                ' IndirectMergeSort/BubbleSort is used for custom sorting as row1/row2 must be meaningful in the 'Compare' event.
+                ' CustomMergeSort/BubbleSort is used for custom sorting as row1/row2 must be meaningful in the 'Compare' event.
                 ' Call BubbleSortIter(Row1, Row2, iCol, VBFlexGridCells.Rows())
                 Length = LenB(Blank)
                 ReDim Data(Row1 To Row2) As TINDIRECTMERGESORTDATA
@@ -5025,7 +5047,7 @@ Select Case Value
                     Data(iRow).Row = iRow
                     CopyMemory ByVal VarPtr(Data(iRow).Swap), ByVal VarPtr(VBFlexGridCells.Rows(iRow)), Length
                 Next iRow
-                Call IndirectMergeSortRec(Row1, Row2, iCol, Data())
+                Call CustomMergeSortRec(Row1, Row2, iCol, Data())
                 For iRow = Row1 To Row2
                     CopyMemory ByVal VarPtr(VBFlexGridCells.Rows(iRow)), ByVal VarPtr(Data(iRow).Swap), Length
                 Next iRow
@@ -8871,6 +8893,30 @@ Else
     Dim i As Long
     For i = 0 To (PropCols - 1)
         VBFlexGridColsInfo(i).Sort = Value
+    Next i
+End If
+End Property
+
+Public Property Get ColSortMode(ByVal Index As Long) As FlexSortModeConstants
+Attribute ColSortMode.VB_Description = "Returns/sets the sort mode for the specified column."
+Attribute ColSortMode.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColSortMode = VBFlexGridColsInfo(Index).SortMode
+End Property
+
+Public Property Let ColSortMode(ByVal Index As Long, ByVal Value As FlexSortModeConstants)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Select Case Value
+    Case FlexSortModeNormal, FlexSortModeTextDisplay
+    Case Else
+        Err.Raise 380
+End Select
+If Index > -1 Then
+    VBFlexGridColsInfo(Index).SortMode = Value
+Else
+    Dim i As Long
+    For i = 0 To (PropCols - 1)
+        VBFlexGridColsInfo(i).SortMode = Value
     Next i
 End If
 End Property
@@ -24328,7 +24374,103 @@ If Left < Right Then
 End If
 End Sub
 
-Private Sub InplaceIndirectMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
+Private Sub InplaceTextDisplayMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA, ByVal Sort As FlexSortConstants)
+Dim Blank As TINDIRECTMERGESORTDATA, Length As Long, Temp() As TINDIRECTMERGESORTDATA, Cmp As Long, Dst As Long
+Dim i As Long, j As Long
+Dim Dbl1 As Double, Dbl2 As Double
+Length = LenB(Blank)
+ReDim Temp(0 To (Middle - Left)) As TINDIRECTMERGESORTDATA
+j = 0
+For i = Left To Middle
+    CopyMemory ByVal VarPtr(Temp(j)), ByVal VarPtr(Data(i)), Length
+    j = j + 1
+Next i
+j = 0
+Dst = Left
+Do While i <= Right And j <= UBound(Temp)
+    Cmp = 0
+    Select Case Sort
+        Case FlexSortGenericAscending, FlexSortGenericDescending
+            ' Sort strings and numbers only. (dates will be sorted as strings)
+            If Not IsNumeric(Data(i).TextDisplay) Or Not IsNumeric(Temp(j).TextDisplay) Then
+                If Data(i).TextDisplay < Temp(j).TextDisplay Then
+                    Cmp = -1
+                ElseIf Data(i).TextDisplay > Temp(j).TextDisplay Then
+                    Cmp = 1
+                End If
+            Else
+                Dbl1 = Empty: Dbl2 = Empty
+                On Error Resume Next
+                Dbl1 = CDbl(Data(i).TextDisplay)
+                Dbl2 = CDbl(Temp(j).TextDisplay)
+                On Error GoTo 0
+                Cmp = Sgn(Dbl1 - Dbl2)
+            End If
+            If Sort = FlexSortGenericDescending Then Cmp = -Cmp
+        Case FlexSortNumericAscending, FlexSortNumericDescending
+            Dbl1 = Empty: Dbl2 = Empty
+            On Error Resume Next
+            Dbl1 = CDbl(Data(i).TextDisplay)
+            Dbl2 = CDbl(Temp(j).TextDisplay)
+            On Error GoTo 0
+            Cmp = Sgn(Dbl1 - Dbl2)
+            If Sort = FlexSortNumericDescending Then Cmp = -Cmp
+        Case FlexSortStringNoCaseAscending, FlexSortStringNoCaseDescending
+            Cmp = lstrcmpi(StrPtr(Data(i).TextDisplay), StrPtr(Temp(j).TextDisplay))
+            If Sort = FlexSortStringNoCaseDescending Then Cmp = -Cmp
+        Case FlexSortStringAscending, FlexSortStringDescending
+            Cmp = lstrcmp(StrPtr(Data(i).TextDisplay), StrPtr(Temp(j).TextDisplay))
+            If Sort = FlexSortStringDescending Then Cmp = -Cmp
+        Case FlexSortCurrencyAscending, FlexSortCurrencyDescending
+            Dim Cur1 As Currency, Cur2 As Currency
+            Cur1 = Empty: Cur2 = Empty
+            On Error Resume Next
+            Cur1 = CCur(Data(i).TextDisplay)
+            Cur2 = CCur(Temp(j).TextDisplay)
+            On Error GoTo 0
+            Cmp = Sgn(Cur1 - Cur2)
+            If Sort = FlexSortCurrencyDescending Then Cmp = -Cmp
+        Case FlexSortDateAscending, FlexSortDateDescending
+            Dim Date1 As Date, Date2 As Date
+            Date1 = Empty: Date2 = Empty
+            On Error Resume Next
+            Date1 = CDate(Data(i).TextDisplay)
+            Date2 = CDate(Temp(j).TextDisplay)
+            On Error GoTo 0
+            Cmp = Sgn(Date1 - Date2)
+            If Sort = FlexSortDateDescending Then Cmp = -Cmp
+        Case FlexSortCustomText
+            RaiseEvent CompareText(Data(i).TextDisplay, Temp(j).TextDisplay, Col, Cmp)
+    End Select
+    If Cmp < 0 Then
+        CopyMemory ByVal VarPtr(Data(Dst)), ByVal VarPtr(Data(i)), Length
+        i = i + 1
+    Else
+        CopyMemory ByVal VarPtr(Data(Dst)), ByVal VarPtr(Temp(j)), Length
+        ZeroMemory ByVal VarPtr(Temp(j)), Length
+        j = j + 1
+    End If
+    Dst = Dst + 1
+Loop
+Do While j <= UBound(Temp)
+    CopyMemory ByVal VarPtr(Data(Dst)), ByVal VarPtr(Temp(j)), Length
+    ZeroMemory ByVal VarPtr(Temp(j)), Length
+    Dst = Dst + 1
+    j = j + 1
+Loop
+End Sub
+
+Private Sub TextDisplayMergeSortRec(ByVal Left As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA, ByVal Sort As FlexSortConstants)
+Dim Middle As Long
+Middle = (Left + Right) \ 2
+If Left < Right Then
+    Call TextDisplayMergeSortRec(Left, Middle, Col, Data(), Sort)
+    Call TextDisplayMergeSortRec(Middle + 1, Right, Col, Data(), Sort)
+    Call InplaceTextDisplayMergeSort(Left, Middle, Right, Col, Data(), Sort)
+End If
+End Sub
+
+Private Sub InplaceCustomMergeSort(ByVal Left As Long, ByVal Middle As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
 Dim Blank As TINDIRECTMERGESORTDATA, Length As Long, Temp() As TINDIRECTMERGESORTDATA, Cmp As Long, Dst As Long
 Dim i As Long, j As Long
 Length = LenB(Blank)
@@ -24361,13 +24503,13 @@ Do While j <= UBound(Temp)
 Loop
 End Sub
 
-Private Sub IndirectMergeSortRec(ByVal Left As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
+Private Sub CustomMergeSortRec(ByVal Left As Long, ByVal Right As Long, ByVal Col As Long, ByRef Data() As TINDIRECTMERGESORTDATA)
 Dim Middle As Long
 Middle = (Left + Right) \ 2
 If Left < Right Then
-    Call IndirectMergeSortRec(Left, Middle, Col, Data())
-    Call IndirectMergeSortRec(Middle + 1, Right, Col, Data())
-    Call InplaceIndirectMergeSort(Left, Middle, Right, Col, Data())
+    Call CustomMergeSortRec(Left, Middle, Col, Data())
+    Call CustomMergeSortRec(Middle + 1, Right, Col, Data())
+    Call InplaceCustomMergeSort(Left, Middle, Right, Col, Data())
 End If
 End Sub
 
