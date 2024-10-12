@@ -794,6 +794,10 @@ Private Type TGRIDLINEOFFSETS
 LeftTop As SIZEAPI
 RightBottom As SIZEAPI
 End Type
+Private Type TTEXTINDENT
+Left As Long
+Right As Long
+End Type
 Private Const DIVIDER_SPACING_DIP As Long = 2
 Private Type THITTESTINFO
 PT As POINTAPI
@@ -6070,7 +6074,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     End If
     End With
     SendMessage VBFlexGridEditHandle, WM_SETFONT, hFont, ByVal 0&
-    Dim TextIndent As RECT
+    Dim TextIndent As TTEXTINDENT
     If (VBFlexGridColsInfo(VBFlexGridEditCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
         With TextIndent
         RaiseEvent CellTextIndent(VBFlexGridEditRow, VBFlexGridEditCol, .Left, .Right)
@@ -15500,7 +15504,7 @@ If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
         End If
     End If
 End If
-Dim TextIndent As RECT
+Dim TextIndent As TTEXTINDENT
 If (VBFlexGridColsInfo(iCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
     With TextIndent
     RaiseEvent CellTextIndent(iRow, iCol, .Left, .Right)
@@ -16347,7 +16351,7 @@ If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
         End If
     End If
 End If
-Dim TextIndent As RECT
+Dim TextIndent As TTEXTINDENT
 If (VBFlexGridColsInfo(iCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
     With TextIndent
     RaiseEvent CellTextIndent(iRow, iCol, .Left, .Right)
@@ -17972,7 +17976,7 @@ If hDC <> NULL_PTR Then
                 End If
             End If
         End If
-        Dim TextIndent As RECT
+        Dim TextIndent As TTEXTINDENT
         If (VBFlexGridColsInfo(iCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
             With TextIndent
             RaiseEvent CellTextIndent(iRow, iCol, .Left, .Right)
@@ -18160,7 +18164,7 @@ If hDC <> NULL_PTR Then
     Dim CX As Long
     If HiddenText = False Then CX = GetTextSize(iRow, iCol, Text, hDC).CX
     If (VBFlexGridColsInfo(iCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
-        Dim TextIndent As RECT
+        Dim TextIndent As TTEXTINDENT
         With TextIndent
         RaiseEvent CellTextIndent(iRow, iCol, .Left, .Right)
         If .Left > 0 Then .Left = UserControl.ScaleX(.Left, vbTwips, vbPixels) Else .Left = 0
@@ -19023,7 +19027,7 @@ If hDC <> NULL_PTR Then
             End If
         End If
     End If
-    Dim TextIndent As RECT
+    Dim TextIndent As TTEXTINDENT
     If (VBFlexGridColsInfo(iCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
         With TextIndent
         RaiseEvent CellTextIndent(iRow, iCol, .Left, .Right)
