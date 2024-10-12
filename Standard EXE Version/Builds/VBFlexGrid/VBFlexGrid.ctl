@@ -931,6 +931,7 @@ Private Const CLIS_CHECKBOXESHITTESTINVISIBLE As Long = &H20
 Private Const CLIS_CHECKBOXESHITTESTINVISIBLEDISABLEDONLY As Long = &H40
 Private Const CLIS_CHECKBOXESHITTESTINVISIBLEFIXED As Long = &H80
 Private Const CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY As Long = &H100
+Private Const CLIS_TEXTINDENT As Long = &H200
 Private Type TCOLINFO
 Width As Long
 Data As LongPtr
@@ -1127,6 +1128,8 @@ Public Event CellBeforeCheck(ByVal Row As Long, ByVal Col As Long, ByVal Reason 
 Attribute CellBeforeCheck.VB_Description = "Occurs before a cell is about to be checked."
 Public Event CellCheck(ByVal Row As Long, ByVal Col As Long)
 Attribute CellCheck.VB_Description = "Occurs when a cell is checked."
+Public Event CellTextIndent(ByVal Row As Long, ByVal Col As Long, ByRef Left As Long, ByRef Right As Long)
+Attribute CellTextIndent.VB_Description = "Occurs when a cell requests for the amount of space, in twips, to indent text. Only applicable if the column's text indent property is set to true."
 Public Event CheckBoxOwnerDraw(ByVal Row As Long, ByVal Col As Long, ByRef Cancel As Boolean, ByVal ItemState As Long, ByVal hDC As Long, ByVal Left As Long, ByVal Top As Long, ByVal Right As Long, ByVal Bottom As Long)
 Attribute CheckBoxOwnerDraw.VB_Description = "Occurs when a visual aspect of an owner-drawn check box has changed."
 Public Event PreviewKeyDown(ByVal KeyCode As Integer, ByRef IsInputKey As Boolean)
@@ -6067,10 +6070,18 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     End If
     End With
     SendMessage VBFlexGridEditHandle, WM_SETFONT, hFont, ByVal 0&
+    Dim TextIndent As RECT
+    If (VBFlexGridColsInfo(VBFlexGridEditCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
+        With TextIndent
+        RaiseEvent CellTextIndent(VBFlexGridEditRow, VBFlexGridEditCol, .Left, .Right)
+        If .Left > 0 Then .Left = UserControl.ScaleX(.Left, vbTwips, vbPixels) Else .Left = 0
+        If .Right > 0 Then .Right = UserControl.ScaleX(.Right, vbTwips, vbPixels) Else .Right = 0
+        End With
+    End If
     If VBFlexGridRTLLayout = False Then
-        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(VBFlexGridPixelMetrics.TextPadding.CX - VBFlexGridEditGridLineOffsets.LeftTop.CX, VBFlexGridPixelMetrics.TextPadding.CX - VBFlexGridEditGridLineOffsets.RightBottom.CX)
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(VBFlexGridPixelMetrics.TextPadding.CX + TextIndent.Left - VBFlexGridEditGridLineOffsets.LeftTop.CX, VBFlexGridPixelMetrics.TextPadding.CX + TextIndent.Right - VBFlexGridEditGridLineOffsets.RightBottom.CX)
     Else
-        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(VBFlexGridPixelMetrics.TextPadding.CX - VBFlexGridEditGridLineOffsets.RightBottom.CX, VBFlexGridPixelMetrics.TextPadding.CX - VBFlexGridEditGridLineOffsets.LeftTop.CX)
+        SendMessage VBFlexGridEditHandle, EM_SETMARGINS, EC_LEFTMARGIN Or EC_RIGHTMARGIN, ByVal MakeDWord(VBFlexGridPixelMetrics.TextPadding.CX + TextIndent.Right - VBFlexGridEditGridLineOffsets.RightBottom.CX, VBFlexGridPixelMetrics.TextPadding.CX + TextIndent.Left - VBFlexGridEditGridLineOffsets.LeftTop.CX)
     End If
     SendMessage VBFlexGridEditHandle, WM_SETTEXT, 0, ByVal StrPtr(Text)
     VBFlexGridEditTextChanged = False
@@ -9662,6 +9673,38 @@ Else
                 If (VBFlexGridColsInfo(i).State And CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_CHECKBOXESHITTESTINVISIBLEFIXEDDISABLEDONLY
             Next i
         End If
+    End If
+End If
+Call RedrawGrid
+End Property
+
+Public Property Get ColTextIndent(ByVal Index As Long) As Boolean
+Attribute ColTextIndent.VB_Description = "Returns/sets a value that determines whether to indent text in cells for the specified column. The CellTextIndent event is fired for all cells within this column."
+Attribute ColTextIndent.VB_MemberFlags = "400"
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColTextIndent = CBool((VBFlexGridColsInfo(Index).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT)
+End Property
+
+Public Property Let ColTextIndent(ByVal Index As Long, ByVal Value As Boolean)
+If Index <> -1 And (Index < 0 Or Index > (PropCols - 1)) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+If Index > -1 Then
+    With VBFlexGridColsInfo(Index)
+    If Value = True Then
+        If (.State And CLIS_TEXTINDENT) = 0 Then .State = .State Or CLIS_TEXTINDENT
+    Else
+        If (.State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then .State = .State And Not CLIS_TEXTINDENT
+    End If
+    End With
+Else
+    Dim i As Long
+    If Value = True Then
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_TEXTINDENT) = 0 Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State Or CLIS_TEXTINDENT
+        Next i
+    Else
+        For i = 0 To (PropCols - 1)
+            If (VBFlexGridColsInfo(i).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then VBFlexGridColsInfo(i).State = VBFlexGridColsInfo(i).State And Not CLIS_TEXTINDENT
+        Next i
     End If
 End If
 Call RedrawGrid
@@ -15457,13 +15500,21 @@ If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
         End If
     End If
 End If
+Dim TextIndent As RECT
+If (VBFlexGridColsInfo(iCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
+    With TextIndent
+    RaiseEvent CellTextIndent(iRow, iCol, .Left, .Right)
+    If .Left > 0 Then .Left = UserControl.ScaleX(.Left, vbTwips, vbPixels) Else .Left = 0
+    If .Right > 0 Then .Right = UserControl.ScaleX(.Right, vbTwips, vbPixels) Else .Right = 0
+    End With
+End If
 Dim Text As String, TextRect As RECT, HiddenText As Boolean
 Call GetCellText(iRow, iCol, Text)
 Call GetTextDisplay(iRow, iCol, Text)
 With TextRect
-.Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX
+.Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX + TextIndent.Left
 .Top = CellRect.Top + VBFlexGridPixelMetrics.TextPadding.CY
-.Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX
+.Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX - TextIndent.Right
 If ComboCueWidth > 0 Then
     If ComboCueAlignment = FlexLeftRightAlignmentRight Then
         .Right = .Right - ComboCueWidth
@@ -16296,13 +16347,21 @@ If PropAllowUserEditing = True Or PropAlwaysAllowComboCues = True Then
         End If
     End If
 End If
+Dim TextIndent As RECT
+If (VBFlexGridColsInfo(iCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
+    With TextIndent
+    RaiseEvent CellTextIndent(iRow, iCol, .Left, .Right)
+    If .Left > 0 Then .Left = UserControl.ScaleX(.Left, vbTwips, vbPixels) Else .Left = 0
+    If .Right > 0 Then .Right = UserControl.ScaleX(.Right, vbTwips, vbPixels) Else .Right = 0
+    End With
+End If
 Dim Text As String, TextRect As RECT, HiddenText As Boolean
 Call GetCellText(iRow, iCol, Text)
 Call GetTextDisplay(iRow, iCol, Text)
 With TextRect
-.Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX
+.Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX + TextIndent.Left
 .Top = CellRect.Top + VBFlexGridPixelMetrics.TextPadding.CY
-.Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX
+.Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX - TextIndent.Right
 If ComboCueWidth > 0 Then
     If ComboCueAlignment = FlexLeftRightAlignmentRight Then
         .Right = .Right - ComboCueWidth
@@ -17913,11 +17972,19 @@ If hDC <> NULL_PTR Then
                 End If
             End If
         End If
+        Dim TextIndent As RECT
+        If (VBFlexGridColsInfo(iCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
+            With TextIndent
+            RaiseEvent CellTextIndent(iRow, iCol, .Left, .Right)
+            If .Left > 0 Then .Left = UserControl.ScaleX(.Left, vbTwips, vbPixels) Else .Left = 0
+            If .Right > 0 Then .Right = UserControl.ScaleX(.Right, vbTwips, vbPixels) Else .Right = 0
+            End With
+        End If
         Dim TextRect As RECT, DrawFlags As Long
         With TextRect
-        .Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX
+        .Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX + TextIndent.Left
         .Top = CellRect.Top + VBFlexGridPixelMetrics.TextPadding.CY
-        .Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX
+        .Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX - TextIndent.Right
         If ComboCueWidth > 0 Then
             If ComboCueAlignment = FlexLeftRightAlignmentRight Then
                 .Right = .Right - ComboCueWidth
@@ -18092,6 +18159,15 @@ If hDC <> NULL_PTR Then
     End If
     Dim CX As Long
     If HiddenText = False Then CX = GetTextSize(iRow, iCol, Text, hDC).CX
+    If (VBFlexGridColsInfo(iCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
+        Dim TextIndent As RECT
+        With TextIndent
+        RaiseEvent CellTextIndent(iRow, iCol, .Left, .Right)
+        If .Left > 0 Then .Left = UserControl.ScaleX(.Left, vbTwips, vbPixels) Else .Left = 0
+        If .Right > 0 Then .Right = UserControl.ScaleX(.Right, vbTwips, vbPixels) Else .Right = 0
+        CX = CX + .Left + .Right
+        End With
+    End If
     If PropBestFitMode <> FlexBestFitModeTextOnly Then
         Select Case PropBestFitMode
             Case FlexBestFitModeFull, FlexBestFitModeOtherText
@@ -18947,14 +19023,22 @@ If hDC <> NULL_PTR Then
             End If
         End If
     End If
+    Dim TextIndent As RECT
+    If (VBFlexGridColsInfo(iCol).State And CLIS_TEXTINDENT) = CLIS_TEXTINDENT Then
+        With TextIndent
+        RaiseEvent CellTextIndent(iRow, iCol, .Left, .Right)
+        If .Left > 0 Then .Left = UserControl.ScaleX(.Left, vbTwips, vbPixels) Else .Left = 0
+        If .Right > 0 Then .Right = UserControl.ScaleX(.Right, vbTwips, vbPixels) Else .Right = 0
+        End With
+    End If
     Dim Text As String, TextRect As RECT, HiddenText As Boolean
     Call GetCellText(iRow, iCol, Text)
     Call GetTextDisplay(iRow, iCol, Text)
     If StrPtr(Text) = NULL_PTR Then Text = ""
     With TextRect
-    .Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX
+    .Left = CellRect.Left + VBFlexGridPixelMetrics.TextPadding.CX + TextIndent.Left
     .Top = CellRect.Top + VBFlexGridPixelMetrics.TextPadding.CY
-    .Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX
+    .Right = CellRect.Right - VBFlexGridPixelMetrics.TextPadding.CX - TextIndent.Right
     If ComboCueWidth > 0 Then
         If ComboCueAlignment = FlexLeftRightAlignmentRight Then
             .Right = .Right - ComboCueWidth
