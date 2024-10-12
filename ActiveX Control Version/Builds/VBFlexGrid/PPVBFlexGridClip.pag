@@ -1,0 +1,238 @@
+VERSION 5.00
+Begin VB.PropertyPage PPVBFlexGridClip 
+   Caption         =   "Clip"
+   ClientHeight    =   8820
+   ClientLeft      =   0
+   ClientTop       =   0
+   ClientWidth     =   6450
+   LockControls    =   -1  'True
+   PaletteMode     =   0  'Halftone
+   ScaleHeight     =   8820
+   ScaleWidth      =   6450
+   Begin VB.Frame FrameClip 
+      Caption         =   "Clip"
+      Height          =   2415
+      Left            =   120
+      TabIndex        =   0
+      Top             =   120
+      Width           =   4455
+      Begin VB.ComboBox ComboClipMode 
+         Height          =   315
+         Left            =   1920
+         Style           =   2  'Dropdown List
+         TabIndex        =   5
+         Top             =   1080
+         Width           =   2235
+      End
+      Begin VB.ComboBox ComboClipCopyMode 
+         Height          =   315
+         Left            =   1920
+         Style           =   2  'Dropdown List
+         TabIndex        =   7
+         Top             =   1440
+         Width           =   2235
+      End
+      Begin VB.ComboBox ComboClipPasteMode 
+         Height          =   315
+         Left            =   1920
+         Style           =   2  'Dropdown List
+         TabIndex        =   9
+         Top             =   1800
+         Width           =   2235
+      End
+      Begin VB.CheckBox CheckAutoClipboard 
+         Caption         =   "&AutoClipboard"
+         Height          =   285
+         Left            =   240
+         TabIndex        =   1
+         Top             =   360
+         Width           =   1620
+      End
+      Begin VB.TextBox TextClipSeparators 
+         Height          =   315
+         Left            =   1920
+         MaxLength       =   2
+         TabIndex        =   3
+         Top             =   720
+         Width           =   2235
+      End
+      Begin VB.Label LabelClipMode 
+         Caption         =   "Clip&Mode:"
+         Height          =   240
+         Left            =   240
+         TabIndex        =   4
+         Top             =   1080
+         Width           =   1620
+      End
+      Begin VB.Label LabelClipCopyMode 
+         Caption         =   "Clip&CopyMode:"
+         Height          =   240
+         Left            =   240
+         TabIndex        =   6
+         Top             =   1440
+         Width           =   1620
+      End
+      Begin VB.Label LabelClipPasteMode 
+         Caption         =   "Clip&PasteMode:"
+         Height          =   240
+         Left            =   240
+         TabIndex        =   8
+         Top             =   1800
+         Width           =   1620
+      End
+      Begin VB.Label LabelClipSeparators 
+         Caption         =   "Clip&Separators:"
+         Height          =   240
+         Left            =   240
+         TabIndex        =   2
+         Top             =   720
+         Width           =   1620
+      End
+   End
+End
+Attribute VB_Name = "PPVBFlexGridClip"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = True
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = True
+Option Explicit
+#If VBA7 Then
+Private Declare PtrSafe Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByRef lParam As Any) As LongPtr
+#Else
+Private Declare Function SendMessage Lib "user32" Alias "SendMessageW" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
+#End If
+Private Const WM_UPDATEUISTATE As Long = &H128
+Private Const UIS_CLEAR As Long = 2, UISF_HIDEFOCUS As Long = &H1, UISF_HIDEACCEL As Long = &H2
+Private FreezeChanged As Boolean
+
+Private Sub PropertyPage_Initialize()
+SendMessage PropertyPage.hWnd, WM_UPDATEUISTATE, MakeDWord(UIS_CLEAR, UISF_HIDEFOCUS Or UISF_HIDEACCEL), ByVal 0&
+With ComboClipMode
+.AddItem FlexClipModeNormal & " - Normal"
+.ItemData(.NewIndex) = FlexClipModeNormal
+.AddItem FlexClipModeExcludeHidden & " - ExcludeHidden"
+.ItemData(.NewIndex) = FlexClipModeExcludeHidden
+End With
+With ComboClipCopyMode
+.AddItem FlexClipCopyModeNormal & " - Normal"
+.ItemData(.NewIndex) = FlexClipCopyModeNormal
+.AddItem FlexClipCopyModeIncludeFixedRows & " - IncludeFixedRows"
+.ItemData(.NewIndex) = FlexClipCopyModeIncludeFixedRows
+.AddItem FlexClipCopyModeIncludeFixedColumns & " - IncludeFixedColumns"
+.ItemData(.NewIndex) = FlexClipCopyModeIncludeFixedColumns
+.AddItem FlexClipCopyModeIncludeFixedAll & " - IncludeFixedAll"
+.ItemData(.NewIndex) = FlexClipCopyModeIncludeFixedAll
+.AddItem FlexClipCopyModeExtended & " - Extended"
+.ItemData(.NewIndex) = FlexClipCopyModeExtended
+.AddItem FlexClipCopyModeExtendedFixedRows & " - ExtendedFixedRows"
+.ItemData(.NewIndex) = FlexClipCopyModeExtendedFixedRows
+.AddItem FlexClipCopyModeExtendedFixedColumns & " - ExtendedFixedColumns"
+.ItemData(.NewIndex) = FlexClipCopyModeExtendedFixedColumns
+.AddItem FlexClipCopyModeExtendedFixedAll & " - ExtendedFixedAll"
+.ItemData(.NewIndex) = FlexClipCopyModeExtendedFixedAll
+End With
+With ComboClipPasteMode
+.AddItem FlexClipPasteModeNormal & " - Normal"
+.ItemData(.NewIndex) = FlexClipPasteModeNormal
+.AddItem FlexClipPasteModeAutoSelection & " - AutoSelection"
+.ItemData(.NewIndex) = FlexClipPasteModeAutoSelection
+.AddItem FlexClipPasteModeExtended & " - Extended"
+.ItemData(.NewIndex) = FlexClipPasteModeExtended
+.AddItem FlexClipPasteModeExtendedAutoSelection & " - ExtendedAutoSelection"
+.ItemData(.NewIndex) = FlexClipPasteModeExtendedAutoSelection
+End With
+End Sub
+
+Private Sub PropertyPage_ApplyChanges()
+On Error Resume Next
+PropertyPage.ValidateControls
+If Err.Number = 380 Then Exit Sub
+On Error GoTo 0
+With PropertyPage.SelectedControls(0)
+.AutoClipboard = CBool(CheckAutoClipboard.Value = vbChecked)
+.ClipSeparators = TextClipSeparators.Text
+.ClipMode = ComboClipMode.ItemData(ComboClipMode.ListIndex)
+.ClipCopyMode = ComboClipCopyMode.ItemData(ComboClipCopyMode.ListIndex)
+.ClipPasteMode = ComboClipPasteMode.ItemData(ComboClipPasteMode.ListIndex)
+End With
+Call PropertyPage_SelectionChanged
+End Sub
+
+Private Sub PropertyPage_SelectionChanged()
+Dim i As Long
+FreezeChanged = True
+With PropertyPage.SelectedControls(0)
+CheckAutoClipboard.Value = IIf(.AutoClipboard = True, vbChecked, vbUnchecked)
+TextClipSeparators.Text = .ClipSeparators
+For i = 0 To ComboClipMode.ListCount - 1
+    If ComboClipMode.ItemData(i) = .ClipMode Then
+        ComboClipMode.ListIndex = i
+        Exit For
+    End If
+Next i
+For i = 0 To ComboClipCopyMode.ListCount - 1
+    If ComboClipCopyMode.ItemData(i) = .ClipCopyMode Then
+        ComboClipCopyMode.ListIndex = i
+        Exit For
+    End If
+Next i
+For i = 0 To ComboClipPasteMode.ListCount - 1
+    If ComboClipPasteMode.ItemData(i) = .ClipPasteMode Then
+        ComboClipPasteMode.ListIndex = i
+        Exit For
+    End If
+Next i
+End With
+FreezeChanged = False
+End Sub
+
+Private Sub CheckAutoClipboard_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub TextClipSeparators_GotFocus()
+If Not TextClipSeparators.SelStart = 0 Then Exit Sub
+TextClipSeparators.SelLength = Len(TextClipSeparators.Text)
+End Sub
+
+Private Sub TextClipSeparators_LostFocus()
+TextClipSeparators.SelStart = 0
+End Sub
+
+Private Sub TextClipSeparators_Change()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub TextClipSeparators_Validate(Cancel As Boolean)
+Select Case Len(TextClipSeparators.Text)
+    Case Is > 2, 1
+        MsgBox "Invalid property value", vbCritical + vbOKOnly
+        TextClipSeparators.Text = PropertyPage.SelectedControls(0).ClipSeparators
+        TextClipSeparators.SetFocus
+        Cancel = True
+    Case 2
+        If StrComp(Left$(TextClipSeparators.Text, 1), Right$(TextClipSeparators.Text, 1)) = 0 Then
+            MsgBox "Invalid property value", vbCritical + vbOKOnly
+            TextClipSeparators.Text = PropertyPage.SelectedControls(0).ClipSeparators
+            TextClipSeparators.SetFocus
+            Cancel = True
+        End If
+End Select
+End Sub
+
+Private Sub ComboClipMode_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub ComboClipCopyMode_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
+
+Private Sub ComboClipPasteMode_Click()
+If FreezeChanged = True Then Exit Sub
+PropertyPage.Changed = True
+End Sub
