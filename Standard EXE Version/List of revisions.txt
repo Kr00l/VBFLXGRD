@@ -1,5 +1,10 @@
 List of revisions:
 
+12-Oct-2024
+- Included the ColTextIndent property and CellTextIndent event.
+  When ColTextIndent is set to True the CellTextIndent event is fired for all cells within this column.
+  By this you can define a Left/Right indentation of the text block.
+
 11-Oct-2024
 - Included the ColSortMode property and the FlexSortModeConstants enum.
   It defaults to 0 - Normal but can be changed to 1 - TextDisplay.
