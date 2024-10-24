@@ -112,6 +112,10 @@ With ComboClipMode
 .ItemData(.NewIndex) = FlexClipModeNormal
 .AddItem FlexClipModeExcludeHidden & " - ExcludeHidden"
 .ItemData(.NewIndex) = FlexClipModeExcludeHidden
+.AddItem FlexClipModeLookupConv & " - LookupConv"
+.ItemData(.NewIndex) = FlexClipModeLookupConv
+.AddItem FlexClipModeLookupConvExcludeHidden & " - LookupConvExcludeHidden"
+.ItemData(.NewIndex) = FlexClipModeLookupConvExcludeHidden
 End With
 With ComboClipCopyMode
 .AddItem FlexClipCopyModeNormal & " - Normal"

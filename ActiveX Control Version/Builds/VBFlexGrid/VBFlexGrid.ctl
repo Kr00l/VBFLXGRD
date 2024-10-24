@@ -79,7 +79,7 @@ Private FlexWrapNone, FlexWrapRow, FlexWrapGrid
 Private FlexCellText, FlexCellClip, FlexCellTextStyle, FlexCellAlignment, FlexCellPicture, FlexCellPictureAlignment, FlexCellBackColor, FlexCellForeColor, FlexCellToolTipText, FlexCellComboCue, FlexCellChecked, FlexCellFloodPercent, FlexCellFloodColor, FlexCellFontName, FlexCellFontSize, FlexCellFontBold, FlexCellFontItalic, FlexCellFontStrikeThrough, FlexCellFontUnderline, FlexCellFontCharset, FlexCellLeft, FlexCellTop, FlexCellWidth, FlexCellHeight, FlexCellSort, FlexCellTextDisplay, FlexCellTextHidden, FlexCellHasCustomFormatting, FlexCellHasTag, FlexCellTag
 Private FlexAutoSizeModeColWidth, FlexAutoSizeModeRowHeight
 Private FlexAutoSizeScopeAll, FlexAutoSizeScopeFixed, FlexAutoSizeScopeScrollable, FlexAutoSizeScopeMovable, FlexAutoSizeScopeFrozen
-Private FlexClipModeNormal, FlexClipModeExcludeHidden
+Private FlexClipModeNormal, FlexClipModeExcludeHidden, FlexClipModeLookupConv, FlexClipModeLookupConvExcludeHidden
 Private FlexClipCopyModeNormal, FlexClipCopyModeIncludeFixedRows, FlexClipCopyModeIncludeFixedColumns, FlexClipCopyModeIncludeFixedAll, FlexClipCopyModeExtended, FlexClipCopyModeExtendedFixedRows, FlexClipCopyModeExtendedFixedColumns, FlexClipCopyModeExtendedFixedAll
 Private FlexClipPasteModeNormal, FlexClipPasteModeAutoSelection, FlexClipPasteModeExtended, FlexClipPasteModeExtendedAutoSelection
 Private FlexClipboardActionCopy, FlexClipboardActionCut, FlexClipboardActionPaste, FlexClipboardActionDelete
@@ -412,6 +412,8 @@ End Enum
 Public Enum FlexClipModeConstants
 FlexClipModeNormal = 0
 FlexClipModeExcludeHidden = 1
+FlexClipModeLookupConv = 2
+FlexClipModeLookupConvExcludeHidden = 3
 End Enum
 Public Enum FlexClipCopyModeConstants
 FlexClipCopyModeNormal = 0
@@ -5212,7 +5214,7 @@ End Property
 
 Public Property Let ClipMode(ByVal Value As FlexClipModeConstants)
 Select Case Value
-    Case FlexClipModeNormal, FlexClipModeExcludeHidden
+    Case FlexClipModeNormal, FlexClipModeExcludeHidden, FlexClipModeLookupConv, FlexClipModeLookupConvExcludeHidden
         PropClipMode = Value
     Case Else
         Err.Raise 380
@@ -6673,32 +6675,93 @@ Else
         If PropCols > 0 Then Call InitFlexGridCells
     End If
     If PropRows > 0 And PropCols > 0 Then
+        Dim Text As String, i As Long
         Dim Pos1 As Long, Pos2 As Long, iCol As Long
         Dim CSCol As String, CSColLen As Long
         CSCol = GetClipSeparatorCol()
         CSColLen = Len(CSCol)
-        If PropClipMode = FlexClipModeNormal Then
+        If PropClipMode = FlexClipModeNormal Or PropClipMode = FlexClipModeLookupConv Then
             Do
                 Pos1 = InStr(Pos1 + 1, Item, CSCol)
                 If Pos1 > 0 Then
                     Pos1 = Pos1 + CSColLen - 1
-                    If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - CSColLen))
+                    If iCol < PropCols Then
+                        If PropClipMode = FlexClipModeNormal Then
+                            Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - CSColLen))
+                        ElseIf PropClipMode = FlexClipModeLookupConv Then
+                            Text = Mid$(Item, Pos2 + 1, Pos1 - Pos2 - CSColLen)
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                        Text = VBFlexGridColsInfo(iCol).Lookup.Items(i).Key
+                                        Exit For
+                                    End If
+                                Next i
+                            End If
+                            Call SetCellText(IndexLong, iCol, Text)
+                        End If
+                    End If
                 Else
-                    If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1))
+                    If iCol < PropCols Then
+                        If PropClipMode = FlexClipModeNormal Then
+                            Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1))
+                        ElseIf PropClipMode = FlexClipModeLookupConv Then
+                            Text = Mid$(Item, Pos2 + 1)
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                        Text = VBFlexGridColsInfo(iCol).Lookup.Items(i).Key
+                                        Exit For
+                                    End If
+                                Next i
+                            End If
+                            Call SetCellText(IndexLong, iCol, Text)
+                        End If
+                    End If
                 End If
                 Pos2 = Pos1
                 iCol = iCol + 1
             Loop Until Pos1 = 0
-        ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+        ElseIf PropClipMode = FlexClipModeExcludeHidden Or PropClipMode = FlexClipModeLookupConvExcludeHidden Then
             Dim ColLoop As Boolean
             Do
                 If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                     Pos1 = InStr(Pos1 + 1, Item, CSCol)
                     If Pos1 > 0 Then
                         Pos1 = Pos1 + CSColLen - 1
-                        If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - CSColLen))
+                        If iCol < PropCols Then
+                            If PropClipMode = FlexClipModeExcludeHidden Then
+                                Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1, Pos1 - Pos2 - CSColLen))
+                            ElseIf PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                Text = Mid$(Item, Pos2 + 1, Pos1 - Pos2 - CSColLen)
+                                If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                    For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                            Text = VBFlexGridColsInfo(iCol).Lookup.Items(i).Key
+                                            Exit For
+                                        End If
+                                    Next i
+                                End If
+                                Call SetCellText(IndexLong, iCol, Text)
+                            End If
+                        End If
                     Else
-                        If iCol < PropCols Then Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1))
+                        If iCol < PropCols Then
+                            If PropClipMode = FlexClipModeExcludeHidden Then
+                                Call SetCellText(IndexLong, iCol, Mid$(Item, Pos2 + 1))
+                            ElseIf PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                Text = Mid$(Item, Pos2 + 1)
+                                If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                    For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                            Text = VBFlexGridColsInfo(iCol).Lookup.Items(i).Key
+                                            Exit For
+                                        End If
+                                    Next i
+                                End If
+                                Call SetCellText(IndexLong, iCol, Text)
+                            End If
+                        End If
                     End If
                     Pos2 = Pos1
                     iCol = iCol + 1
@@ -7228,7 +7291,7 @@ Select Case Where
                     SelRange.BottomRow = PropRows - 1
             End Select
         End If
-        If PropClipMode = FlexClipModeNormal Then
+        If PropClipMode = FlexClipModeNormal Or PropClipMode = FlexClipModeLookupConv Then
             If PropAllowMultiSelection = False Or PropClipPasteMode < FlexClipPasteModeExtended Then
                 Select Case What
                     Case FlexClearEverything
@@ -7296,7 +7359,7 @@ Select Case Where
                         Next iRow
                 End Select
             End If
-        ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+        ElseIf PropClipMode = FlexClipModeExcludeHidden Or PropClipMode = FlexClipModeLookupConvExcludeHidden Then
             If PropAllowMultiSelection = False Or PropClipPasteMode < FlexClipPasteModeExtended Then
                 Select Case What
                     Case FlexClearEverything
@@ -10035,12 +10098,12 @@ Public Property Get Clip() As String
 Attribute Clip.VB_Description = "Returns/sets the contents of the cells in a selected region."
 Attribute Clip.VB_MemberFlags = "400"
 If VBFlexGridRow < 0 Or VBFlexGridCol < 0 Then Err.Raise 7
-Dim iRow As Long, iCol As Long, iSelRow As Long, SelRange As TCELLRANGE, Buffer As String
+Dim iRow As Long, iCol As Long, iSelRow As Long, SelRange As TCELLRANGE, Buffer As String, Hash As Long, i As Long
 Dim UBoundRows As Long, UBoundCols As Long
 Dim StrArr() As String, StrSize As Long
 Dim CSCol As String, CSColLen As Long, CSRow As String, CSRowLen As Long
 Call GetSelRangeStruct(SelRange)
-If PropClipMode = FlexClipModeNormal Then
+If PropClipMode = FlexClipModeNormal Or PropClipMode = FlexClipModeLookupConv Then
     If PropClipCopyMode < FlexClipCopyModeExtended Then
         UBoundRows = (SelRange.BottomRow - SelRange.TopRow)
         UBoundCols = (SelRange.RightCol - SelRange.LeftCol)
@@ -10069,7 +10132,7 @@ If PropClipMode = FlexClipModeNormal Then
             UBoundRows = UBoundRows + PropFixedRows
             UBoundCols = UBoundCols + PropFixedCols
     End Select
-ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+ElseIf PropClipMode = FlexClipModeExcludeHidden Or PropClipMode = FlexClipModeLookupConvExcludeHidden Then
     UBoundRows = -1
     UBoundCols = -1
     If PropClipCopyMode < FlexClipCopyModeExtended Then
@@ -10124,13 +10187,26 @@ CSCol = GetClipSeparatorCol()
 CSColLen = Len(CSCol)
 CSRow = GetClipSeparatorRow()
 CSRowLen = Len(CSRow)
-If PropClipMode = FlexClipModeNormal Then
+If PropClipMode = FlexClipModeNormal Or PropClipMode = FlexClipModeLookupConv Then
     Select Case PropClipCopyMode
         Case FlexClipCopyModeNormal, FlexClipCopyModeExtended
             If PropAllowMultiSelection = False Or PropClipCopyMode = FlexClipCopyModeNormal Then
                 For iRow = SelRange.TopRow To SelRange.BottomRow
                     For iCol = SelRange.LeftCol To SelRange.RightCol
                         Call GetCellText(iRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + (0 - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & CSCol
                         ElseIf iRow < SelRange.BottomRow Then
@@ -10145,6 +10221,19 @@ If PropClipMode = FlexClipModeNormal Then
                     iSelRow = Me.SelectedRow(iRow)
                     For iCol = SelRange.LeftCol To SelRange.RightCol
                         Call GetCellText(iSelRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer & CSCol
                         ElseIf iSelRow < SelRange.BottomRow Then
@@ -10159,6 +10248,19 @@ If PropClipMode = FlexClipModeNormal Then
             For iCol = SelRange.LeftCol To SelRange.RightCol
                 For iRow = 0 To PropFixedRows - 1
                     Call GetCellText(iRow, iCol, Buffer)
+                    If PropClipMode = FlexClipModeLookupConv Then
+                        If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                            Hash = CalcHash(Buffer)
+                            For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                    If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                        Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                        Exit For
+                                    End If
+                                End If
+                            Next i
+                        End If
+                    End If
                     If iCol < SelRange.RightCol Then
                         StrArr(iRow, iCol + (0 - SelRange.LeftCol)) = Buffer & CSCol
                     ElseIf iRow < SelRange.BottomRow Then
@@ -10172,6 +10274,19 @@ If PropClipMode = FlexClipModeNormal Then
                 For iRow = SelRange.TopRow To SelRange.BottomRow
                     For iCol = SelRange.LeftCol To SelRange.RightCol
                         Call GetCellText(iRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (0 - SelRange.LeftCol)) = Buffer & CSCol
                         ElseIf iRow < SelRange.BottomRow Then
@@ -10186,6 +10301,19 @@ If PropClipMode = FlexClipModeNormal Then
                     iSelRow = Me.SelectedRow(iRow)
                     For iCol = SelRange.LeftCol To SelRange.RightCol
                         Call GetCellText(iSelRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + PropFixedRows, iCol + (0 - SelRange.LeftCol)) = Buffer & CSCol
                         ElseIf iSelRow < SelRange.BottomRow Then
@@ -10201,6 +10329,19 @@ If PropClipMode = FlexClipModeNormal Then
                 For iRow = SelRange.TopRow To SelRange.BottomRow
                     For iCol = 0 To PropFixedCols - 1
                         Call GetCellText(iRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + (0 - SelRange.TopRow), iCol) = Buffer & CSCol
                         ElseIf iRow < SelRange.BottomRow Then
@@ -10211,6 +10352,19 @@ If PropClipMode = FlexClipModeNormal Then
                     Next iCol
                     For iCol = SelRange.LeftCol To SelRange.RightCol
                         Call GetCellText(iRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + (0 - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
                         ElseIf iRow < SelRange.BottomRow Then
@@ -10225,6 +10379,19 @@ If PropClipMode = FlexClipModeNormal Then
                     iSelRow = Me.SelectedRow(iRow)
                     For iCol = 0 To PropFixedCols - 1
                         Call GetCellText(iSelRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow, iCol) = Buffer & CSCol
                         ElseIf iSelRow < SelRange.BottomRow Then
@@ -10235,6 +10402,19 @@ If PropClipMode = FlexClipModeNormal Then
                     Next iCol
                     For iCol = SelRange.LeftCol To SelRange.RightCol
                         Call GetCellText(iSelRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
                         ElseIf iSelRow < SelRange.BottomRow Then
@@ -10249,6 +10429,19 @@ If PropClipMode = FlexClipModeNormal Then
             For iRow = 0 To PropFixedRows - 1
                 For iCol = 0 To PropFixedCols - 1
                     Call GetCellText(iRow, iCol, Buffer)
+                    If PropClipMode = FlexClipModeLookupConv Then
+                        If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                            Hash = CalcHash(Buffer)
+                            For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                    If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                        Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                        Exit For
+                                    End If
+                                End If
+                            Next i
+                        End If
+                    End If
                     If iCol < SelRange.RightCol Then
                         StrArr(iRow, iCol) = Buffer & CSCol
                     ElseIf iRow < SelRange.BottomRow Then
@@ -10259,6 +10452,19 @@ If PropClipMode = FlexClipModeNormal Then
                 Next iCol
                 For iCol = SelRange.LeftCol To SelRange.RightCol
                     Call GetCellText(iRow, iCol, Buffer)
+                    If PropClipMode = FlexClipModeLookupConv Then
+                        If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                            Hash = CalcHash(Buffer)
+                            For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                    If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                        Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                        Exit For
+                                    End If
+                                End If
+                            Next i
+                        End If
+                    End If
                     If iCol < SelRange.RightCol Then
                         StrArr(iRow, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
                     ElseIf iRow < SelRange.BottomRow Then
@@ -10272,6 +10478,19 @@ If PropClipMode = FlexClipModeNormal Then
                 For iRow = SelRange.TopRow To SelRange.BottomRow
                     For iCol = 0 To PropFixedCols - 1
                         Call GetCellText(iRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol) = Buffer & CSCol
                         ElseIf iRow < SelRange.BottomRow Then
@@ -10282,6 +10501,19 @@ If PropClipMode = FlexClipModeNormal Then
                     Next iCol
                     For iCol = SelRange.LeftCol To SelRange.RightCol
                         Call GetCellText(iRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + (PropFixedRows - SelRange.TopRow), iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
                         ElseIf iRow < SelRange.BottomRow Then
@@ -10296,6 +10528,19 @@ If PropClipMode = FlexClipModeNormal Then
                     iSelRow = Me.SelectedRow(iRow)
                     For iCol = 0 To PropFixedCols - 1
                         Call GetCellText(iSelRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + PropFixedRows, iCol) = Buffer & CSCol
                         ElseIf iSelRow < SelRange.BottomRow Then
@@ -10306,6 +10551,19 @@ If PropClipMode = FlexClipModeNormal Then
                     Next iCol
                     For iCol = SelRange.LeftCol To SelRange.RightCol
                         Call GetCellText(iSelRow, iCol, Buffer)
+                        If PropClipMode = FlexClipModeLookupConv Then
+                            If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                Hash = CalcHash(Buffer)
+                                For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                    If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                        If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                            Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                            Exit For
+                                        End If
+                                    End If
+                                Next i
+                            End If
+                        End If
                         If iCol < SelRange.RightCol Then
                             StrArr(iRow + PropFixedRows, iCol + (PropFixedCols - SelRange.LeftCol)) = Buffer & CSCol
                         ElseIf iSelRow < SelRange.BottomRow Then
@@ -10317,7 +10575,7 @@ If PropClipMode = FlexClipModeNormal Then
                 Next iRow
             End If
     End Select
-ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+ElseIf PropClipMode = FlexClipModeExcludeHidden Or PropClipMode = FlexClipModeLookupConvExcludeHidden Then
     Dim FixedRowsAdj As Long, FixedColsAdj As Long
     For iRow = 0 To PropFixedRows - 1
         If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then FixedRowsAdj = FixedRowsAdj + 1
@@ -10341,6 +10599,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = SelRange.LeftCol To SelRange.RightCol
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
                                 ElseIf iRow < SelRange.BottomRow Then
@@ -10364,6 +10635,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = SelRange.LeftCol To SelRange.RightCol
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
                                 ElseIf iSelRow < SelRange.BottomRow Then
@@ -10387,6 +10671,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                     For iRow = 0 To PropFixedRows - 1
                         If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Then
                             Call GetCellText(iRow, iCol, Buffer)
+                            If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                    Hash = CalcHash(Buffer)
+                                    For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                        If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                            If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                Exit For
+                                            End If
+                                        End If
+                                    Next i
+                                End If
+                            End If
                             If iCol < SelRange.RightCol Then
                                 StrArr(iRow - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
                             ElseIf iRow < SelRange.BottomRow Then
@@ -10411,6 +10708,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = SelRange.LeftCol To SelRange.RightCol
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
                                 ElseIf iRow < SelRange.BottomRow Then
@@ -10434,6 +10744,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = SelRange.LeftCol To SelRange.RightCol
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol + (0 - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
                                 ElseIf iSelRow < SelRange.BottomRow Then
@@ -10458,6 +10781,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = 0 To PropFixedCols - 1
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
                                 ElseIf iRow < SelRange.BottomRow Then
@@ -10473,6 +10809,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = SelRange.LeftCol To SelRange.RightCol
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + (0 - SelRange.TopRow) - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
                                 ElseIf iRow < SelRange.BottomRow Then
@@ -10496,6 +10845,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = 0 To PropFixedCols - 1
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
                                 ElseIf iSelRow < SelRange.BottomRow Then
@@ -10511,6 +10873,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = SelRange.LeftCol To SelRange.RightCol
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
                                 ElseIf iSelRow < SelRange.BottomRow Then
@@ -10534,6 +10909,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                     For iCol = 0 To PropFixedCols - 1
                         If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                             Call GetCellText(iRow, iCol, Buffer)
+                            If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                    Hash = CalcHash(Buffer)
+                                    For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                        If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                            If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                Exit For
+                                            End If
+                                        End If
+                                    Next i
+                                End If
+                            End If
                             If iCol < SelRange.RightCol Then
                                 StrArr(iRow - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
                             ElseIf iRow < SelRange.BottomRow Then
@@ -10549,6 +10937,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                     For iCol = SelRange.LeftCol To SelRange.RightCol
                         If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                             Call GetCellText(iRow, iCol, Buffer)
+                            If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                    Hash = CalcHash(Buffer)
+                                    For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                        If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                            If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                Exit For
+                                            End If
+                                        End If
+                                    Next i
+                                End If
+                            End If
                             If iCol < SelRange.RightCol Then
                                 StrArr(iRow - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
                             ElseIf iRow < SelRange.BottomRow Then
@@ -10573,6 +10974,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = 0 To PropFixedCols - 1
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
                                 ElseIf iRow < SelRange.BottomRow Then
@@ -10588,6 +11002,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = SelRange.LeftCol To SelRange.RightCol
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + (FixedRowsAdj - SelRange.TopRow) - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
                                 ElseIf iRow < SelRange.BottomRow Then
@@ -10611,6 +11038,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = 0 To PropFixedCols - 1
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol - ArrColAdj) = Buffer & CSCol
                                 ElseIf iSelRow < SelRange.BottomRow Then
@@ -10626,6 +11066,19 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                         For iCol = SelRange.LeftCol To SelRange.RightCol
                             If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Then
                                 Call GetCellText(iSelRow, iCol, Buffer)
+                                If PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                    If VBFlexGridColsInfo(iCol).Lookup.Count > 0 Then
+                                        Hash = CalcHash(Buffer)
+                                        For i = 0 To (VBFlexGridColsInfo(iCol).Lookup.Count - 1)
+                                            If VBFlexGridColsInfo(iCol).Lookup.Items(i).Hash = Hash Then
+                                                If StrComp(VBFlexGridColsInfo(iCol).Lookup.Items(i).Key, Buffer, vbTextCompare) = 0 Then
+                                                    Buffer = VBFlexGridColsInfo(iCol).Lookup.Items(i).Value
+                                                    Exit For
+                                                End If
+                                            End If
+                                        Next i
+                                    End If
+                                End If
                                 If iCol < SelRange.RightCol Then
                                     StrArr(iRow + FixedRowsAdj - ArrRowAdj, iCol + (FixedColsAdj - SelRange.LeftCol) - ArrColAdj) = Buffer & CSCol
                                 ElseIf iSelRow < SelRange.BottomRow Then
@@ -10668,7 +11121,7 @@ If VBFlexGridRow < 0 Then
 ElseIf VBFlexGridCol < 0 Then
     Err.Raise Number:=30010, Description:="Invalid Col value"
 End If
-Dim iRow As Long, iCol As Long, iSelRow As Long, SelRange As TCELLRANGE, Temp As String
+Dim iRow As Long, iCol As Long, iSelRow As Long, SelRange As TCELLRANGE, Temp As String, Text As String, i As Long
 Dim Pos1 As Long, Pos2 As Long, Pos3 As Long, Pos4 As Long
 Dim CSCol As String, CSColLen As Long, CSRow As String, CSRowLen As Long
 Call GetSelRangeStruct(SelRange)
@@ -10702,7 +11155,7 @@ CSColLen = Len(CSCol)
 CSRow = GetClipSeparatorRow()
 CSRowLen = Len(CSRow)
 With VBFlexGridCells
-If PropClipMode = FlexClipModeNormal Then
+If PropClipMode = FlexClipModeNormal Or PropClipMode = FlexClipModeLookupConv Then
     If PropAllowMultiSelection = False Or PropClipPasteMode <> FlexClipPasteModeExtended Then
         Do
             Pos1 = InStr(Pos1 + 1, Value, CSRow)
@@ -10719,9 +11172,39 @@ If PropClipMode = FlexClipModeNormal Then
                     End If
                     If Pos3 > 0 Then
                         Pos3 = Pos3 + CSColLen - 1
-                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then
+                            If PropClipMode = FlexClipModeNormal Then
+                                Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                            ElseIf PropClipMode = FlexClipModeLookupConv Then
+                                Text = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen)
+                                If VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count > 0 Then
+                                    For i = 0 To (VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count - 1)
+                                        If StrComp(VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                            Text = VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Key
+                                            Exit For
+                                        End If
+                                    Next i
+                                End If
+                                Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Text)
+                            End If
+                        End If
                     Else
-                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then
+                            If PropClipMode = FlexClipModeNormal Then
+                                Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                            ElseIf PropClipMode = FlexClipModeLookupConv Then
+                                Text = Mid$(Temp, Pos4 + 1)
+                                If VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count > 0 Then
+                                    For i = 0 To (VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count - 1)
+                                        If StrComp(VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                            Text = VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Key
+                                            Exit For
+                                        End If
+                                    Next i
+                                End If
+                                Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Text)
+                            End If
+                        End If
                     End If
                     Pos4 = Pos3
                     iCol = iCol + 1
@@ -10747,9 +11230,39 @@ If PropClipMode = FlexClipModeNormal Then
                     Pos3 = InStr(Pos3 + 1, Temp, CSCol)
                     If Pos3 > 0 Then
                         Pos3 = Pos3 + CSColLen - 1
-                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then
+                            If PropClipMode = FlexClipModeNormal Then
+                                Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                            ElseIf PropClipMode = FlexClipModeLookupConv Then
+                                Text = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen)
+                                If VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count > 0 Then
+                                    For i = 0 To (VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count - 1)
+                                        If StrComp(VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                            Text = VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Key
+                                            Exit For
+                                        End If
+                                    Next i
+                                End If
+                                Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Text)
+                            End If
+                        End If
                     Else
-                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                        If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then
+                            If PropClipMode = FlexClipModeNormal Then
+                                Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                            ElseIf PropClipMode = FlexClipModeLookupConv Then
+                                Text = Mid$(Temp, Pos4 + 1)
+                                If VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count > 0 Then
+                                    For i = 0 To (VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count - 1)
+                                        If StrComp(VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                            Text = VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Key
+                                            Exit For
+                                        End If
+                                    Next i
+                                End If
+                                Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Text)
+                            End If
+                        End If
                     End If
                     Pos4 = Pos3
                     iCol = iCol + 1
@@ -10763,7 +11276,7 @@ If PropClipMode = FlexClipModeNormal Then
             End If
         Loop Until Pos1 = 0
     End If
-ElseIf PropClipMode = FlexClipModeExcludeHidden Then
+ElseIf PropClipMode = FlexClipModeExcludeHidden Or PropClipMode = FlexClipModeLookupConvExcludeHidden Then
     Dim RowLoop As Boolean, ColLoop As Boolean
     If PropAllowMultiSelection = False Or PropClipPasteMode <> FlexClipPasteModeExtended Then
         Do
@@ -10783,9 +11296,39 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                             End If
                             If Pos3 > 0 Then
                                 Pos3 = Pos3 + CSColLen - 1
-                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then
+                                    If PropClipMode = FlexClipModeExcludeHidden Then
+                                        Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                                    ElseIf PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                        Text = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen)
+                                        If VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count > 0 Then
+                                            For i = 0 To (VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count - 1)
+                                                If StrComp(VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                                    Text = VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Key
+                                                    Exit For
+                                                End If
+                                            Next i
+                                        End If
+                                        Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Text)
+                                    End If
+                                End If
                             Else
-                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then
+                                    If PropClipMode = FlexClipModeExcludeHidden Then
+                                        Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                                    ElseIf PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                        Text = Mid$(Temp, Pos4 + 1)
+                                        If VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count > 0 Then
+                                            For i = 0 To (VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count - 1)
+                                                If StrComp(VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                                    Text = VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Key
+                                                    Exit For
+                                                End If
+                                            Next i
+                                        End If
+                                        Call SetCellText(SelRange.TopRow + iRow, SelRange.LeftCol + iCol, Text)
+                                    End If
+                                End If
                             End If
                             Pos4 = Pos3
                             iCol = iCol + 1
@@ -10840,9 +11383,39 @@ ElseIf PropClipMode = FlexClipModeExcludeHidden Then
                             Pos3 = InStr(Pos3 + 1, Temp, CSCol)
                             If Pos3 > 0 Then
                                 Pos3 = Pos3 + CSColLen - 1
-                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then
+                                    If PropClipMode = FlexClipModeExcludeHidden Then
+                                        Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen))
+                                    ElseIf PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                        Text = Mid$(Temp, Pos4 + 1, Pos3 - Pos4 - CSColLen)
+                                        If VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count > 0 Then
+                                            For i = 0 To (VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count - 1)
+                                                If StrComp(VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                                    Text = VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Key
+                                                    Exit For
+                                                End If
+                                            Next i
+                                        End If
+                                        Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Text)
+                                    End If
+                                End If
                             Else
-                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                                If (SelRange.LeftCol + iCol) <= SelRange.RightCol Then
+                                    If PropClipMode = FlexClipModeExcludeHidden Then
+                                        Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Mid$(Temp, Pos4 + 1))
+                                    ElseIf PropClipMode = FlexClipModeLookupConvExcludeHidden Then
+                                        Text = Mid$(Temp, Pos4 + 1)
+                                        If VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count > 0 Then
+                                            For i = 0 To (VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Count - 1)
+                                                If StrComp(VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Value, Text) = 0 Then
+                                                    Text = VBFlexGridColsInfo(SelRange.LeftCol + iCol).Lookup.Items(i).Key
+                                                    Exit For
+                                                End If
+                                            Next i
+                                        End If
+                                        Call SetCellText(iSelRow, SelRange.LeftCol + iCol, Text)
+                                    End If
+                                End If
                             End If
                             Pos4 = Pos3
                             iCol = iCol + 1
