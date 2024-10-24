@@ -11,4 +11,4 @@ IVBFlexDataSource = 0, 0, 0, 0, C
 IVBFlexDataSource2 = 0, 0, 0, 0, C
 PPVBFlexGridGeneral = 234, 234, 1285, 894, C, 167, 103, 927, 836, C
 PPVBFlexGridStyle = 260, 260, 1310, 920, C, 229, 126, 962, 836, C
-PPVBFlexGridClip = 0, 0, 0, 0, C, 26, 26, 888, 744, C
+PPVBFlexGridClip = 270, 106, 1320, 766, C, 26, 26, 888, 744, C

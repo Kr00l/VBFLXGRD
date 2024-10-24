@@ -1,5 +1,10 @@
 List of revisions:
 
+24-Oct-2024
+- Included enum FlexClipModeLookupConv/FlexClipModeLookupConvExcludeHidden for the ClipMode property.
+  This translates to Value in Get .Clip and to Key in Let .Clip. (Method AddItem also affected)
+  The translation only occurs if a column has a lookup defined.
+
 12-Oct-2024
 - Included the ColTextIndent property and CellTextIndent event.
   When ColTextIndent is set to True the CellTextIndent event is fired for all cells within this column.
