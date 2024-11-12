@@ -14143,7 +14143,7 @@ If VBFlexGridComboCalendarHandle <> NULL_PTR Then
     If (SendMessage(VBFlexGridComboCalendarHandle, MCM_GETRANGE, 0, ByVal VarPtr(ST(0))) And GDTR_MIN) = GDTR_MIN Then
         ComboCalendarMinDate = DateSerial(ST(0).wYear, ST(0).wMonth, ST(0).wDay)
     Else
-        ComboCalendarMinDate = DateSerial(1900, 1, 1)
+        ComboCalendarMinDate = #1/1/1900#
     End If
 Else
     Err.Raise 5
@@ -14154,8 +14154,8 @@ Public Property Let ComboCalendarMinDate(ByVal Value As Date)
 Dim MaxDate As Date
 MaxDate = Me.ComboCalendarMaxDate
 Select Case Value
-    Case DateSerial(1900, 1, 1) To DateSerial(9999, 12, 31)
-        If Int(Value) > MaxDate Then Err.Raise 35775, Description:="A value was specified for the MinDate property that is higher than the current value of MaxDate"
+    Case #1/1/1900# To #12/31/9999 11:59:59 PM#
+        If Fix(Value) > MaxDate Then Err.Raise 35775, Description:="A value was specified for the MinDate property that is higher than the current value of MaxDate"
     Case Else
         Err.Raise 380
 End Select
@@ -14181,7 +14181,7 @@ If VBFlexGridComboCalendarHandle <> NULL_PTR Then
     If (SendMessage(VBFlexGridComboCalendarHandle, MCM_GETRANGE, 0, ByVal VarPtr(ST(0))) And GDTR_MAX) = GDTR_MAX Then
         ComboCalendarMaxDate = DateSerial(ST(1).wYear, ST(1).wMonth, ST(1).wDay)
     Else
-        ComboCalendarMaxDate = DateSerial(9999, 12, 31)
+        ComboCalendarMaxDate = #12/31/9999#
     End If
 Else
     Err.Raise 5
@@ -14192,8 +14192,8 @@ Public Property Let ComboCalendarMaxDate(ByVal Value As Date)
 Dim MinDate As Date
 MinDate = Me.ComboCalendarMinDate
 Select Case Value
-    Case DateSerial(1900, 1, 1) To DateSerial(9999, 12, 31)
-        If Int(Value) < MinDate Then Err.Raise 35774, Description:="A value was specified for the MaxDate property that is lower than the current value of MinDate"
+    Case #1/1/1900# To #12/31/9999 11:59:59 PM#
+        If Fix(Value) < MinDate Then Err.Raise 35774, Description:="A value was specified for the MaxDate property that is lower than the current value of MinDate"
     Case Else
         Err.Raise 380
 End Select
