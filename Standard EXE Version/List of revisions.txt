@@ -1,5 +1,8 @@
 List of revisions:
 
+22-Mar-2025
+- Scroll wheel down was not working on 64-bit.
+
 24-Oct-2024
 - Included enum FlexClipModeLookupConv/FlexClipModeLookupConvExcludeHidden for the ClipMode property.
   This translates to Value in Get .Clip and to Key in Let .Clip. (Method AddItem also affected)
