@@ -25586,8 +25586,10 @@ Select Case wMsg
     Case WM_MOUSEWHEEL
         If VBFlexGridWheelScrollLines > 0 Then
             Static WheelDelta As Long, LastWheelDelta As Long
-            If Sgn(HiWord(CLng(wParam))) <> Sgn(LastWheelDelta) Then WheelDelta = 0
-            WheelDelta = WheelDelta + HiWord(CLng(wParam))
+            Dim CurrWheelDelta As Long
+            CurrWheelDelta = Get_Wheel_Delta_wParam(wParam)
+            If Sgn(CurrWheelDelta) <> Sgn(LastWheelDelta) Then WheelDelta = 0
+            WheelDelta = WheelDelta + CurrWheelDelta
             If Abs(WheelDelta) >= 120 Then
                 Dim WheelDeltaPerLine As Long
                 WheelDeltaPerLine = (WheelDelta \ VBFlexGridWheelScrollLines)
@@ -25604,14 +25606,16 @@ Select Case wMsg
                 End If
                 WheelDelta = 0
             End If
-            LastWheelDelta = HiWord(CLng(wParam))
+            LastWheelDelta = CurrWheelDelta
             WindowProcControl = 0
             Exit Function
         End If
     Case WM_MOUSEHWHEEL
         Static HWheelDelta As Long, LastHWheelDelta As Long
-        If Sgn(HiWord(CLng(wParam))) <> Sgn(LastHWheelDelta) Then HWheelDelta = 0
-        HWheelDelta = HWheelDelta + HiWord(CLng(wParam))
+        Dim CurrHWheelDelta As Long
+        CurrHWheelDelta = Get_Wheel_Delta_wParam(wParam)
+        If Sgn(CurrHWheelDelta) <> Sgn(LastHWheelDelta) Then HWheelDelta = 0
+        HWheelDelta = HWheelDelta + CurrHWheelDelta
         If Abs(HWheelDelta) >= 120 Then
             If Sgn(HWheelDelta) = -1 Then
                 SendMessage hWnd, WM_HSCROLL, MakeDWord(SB_LINELEFT, 0), ByVal 0&
@@ -25620,7 +25624,7 @@ Select Case wMsg
             End If
             HWheelDelta = 0
         End If
-        LastHWheelDelta = HiWord(CLng(wParam))
+        LastHWheelDelta = CurrHWheelDelta
         WindowProcControl = 0
         Exit Function
     Case WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP
