@@ -1,5 +1,10 @@
 List of revisions:
 
+29-Apr-2025
+- Improved mouse handling of the combo drop-down list to enable auto scroll while mouse move (mouse button must be down)
+  and to commit upon mouse button up instead of mouse button down.
+  It now feels and behaves more like a real combo box.
+
 22-Mar-2025
 - Scroll wheel down was not working on 64-bit.
 
