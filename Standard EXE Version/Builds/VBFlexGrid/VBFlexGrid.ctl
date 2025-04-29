@@ -24855,7 +24855,7 @@ If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboButtonHandle <> NULL_PTR 
 End If
 End Sub
 
-Private Function ComboListSelFromPt(ByVal X As Long, ByVal Y As Long) As Long
+Private Function ComboListSelFromPt(ByVal X As Long, ByVal Y As Long, ByVal AutoScroll As Boolean) As Long
 ComboListSelFromPt = LB_ERR
 If VBFlexGridComboListHandle <> NULL_PTR Then
     Dim P As POINTAPI, XY As Currency, Index As Long
@@ -24863,7 +24863,7 @@ If VBFlexGridComboListHandle <> NULL_PTR Then
     P.Y = Y
     ClientToScreen VBFlexGridComboListHandle, P
     CopyMemory ByVal VarPtr(XY), ByVal VarPtr(P), 8
-    Index = LBItemFromPt(VBFlexGridComboListHandle, XY, 0)
+    Index = LBItemFromPt(VBFlexGridComboListHandle, XY, IIf(AutoScroll = True, 1, 0))
     If Not Index = LB_ERR Then
         If SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&) > 0 Then
             If Index <> SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&) Then SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, Index, ByVal 0&
@@ -26736,7 +26736,7 @@ WindowProcComboButton = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
 End Function
 
 Private Function WindowProcComboList(ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
-Static NonClientMouseOver As Boolean, LastMouseMoveLParam As LongPtr
+Static NonClientMouseOver As Boolean, LastMouseMoveLParam As LongPtr, CanCommitSel As Boolean
 Select Case wMsg
     Case WM_MOUSEACTIVATE
         ' To prevent the popup window from being activated it is necessary to return MA_NOACTIVATE.
@@ -26744,13 +26744,18 @@ Select Case wMsg
         Exit Function
     Case WM_SHOWWINDOW
         LastMouseMoveLParam = 0
+        CanCommitSel = False
     Case WM_MOUSEMOVE
         Select Case SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos())
             Case HTHSCROLL, HTVSCROLL
                 ReleaseCapture
         End Select
         If LastMouseMoveLParam <> lParam Or LastMouseMoveLParam = 0 Then
-            ComboListSelFromPt Get_X_lParam(lParam), Get_Y_lParam(lParam)
+            If CanCommitSel = True Then
+                ComboListSelFromPt Get_X_lParam(lParam), Get_Y_lParam(lParam), CBool((GetMouseStateFromParam(wParam) And vbLeftButton) <> 0)
+            Else
+                If Not ComboListSelFromPt(Get_X_lParam(lParam), Get_Y_lParam(lParam), False) = LB_ERR Then CanCommitSel = True
+            End If
             LastMouseMoveLParam = lParam
         End If
     Case WM_NCMOUSEMOVE
@@ -26768,17 +26773,26 @@ Select Case wMsg
         NonClientMouseOver = False
         SetCapture hWnd
     Case WM_LBUTTONDOWN, WM_LBUTTONDBLCLK
-        If Not ComboListSelFromPt(Get_X_lParam(lParam), Get_Y_lParam(lParam)) = LB_ERR Then
-            If SendMessage(hWnd, LB_GETCOUNT, 0, ByVal 0&) = 0 Then Exit Function
-            Call ComboListCommitSel
-            If VBFlexGridComboModeActive = FlexComboModeDropDown Then
-                Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
-                DestroyEdit False, FlexEditCloseModeReturn
-                Exit Function
-            End If
+        If Not ComboListSelFromPt(Get_X_lParam(lParam), Get_Y_lParam(lParam), False) = LB_ERR Then
+            CanCommitSel = True
+        Else
+            ReleaseCapture
         End If
-        ReleaseCapture
         Exit Function ' Prevents the popup window from being focused.
+    Case WM_LBUTTONUP
+        If CanCommitSel = True Then
+            If Not ComboListSelFromPt(Get_X_lParam(lParam), Get_Y_lParam(lParam), False) = LB_ERR Then
+                If SendMessage(hWnd, LB_GETCOUNT, 0, ByVal 0&) = 0 Then Exit Function
+                Call ComboListCommitSel
+                If VBFlexGridComboModeActive = FlexComboModeDropDown Then
+                    Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
+                    DestroyEdit False, FlexEditCloseModeReturn
+                    Exit Function
+                End If
+            End If
+            ReleaseCapture
+        End If
+        Exit Function
     Case WM_CAPTURECHANGED
         Select Case SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos())
             Case HTHSCROLL, HTVSCROLL
