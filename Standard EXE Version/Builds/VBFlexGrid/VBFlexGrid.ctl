@@ -1969,6 +1969,8 @@ Private VBFlexGridUndoQueueIndex As Long
 Private VBFlexGridUndoQueue() As TUNDOREDOENTRY
 Private VBFlexGridRedoQueueIndex As Long
 Private VBFlexGridRedoQueue() As TUNDOREDOENTRY
+Private VBFlexGridSelectedRows As Long
+Private VBFlexGridSelectedRowIndices() As Long
 
 #If ImplementFlexDataSource = True Then
 
@@ -8098,6 +8100,10 @@ Else
         Next i
     End If
 End If
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
+End If
 Call RedrawGrid
 End Property
 
@@ -8105,16 +8111,20 @@ Public Property Get SelectedRow(ByVal Index As Long) As Long
 Attribute SelectedRow.VB_Description = "Returns the position of a selected row for multiple (non-contiguous) selections."
 Attribute SelectedRow.VB_MemberFlags = "400"
 SelectedRow = -1
-Dim i As Long, Count As Long
-For i = 0 To (PropRows - 1)
-    If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
-        If Count = Index Then
-            SelectedRow = i
-            Exit For
+If Index >= 0 And Index <= (VBFlexGridSelectedRows - 1) Then
+    SelectedRow = VBFlexGridSelectedRowIndices(Index)
+Else
+    Dim i As Long, Count As Long
+    For i = 0 To (PropRows - 1)
+        If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
+            If Count = Index Then
+                SelectedRow = i
+                Exit For
+            End If
+            Count = Count + 1
         End If
-        Count = Count + 1
-    End If
-Next i
+    Next i
+End If
 End Property
 
 Public Property Get SelectedRows() As Long
@@ -8124,6 +8134,17 @@ Dim i As Long, Count As Long
 For i = 0 To (PropRows - 1)
     If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then Count = Count + 1
 Next i
+If VBFlexGridSelectedRows = 0 And Count > 0 Then
+    ReDim VBFlexGridSelectedRowIndices(0 To (Count - 1)) As Long
+    Dim Index As Long
+    For i = 0 To (PropRows - 1)
+        If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
+            VBFlexGridSelectedRowIndices(Index) = i
+            Index = Index + 1
+        End If
+    Next i
+    VBFlexGridSelectedRows = Count
+End If
 SelectedRows = Count
 End Property
 
@@ -20587,6 +20608,10 @@ For i = 0 To (PropRows - 1)
     If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
     End With
 Next i
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
+End If
 End Sub
 
 Private Sub AddSelectedRows()
@@ -20600,6 +20625,10 @@ If SelRange.TopRow > -1 And SelRange.BottomRow > -1 Then
         If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED
         End With
     Next i
+End If
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
 End If
 End Sub
 
@@ -20615,6 +20644,10 @@ If SelRange.TopRow > -1 And SelRange.BottomRow > -1 Then
         End With
     Next i
 End If
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
+End If
 End Sub
 
 Private Sub AddSelectedRow()
@@ -20624,6 +20657,10 @@ If VBFlexGridRow > -1 Then
     If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED
     End With
 End If
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
+End If
 End Sub
 
 Private Sub RemoveSelectedRow()
@@ -20632,6 +20669,10 @@ If VBFlexGridRow > -1 Then
     With VBFlexGridCells.Rows(VBFlexGridRow).RowInfo
     If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
     End With
+End If
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
 End If
 End Sub
 
@@ -20647,6 +20688,10 @@ If VBFlexGridRow > -1 Then
         ToggleSelectedRow = False
     End If
     End With
+End If
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
 End If
 End Function
 
