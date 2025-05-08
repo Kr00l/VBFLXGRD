@@ -1,5 +1,8 @@
 List of revisions:
 
+08-May-2025
+- Major performance improvement in the .SelectedRow property. (used in conjunction with the .SelectedRows property)
+
 29-Apr-2025
 - Improved mouse handling of the combo drop-down list to enable auto scroll while mouse move (mouse button must be down)
   and to commit upon mouse button up instead of mouse button down.
