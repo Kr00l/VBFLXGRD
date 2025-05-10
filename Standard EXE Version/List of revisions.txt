@@ -1,5 +1,8 @@
 List of revisions:
 
+10-May-2025
+- Bugfix in the scrollbar capture of the combo drop-down list.
+
 08-May-2025
 - Major performance improvement in the .SelectedRow property. (used in conjunction with the .SelectedRows property)
 
