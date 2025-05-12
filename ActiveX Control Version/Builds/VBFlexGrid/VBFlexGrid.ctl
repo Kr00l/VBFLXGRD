@@ -20240,41 +20240,71 @@ If SelChanged = True Then
         End Select
     End If
 End If
-If PropAllowMultiSelection = True And .Message <> WM_MOUSEMOVE Then
+If PropAllowMultiSelection = True Then
     Select Case PropSelectionMode
         Case FlexSelectionModeFree
             ' Not supported.
         Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
-            If (.Mask And RCPM_ROW) = RCPM_ROW Or (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then
-                VBFlexGridInvertSelection = False
-                If PropAllowSelection = True Then
-                    If (.Flags And RCPF_SHIFT) = RCPF_SHIFT And (.Flags And RCPF_CTRL) = RCPF_CTRL Then
-                        Call AddSelectedRows
-                    ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
-                        VBFlexGridInvertSelection = Not ToggleSelectedRow()
-                    Else
-                        Call ClearSelectedRows
-                        If .Message <> WM_LBUTTONDOWN Then
+            Select Case .Message
+                Case WM_MOUSEMOVE
+                    ' Void
+                Case WM_LBUTTONUP
+                    If PropAllowSelection = True Then
+                        If VBFlexGridInvertSelection = False Then
                             Call AddSelectedRows
                         Else
+                            Call RemoveSelectedRows
+                        End If
+                        ' Redraw not needed as already drawn with the mouse move.
+                    Else
+                        If (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                            If (.Flags And RCPF_SHIFT) = RCPF_SHIFT Then
+                                Call AddSelectedRow
+                            Else
+                                If VBFlexGridInvertSelection = False Then
+                                    Call AddSelectedRow
+                                Else
+                                    Call RemoveSelectedRow
+                                End If
+                            End If
+                        Else
+                            Call ClearSelectedRows
                             Call AddSelectedRow
                         End If
+                        NeedRedraw = True
                     End If
-                Else
-                    If (.Flags And RCPF_SHIFT) = RCPF_SHIFT And (.Flags And RCPF_CTRL) = RCPF_CTRL Then
-                        ' Void
-                    ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
-                        VBFlexGridInvertSelection = GetSelectedRow()
-                    Else
-                        Call ClearSelectedRows
-                        If .Message <> WM_LBUTTONDOWN Then Call AddSelectedRow
+                Case Else
+                    If (.Mask And RCPM_ROW) = RCPM_ROW Or (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then
+                        VBFlexGridInvertSelection = False
+                        If PropAllowSelection = True Then
+                            If (.Flags And RCPF_SHIFT) = RCPF_SHIFT And (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                                Call AddSelectedRows
+                            ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                                VBFlexGridInvertSelection = Not ToggleSelectedRow()
+                            Else
+                                Call ClearSelectedRows
+                                If .Message <> WM_LBUTTONDOWN Then
+                                    Call AddSelectedRows
+                                Else
+                                    Call AddSelectedRow
+                                End If
+                            End If
+                        Else
+                            If (.Flags And RCPF_SHIFT) = RCPF_SHIFT And (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                                ' Void
+                            ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                                VBFlexGridInvertSelection = GetSelectedRow()
+                            Else
+                                Call ClearSelectedRows
+                                If .Message <> WM_LBUTTONDOWN Then Call AddSelectedRow
+                            End If
+                        End If
+                        NeedRedraw = True
                     End If
-                End If
-            End If
+            End Select
         Case FlexSelectionModeByColumn, FlexSelectionModeFreeByColumn
             ' Not supported.
     End Select
-    NeedRedraw = True
 End If
 If PropAllowIncrementalSearch = True Then
     Select Case .Message
@@ -22822,42 +22852,14 @@ If VBFlexGridCaptureDividerDrag = True Then
     End Select
     Exit Sub
 End If
-If PropAllowMultiSelection = True Then
-    Select Case PropSelectionMode
-        Case FlexSelectionModeFree
-            ' Not supported.
-        Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
-            If PropAllowSelection = True Then
-                If VBFlexGridInvertSelection = False Then
-                    Call AddSelectedRows
-                Else
-                    Call RemoveSelectedRows
-                End If
-                ' Redraw not needed as already drawn with the mouse move.
-            Else
-                If (Shift And vbCtrlMask) <> 0 Then
-                    If (Shift And vbShiftMask) <> 0 Then
-                        Call AddSelectedRow
-                    Else
-                        If VBFlexGridInvertSelection = False Then
-                            Call AddSelectedRow
-                        Else
-                            Call RemoveSelectedRow
-                        End If
-                    End If
-                Else
-                    Call ClearSelectedRows
-                    Call AddSelectedRow
-                End If
-                Call RedrawGrid
-            End If
-        Case FlexSelectionModeByColumn, FlexSelectionModeFreeByColumn
-            ' Not supported.
-    End Select
+With RCP
+If (Shift And vbCtrlMask) <> 0 Then
+    .Flags = .Flags Or RCPF_CTRL
+    If (Shift And vbShiftMask) <> 0 Then .Flags = .Flags Or RCPF_SHIFT
 End If
+.Message = WM_LBUTTONUP
 If VBFlexGridMouseMoveChanged = False And VBFlexGridMouseMoveRow > -1 And VBFlexGridMouseMoveCol > -1 Then
-    With RCP
-    .Mask = RCPM_TOPROW Or RCPM_LEFTCOL
+    .Mask = .Mask Or RCPM_TOPROW Or RCPM_LEFTCOL
     .TopRow = VBFlexGridTopRow
     .LeftCol = VBFlexGridLeftCol
     If .TopRow <= VBFlexGridRow Then
@@ -22870,9 +22872,9 @@ If VBFlexGridMouseMoveChanged = False And VBFlexGridMouseMoveRow > -1 And VBFlex
             .LeftCol = VBFlexGridCol - GetColsPerPageRev(VBFlexGridCol) + 1
         End If
     End If
-    Call SetRowColParams(RCP)
-    End With
 End If
+Call SetRowColParams(RCP)
+End With
 End Sub
 
 Private Sub ProcessMouseMove(ByVal Button As Integer, ByVal X As Long, ByVal Y As Long)
