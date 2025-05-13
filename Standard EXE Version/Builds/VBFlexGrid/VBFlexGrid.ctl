@@ -4267,11 +4267,27 @@ If Value = True Then
     End Select
 End If
 PropAllowMultiSelection = Value
+Dim RCP As TROWCOLPARAMS
+With RCP
+.Mask = RCPM_ROWSEL Or RCPM_COLSEL
 If PropAllowMultiSelection = False Then
     VBFlexGridInvertSelection = False
     Call ClearSelectedRows
-    Call RedrawGrid
+    .Flags = .Flags Or RCPF_FORCEREDRAW
 End If
+Select Case PropSelectionMode
+    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
+        .RowSel = VBFlexGridRowSel
+        .ColSel = VBFlexGridColSel
+    Case FlexSelectionModeByRow
+        .RowSel = VBFlexGridRowSel
+        .ColSel = (PropCols - 1)
+    Case FlexSelectionModeByColumn
+        .RowSel = (PropRows - 1)
+        .ColSel = VBFlexGridColSel
+End Select
+Call SetRowColParams(RCP)
+End With
 UserControl.PropertyChanged "AllowMultiSelection"
 End Property
 
@@ -4287,14 +4303,14 @@ With RCP
 .Mask = RCPM_ROWSEL Or RCPM_COLSEL
 Select Case PropSelectionMode
     Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        .RowSel = VBFlexGridRow
-        .ColSel = VBFlexGridCol
+        .RowSel = VBFlexGridRowSel
+        .ColSel = VBFlexGridColSel
     Case FlexSelectionModeByRow
-        .RowSel = VBFlexGridRow
+        .RowSel = VBFlexGridRowSel
         .ColSel = (PropCols - 1)
     Case FlexSelectionModeByColumn
         .RowSel = (PropRows - 1)
-        .ColSel = VBFlexGridCol
+        .ColSel = VBFlexGridColSel
 End Select
 Call SetRowColParams(RCP)
 End With
@@ -20142,6 +20158,12 @@ End If
 If (.Mask And RCPM_COL) = RCPM_COL Then
     If .Col > (PropCols - 1) Then .Col = (PropCols - 1)
     If VBFlexGridCol <> .Col Then RowColChanged = True
+End If
+If (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then
+    If .RowSel > (PropRows - 1) Then .RowSel = (PropRows - 1)
+End If
+If (.Mask And RCPM_COLSEL) = RCPM_COLSEL Then
+    If .ColSel > (PropCols - 1) Then .ColSel = (PropCols - 1)
 End If
 If RowColChanged = True Then
     Dim NewRow As Long, NewCol As Long
