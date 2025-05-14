@@ -1,5 +1,11 @@
 List of revisions:
 
+14-May-2025
+- Bugfix in the internal ProcessLButtonUp handler that it can scroll unintentionally
+  when the focused cell is out of view and clicking on a combo cue / fixed cell checkbox etc.
+- .SelectedRows and .SelectedRow property enhanced to include the selection range while mouse drag move. (inverted or not)
+  While mouse drag move the selected state is not yet commited but will be upon LButtonUp.
+
 10-May-2025
 - Bugfix in the scrollbar capture of the combo drop-down list.
 
