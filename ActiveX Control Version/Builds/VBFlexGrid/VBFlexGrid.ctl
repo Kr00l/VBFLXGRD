@@ -1959,6 +1959,9 @@ Private VBFlexGridAlignable As Boolean
 Private VBFlexGridEnabledVisualStyles As Boolean
 Private VBFlexGridExtendLastCol As Long
 Private VBFlexGridInvertSelection As Boolean
+Private VBFlexGridExpandSelectedRows As Boolean
+Private VBFlexGridSelectedRows As Long
+Private VBFlexGridSelectedRowIndices() As Long
 Private VBFlexGridClipSeparatorCol As String, VBFlexGridClipSeparatorRow As String
 Private VBFlexGridHotRow As Long, VBFlexGridHotCol As Long
 Private VBFlexGridHotHitResult As FlexHitResultConstants
@@ -1970,8 +1973,6 @@ Private VBFlexGridUndoQueueIndex As Long
 Private VBFlexGridUndoQueue() As TUNDOREDOENTRY
 Private VBFlexGridRedoQueueIndex As Long
 Private VBFlexGridRedoQueue() As TUNDOREDOENTRY
-Private VBFlexGridSelectedRows As Long
-Private VBFlexGridSelectedRowIndices() As Long
 
 #If ImplementFlexDataSource = True Then
 
@@ -8128,19 +8129,45 @@ Public Property Get SelectedRow(ByVal Index As Long) As Long
 Attribute SelectedRow.VB_Description = "Returns the position of a selected row for multiple (non-contiguous) selections."
 Attribute SelectedRow.VB_MemberFlags = "400"
 SelectedRow = -1
-If Index >= 0 And Index <= (VBFlexGridSelectedRows - 1) Then
-    SelectedRow = VBFlexGridSelectedRowIndices(Index)
+If VBFlexGridSelectedRows > 0 Then
+    If Index >= 0 And Index <= (VBFlexGridSelectedRows - 1) Then SelectedRow = VBFlexGridSelectedRowIndices(Index)
 Else
     Dim i As Long, Count As Long
-    For i = 0 To (PropRows - 1)
-        If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
-            If Count = Index Then
-                SelectedRow = i
-                Exit For
+    If VBFlexGridExpandSelectedRows = False Then
+        For i = 0 To (PropRows - 1)
+            If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
+                If Count = Index Then
+                    SelectedRow = i
+                    Exit For
+                End If
+                Count = Count + 1
             End If
-            Count = Count + 1
+        Next i
+    Else
+        Dim SelRange As TCELLRANGE
+        Call GetSelRangeStruct(SelRange)
+        If VBFlexGridInvertSelection = False Then
+            For i = 0 To (PropRows - 1)
+                If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Or (i >= SelRange.TopRow And i <= SelRange.BottomRow) Then
+                    If Count = Index Then
+                        SelectedRow = i
+                        Exit For
+                    End If
+                    Count = Count + 1
+                End If
+            Next i
+        Else
+            For i = 0 To (PropRows - 1)
+                If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED And Not (i >= SelRange.TopRow And i <= SelRange.BottomRow) Then
+                    If Count = Index Then
+                        SelectedRow = i
+                        Exit For
+                    End If
+                    Count = Count + 1
+                End If
+            Next i
         End If
-    Next i
+    End If
 End If
 End Property
 
@@ -8148,18 +8175,50 @@ Public Property Get SelectedRows() As Long
 Attribute SelectedRows.VB_Description = "Returns the number of selected rows for multiple (non-contiguous) selections."
 Attribute SelectedRows.VB_MemberFlags = "400"
 Dim i As Long, Count As Long
-For i = 0 To (PropRows - 1)
-    If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then Count = Count + 1
-Next i
+If VBFlexGridExpandSelectedRows = False Then
+    For i = 0 To (PropRows - 1)
+        If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then Count = Count + 1
+    Next i
+Else
+    Dim SelRange As TCELLRANGE
+    Call GetSelRangeStruct(SelRange)
+    If VBFlexGridInvertSelection = False Then
+        For i = 0 To (PropRows - 1)
+            If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Or (i >= SelRange.TopRow And i <= SelRange.BottomRow) Then Count = Count + 1
+        Next i
+    Else
+        For i = 0 To (PropRows - 1)
+            If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED And Not (i >= SelRange.TopRow And i <= SelRange.BottomRow) Then Count = Count + 1
+        Next i
+    End If
+End If
 If VBFlexGridSelectedRows = 0 And Count > 0 Then
     ReDim VBFlexGridSelectedRowIndices(0 To (Count - 1)) As Long
     Dim Index As Long
-    For i = 0 To (PropRows - 1)
-        If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
-            VBFlexGridSelectedRowIndices(Index) = i
-            Index = Index + 1
+    If VBFlexGridExpandSelectedRows = False Then
+        For i = 0 To (PropRows - 1)
+            If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
+                VBFlexGridSelectedRowIndices(Index) = i
+                Index = Index + 1
+            End If
+        Next i
+    Else
+        If VBFlexGridInvertSelection = False Then
+            For i = 0 To (PropRows - 1)
+                If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Or (i >= SelRange.TopRow And i <= SelRange.BottomRow) Then
+                    VBFlexGridSelectedRowIndices(Index) = i
+                    Index = Index + 1
+                End If
+            Next i
+        Else
+            For i = 0 To (PropRows - 1)
+                If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED And Not (i >= SelRange.TopRow And i <= SelRange.BottomRow) Then
+                    VBFlexGridSelectedRowIndices(Index) = i
+                    Index = Index + 1
+                End If
+            Next i
         End If
-    Next i
+    End If
     VBFlexGridSelectedRows = Count
 End If
 SelectedRows = Count
@@ -20269,8 +20328,9 @@ If PropAllowMultiSelection = True Then
         Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
             Select Case .Message
                 Case WM_MOUSEMOVE
-                    ' Void
+                    Call ExpandSelectedRows
                 Case WM_LBUTTONUP
+                    VBFlexGridExpandSelectedRows = False
                     If PropAllowSelection = True Then
                         If VBFlexGridInvertSelection = False Then
                             Call AddSelectedRows
@@ -20290,8 +20350,7 @@ If PropAllowMultiSelection = True Then
                                 End If
                             End If
                         Else
-                            Call ClearSelectedRows
-                            Call AddSelectedRow
+                            Call InitSelectedRow
                         End If
                         NeedRedraw = True
                     End If
@@ -20304,11 +20363,11 @@ If PropAllowMultiSelection = True Then
                             ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
                                 VBFlexGridInvertSelection = Not ToggleSelectedRow()
                             Else
-                                Call ClearSelectedRows
                                 If .Message <> WM_LBUTTONDOWN Then
-                                    Call AddSelectedRows
+                                    Call InitSelectedRows
                                 Else
-                                    Call AddSelectedRow
+                                    Call InitSelectedRow
+                                    Call ExpandSelectedRows
                                 End If
                             End If
                         Else
@@ -20317,8 +20376,12 @@ If PropAllowMultiSelection = True Then
                             ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
                                 VBFlexGridInvertSelection = GetSelectedRow()
                             Else
-                                Call ClearSelectedRows
-                                If .Message <> WM_LBUTTONDOWN Then Call AddSelectedRow
+                                If .Message <> WM_LBUTTONDOWN Then
+                                    Call InitSelectedRow
+                                Else
+                                    Call ClearSelectedRows
+                                    Call ExpandSelectedRows
+                                End If
                             End If
                         End If
                         NeedRedraw = True
@@ -20664,6 +20727,65 @@ Next i
 If VBFlexGridSelectedRows > 0 Then
     Erase VBFlexGridSelectedRowIndices()
     VBFlexGridSelectedRows = 0
+End If
+End Sub
+
+Private Sub InitSelectedRows()
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
+Dim SelRange As TCELLRANGE
+Call GetSelRangeStruct(SelRange)
+Dim i As Long
+For i = 0 To (PropRows - 1)
+    If i < SelRange.TopRow Or i > SelRange.BottomRow Then
+        With VBFlexGridCells.Rows(i).RowInfo
+        If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
+        End With
+    Else
+        With VBFlexGridCells.Rows(i).RowInfo
+        If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED
+        End With
+    End If
+Next i
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
+End If
+End Sub
+
+Private Sub InitSelectedRow()
+If PropRows < 1 Or PropCols < 1 Then Exit Sub
+Dim i As Long
+For i = 0 To (PropRows - 1)
+    If i <> VBFlexGridRow Then
+        With VBFlexGridCells.Rows(i).RowInfo
+        If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
+        End With
+    Else
+        With VBFlexGridCells.Rows(i).RowInfo
+        If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED
+        End With
+    End If
+Next i
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
+End If
+End Sub
+
+Private Sub ExpandSelectedRows()
+Static LastRow As Long, LastRowSel As Long
+If VBFlexGridExpandSelectedRows = False Then
+    LastRow = -1
+    LastRowSel = -1
+    VBFlexGridExpandSelectedRows = True
+End If
+If VBFlexGridRow <> LastRow Or VBFlexGridRowSel <> LastRowSel Then
+    If VBFlexGridSelectedRows > 0 Then
+        Erase VBFlexGridSelectedRowIndices()
+        VBFlexGridSelectedRows = 0
+    End If
+    LastRow = VBFlexGridRow
+    LastRowSel = VBFlexGridRowSel
 End If
 End Sub
 
@@ -22881,17 +23003,26 @@ If (Shift And vbCtrlMask) <> 0 Then
 End If
 .Message = WM_LBUTTONUP
 If VBFlexGridMouseMoveChanged = False And VBFlexGridMouseMoveRow > -1 And VBFlexGridMouseMoveCol > -1 Then
-    .Mask = .Mask Or RCPM_TOPROW Or RCPM_LEFTCOL
-    .TopRow = VBFlexGridTopRow
-    .LeftCol = VBFlexGridLeftCol
-    If .TopRow <= VBFlexGridRow Then
-        If VBFlexGridRow > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-            .TopRow = VBFlexGridRow - GetRowsPerPageRev(VBFlexGridRow) + 1
+    Dim Cancel As Boolean
+    Select Case VBFlexGridCaptureHitResult
+        Case FlexHitResultNoWhere, FlexHitResultComboCue, FlexHitResultComboCueDisabled
+            Cancel = True
+        Case FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
+            If VBFlexGridCaptureRow <= (PropFixedRows - 1) Or VBFlexGridCaptureCol <= (PropFixedCols - 1) Then Cancel = True
+    End Select
+    If Cancel = False Then
+        .Mask = .Mask Or RCPM_TOPROW Or RCPM_LEFTCOL
+        .TopRow = VBFlexGridTopRow
+        .LeftCol = VBFlexGridLeftCol
+        If .TopRow <= VBFlexGridRow Then
+            If VBFlexGridRow > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                .TopRow = VBFlexGridRow - GetRowsPerPageRev(VBFlexGridRow) + 1
+            End If
         End If
-    End If
-    If .LeftCol <= VBFlexGridCol Then
-        If VBFlexGridCol > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-            .LeftCol = VBFlexGridCol - GetColsPerPageRev(VBFlexGridCol) + 1
+        If .LeftCol <= VBFlexGridCol Then
+            If VBFlexGridCol > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                .LeftCol = VBFlexGridCol - GetColsPerPageRev(VBFlexGridCol) + 1
+            End If
         End If
     End If
 End If
