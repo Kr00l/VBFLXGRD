@@ -1076,6 +1076,8 @@ Public Event BeforeSelChange(ByVal NewRowSel As Long, ByVal NewColSel As Long, B
 Attribute BeforeSelChange.VB_Description = "Occurs before the selected range of cells changes."
 Public Event SelChange()
 Attribute SelChange.VB_Description = "Occurs when the selected range of cells changes."
+Public Event MultiSelChange()
+Attribute MultiSelChange.VB_Description = "Occurs when the selection of multiple (non-contiguous) ranges of cells changes."
 Public Event Compare(ByVal Row1 As Long, ByVal Row2 As Long, ByVal Col As Long, ByRef Cmp As Long)
 Attribute Compare.VB_Description = "Occurs during custom sorts to compare two rows."
 Public Event CompareText(ByVal Text1 As String, ByVal Text2 As String, ByVal Col As Long, ByRef Cmp As Long)
@@ -1530,6 +1532,11 @@ Private Const ICC_STANDARD_CLASSES As Long = &H4000
 Private Const ICC_TAB_CLASSES As Long = &H8
 Private Const ICC_DATE_CLASSES As Long = &H100
 Private Const ID_EDITCHILD As Long = 100, ID_COMBOBUTTONCHILD As Long = 101
+#If VBA7 Then
+Const IDT_MULTISELCHANGE As LongPtr = 100
+#Else
+Const IDT_MULTISELCHANGE As Long = 100
+#End If
 Private Const RDW_UPDATENOW As Long = &H100, RDW_INVALIDATE As Long = &H1, RDW_ERASE As Long = &H4, RDW_ALLCHILDREN As Long = &H80, RDW_FRAME As Long = &H400
 Private Const SWP_FRAMECHANGED As Long = &H20
 Private Const SWP_DRAWFRAME As Long = SWP_FRAMECHANGED
@@ -1960,6 +1967,7 @@ Private VBFlexGridEnabledVisualStyles As Boolean
 Private VBFlexGridExtendLastCol As Long
 Private VBFlexGridInvertSelection As Boolean
 Private VBFlexGridExpandSelectedRows As Boolean
+Private VBFlexGridMultiSelChangeTimer As Boolean
 Private VBFlexGridSelectedRows As Long
 Private VBFlexGridSelectedRowIndices() As Long
 Private VBFlexGridClipSeparatorCol As String, VBFlexGridClipSeparatorRow As String
@@ -2089,8 +2097,9 @@ Private PropWallPaperAlignment As FlexWallPaperAlignmentConstants
 Private PropAllowIncrementalSearch As Boolean
 Private PropAllowReaderMode As Boolean
 Private PropAlwaysAllowComboCues As Boolean
-Private PropFontQuality As FlexFontQualityConstants
 Private PropUndoLimit As Long
+Private PropFontQuality As FlexFontQualityConstants
+Private PropMultiSelChangeTime As Long
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -2430,6 +2439,7 @@ PropAllowReaderMode = False
 PropAlwaysAllowComboCues = False
 PropUndoLimit = 0
 PropFontQuality = FlexFontQualityDefault
+PropMultiSelChangeTime = 50
 Call CreateVBFlexGrid
 End Sub
 
@@ -2547,6 +2557,7 @@ PropAllowReaderMode = .ReadProperty("AllowReaderMode", False)
 PropAlwaysAllowComboCues = .ReadProperty("AlwaysAllowComboCues", False)
 PropUndoLimit = .ReadProperty("UndoLimit", 0)
 PropFontQuality = .ReadProperty("FontQuality", FlexFontQualityDefault)
+PropMultiSelChangeTime = .ReadProperty("MultiSelChangeTime", 50)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -2660,6 +2671,7 @@ With PropBag
 .WriteProperty "AlwaysAllowComboCues", PropAlwaysAllowComboCues, False
 .WriteProperty "UndoLimit", PropUndoLimit, 0
 .WriteProperty "FontQuality", PropFontQuality, FlexFontQualityDefault
+.WriteProperty "MultiSelChangeTime", PropMultiSelChangeTime, 50
 End With
 End Sub
 
@@ -4273,6 +4285,11 @@ With RCP
 .Mask = RCPM_ROWSEL Or RCPM_COLSEL
 If PropAllowMultiSelection = False Then
     VBFlexGridInvertSelection = False
+    VBFlexGridExpandSelectedRows = False
+    If VBFlexGridMultiSelChangeTimer = True Then
+        If VBFlexGridHandle <> NULL_PTR Then KillTimer VBFlexGridHandle, IDT_MULTISELCHANGE
+        VBFlexGridMultiSelChangeTimer = False
+    End If
     Call ClearSelectedRows
     .Flags = .Flags Or RCPF_FORCEREDRAW
 End If
@@ -4407,6 +4424,11 @@ Select Case PropSelectionMode
         If PropAllowMultiSelection = True Then
             PropAllowMultiSelection = False
             VBFlexGridInvertSelection = False
+            VBFlexGridExpandSelectedRows = False
+            If VBFlexGridMultiSelChangeTimer = True Then
+                If VBFlexGridHandle <> NULL_PTR Then KillTimer VBFlexGridHandle, IDT_MULTISELCHANGE
+                VBFlexGridMultiSelChangeTimer = False
+            End If
             Call ClearSelectedRows
         End If
 End Select
@@ -5617,6 +5639,24 @@ Set Me.FontFixed = PropFontFixed
 UserControl.PropertyChanged "FontQuality"
 End Property
 
+Public Property Get MultiSelChangeTime() As Long
+Attribute MultiSelChangeTime.VB_Description = "Returns/sets the time in milliseconds before the MultiSelChange event is fired by a window message after a change in the multi-selection. A value of 0 indicates that it is fired immediately."
+MultiSelChangeTime = PropMultiSelChangeTime
+End Property
+
+Public Property Let MultiSelChangeTime(ByVal Value As Long)
+If Value < 0 Or Value > 65535 Then
+    If VBFlexGridDesignMode = True Then
+        MsgBox "Invalid property value", vbCritical + vbOKOnly
+        Exit Property
+    Else
+        Err.Raise 380
+    End If
+End If
+PropMultiSelChangeTime = Value
+UserControl.PropertyChanged "MultiSelChangeTime"
+End Property
+
 Private Sub CreateVBFlexGrid()
 If VBFlexGridHandle <> NULL_PTR Then Exit Sub
 Call InitFlexGridCells
@@ -5792,6 +5832,10 @@ Call FlexRemoveSubclass(UserControl.hWnd)
 Call DestroyToolTip
 Call DestroyScrollTip
 If VBFlexGridDesignMode = False Then
+    If VBFlexGridMultiSelChangeTimer = True Then
+        KillTimer VBFlexGridHandle, IDT_MULTISELCHANGE
+        VBFlexGridMultiSelChangeTimer = False
+    End If
     
     #If ImplementPreTranslateMsg = True Then
     
@@ -20190,8 +20234,8 @@ End With
 End Sub
 
 Private Sub SetRowColParams(ByRef RCP As TROWCOLPARAMS)
-Dim RowColChanged As Boolean, SelChanged As Boolean, ScrollChanged As Boolean
-Dim NoRedraw As Boolean, NeedRedraw As Boolean, Cancel As Boolean
+Dim RowColChanged As Boolean, SelChanged As Boolean, MultiSelChanged As Boolean, ScrollChanged As Boolean
+Dim NoRedraw As Boolean, Cancel As Boolean
 With RCP
 Select Case PropScrollBars
     Case vbSBNone
@@ -20328,46 +20372,45 @@ If PropAllowMultiSelection = True Then
         Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
             Select Case .Message
                 Case WM_MOUSEMOVE
-                    Call ExpandSelectedRows
+                    MultiSelChanged = ExpandSelectedRows()
                 Case WM_LBUTTONUP
                     VBFlexGridExpandSelectedRows = False
                     If PropAllowSelection = True Then
                         If VBFlexGridInvertSelection = False Then
-                            Call AddSelectedRows
+                            MultiSelChanged = AddSelectedRows()
                         Else
-                            Call RemoveSelectedRows
+                            MultiSelChanged = RemoveSelectedRows()
                         End If
                         ' Redraw not needed as already drawn with the mouse move.
                     Else
                         If (.Flags And RCPF_CTRL) = RCPF_CTRL Then
                             If (.Flags And RCPF_SHIFT) = RCPF_SHIFT Then
-                                Call AddSelectedRow
+                                MultiSelChanged = AddSelectedRow()
                             Else
                                 If VBFlexGridInvertSelection = False Then
-                                    Call AddSelectedRow
+                                    MultiSelChanged = AddSelectedRow()
                                 Else
-                                    Call RemoveSelectedRow
+                                    MultiSelChanged = RemoveSelectedRow()
                                 End If
                             End If
                         Else
-                            Call InitSelectedRow
+                            MultiSelChanged = InitSelectedRow()
                         End If
-                        NeedRedraw = True
                     End If
                 Case Else
                     If (.Mask And RCPM_ROW) = RCPM_ROW Or (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then
                         VBFlexGridInvertSelection = False
                         If PropAllowSelection = True Then
                             If (.Flags And RCPF_SHIFT) = RCPF_SHIFT And (.Flags And RCPF_CTRL) = RCPF_CTRL Then
-                                Call AddSelectedRows
+                                MultiSelChanged = AddSelectedRows()
                             ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
                                 VBFlexGridInvertSelection = Not ToggleSelectedRow()
+                                MultiSelChanged = True
                             Else
                                 If .Message <> WM_LBUTTONDOWN Then
-                                    Call InitSelectedRows
+                                    MultiSelChanged = InitSelectedRows()
                                 Else
-                                    Call InitSelectedRow
-                                    Call ExpandSelectedRows
+                                    MultiSelChanged = InitSelectedRow()
                                 End If
                             End If
                         Else
@@ -20375,29 +20418,26 @@ If PropAllowMultiSelection = True Then
                                 ' Void
                             ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
                                 VBFlexGridInvertSelection = GetSelectedRow()
+                                MultiSelChanged = True
                             Else
                                 If .Message <> WM_LBUTTONDOWN Then
-                                    Call InitSelectedRow
+                                    MultiSelChanged = InitSelectedRow()
                                 Else
-                                    Call ClearSelectedRows
-                                    Call ExpandSelectedRows
+                                    MultiSelChanged = ClearSelectedRows()
                                 End If
                             End If
                         End If
-                        NeedRedraw = True
+                        If .Message = WM_LBUTTONDOWN Then
+                            Call ExpandSelectedRows(True)
+                        ElseIf .Message = 0 And VBFlexGridMultiSelChangeTimer = True Then
+                            If VBFlexGridHandle <> NULL_PTR Then KillTimer VBFlexGridHandle, IDT_MULTISELCHANGE
+                            VBFlexGridMultiSelChangeTimer = False
+                            MultiSelChanged = True
+                        End If
                     End If
             End Select
         Case FlexSelectionModeByColumn, FlexSelectionModeFreeByColumn
             ' Not supported.
-    End Select
-End If
-If PropAllowIncrementalSearch = True Then
-    Select Case .Message
-        Case WM_KEYDOWN, WM_LBUTTONDOWN
-            If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then
-                Call CancelIncrementalSearch(True)
-                NeedRedraw = True
-            End If
     End Select
 End If
 If ScrollChanged = True Then
@@ -20410,7 +20450,7 @@ If ScrollChanged = True Then
     End If
 End If
 If NoRedraw = False Then
-    If RowColChanged = True Or SelChanged = True Or ScrollChanged = True Or NeedRedraw = True Or (.Flags And RCPF_FORCEREDRAW) = RCPF_FORCEREDRAW Then
+    If RowColChanged = True Or SelChanged = True Or MultiSelChanged = True Or ScrollChanged = True Or (.Flags And RCPF_FORCEREDRAW) = RCPF_FORCEREDRAW Then
         Call RedrawGrid
     ElseIf .Message = WM_SIZE Then
         If VBFlexGridExtendLastCol > -1 Then
@@ -20427,6 +20467,18 @@ If NoRedraw = False Then
 End If
 If (.Flags And RCPF_SETSCROLLBARS) = RCPF_SETSCROLLBARS Then Call SetScrollBars
 If SelChanged = True Then RaiseEvent SelChange
+If MultiSelChanged = True Then
+    If VBFlexGridDesignMode = False Then
+        If .Message = 0 Or PropMultiSelChangeTime = 0 Then
+            RaiseEvent MultiSelChange
+        ElseIf VBFlexGridHandle <> NULL_PTR Then
+            SetTimer VBFlexGridHandle, IDT_MULTISELCHANGE, PropMultiSelChangeTime, NULL_PTR
+            VBFlexGridMultiSelChangeTimer = True
+        End If
+    Else
+        RaiseEvent MultiSelChange
+    End If
+End If
 If RowColChanged = True Then
     RaiseEvent EnterCell
     RaiseEvent RowColChange
@@ -20716,140 +20768,139 @@ End If
 GetColDividerFrozenLeft = iColDivider
 End Function
 
-Private Sub ClearSelectedRows()
-If PropRows < 1 Or PropCols < 1 Then Exit Sub
-Dim i As Long
+Private Function ClearSelectedRows() As Boolean
+If PropRows < 1 Or PropCols < 1 Then Exit Function
+Dim i As Long, Count As Long
 For i = 0 To (PropRows - 1)
     With VBFlexGridCells.Rows(i).RowInfo
-    If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
+    If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED: Count = Count + 1
     End With
 Next i
+If Count > 0 Then ClearSelectedRows = True
 If VBFlexGridSelectedRows > 0 Then
     Erase VBFlexGridSelectedRowIndices()
     VBFlexGridSelectedRows = 0
 End If
-End Sub
+End Function
 
-Private Sub InitSelectedRows()
-If PropRows < 1 Or PropCols < 1 Then Exit Sub
-Dim SelRange As TCELLRANGE
-Call GetSelRangeStruct(SelRange)
-Dim i As Long
-For i = 0 To (PropRows - 1)
-    If i < SelRange.TopRow Or i > SelRange.BottomRow Then
-        With VBFlexGridCells.Rows(i).RowInfo
-        If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
-        End With
-    Else
-        With VBFlexGridCells.Rows(i).RowInfo
-        If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED
-        End With
-    End If
-Next i
-If VBFlexGridSelectedRows > 0 Then
-    Erase VBFlexGridSelectedRowIndices()
-    VBFlexGridSelectedRows = 0
-End If
-End Sub
-
-Private Sub InitSelectedRow()
-If PropRows < 1 Or PropCols < 1 Then Exit Sub
-Dim i As Long
-For i = 0 To (PropRows - 1)
-    If i <> VBFlexGridRow Then
-        With VBFlexGridCells.Rows(i).RowInfo
-        If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
-        End With
-    Else
-        With VBFlexGridCells.Rows(i).RowInfo
-        If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED
-        End With
-    End If
-Next i
-If VBFlexGridSelectedRows > 0 Then
-    Erase VBFlexGridSelectedRowIndices()
-    VBFlexGridSelectedRows = 0
-End If
-End Sub
-
-Private Sub ExpandSelectedRows()
+Private Function ExpandSelectedRows(Optional ByVal Initialize As Boolean) As Boolean
 Static LastRow As Long, LastRowSel As Long
-If VBFlexGridExpandSelectedRows = False Then
-    LastRow = -1
-    LastRowSel = -1
+If Initialize = True Then
     VBFlexGridExpandSelectedRows = True
-End If
-If VBFlexGridRow <> LastRow Or VBFlexGridRowSel <> LastRowSel Then
+ElseIf VBFlexGridRow <> LastRow Or VBFlexGridRowSel <> LastRowSel Then
+    ExpandSelectedRows = True
     If VBFlexGridSelectedRows > 0 Then
         Erase VBFlexGridSelectedRowIndices()
         VBFlexGridSelectedRows = 0
     End If
-    LastRow = VBFlexGridRow
-    LastRowSel = VBFlexGridRowSel
 End If
-End Sub
+LastRow = VBFlexGridRow
+LastRowSel = VBFlexGridRowSel
+End Function
 
-Private Sub AddSelectedRows()
-If PropRows < 1 Or PropCols < 1 Then Exit Sub
+Private Function InitSelectedRows() As Boolean
+If PropRows < 1 Or PropCols < 1 Then Exit Function
+Dim SelRange As TCELLRANGE
+Call GetSelRangeStruct(SelRange)
+Dim i As Long, Count As Long
+For i = 0 To (PropRows - 1)
+    With VBFlexGridCells.Rows(i).RowInfo
+    If i < SelRange.TopRow Or i > SelRange.BottomRow Then
+        If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED: Count = Count + 1
+    Else
+        If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED: Count = Count + 1
+    End If
+    End With
+Next i
+If Count > 0 Then InitSelectedRows = True
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
+End If
+End Function
+
+Private Function InitSelectedRow() As Boolean
+If PropRows < 1 Or PropCols < 1 Then Exit Function
+Dim i As Long, Count As Long
+For i = 0 To (PropRows - 1)
+    With VBFlexGridCells.Rows(i).RowInfo
+    If i <> VBFlexGridRow Then
+        If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED: Count = Count + 1
+    Else
+        If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED: Count = Count + 1
+    End If
+    End With
+Next i
+If Count > 0 Or VBFlexGridRow <> VBFlexGridRowSel Then InitSelectedRow = True
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
+End If
+End Function
+
+Private Function AddSelectedRows() As Boolean
+If PropRows < 1 Or PropCols < 1 Then Exit Function
 Dim SelRange As TCELLRANGE
 Call GetSelRangeStruct(SelRange)
 If SelRange.TopRow > -1 And SelRange.BottomRow > -1 Then
-    Dim i As Long
+    Dim i As Long, Count As Long
     For i = SelRange.TopRow To SelRange.BottomRow
         With VBFlexGridCells.Rows(i).RowInfo
-        If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED
+        If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED: Count = Count + 1
         End With
     Next i
+    If Count > 0 Then AddSelectedRows = True
 End If
 If VBFlexGridSelectedRows > 0 Then
     Erase VBFlexGridSelectedRowIndices()
     VBFlexGridSelectedRows = 0
 End If
-End Sub
+End Function
 
-Private Sub RemoveSelectedRows()
-If PropRows < 1 Or PropCols < 1 Then Exit Sub
+Private Function RemoveSelectedRows() As Boolean
+If PropRows < 1 Or PropCols < 1 Then Exit Function
 Dim SelRange As TCELLRANGE
 Call GetSelRangeStruct(SelRange)
 If SelRange.TopRow > -1 And SelRange.BottomRow > -1 Then
-    Dim i As Long
+    Dim i As Long, Count As Long
     For i = SelRange.TopRow To SelRange.BottomRow
         With VBFlexGridCells.Rows(i).RowInfo
-        If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
+        If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED: Count = Count + 1
         End With
     Next i
+    If Count > 0 Then RemoveSelectedRows = True
 End If
 If VBFlexGridSelectedRows > 0 Then
     Erase VBFlexGridSelectedRowIndices()
     VBFlexGridSelectedRows = 0
 End If
-End Sub
+End Function
 
-Private Sub AddSelectedRow()
-If PropRows < 1 Or PropCols < 1 Then Exit Sub
+Private Function AddSelectedRow() As Boolean
+If PropRows < 1 Or PropCols < 1 Then Exit Function
 If VBFlexGridRow > -1 Then
     With VBFlexGridCells.Rows(VBFlexGridRow).RowInfo
-    If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED
+    If Not (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State Or RWIS_SELECTED: AddSelectedRow = True
     End With
 End If
 If VBFlexGridSelectedRows > 0 Then
     Erase VBFlexGridSelectedRowIndices()
     VBFlexGridSelectedRows = 0
 End If
-End Sub
+End Function
 
-Private Sub RemoveSelectedRow()
-If PropRows < 1 Or PropCols < 1 Then Exit Sub
+Private Function RemoveSelectedRow() As Boolean
+If PropRows < 1 Or PropCols < 1 Then Exit Function
 If VBFlexGridRow > -1 Then
     With VBFlexGridCells.Rows(VBFlexGridRow).RowInfo
-    If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED
+    If (.State And RWIS_SELECTED) = RWIS_SELECTED Then .State = .State And Not RWIS_SELECTED: RemoveSelectedRow = True
     End With
 End If
 If VBFlexGridSelectedRows > 0 Then
     Erase VBFlexGridSelectedRowIndices()
     VBFlexGridSelectedRows = 0
 End If
-End Sub
+End Function
 
 Private Function ToggleSelectedRow() As Boolean
 If PropRows < 1 Or PropCols < 1 Then Exit Function
@@ -21014,6 +21065,12 @@ With RCP
 If (Shift And vbShiftMask) <> 0 Then
     .Flags = .Flags Or RCPF_SHIFT
     If (Shift And vbCtrlMask) <> 0 Then .Flags = .Flags Or RCPF_CTRL
+End If
+If PropAllowIncrementalSearch = True Then
+    If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then
+        Call CancelIncrementalSearch(True)
+        .Flags = .Flags Or RCPF_FORCEREDRAW
+    End If
 End If
 .Message = WM_KEYDOWN
 .Row = VBFlexGridRow
@@ -22630,6 +22687,12 @@ With RCP
 If (Shift And vbCtrlMask) <> 0 Then
     .Flags = .Flags Or RCPF_CTRL
     If (Shift And vbShiftMask) <> 0 Then .Flags = .Flags Or RCPF_SHIFT
+End If
+If PropAllowIncrementalSearch = True Then
+    If Not VBFlexGridIncrementalSearch.SearchString = vbNullString Then
+        Call CancelIncrementalSearch(True)
+        .Flags = .Flags Or RCPF_FORCEREDRAW
+    End If
 End If
 .Message = WM_LBUTTONDOWN
 .Row = VBFlexGridRow
@@ -26425,6 +26488,15 @@ Select Case wMsg
             WindowProcControl = 1
             Exit Function
         End If
+    Case WM_TIMER
+        Select Case wParam
+            Case IDT_MULTISELCHANGE
+                KillTimer hWnd, IDT_MULTISELCHANGE
+                VBFlexGridMultiSelChangeTimer = False
+                If PropAllowMultiSelection = True Then RaiseEvent MultiSelChange
+                WindowProcControl = 0
+                Exit Function
+        End Select
     Case VP_FORMATRANGE
         WindowProcControl = ProcessFormatRange(wParam, lParam)
         Exit Function
