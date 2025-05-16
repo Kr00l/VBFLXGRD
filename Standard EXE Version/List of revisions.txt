@@ -1,5 +1,11 @@
 List of revisions:
 
+16-May-2025
+- Included the MultiSelChange event which occurs when the selection of multiple (non-contiguous) ranges of cells changes.
+  Of course the AllowMultiSelection property must be set to True.
+- Included the MultiSelChangeTime property to set the time in milliseconds before the MultiSelChange event is fired
+  by a window message after a change in the multi-selection. A value of 0 indicates that it is fired immediately.
+
 14-May-2025
 - Bugfix in the internal ProcessLButtonUp handler that it can scroll unintentionally
   when the focused cell is out of view and clicking on a combo cue / fixed cell checkbox etc.
