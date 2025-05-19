@@ -2439,7 +2439,7 @@ PropAllowReaderMode = False
 PropAlwaysAllowComboCues = False
 PropUndoLimit = 0
 PropFontQuality = FlexFontQualityDefault
-PropMultiSelChangeTime = 50
+PropMultiSelChangeTime = 0
 Call CreateVBFlexGrid
 End Sub
 
@@ -2557,7 +2557,7 @@ PropAllowReaderMode = .ReadProperty("AllowReaderMode", False)
 PropAlwaysAllowComboCues = .ReadProperty("AlwaysAllowComboCues", False)
 PropUndoLimit = .ReadProperty("UndoLimit", 0)
 PropFontQuality = .ReadProperty("FontQuality", FlexFontQualityDefault)
-PropMultiSelChangeTime = .ReadProperty("MultiSelChangeTime", 50)
+PropMultiSelChangeTime = .ReadProperty("MultiSelChangeTime", 0)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -2671,7 +2671,7 @@ With PropBag
 .WriteProperty "AlwaysAllowComboCues", PropAlwaysAllowComboCues, False
 .WriteProperty "UndoLimit", PropUndoLimit, 0
 .WriteProperty "FontQuality", PropFontQuality, FlexFontQualityDefault
-.WriteProperty "MultiSelChangeTime", PropMultiSelChangeTime, 50
+.WriteProperty "MultiSelChangeTime", PropMultiSelChangeTime, 0
 End With
 End Sub
 
