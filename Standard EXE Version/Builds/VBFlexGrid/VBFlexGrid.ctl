@@ -27076,6 +27076,7 @@ Select Case wMsg
     Case WM_CAPTURECHANGED
         Select Case SendMessage(hWnd, WM_NCHITTEST, 0, ByVal GetMessagePos())
             Case HTHSCROLL, HTVSCROLL
+                If NonClientCapture = True And lParam = 0 Then NonClientCapture = False
             Case Else
                 If NonClientCapture = True Then
                     PostMessage hWnd, UM_CAPTURECHANGED, wParam, ByVal lParam
