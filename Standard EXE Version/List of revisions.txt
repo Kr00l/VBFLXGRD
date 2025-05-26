@@ -1,5 +1,8 @@
 List of revisions:
 
+26-May-2025
+- Bugfix in the scrollbar capture of the combo drop-down list. (related to 10-May-2025 update)
+
 16-May-2025
 - Included the MultiSelChange event which occurs when the selection of multiple (non-contiguous) ranges of cells changes.
   Of course the AllowMultiSelection property must be set to True.
