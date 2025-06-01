@@ -6854,10 +6854,8 @@ Public Sub RemoveItem(ByVal Index As Long)
 Attribute RemoveItem.VB_Description = "Removes an item from the flex grid."
 If Index > -1 And Index < PropFixedRows Then
     Err.Raise Number:=30000, Description:="Cannot do a RemoveItem on a fixed row"
-ElseIf Index < 0 Or Index > PropRows Then
+ElseIf Index < 0 Or Index > (PropRows - 1) Then
     Err.Raise Number:=30002, Description:="Grid does not contain that row"
-ElseIf Index = (PropRows - 1) And (PropRows - PropFixedRows) = 1 Then
-    Err.Raise Number:=30015, Description:="Can not remove last non-fixed row"
 Else
     PropRows = PropRows - 1
     Dim RowsPerPage As Long
