@@ -8863,35 +8863,37 @@ Public Property Let ColImageList(ByVal Index As Long, ByVal Value As Variant)
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 With VBFlexGridColsInfo(Index).ImageList
 Dim Success As Boolean, Handle As LongPtr
-Select Case VarType(Value)
-    Case vbObject
-        If Not Value Is Nothing Then
-            If TypeName(Value) = "ImageList" Then
-                On Error Resume Next
-                Handle = Value.hImageList
-                Success = CBool(Err.Number = 0 And Handle <> NULL_PTR)
-                On Error GoTo 0
-            Else
-                Err.Raise Number:=35610, Description:="Invalid object"
+If IsObject(Value) Then
+    If Not Value Is Nothing Then
+        If TypeName(Value) = "ImageList" Then
+            On Error Resume Next
+            Handle = Value.hImageList
+            Success = CBool(Err.Number = 0 And Handle <> NULL_PTR)
+            On Error GoTo 0
+        Else
+            Err.Raise Number:=35610, Description:="Invalid object"
+        End If
+    End If
+    If Success = True Then
+        .ObjectPointer = ObjPtr(Value)
+        .Handle = Handle
+        If ImageList_GetIconSize(.Handle, .Size.CX, .Size.CY) = 0 Then Success = False
+    End If
+Else
+    Select Case VarType(Value)
+        Case vbLong, &H14 ' vbLongLong
+            Handle = Value
+            Success = CBool(Handle <> NULL_PTR)
+            If Success = True Then
+                .ObjectPointer = NULL_PTR
+                .Handle = Handle
+                If ImageList_GetIconSize(.Handle, .Size.CX, .Size.CY) = 0 Then Success = False
             End If
-        End If
-        If Success = True Then
-            .ObjectPointer = ObjPtr(Value)
-            .Handle = Handle
-            If ImageList_GetIconSize(.Handle, .Size.CX, .Size.CY) = 0 Then Success = False
-        End If
-    Case vbLong, &H14 ' vbLongLong
-        Handle = Value
-        Success = CBool(Handle <> NULL_PTR)
-        If Success = True Then
-            .ObjectPointer = NULL_PTR
-            .Handle = Handle
-            If ImageList_GetIconSize(.Handle, .Size.CX, .Size.CY) = 0 Then Success = False
-        End If
-    Case vbEmpty
-    Case Else
-        Err.Raise 13
-End Select
+        Case vbEmpty
+        Case Else
+            Err.Raise 13
+    End Select
+End If
 If Success = False Then
     .ObjectPointer = NULL_PTR
     .Handle = NULL_PTR
@@ -24846,12 +24848,13 @@ If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboButtonHandle <> NULL_PTR 
         If Not (dwLong And ODS_SELECTED) = ODS_SELECTED Then
             SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or ODS_SELECTED
             InvalidateRect VBFlexGridComboButtonHandle, ByVal NULL_PTR, 0
+            UpdateWindow VBFlexGridComboButtonHandle
         End If
         VBFlexGridEditNoLostFocus = True
         RaiseEvent ComboButtonClick
         If VBFlexGridEditHandle <> NULL_PTR Then
             If VBFlexGridComboButtonHandle <> NULL_PTR Then
-                Call ComboButtonSetState(ODS_SELECTED, False)
+                Call ComboButtonSetState(ODS_SELECTED, False, True)
                 ' Remove any left mouse button down or double-click messages so that we can get a toggle effect on the combo button.
                 Dim Msg As TMSG
                 Const PM_REMOVE As Long = &H1
@@ -25101,7 +25104,7 @@ Private Function ComboButtonGetState(ByVal dwState As Long) As Boolean
 If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboButtonHandle <> NULL_PTR Then ComboButtonGetState = CBool((GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA) And dwState) = dwState)
 End Function
 
-Private Sub ComboButtonSetState(ByVal dwState As Long, ByVal Value As Boolean)
+Private Sub ComboButtonSetState(ByVal dwState As Long, ByVal Value As Boolean, Optional ByVal UpdateNow As Boolean)
 If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboButtonHandle <> NULL_PTR Then
     Dim dwLong As Long
     dwLong = GetWindowLong(VBFlexGridComboButtonHandle, GWL_USERDATA)
@@ -25109,11 +25112,13 @@ If VBFlexGridEditHandle <> NULL_PTR And VBFlexGridComboButtonHandle <> NULL_PTR 
         If Not (dwLong And dwState) = dwState Then
             SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong Or dwState
             InvalidateRect VBFlexGridComboButtonHandle, ByVal NULL_PTR, 0
+            If UpdateNow = True Then UpdateWindow VBFlexGridComboButtonHandle
         End If
     Else
         If (dwLong And dwState) = dwState Then
             SetWindowLong VBFlexGridComboButtonHandle, GWL_USERDATA, dwLong And Not dwState
             InvalidateRect VBFlexGridComboButtonHandle, ByVal NULL_PTR, 0
+            If UpdateNow = True Then UpdateWindow VBFlexGridComboButtonHandle
         End If
     End If
 End If
@@ -25178,7 +25183,7 @@ If VBFlexGridEditHandle = NULL_PTR And VBFlexGridComboButtonHandle = NULL_PTR An
     InProc = True
     VBFlexGridComboCueClickRow = Row
     VBFlexGridComboCueClickCol = Col
-    Call RedrawGrid
+    Call RedrawGrid(True)
     RaiseEvent ComboCueClick(Row, Col, Reason)
     Dim P As POINTAPI, XY As Currency
     GetCursorPos P
@@ -25198,7 +25203,7 @@ If VBFlexGridEditHandle = NULL_PTR And VBFlexGridComboButtonHandle = NULL_PTR An
     End If
     VBFlexGridComboCueClickRow = -1
     VBFlexGridComboCueClickCol = -1
-    Call RedrawGrid
+    Call RedrawGrid(True)
     InProc = False
 End If
 End Sub
