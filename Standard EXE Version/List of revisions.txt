@@ -1,5 +1,8 @@
 List of revisions:
 
+01-Jun-2025
+- RemoveItem method now allowed to remove the last non-fixed row. (like vsFlexGrid)
+
 26-May-2025
 - Bugfix in the scrollbar capture of the combo drop-down list. (related to 10-May-2025 update)
 
