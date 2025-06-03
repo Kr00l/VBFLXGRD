@@ -1,5 +1,8 @@
 List of revisions:
 
+03-Jun-2025
+- Bugfix in the AllowMultiSelection property.
+
 01-Jun-2025
 - RemoveItem method now allowed to remove the last non-fixed row. (like vsFlexGrid)
 
