@@ -20392,35 +20392,47 @@ If PropAllowMultiSelection = True Then
                     End If
                 Case Else
                     If (.Mask And RCPM_ROW) = RCPM_ROW Or (.Mask And RCPM_ROWSEL) = RCPM_ROWSEL Then
+                        VBFlexGridInvertSelection = False
                         If PropAllowSelection = True Then
                             If (.Flags And RCPF_SHIFT) = RCPF_SHIFT And (.Flags And RCPF_CTRL) = RCPF_CTRL Then
                                 MultiSelChanged = AddSelectedRows()
-                                VBFlexGridInvertSelection = False
                             ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
-                                MultiSelChanged = True
                                 VBFlexGridInvertSelection = Not ToggleSelectedRow()
+                                MultiSelChanged = True
                             Else
                                 If .Message <> WM_LBUTTONDOWN Then
                                     MultiSelChanged = InitSelectedRows()
                                 Else
                                     MultiSelChanged = InitSelectedRow()
                                 End If
-                                VBFlexGridInvertSelection = False
                             End If
                         Else
-                            If (.Flags And RCPF_SHIFT) = RCPF_SHIFT And (.Flags And RCPF_CTRL) = RCPF_CTRL Then
-                                MultiSelChanged = Not GetSelectedRow() Or VBFlexGridInvertSelection
-                                VBFlexGridInvertSelection = False
-                            ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
-                                MultiSelChanged = True
-                                VBFlexGridInvertSelection = GetSelectedRow()
-                            Else
-                                If .Message <> WM_LBUTTONDOWN Then
-                                    MultiSelChanged = InitSelectedRow()
+                            If PropAllowBigSelection = True Then
+                                If (.Flags And RCPF_SHIFT) = RCPF_SHIFT And (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                                    MultiSelChanged = Not GetSelectedRow()
+                                ElseIf (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                                    VBFlexGridInvertSelection = GetSelectedRow()
+                                    MultiSelChanged = True
                                 Else
-                                    MultiSelChanged = ClearSelectedRows() Or VBFlexGridInvertSelection
+                                    If .Message <> WM_LBUTTONDOWN Then
+                                        MultiSelChanged = InitSelectedRow()
+                                    Else
+                                        MultiSelChanged = ClearSelectedRows() Or (Not GetSelectedRow())
+                                    End If
                                 End If
-                                VBFlexGridInvertSelection = False
+                            Else
+                                If (.Flags And RCPF_SHIFT) = 0 And (.Flags And RCPF_CTRL) = RCPF_CTRL Then
+                                    VBFlexGridInvertSelection = GetSelectedRow()
+                                    Call ClearSelectedRows
+                                    If VBFlexGridInvertSelection = True Then Call InitSelectedRow
+                                    MultiSelChanged = True
+                                Else
+                                    If .Message <> WM_LBUTTONDOWN Then
+                                        MultiSelChanged = InitSelectedRow()
+                                    Else
+                                        MultiSelChanged = ClearSelectedRows() Or (Not GetSelectedRow())
+                                    End If
+                                End If
                             End If
                         End If
                         If .Message = WM_LBUTTONDOWN Then
