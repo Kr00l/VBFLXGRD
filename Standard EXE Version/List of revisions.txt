@@ -1,5 +1,11 @@
 List of revisions:
 
+04-Jun-2025
+- When AllowMultiSelection is True and AllowSelection is False the AllowBigSelection property now
+  controls the behavior whether multiple single selections can be done via shift+ctrl or ctrl.
+  When AllowBigSelection is set to False (defaults True) it is not allowed anymore and truly single selection.
+  That is that .SelectedRows can then return only 1 or 0.
+
 03-Jun-2025
 - Bugfix in the AllowMultiSelection property.
 
