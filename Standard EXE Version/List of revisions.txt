@@ -1,5 +1,10 @@
 List of revisions:
 
+05-Jun-2025
+- AllowSelection/AllowMultiSelection property does not enforce anymore possible selection change. (like vsFlexGrid)
+  As the MS ListView does also not enforce it when turning off MultiSelect property.
+  AllowMultiSelection still clears or initialize the selected flags. (though vsFlexGrid only clears; OK to be different)
+
 04-Jun-2025
 - When AllowMultiSelection is True and AllowSelection is False the AllowBigSelection property now
   controls the behavior whether multiple single selections can be done via shift+ctrl or ctrl.
