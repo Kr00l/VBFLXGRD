@@ -633,6 +633,34 @@ With ComboMousePointer
 .ItemData(.NewIndex) = FlexMousePointerSizeAll
 .AddItem FlexMousePointerArrowCD & " - Arrow and CD"
 .ItemData(.NewIndex) = FlexMousePointerArrowCD
+.AddItem FlexMousePointerPin & " - Pin"
+.ItemData(.NewIndex) = FlexMousePointerPin
+.AddItem FlexMousePointerPerson & " - Person"
+.ItemData(.NewIndex) = FlexMousePointerPerson
+.AddItem FlexMousePointerPen & " - Pen"
+.ItemData(.NewIndex) = FlexMousePointerPen
+.AddItem FlexMousePointerScrollN & " - Scroll N"
+.ItemData(.NewIndex) = FlexMousePointerScrollN
+.AddItem FlexMousePointerScrollS & " - Scroll S"
+.ItemData(.NewIndex) = FlexMousePointerScrollS
+.AddItem FlexMousePointerScrollE & " - Scroll E"
+.ItemData(.NewIndex) = FlexMousePointerScrollE
+.AddItem FlexMousePointerScrollW & " - Scroll W"
+.ItemData(.NewIndex) = FlexMousePointerScrollW
+.AddItem FlexMousePointerScrollNS & " - Scroll N S"
+.ItemData(.NewIndex) = FlexMousePointerScrollNS
+.AddItem FlexMousePointerScrollWE & " - Scroll W E"
+.ItemData(.NewIndex) = FlexMousePointerScrollWE
+.AddItem FlexMousePointerScrollNW & " - Scroll NW"
+.ItemData(.NewIndex) = FlexMousePointerScrollNW
+.AddItem FlexMousePointerScrollNE & " - Scroll NE"
+.ItemData(.NewIndex) = FlexMousePointerScrollNE
+.AddItem FlexMousePointerScrollSW & " - Scroll SW"
+.ItemData(.NewIndex) = FlexMousePointerScrollSW
+.AddItem FlexMousePointerScrollSE & " - Scroll SE"
+.ItemData(.NewIndex) = FlexMousePointerScrollSE
+.AddItem FlexMousePointerScrollAll & " - Scroll All"
+.ItemData(.NewIndex) = FlexMousePointerScrollAll
 .AddItem FlexMousePointerCustom & " - Custom"
 .ItemData(.NewIndex) = FlexMousePointerCustom
 End With
