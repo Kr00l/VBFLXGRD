@@ -45,7 +45,7 @@ Private Const PTR_SIZE As Long = 4
 
 #If False Then
 Private FlexOLEDropModeNone, FlexOLEDropModeManual
-Private FlexMousePointerDefault, FlexMousePointerArrow, FlexMousePointerCrosshair, FlexMousePointerIbeam, FlexMousePointerHand, FlexMousePointerSizePointer, FlexMousePointerSizeNESW, FlexMousePointerSizeNS, FlexMousePointerSizeNWSE, FlexMousePointerSizeWE, FlexMousePointerUpArrow, FlexMousePointerHourglass, FlexMousePointerNoDrop, FlexMousePointerArrowHourglass, FlexMousePointerArrowQuestion, FlexMousePointerSizeAll, FlexMousePointerArrowCD, FlexMousePointerCustom
+Private FlexMousePointerDefault, FlexMousePointerArrow, FlexMousePointerCrosshair, FlexMousePointerIbeam, FlexMousePointerHand, FlexMousePointerSizePointer, FlexMousePointerSizeNESW, FlexMousePointerSizeNS, FlexMousePointerSizeNWSE, FlexMousePointerSizeWE, FlexMousePointerUpArrow, FlexMousePointerHourglass, FlexMousePointerNoDrop, FlexMousePointerArrowHourglass, FlexMousePointerArrowQuestion, FlexMousePointerSizeAll, FlexMousePointerArrowCD, FlexMousePointerPin, FlexMousePointerPerson, FlexMousePointerPen, FlexMousePointerScrollN, FlexMousePointerScrollS, FlexMousePointerScrollE, FlexMousePointerScrollW, FlexMousePointerScrollNS, FlexMousePointerScrollWE, FlexMousePointerScrollNW, FlexMousePointerScrollNE, FlexMousePointerScrollSW, FlexMousePointerScrollSE, FlexMousePointerScrollAll, FlexMousePointerCustom
 Private FlexRightToLeftModeNoControl, FlexRightToLeftModeVBAME, FlexRightToLeftModeSystemLocale, FlexRightToLeftModeUserLocale, FlexRightToLeftModeOSLanguage
 Private FlexBorderStyleNone, FlexBorderStyleSingle, FlexBorderStyleThin, FlexBorderStyleSunken, FlexBorderStyleRaised
 Private FlexLeftRightAlignmentLeft, FlexLeftRightAlignmentRight
@@ -127,6 +127,20 @@ FlexMousePointerArrowHourglass = 13
 FlexMousePointerArrowQuestion = 14
 FlexMousePointerSizeAll = 15
 FlexMousePointerArrowCD = 16
+FlexMousePointerPin = 17
+FlexMousePointerPerson = 18
+FlexMousePointerPen = 19
+FlexMousePointerScrollN = 20
+FlexMousePointerScrollS = 21
+FlexMousePointerScrollE = 22
+FlexMousePointerScrollW = 23
+FlexMousePointerScrollNS = 24
+FlexMousePointerScrollWE = 25
+FlexMousePointerScrollNW = 26
+FlexMousePointerScrollNE = 27
+FlexMousePointerScrollSW = 28
+FlexMousePointerScrollSE = 29
+FlexMousePointerScrollAll = 30
 FlexMousePointerCustom = 99
 End Enum
 Public Enum FlexRightToLeftModeConstants
@@ -3611,7 +3625,7 @@ End Property
 
 Public Property Let MousePointer(ByVal Value As FlexMousePointerConstants)
 Select Case Value
-    Case 0 To 16, 99
+    Case 0 To 30, 99
         PropMousePointer = Value
     Case Else
         Err.Raise 380
@@ -4267,6 +4281,7 @@ AllowMultiSelection = PropAllowMultiSelection
 End Property
 
 Public Property Let AllowMultiSelection(ByVal Value As Boolean)
+If PropAllowMultiSelection = Value Then Exit Property
 If Value = True Then
     Select Case PropSelectionMode
         Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
@@ -4280,9 +4295,6 @@ If Value = True Then
     End Select
 End If
 PropAllowMultiSelection = Value
-Dim RCP As TROWCOLPARAMS
-With RCP
-.Mask = RCPM_ROWSEL Or RCPM_COLSEL
 If PropAllowMultiSelection = False Then
     VBFlexGridInvertSelection = False
     VBFlexGridExpandSelectedRows = False
@@ -4291,21 +4303,10 @@ If PropAllowMultiSelection = False Then
         VBFlexGridMultiSelChangeTimer = False
     End If
     Call ClearSelectedRows
-    .Flags = .Flags Or RCPF_FORCEREDRAW
+Else
+    Call InitSelectedRows
 End If
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        .RowSel = VBFlexGridRowSel
-        .ColSel = VBFlexGridColSel
-    Case FlexSelectionModeByRow
-        .RowSel = VBFlexGridRowSel
-        .ColSel = (PropCols - 1)
-    Case FlexSelectionModeByColumn
-        .RowSel = (PropRows - 1)
-        .ColSel = VBFlexGridColSel
-End Select
-Call SetRowColParams(RCP)
-End With
+Call RedrawGrid
 UserControl.PropertyChanged "AllowMultiSelection"
 End Property
 
@@ -4316,22 +4317,6 @@ End Property
 
 Public Property Let AllowSelection(ByVal Value As Boolean)
 PropAllowSelection = Value
-Dim RCP As TROWCOLPARAMS
-With RCP
-.Mask = RCPM_ROWSEL Or RCPM_COLSEL
-Select Case PropSelectionMode
-    Case FlexSelectionModeFree, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
-        .RowSel = VBFlexGridRowSel
-        .ColSel = VBFlexGridColSel
-    Case FlexSelectionModeByRow
-        .RowSel = VBFlexGridRowSel
-        .ColSel = (PropCols - 1)
-    Case FlexSelectionModeByColumn
-        .RowSel = (PropRows - 1)
-        .ColSel = VBFlexGridColSel
-End Select
-Call SetRowColParams(RCP)
-End With
 UserControl.PropertyChanged "AllowSelection"
 End Property
 
@@ -20373,7 +20358,7 @@ If PropAllowMultiSelection = True Then
             Select Case .Message
                 Case WM_MOUSEMOVE
                     MultiSelChanged = ExpandSelectedRows()
-                Case WM_LBUTTONUP
+                Case WM_LBUTTONUP, WM_CAPTURECHANGED
                     If VBFlexGridExpandSelectedRows = True Then
                         VBFlexGridExpandSelectedRows = False
                         If PropAllowSelection = True Then
@@ -23085,15 +23070,15 @@ If VBFlexGridMouseMoveChanged = False And VBFlexGridMouseMoveRow > -1 And VBFlex
         .Mask = .Mask Or RCPM_TOPROW Or RCPM_LEFTCOL
         .TopRow = VBFlexGridTopRow
         .LeftCol = VBFlexGridLeftCol
-        If .TopRow <= VBFlexGridRow Then
-            If VBFlexGridRow > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-                .TopRow = VBFlexGridRow - GetRowsPerPageRev(VBFlexGridRow) + 1
-            End If
+        If .TopRow > VBFlexGridRow Then
+            If VBFlexGridRow >= (PropFixedRows + PropFrozenRows) Then .TopRow = VBFlexGridRow
+        ElseIf VBFlexGridRow > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+            .TopRow = VBFlexGridRow - GetRowsPerPageRev(Row) + 1
         End If
-        If .LeftCol <= VBFlexGridCol Then
-            If VBFlexGridCol > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-                .LeftCol = VBFlexGridCol - GetColsPerPageRev(VBFlexGridCol) + 1
-            End If
+        If .LeftCol > VBFlexGridCol Then
+            If VBFlexGridCol >= (PropFixedCols + PropFrozenCols) Then .LeftCol = VBFlexGridCol
+        ElseIf VBFlexGridCol > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+            .LeftCol = VBFlexGridCol - GetColsPerPageRev(Col) + 1
         End If
     End If
 End If
@@ -25560,7 +25545,7 @@ End Select
 End Function
 
 Private Function WindowProcControl(ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
-Dim HTI As THITTESTINFO, Pos As Long, Cancel As Boolean
+Dim Pos As Long, Cancel As Boolean
 Select Case wMsg
     Case WM_SETFOCUS
         If wParam <> UserControl.hWnd Then SetFocusAPI UserControl.hWnd: Exit Function
@@ -25609,14 +25594,14 @@ Select Case wMsg
             VBFlexGridDoubleBufferDC = NULL_PTR
         End If
         GetClientRect hWnd, VBFlexGridClientRect
-        Dim RCP As TROWCOLPARAMS
-        With RCP
+        Dim RCP1 As TROWCOLPARAMS
+        With RCP1
         .Mask = RCPM_TOPROW Or RCPM_LEFTCOL
         .Flags = RCPF_CHECKTOPROW Or RCPF_CHECKLEFTCOL Or RCPF_FORCETOPROWMASK Or RCPF_FORCELEFTCOLMASK Or RCPF_SETSCROLLBARS
         .Message = WM_SIZE
         .TopRow = VBFlexGridTopRow
         .LeftCol = VBFlexGridLeftCol
-        Call SetRowColParams(RCP)
+        Call SetRowColParams(RCP1)
         End With
         If PropShowInfoTips = True Or PropShowLabelTips = True Then Call UpdateToolTipRect
     Case WM_HSCROLL, WM_VSCROLL
@@ -25812,12 +25797,13 @@ Select Case wMsg
         End If
     Case WM_SETCURSOR
         If LoWord(CLng(lParam)) = HTCLIENT Then
-            With HTI
+            Dim HTI1 As THITTESTINFO
+            With HTI1
             Pos = GetMessagePos()
             .PT.X = Get_X_lParam(Pos)
             .PT.Y = Get_Y_lParam(Pos)
             ScreenToClient hWnd, .PT
-            Call GetHitTestInfo(HTI)
+            Call GetHitTestInfo(HTI1)
             Select Case .HitResult
                 Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom
                     SetCursor LoadCursor(NULL_PTR, MousePointerID(vbSizeNS))
@@ -26105,17 +26091,18 @@ Select Case wMsg
         WindowProcControl = 0
         Exit Function
     Case WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_RBUTTONDOWN
-        With HTI
+        Dim HTI2 As THITTESTINFO
+        With HTI2
         .PT.X = Get_X_lParam(lParam)
         .PT.Y = Get_Y_lParam(lParam)
-        Call GetHitTestInfo(HTI)
+        Call GetHitTestInfo(HTI2)
         Select Case wMsg
             Case WM_LBUTTONDOWN
                 RaiseEvent BeforeMouseDown(vbLeftButton, GetShiftStateFromParam(wParam), UserControl.ScaleX(.PT.X, vbPixels, vbTwips), UserControl.ScaleY(.PT.Y, vbPixels, vbTwips), Cancel)
                 If Cancel = False Then
                     SetCapture hWnd
                     If GetFocus() <> hWnd Then SetFocusAPI UserControl.hWnd
-                    Cancel = ProcessLButtonDown(GetShiftStateFromParam(wParam), HTI)
+                    Cancel = ProcessLButtonDown(GetShiftStateFromParam(wParam), HTI2)
                 End If
             Case WM_MBUTTONDOWN
                 RaiseEvent BeforeMouseDown(vbMiddleButton, GetShiftStateFromParam(wParam), UserControl.ScaleX(.PT.X, vbPixels, vbTwips), UserControl.ScaleY(.PT.Y, vbPixels, vbTwips), Cancel)
@@ -26129,7 +26116,7 @@ Select Case wMsg
             WindowProcControl = 0
             Exit Function
         Else
-            With HTI
+            With HTI2
             If .HitResult = FlexHitResultCell Then
                 VBFlexGridCellClickRow = .HitRow
                 VBFlexGridCellClickCol = .HitCol
@@ -26180,10 +26167,11 @@ Select Case wMsg
     Case WM_MOUSEMOVE
         Call ProcessMouseMove(GetMouseStateFromParam(wParam), Get_X_lParam(lParam), Get_Y_lParam(lParam))
         If PropMouseTrack = True Then
-            With HTI
+            Dim HTI3 As THITTESTINFO
+            With HTI3
             .PT.X = Get_X_lParam(lParam)
             .PT.Y = Get_Y_lParam(lParam)
-            Call GetHitTestInfo(HTI)
+            Call GetHitTestInfo(HTI3)
             If .HitRow > -1 And .HitCol > -1 Then
                 If VBFlexGridHotRow <> .HitRow Or VBFlexGridHotCol <> .HitCol Or VBFlexGridHotHitResult <> .HitResult Then
                     VBFlexGridHotRow = .HitRow
@@ -26237,6 +26225,11 @@ Select Case wMsg
             VBFlexGridDividerDragDirty = False
             Call RedrawGrid
         End If
+        If VBFlexGridExpandSelectedRows = True Then
+            Dim RCP2 As TROWCOLPARAMS
+            RCP2.Message = WM_CAPTURECHANGED
+            Call SetRowColParams(RCP2)
+        End If
     Case WM_NOTIFY
         Dim NM As NMHDR
         CopyMemory NM, ByVal lParam, LenB(NM)
@@ -26250,13 +26243,14 @@ Select Case wMsg
                     ShowTipCol = -1
                     ShowInfoTip = False
                     LBLI.Flags = 0
-                    Dim Text As String
-                    With HTI
+                    Dim HTI4 As THITTESTINFO
+                    With HTI4
                     Pos = GetMessagePos()
                     .PT.X = Get_X_lParam(Pos)
                     .PT.Y = Get_Y_lParam(Pos)
                     ScreenToClient hWnd, .PT
-                    Call GetHitTestInfo(HTI)
+                    Call GetHitTestInfo(HTI4)
+                    Dim Text As String
                     If .HitRow > -1 And .HitCol > -1 And .HitResult = FlexHitResultCell Then
                         If PropShowLabelTips = True Then Call GetLabelInfo(.HitRow, .HitCol, LBLI)
                         If (LBLI.Flags And LBLI_VALID) = LBLI_VALID And Not (LBLI.Flags And LBLI_UNFOLDED) = LBLI_UNFOLDED And Not (LBLI.Flags And LBLI_HIDDEN) = LBLI_HIDDEN Then
@@ -26535,12 +26529,13 @@ Select Case wMsg
         End If
         Call RedrawGrid
     Case WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK
-        With HTI
+        Dim HTI5 As THITTESTINFO
+        With HTI5
         Pos = GetMessagePos()
         .PT.X = Get_X_lParam(Pos)
         .PT.Y = Get_Y_lParam(Pos)
         ScreenToClient hWnd, .PT
-        Call GetHitTestInfo(HTI)
+        Call GetHitTestInfo(HTI5)
         If wMsg = WM_LBUTTONDBLCLK Then
             Select Case .HitResult
                 Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
@@ -26628,10 +26623,11 @@ Select Case wMsg
                 End If
                 RaiseEvent MouseMove(GetMouseStateFromParam(wParam), GetShiftStateFromParam(wParam), X, Y)
             Case WM_LBUTTONUP, WM_MBUTTONUP, WM_RBUTTONUP
-                With HTI
+                Dim HTI6 As THITTESTINFO
+                With HTI6
                 .PT.X = Get_X_lParam(lParam)
                 .PT.Y = Get_Y_lParam(lParam)
-                Call GetHitTestInfo(HTI)
+                Call GetHitTestInfo(HTI6)
                 If .HitResult = FlexHitResultCell And VBFlexGridIsClick = True Then
                     If VBFlexGridCellClickRow = .HitRow And VBFlexGridCellClickCol = .HitCol Then
                         Select Case wMsg
