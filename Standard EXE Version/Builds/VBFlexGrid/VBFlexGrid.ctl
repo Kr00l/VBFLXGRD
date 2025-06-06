@@ -23070,15 +23070,15 @@ If VBFlexGridMouseMoveChanged = False And VBFlexGridMouseMoveRow > -1 And VBFlex
         .Mask = .Mask Or RCPM_TOPROW Or RCPM_LEFTCOL
         .TopRow = VBFlexGridTopRow
         .LeftCol = VBFlexGridLeftCol
-        If .TopRow > VBFlexGridRow Then
-            If VBFlexGridRow >= (PropFixedRows + PropFrozenRows) Then .TopRow = VBFlexGridRow
-        ElseIf VBFlexGridRow > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
-            .TopRow = VBFlexGridRow - GetRowsPerPageRev(Row) + 1
+        If .TopRow <= VBFlexGridRow Then
+            If VBFlexGridRow > (.TopRow + GetRowsPerPage(.TopRow) - 1) Then
+                .TopRow = VBFlexGridRow - GetRowsPerPageRev(VBFlexGridRow) + 1
+            End If
         End If
-        If .LeftCol > VBFlexGridCol Then
-            If VBFlexGridCol >= (PropFixedCols + PropFrozenCols) Then .LeftCol = VBFlexGridCol
-        ElseIf VBFlexGridCol > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
-            .LeftCol = VBFlexGridCol - GetColsPerPageRev(Col) + 1
+        If .LeftCol <= VBFlexGridCol Then
+            If VBFlexGridCol > (.LeftCol + GetColsPerPage(.LeftCol) - 1) Then
+                .LeftCol = VBFlexGridCol - GetColsPerPageRev(VBFlexGridCol) + 1
+            End If
         End If
     End If
 End If
