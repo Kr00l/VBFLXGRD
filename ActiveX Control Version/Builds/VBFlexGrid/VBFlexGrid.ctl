@@ -20357,7 +20357,7 @@ If PropAllowMultiSelection = True Then
         Case FlexSelectionModeByRow, FlexSelectionModeFreeByRow
             Select Case .Message
                 Case WM_MOUSEMOVE
-                    MultiSelChanged = ExpandSelectedRows()
+                    If VBFlexGridExpandSelectedRows = True Then MultiSelChanged = ExpandSelectedRows()
                 Case WM_LBUTTONUP, WM_CAPTURECHANGED
                     If VBFlexGridExpandSelectedRows = True Then
                         VBFlexGridExpandSelectedRows = False
