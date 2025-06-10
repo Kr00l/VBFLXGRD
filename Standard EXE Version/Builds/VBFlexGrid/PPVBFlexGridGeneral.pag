@@ -681,6 +681,8 @@ With ComboHighLight
 .ItemData(.NewIndex) = FlexHighLightAlways
 .AddItem FlexHighLightWithFocus & " - WithFocus"
 .ItemData(.NewIndex) = FlexHighLightWithFocus
+.AddItem FlexHighLightAlwaysFocusRect & " - AlwaysFocusRect"
+.ItemData(.NewIndex) = FlexHighLightAlwaysFocusRect
 End With
 With ComboFocusRect
 .AddItem FlexFocusRectNone & " - None"
