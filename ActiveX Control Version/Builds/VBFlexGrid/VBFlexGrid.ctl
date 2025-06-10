@@ -54,7 +54,7 @@ Private FlexAllowUserFreezingNone, FlexAllowUserFreezingColumns, FlexAllowUserFr
 Private FlexAllowUserResizingNone, FlexAllowUserResizingColumns, FlexAllowUserResizingRows, FlexAllowUserResizingBoth
 Private FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn, FlexSelectionModeFreeByRow, FlexSelectionModeFreeByColumn
 Private FlexFillStyleSingle, FlexFillStyleRepeat
-Private FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus
+Private FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus, FlexHighLightAlwaysFocusRect
 Private FlexFocusRectNone, FlexFocusRectLight, FlexFocusRectHeavy, FlexFocusRectFlat
 Private FlexGridLineNone, FlexGridLineFlat, FlexGridLineInset, FlexGridLineRaised, FlexGridLineDashes, FlexGridLineDots, FlexGridLineFlatHorz, FlexGridLineInsetHorz, FlexGridLineRaisedHorz, FlexGridLineDashesHorz, FlexGridLineDotsHorz, FlexGridLineFlatVert, FlexGridLineInsetVert, FlexGridLineRaisedVert, FlexGridLineDashesVert, FlexGridLineDotsVert
 Private FlexTextStyleFlat, FlexTextStyleRaised, FlexTextStyleInset, FlexTextStyleRaisedLight, FlexTextStyleInsetLight
@@ -193,6 +193,7 @@ Public Enum FlexHighLightConstants
 FlexHighLightNever = 0
 FlexHighLightAlways = 1
 FlexHighLightWithFocus = 2
+FlexHighLightAlwaysFocusRect = 3
 End Enum
 Public Enum FlexFocusRectConstants
 FlexFocusRectNone = 0
@@ -4510,7 +4511,7 @@ End Property
 
 Public Property Let HighLight(ByVal Value As FlexHighLightConstants)
 Select Case Value
-    Case FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus
+    Case FlexHighLightNever, FlexHighLightAlways, FlexHighLightWithFocus, FlexHighLightAlwaysFocusRect
         PropHighLight = Value
     Case Else
         Err.Raise 380
@@ -16090,7 +16091,7 @@ End If
 With VBFlexGridDrawInfo.SelRange
 If PropAllowMultiSelection = False Then
     Select Case PropHighLight
-        Case FlexHighLightAlways
+        Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
             If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
         Case FlexHighLightWithFocus
             If VBFlexGridFocused = True Then
@@ -16099,7 +16100,7 @@ If PropAllowMultiSelection = False Then
     End Select
     If iCol > (PropFixedCols - 1) Then
         Select Case PropHighLight
-            Case FlexHighLightAlways
+            Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
                 If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
                     If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
                 End If
@@ -16114,7 +16115,7 @@ If PropAllowMultiSelection = False Then
 Else
     If iCol > (PropFixedCols - 1) Then
         Select Case PropHighLight
-            Case FlexHighLightAlways
+            Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
                 If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
             Case FlexHighLightWithFocus
                 If VBFlexGridFocused = True Then
@@ -16124,7 +16125,7 @@ Else
     End If
     If VBFlexGridCaptureRow > -1 And VBFlexGridCaptureCol > -1 Then
         Select Case PropHighLight
-            Case FlexHighLightAlways
+            Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
                 If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then
                     If VBFlexGridInvertSelection = False Then
                         If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
@@ -16147,7 +16148,9 @@ Else
 End If
 End With
 If PropFocusRect <> FlexFocusRectNone Then
-    If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
+    If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then
+        If PropHighLight <> FlexHighLightAlwaysFocusRect Or VBFlexGridFocused = True Then ItemState = ItemState Or ODS_FOCUS
+    End If
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 If VBFlexGridDropHighlight > -1 Then
@@ -16885,7 +16888,7 @@ If PropAllowMultiSelection = False Then
     Select Case PropSelectionMode
         Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn
             Select Case PropHighLight
-                Case FlexHighLightAlways
+                Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
                     If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
                 Case FlexHighLightWithFocus
                     If VBFlexGridFocused = True Then
@@ -16894,7 +16897,7 @@ If PropAllowMultiSelection = False Then
             End Select
         Case FlexSelectionModeFreeByRow
             Select Case PropHighLight
-                Case FlexHighLightAlways
+                Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
                     If (iRow >= .TopRow And iRow <= .BottomRow) Then ItemState = ItemState Or ODS_SELECTED
                 Case FlexHighLightWithFocus
                     If VBFlexGridFocused = True Then
@@ -16903,7 +16906,7 @@ If PropAllowMultiSelection = False Then
             End Select
         Case FlexSelectionModeFreeByColumn
             Select Case PropHighLight
-                Case FlexHighLightAlways
+                Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
                     If (iCol >= .LeftCol And iCol <= .RightCol) Then ItemState = ItemState Or ODS_SELECTED
                 Case FlexHighLightWithFocus
                     If VBFlexGridFocused = True Then
@@ -16912,7 +16915,7 @@ If PropAllowMultiSelection = False Then
             End Select
     End Select
     Select Case PropHighLight
-        Case FlexHighLightAlways
+        Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
             If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then
                 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
             End If
@@ -16925,7 +16928,7 @@ If PropAllowMultiSelection = False Then
     End Select
 Else
     Select Case PropHighLight
-        Case FlexHighLightAlways
+        Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
             If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_SELECTED) = RWIS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
         Case FlexHighLightWithFocus
             If VBFlexGridFocused = True Then
@@ -16936,7 +16939,7 @@ Else
         Select Case PropSelectionMode
             Case FlexSelectionModeFree, FlexSelectionModeByRow, FlexSelectionModeByColumn
                 Select Case PropHighLight
-                    Case FlexHighLightAlways
+                    Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
                         If (iCol >= .LeftCol And iCol <= .RightCol) And (iRow >= .TopRow And iRow <= .BottomRow) Then
                             If VBFlexGridInvertSelection = False Then
                                 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
@@ -16957,7 +16960,7 @@ Else
                 End Select
             Case FlexSelectionModeFreeByRow
                 Select Case PropHighLight
-                    Case FlexHighLightAlways
+                    Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
                         If (iRow >= .TopRow And iRow <= .BottomRow) Then
                             If VBFlexGridInvertSelection = False Then
                                 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
@@ -16978,7 +16981,7 @@ Else
                 End Select
             Case FlexSelectionModeFreeByColumn
                 Select Case PropHighLight
-                    Case FlexHighLightAlways
+                    Case FlexHighLightAlways, FlexHighLightAlwaysFocusRect
                         If (iCol >= .LeftCol And iCol <= .RightCol) Then
                             If VBFlexGridInvertSelection = False Then
                                 If Not (ItemState And ODS_SELECTED) = ODS_SELECTED Then ItemState = ItemState Or ODS_SELECTED
@@ -17002,7 +17005,9 @@ Else
 End If
 End With
 If PropFocusRect <> FlexFocusRectNone Then
-    If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then ItemState = ItemState Or ODS_FOCUS
+    If (iRow = VBFlexGridRow And iCol = VBFlexGridCol) Then
+        If PropHighLight <> FlexHighLightAlwaysFocusRect Or VBFlexGridFocused = True Then ItemState = ItemState Or ODS_FOCUS
+    End If
 End If
 If VBFlexGridFocused = False Then ItemState = ItemState Or ODS_NOFOCUSRECT
 If VBFlexGridDropHighlight > -1 Then
