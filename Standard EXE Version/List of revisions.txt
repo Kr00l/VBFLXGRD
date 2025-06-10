@@ -1,5 +1,10 @@
 List of revisions:
 
+10-Jun-2025
+- Included enum FlexHighLightAlwaysFocusRect for the HighLight property. (FlexHighLightAlways is default)
+  If new enum set and the control does not have the focus then the focus rect is also drawn highlighted. (like vsFlexGrid behavior)
+  MS(H)FlexGrid does not behave like this. This new enum allows to support both behaviors. (default MS(H)FlexGrid behavior; vsFlexGrid cannot behave like this)
+
 05-Jun-2025
 - AllowSelection/AllowMultiSelection property does not enforce anymore possible selection change. (like vsFlexGrid)
   As the MS ListView does also not enforce it when turning off MultiSelect property.
