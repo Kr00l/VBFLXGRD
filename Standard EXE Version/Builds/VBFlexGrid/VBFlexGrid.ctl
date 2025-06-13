@@ -1714,6 +1714,7 @@ Private Const LB_GETCOUNT As Long = &H18B
 Private Const LB_SETITEMHEIGHT As Long = &H1A0
 Private Const LB_GETITEMHEIGHT As Long = &H1A1
 Private Const LB_FINDSTRINGEXACT As Long = &H1A2
+Private Const LB_CARETON As Long = &H1A3 ' Undocumented
 Private Const LBS_NOTIFY As Long = &H1
 Private Const LBS_SORT As Long = &H2
 Private Const LBS_OWNERDRAWFIXED As Long = &H10
@@ -6179,6 +6180,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                     VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), NULL_PTR, dwStyle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, NULL_PTR, App.hInstance, ByVal NULL_PTR)
                     If VBFlexGridComboListHandle <> NULL_PTR Then
                         SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
+                        If VBFlexGridComboModeActive = FlexComboModeDropDown Then SendMessage VBFlexGridComboListHandle, LB_CARETON, 0, ByVal 0&
                         Dim hDC As LongPtr, Size As SIZEAPI, CX As Long
                         hDC = GetDC(VBFlexGridComboListHandle)
                         SelectObject hDC, hFont
@@ -6294,7 +6296,6 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                         End If
                         If (CX + 6) > (WndRect.Right - WndRect.Left) Then WndRect.Right = WndRect.Left + (CX + 6)
                         MoveWindow VBFlexGridComboListHandle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, Height + 2, 0
-                        SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, SendMessage(VBFlexGridComboListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Text)), ByVal 0&
                     End If
                 Case FlexComboModeCalendar
                     If VBFlexGridComboCalendarRegistered = False Then
@@ -6356,7 +6357,10 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     If VBFlexGridComboListHandle <> NULL_PTR Then Call FlexSetSubclass(VBFlexGridComboListHandle, Me, 4)
     If VBFlexGridComboCalendarHandle <> NULL_PTR Then Call FlexSetSubclass(VBFlexGridComboCalendarHandle, Me, 5)
     SetWindowPos VBFlexGridEditHandle, NULL_PTR, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_FRAMECHANGED
-    If VBFlexGridComboListHandle <> NULL_PTR And VBFlexGridComboMultiColumn.Header.Count > 0 Then SetWindowPos VBFlexGridComboListHandle, NULL_PTR, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_FRAMECHANGED
+    If VBFlexGridComboListHandle <> NULL_PTR Then
+        If VBFlexGridComboMultiColumn.Header.Count > 0 Then SetWindowPos VBFlexGridComboListHandle, NULL_PTR, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_FRAMECHANGED
+        SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, SendMessage(VBFlexGridComboListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Text)), ByVal 0&
+    End If
     RaiseEvent EditSetupWindow(VBFlexGridEditBackColor, VBFlexGridEditForeColor)
     VBFlexGridEditBackColorBrush = CreateSolidBrush(WinColor(VBFlexGridEditBackColor))
     ShowWindow VBFlexGridEditHandle, SW_SHOW
@@ -26636,13 +26640,14 @@ Select Case wMsg
             If TextAlign <> 0 Then OldTextAlign = SetTextAlign(DIS.hDC, TextAlign)
             OldBkMode = SetBkMode(DIS.hDC, 1)
             OldTextColor = GetTextColor(DIS.hDC)
-            Dim hPen As LongPtr, hPenOld As LongPtr, i As Long, LinePoints(0 To 1) As POINTAPI
+            Dim hPen As LongPtr, hPenOld As LongPtr, i As Long, ColumnRect As RECT, LinePoints(0 To 1) As POINTAPI
             If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED And (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
                 hPen = CreatePen(PS_SOLID, 0, GetSysColor(COLOR_HIGHLIGHTTEXT))
             Else
                 hPen = CreatePen(PS_SOLID, 0, &HC0C0C0)
             End If
             If hPen <> NULL_PTR Then hPenOld = SelectObject(DIS.hDC, hPen)
+            LSet ColumnRect = DIS.RCItem
             With VBFlexGridComboMultiColumn
             For i = 0 To (.Items(DIS.ItemID).Count - 1)
                 If i = .BoundColumn Then
@@ -26661,23 +26666,23 @@ Select Case wMsg
                     End If
                 End If
                 If (TextAlign And TA_RIGHT) = 0 Then
-                    TextOut DIS.hDC, DIS.RCItem.Left + 2, DIS.RCItem.Top, StrPtr(.Items(DIS.ItemID).Column(i)), Len(.Items(DIS.ItemID).Column(i))
+                    TextOut DIS.hDC, ColumnRect.Left + 2, ColumnRect.Top, StrPtr(.Items(DIS.ItemID).Column(i)), Len(.Items(DIS.ItemID).Column(i))
                     If i < (.Items(DIS.ItemID).Count - 1) Then
-                        DIS.RCItem.Left = DIS.RCItem.Left + .MaxWidths(i) + 5
-                        LinePoints(0).X = DIS.RCItem.Left - 1
-                        LinePoints(0).Y = DIS.RCItem.Top
-                        LinePoints(1).X = DIS.RCItem.Left - 1
-                        LinePoints(1).Y = DIS.RCItem.Bottom
+                        ColumnRect.Left = ColumnRect.Left + .MaxWidths(i) + 5
+                        LinePoints(0).X = ColumnRect.Left - 1
+                        LinePoints(0).Y = ColumnRect.Top
+                        LinePoints(1).X = ColumnRect.Left - 1
+                        LinePoints(1).Y = ColumnRect.Bottom
                         Polyline DIS.hDC, LinePoints(0), 2
                     End If
                 Else
-                    TextOut DIS.hDC, DIS.RCItem.Right - 2, DIS.RCItem.Top, StrPtr(.Items(DIS.ItemID).Column(i)), Len(.Items(DIS.ItemID).Column(i))
+                    TextOut DIS.hDC, ColumnRect.Right - 2, ColumnRect.Top, StrPtr(.Items(DIS.ItemID).Column(i)), Len(.Items(DIS.ItemID).Column(i))
                     If i < (.Items(DIS.ItemID).Count - 1) Then
-                        DIS.RCItem.Right = DIS.RCItem.Right - .MaxWidths(i) - 5
-                        LinePoints(0).X = DIS.RCItem.Right + 1
-                        LinePoints(0).Y = DIS.RCItem.Top
-                        LinePoints(1).X = DIS.RCItem.Right + 1
-                        LinePoints(1).Y = DIS.RCItem.Bottom
+                        ColumnRect.Right = ColumnRect.Right - .MaxWidths(i) - 5
+                        LinePoints(0).X = ColumnRect.Right + 1
+                        LinePoints(0).Y = ColumnRect.Top
+                        LinePoints(1).X = ColumnRect.Right + 1
+                        LinePoints(1).Y = ColumnRect.Bottom
                         Polyline DIS.hDC, LinePoints(0), 2
                     End If
                 End If
