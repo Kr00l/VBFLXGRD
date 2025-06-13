@@ -1,5 +1,12 @@
 List of revisions:
 
+13-Jun-2025
+- Included the LoadArray function to load data from a variant or string array.
+  It's significantly faster for large arrays instead of doing manually via .TextMatrix.
+  To note is that RowDim/ColDim/PageDim are one-based values! (like for LBound/UBound; vsFlexGrid uses zero-based values)
+  Also there are Rows/Cols/Row/Col arguments where you can control the amount to load and where to start.
+  When RestrictRows/RestrictColumns are set to True then .Rows/.Cols cannot be increased/decreased by the function. (default False to match vsFlexGrid)
+
 10-Jun-2025
 - Included enum FlexHighLightAlwaysFocusRect for the HighLight property. (FlexHighLightAlways is default)
   If new enum set and the control does not have the focus then the focus rect is also drawn highlighted. (like vsFlexGrid behavior)
