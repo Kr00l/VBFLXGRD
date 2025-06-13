@@ -13966,11 +13966,13 @@ End Function
 
 Public Function CancelEdit() As Boolean
 Attribute CancelEdit.VB_Description = "Ends the text editing operation and discards the changes."
+Call ComboShowDropDown(False, FlexComboDropDownReasonCode)
 CancelEdit = DestroyEdit(True, FlexEditCloseModeCode)
 End Function
 
 Public Function CommitEdit() As Boolean
 Attribute CommitEdit.VB_Description = "Ends the text editing operation and saves the changes."
+Call ComboShowDropDown(False, FlexComboDropDownReasonCode)
 CommitEdit = DestroyEdit(False, FlexEditCloseModeCode)
 End Function
 
@@ -26699,7 +26701,9 @@ Select Case wMsg
             SetBkMode DIS.hDC, OldBkMode
             SetTextColor DIS.hDC, OldTextColor
             If TextAlign <> 0 Then SetTextAlign DIS.hDC, OldTextAlign
-            If (DIS.ItemState And ODS_FOCUS) = ODS_FOCUS Then DrawFocusRect DIS.hDC, DIS.RCItem
+            If (DIS.ItemState And ODS_FOCUS) = ODS_FOCUS Then
+                If Not (DIS.ItemState And ODS_NOFOCUSRECT) = ODS_NOFOCUSRECT Then DrawFocusRect DIS.hDC, DIS.RCItem
+            End If
             WindowProcControl = 1
             Exit Function
         End If
@@ -27181,7 +27185,10 @@ Select Case wMsg
     
 End Select
 WindowProcEdit = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
-If wMsg = WM_KILLFOCUS Then DestroyEdit False, FlexEditCloseModeLostFocus
+If wMsg = WM_KILLFOCUS Then
+    If VBFlexGridComboButtonHandle <> NULL_PTR And VBFlexGridComboListHandle <> NULL_PTR Then Call ComboShowDropDown(False, -1)
+    DestroyEdit False, FlexEditCloseModeLostFocus
+End If
 End Function
 
 Private Function WindowProcComboButton(ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
@@ -27487,7 +27494,7 @@ Select Case wMsg
     
 End Select
 WindowProcComboCalendar = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
-If wMsg = WM_KILLFOCUS Then Call ComboShowDropDown(False, FlexComboDropDownReasonMouse)
+If wMsg = WM_KILLFOCUS Then Call ComboShowDropDown(False, -1)
 End Function
 
 Private Function WindowProcUserControl(ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
