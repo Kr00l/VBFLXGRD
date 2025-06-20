@@ -1,5 +1,8 @@
 List of revisions:
 
+20-Jun-2025
+- Some minor internal improvements.
+
 13-Jun-2025
 - Included the LoadArray function to load data from a variant or string array.
   It's significantly faster for large arrays instead of doing manually via .TextMatrix.
