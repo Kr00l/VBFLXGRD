@@ -4100,7 +4100,21 @@ ElseIf Value <> PropRows And PropCols > 0 Then
 Else
     PropRows = Value
 End If
+If VBFlexGridDropHighlight > -1 Then
+    If VBFlexGridDropHighlightMode = FlexDropTargetModeByRow Then
+        If VBFlexGridDropHighlight > (PropRows - 1) Then VBFlexGridDropHighlight = -1
+    End If
+End If
+If VBFlexGridInsertMark > -1 Then
+    If VBFlexGridInsertMarkMode = FlexDropTargetModeByRow Then
+        If VBFlexGridInsertMark > (PropRows - 1) Then VBFlexGridInsertMark = -1: VBFlexGridInsertMarkAfter = False
+    End If
+End If
 If VBFlexGridComboCueRow > (PropRows - 1) Then VBFlexGridComboCueRow = (PropRows - 1)
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
+End If
 If PropRows > 0 And PropCols > 0 Then
     Dim RCP As TROWCOLPARAMS
     With RCP
@@ -4218,6 +4232,16 @@ ElseIf Value <> PropCols And PropRows > 0 Then
     PropCols = Value
 Else
     PropCols = Value
+End If
+If VBFlexGridDropHighlight > -1 Then
+    If VBFlexGridDropHighlightMode = FlexDropTargetModeByColumn Then
+        If VBFlexGridDropHighlight > (PropCols - 1) Then VBFlexGridDropHighlight = -1
+    End If
+End If
+If VBFlexGridInsertMark > -1 Then
+    If VBFlexGridInsertMarkMode = FlexDropTargetModeByColumn Then
+        If VBFlexGridInsertMark > (PropCols - 1) Then VBFlexGridInsertMark = -1: VBFlexGridInsertMarkAfter = False
+    End If
 End If
 If VBFlexGridComboCueCol > (PropCols - 1) Then VBFlexGridComboCueCol = (PropCols - 1)
 If PropRows > 0 And PropCols > 0 Then
@@ -6929,7 +6953,14 @@ Else
         If PropCols > 0 Then Call InitFlexGridCells
     End If
     If PropRows > 0 And PropCols > 0 Then
-        Dim Text As String, i As Long
+        Dim i As Long
+        If VBFlexGridSelectedRows > 0 Then
+            ' Erase not needed as increase of the row indices is sufficient.
+            For i = 0 To (VBFlexGridSelectedRows - 1)
+                If VBFlexGridSelectedRowIndices(i) >= IndexLong Then VBFlexGridSelectedRowIndices(i) = VBFlexGridSelectedRowIndices(i) + 1
+            Next i
+        End If
+        Dim Text As String
         Dim Pos1 As Long, Pos2 As Long, iCol As Long
         Dim CSCol As String, CSColLen As Long
         CSCol = GetClipSeparatorCol()
@@ -7050,7 +7081,7 @@ Else
     PropRows = PropRows - 1
     Dim RowsPerPage As Long
     RowsPerPage = -1
-    If PropCols > 0 Then
+    If PropRows > 0 And PropCols > 0 Then
         Dim iRow As Long, iCol As Long, Blank As TCOLS, Length As Long
         Length = LenB(Blank)
         If Index < ((PropRows - 1) + 1) Then
@@ -7065,9 +7096,25 @@ Else
         ZeroMemory ByVal VarPtr(VBFlexGridCells.Rows(((PropRows - 1) + 1))), Length
         ReDim Preserve VBFlexGridCells.Rows(0 To (PropRows - 1)) As TCOLS
         RowsPerPage = GetRowsPerPageRev(PropRows - 1)
+    Else
+        If PropCols > 0 Then Call EraseFlexGridCells
+    End If
+    If VBFlexGridDropHighlight > -1 Then
+        If VBFlexGridDropHighlightMode = FlexDropTargetModeByRow Then
+            If VBFlexGridDropHighlight > (PropRows - 1) Then VBFlexGridDropHighlight = -1
+        End If
+    End If
+    If VBFlexGridInsertMark > -1 Then
+        If VBFlexGridInsertMarkMode = FlexDropTargetModeByRow Then
+            If VBFlexGridInsertMark > (PropRows - 1) Then VBFlexGridInsertMark = -1: VBFlexGridInsertMarkAfter = False
+        End If
     End If
     If VBFlexGridComboCueRow > (PropRows - 1) Then VBFlexGridComboCueRow = (PropRows - 1)
-    If PropCols > 0 Then
+    If VBFlexGridSelectedRows > 0 Then
+        Erase VBFlexGridSelectedRowIndices()
+        VBFlexGridSelectedRows = 0
+    End If
+    If PropRows > 0 And PropCols > 0 Then
         Dim RCP As TROWCOLPARAMS
         With RCP
         .Flags = RCPF_SETSCROLLBARS Or RCPF_FORCEREDRAW
@@ -7098,6 +7145,8 @@ Else
         End If
         Call SetRowColParams(RCP)
         End With
+    Else
+        Call RedrawGrid
     End If
 End If
 End Sub
@@ -11908,8 +11957,12 @@ End If
 End Function
 
 Public Function ConstructClip(ByRef ArrRows As Variant) As String
-Attribute ConstructClip.VB_Description = "Constructs a clip string from an two-dimensional array indexed by row/col subscripts."
+Attribute ConstructClip.VB_Description = "Constructs a clip string from a two-dimensional array indexed by row/col subscripts."
+If IsEmpty(ArrRows) Then Exit Function
 If IsArray(ArrRows) Then
+    Dim LBoundRows As Long, UBoundRows As Long, LBoundCols As Long, UBoundCols As Long
+    UBoundRows = -1
+    UBoundCols = -1
     Dim Ptr As LongPtr
     CopyMemory Ptr, ByVal UnsignedAdd(VarPtr(ArrRows), 8), PTR_SIZE
     Const VT_BYREF As Integer = &H4000
@@ -11920,18 +11973,30 @@ If IsArray(ArrRows) Then
         Dim DimensionCount As Integer
         CopyMemory DimensionCount, ByVal Ptr, 2
         If DimensionCount = 2 Then
-            If VarType(ArrRows) = vbArray + vbString Then
-                Dim iRow As Long, iCol As Long
-                Dim LBoundRows As Long, UBoundRows As Long, LBoundCols As Long, UBoundCols As Long
-                Dim StrArr() As String, StrSize As Long
-                Dim CSCol As String, CSRow As String
-                LBoundRows = LBound(ArrRows, 1)
-                UBoundRows = UBound(ArrRows, 1)
-                LBoundCols = LBound(ArrRows, 2)
-                UBoundCols = UBound(ArrRows, 2)
-                If (UBoundRows - LBoundRows) > -1 And (UBoundCols - LBoundCols) > -1 Then ReDim StrArr(0 To (UBoundRows - LBoundRows), 0 To (UBoundCols - LBoundCols)) As String
-                CSCol = GetClipSeparatorCol()
-                CSRow = GetClipSeparatorRow()
+            Select Case VarType(ArrRows)
+                Case (vbArray + vbString), (vbArray + vbVariant)
+                    LBoundRows = LBound(ArrRows, 1)
+                    UBoundRows = UBound(ArrRows, 1)
+                    LBoundCols = LBound(ArrRows, 2)
+                    UBoundCols = UBound(ArrRows, 2)
+                Case Else
+                    Err.Raise 13
+            End Select
+        Else
+            Err.Raise Number:=5, Description:="Array must be double dimensioned"
+        End If
+    Else
+        Err.Raise Number:=91, Description:="Array is not allocated"
+    End If
+    If (UBoundRows - LBoundRows) > -1 And (UBoundCols - LBoundCols) > -1 Then
+        Dim StrArr() As String, StrSize As Long
+        ReDim StrArr(0 To (UBoundRows - LBoundRows), 0 To (UBoundCols - LBoundCols)) As String
+        Dim CSCol As String, CSRow As String
+        CSCol = GetClipSeparatorCol()
+        CSRow = GetClipSeparatorRow()
+        Dim iRow As Long, iCol As Long
+        Select Case VarType(ArrRows)
+            Case (vbArray + vbString)
                 For iRow = LBoundRows To UBoundRows
                     For iCol = LBoundCols To UBoundCols
                         If iCol < UBoundCols Then
@@ -11943,32 +12008,47 @@ If IsArray(ArrRows) Then
                         End If
                     Next iCol
                 Next iRow
-                For iRow = 0 To (UBoundRows - LBoundRows)
-                    For iCol = 0 To (UBoundCols - LBoundCols)
-                        StrSize = StrSize + Len(StrArr(iRow, iCol))
+            Case (vbArray + vbVariant)
+                For iRow = LBoundRows To UBoundRows
+                    For iCol = LBoundCols To UBoundCols
+                        If iCol < UBoundCols Then
+                            If Not IsNull(ArrRows(iRow, iCol)) Then
+                                StrArr(iRow + (0 - LBoundRows), iCol + (0 - LBoundCols)) = ArrRows(iRow, iCol) & CSCol
+                            Else
+                                StrArr(iRow + (0 - LBoundRows), iCol + (0 - LBoundCols)) = vbNullString & CSCol
+                            End If
+                        ElseIf iRow < UBoundRows Then
+                            If Not IsNull(ArrRows(iRow, iCol)) Then
+                                StrArr(iRow + (0 - LBoundRows), iCol + (0 - LBoundCols)) = ArrRows(iRow, iCol) & CSRow
+                            Else
+                                StrArr(iRow + (0 - LBoundRows), iCol + (0 - LBoundCols)) = vbNullString & CSRow
+                            End If
+                        Else
+                            If Not IsNull(ArrRows(iRow, iCol)) Then
+                                StrArr(iRow + (0 - LBoundRows), iCol + (0 - LBoundCols)) = ArrRows(iRow, iCol)
+                            Else
+                                StrArr(iRow + (0 - LBoundRows), iCol + (0 - LBoundCols)) = vbNullString
+                            End If
+                        End If
                     Next iCol
                 Next iRow
-                If StrSize > 0 Then
-                    ConstructClip = String$(StrSize, vbNullChar)
-                    StrSize = 1
-                    For iRow = 0 To (UBoundRows - LBoundRows)
-                        For iCol = 0 To (UBoundCols - LBoundCols)
-                            If StrSize <= Len(ConstructClip) Then Mid$(ConstructClip, StrSize, Len(StrArr(iRow, iCol))) = StrArr(iRow, iCol)
-                            StrSize = StrSize + Len(StrArr(iRow, iCol))
-                        Next iCol
-                    Next iRow
-                End If
-            Else
-                Err.Raise 13
-            End If
-        Else
-            Err.Raise Number:=5, Description:="Array must be double dimensioned"
+        End Select
+        For iRow = 0 To (UBoundRows - LBoundRows)
+            For iCol = 0 To (UBoundCols - LBoundCols)
+                StrSize = StrSize + Len(StrArr(iRow, iCol))
+            Next iCol
+        Next iRow
+        If StrSize > 0 Then
+            ConstructClip = String$(StrSize, vbNullChar)
+            StrSize = 1
+            For iRow = 0 To (UBoundRows - LBoundRows)
+                For iCol = 0 To (UBoundCols - LBoundCols)
+                    If StrSize <= Len(ConstructClip) Then Mid$(ConstructClip, StrSize, Len(StrArr(iRow, iCol))) = StrArr(iRow, iCol)
+                    StrSize = StrSize + Len(StrArr(iRow, iCol))
+                Next iCol
+            Next iRow
         End If
-    Else
-        Err.Raise Number:=91, Description:="Array is not allocated"
     End If
-ElseIf IsEmpty(ArrRows) Then
-    ConstructClip = vbNullString
 Else
     Err.Raise 380
 End If
@@ -14637,9 +14717,16 @@ If PropRows < 1 Or PropCols < 1 Then
     VBFlexGridDropHighlight = -1
     VBFlexGridInsertMark = -1
     VBFlexGridInsertMarkAfter = False
+    VBFlexGridCellClickRow = -1
+    VBFlexGridCellClickCol = -1
     VBFlexGridComboCueRow = -1
     VBFlexGridComboCueCol = -1
+    VBFlexGridComboCueClickRow = -1
+    VBFlexGridComboCueClickCol = -1
     VBFlexGridExtendLastCol = -1
+    VBFlexGridHotRow = -1
+    VBFlexGridHotCol = -1
+    VBFlexGridHotHitResult = FlexHitResultNoWhere
     Exit Sub
 End If
 Dim i As Long, j As Long
@@ -14684,9 +14771,16 @@ VBFlexGridLeftCol = PropFixedCols + PropFrozenCols
 VBFlexGridDropHighlight = -1
 VBFlexGridInsertMark = -1
 VBFlexGridInsertMarkAfter = False
+VBFlexGridCellClickRow = -1
+VBFlexGridCellClickCol = -1
 VBFlexGridComboCueRow = -1
 VBFlexGridComboCueCol = -1
+VBFlexGridComboCueClickRow = -1
+VBFlexGridComboCueClickCol = -1
 VBFlexGridExtendLastCol = GetExtendLastCol()
+VBFlexGridHotRow = -1
+VBFlexGridHotCol = -1
+VBFlexGridHotHitResult = FlexHitResultNoWhere
 End Sub
 
 Private Sub EraseFlexGridCells()
@@ -14707,14 +14801,33 @@ VBFlexGridRow = -1
 VBFlexGridCol = -1
 VBFlexGridRowSel = -1
 VBFlexGridColSel = -1
+If PropAllowMultiSelection = True Then
+    VBFlexGridInvertSelection = False
+    VBFlexGridExpandSelectedRows = False
+    If VBFlexGridMultiSelChangeTimer = True Then
+        If VBFlexGridHandle <> NULL_PTR Then KillTimer VBFlexGridHandle, IDT_MULTISELCHANGE
+        VBFlexGridMultiSelChangeTimer = False
+    End If
+    If VBFlexGridSelectedRows > 0 Then
+        Erase VBFlexGridSelectedRowIndices()
+        VBFlexGridSelectedRows = 0
+    End If
+End If
 VBFlexGridTopRow = -1
 VBFlexGridLeftCol = -1
 VBFlexGridDropHighlight = -1
 VBFlexGridInsertMark = -1
 VBFlexGridInsertMarkAfter = False
+VBFlexGridCellClickRow = -1
+VBFlexGridCellClickCol = -1
 VBFlexGridComboCueRow = -1
 VBFlexGridComboCueCol = -1
+VBFlexGridComboCueClickRow = -1
+VBFlexGridComboCueClickCol = -1
 VBFlexGridExtendLastCol = -1
+VBFlexGridHotRow = -1
+VBFlexGridHotCol = -1
+VBFlexGridHotHitResult = FlexHitResultNoWhere
 End Sub
 
 Private Sub RedrawGrid(Optional ByVal UpdateNow As Boolean)
@@ -16221,7 +16334,7 @@ If VBFlexGridInsertMark > -1 Then
     If VBFlexGridInsertMarkBrush = NULL_PTR Then VBFlexGridInsertMarkBrush = CreateSolidBrush(WinColor(PropInsertMarkColor))
     If VBFlexGridInsertMarkBrush <> NULL_PTR Then Brush = SelectObject(hDC, VBFlexGridInsertMarkBrush)
     If VBFlexGridInsertMarkMode = FlexDropTargetModeByRow Then
-        If VBFlexGridInsertMark > -1 And (VBFlexGridInsertMark <= ((PropFixedRows + PropFrozenRows) - 1) Or VBFlexGridInsertMark >= CellRange.TopRow) Then
+        If VBFlexGridInsertMark > -1 And VBFlexGridInsertMark <= (PropRows - 1) And (VBFlexGridInsertMark <= ((PropFixedRows + PropFrozenRows) - 1) Or VBFlexGridInsertMark >= CellRange.TopRow) Then
             RC.Left = 0
             RC.Top = 0
             RC.Right = VBFlexGridClientRect.Right
@@ -16246,7 +16359,7 @@ If VBFlexGridInsertMark > -1 Then
             PatBlt hDC, RC.Right - 1, RC.Top - 2, 1, 6, vbPatCopy
         End If
     ElseIf VBFlexGridInsertMarkMode = FlexDropTargetModeByColumn Then
-        If VBFlexGridInsertMark > -1 And (VBFlexGridInsertMark <= ((PropFixedCols + PropFrozenCols) - 1) Or VBFlexGridInsertMark >= CellRange.LeftCol) Then
+        If VBFlexGridInsertMark > -1 And VBFlexGridInsertMark <= (PropCols - 1) And (VBFlexGridInsertMark <= ((PropFixedCols + PropFrozenCols) - 1) Or VBFlexGridInsertMark >= CellRange.LeftCol) Then
             RC.Left = 0
             RC.Top = 0
             RC.Right = 0
