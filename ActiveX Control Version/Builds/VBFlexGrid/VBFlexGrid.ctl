@@ -8232,6 +8232,10 @@ End If
 CopyMemory ByVal VarPtr(.Rows(Value)), ByVal VarPtr(Swap), Length
 ZeroMemory ByVal VarPtr(Swap), Length
 End With
+If VBFlexGridSelectedRows > 0 Then
+    Erase VBFlexGridSelectedRowIndices()
+    VBFlexGridSelectedRows = 0
+End If
 Dim RCP As TROWCOLPARAMS
 With RCP
 .Mask = RCPM_TOPROW
@@ -24058,7 +24062,15 @@ Do
     WaitMessage
 Loop
 If AutoScroll = True Then KillTimer VBFlexGridHandle, IDT_AUTOSCROLL
-If ButtonUp = True And Dragging = True And NoDrop = False Then DoDragRowCol = TrackIndex
+If ButtonUp = True And Dragging = True And NoDrop = False Then
+    DoDragRowCol = TrackIndex
+    If Row > -1 Then
+        If VBFlexGridSelectedRows > 0 Then
+            Erase VBFlexGridSelectedRowIndices()
+            VBFlexGridSelectedRows = 0
+        End If
+    End If
+End If
 VBFlexGridDoDragRow = -1
 VBFlexGridDoDragCol = -1
 VBFlexGridDoDragRowCol = False
