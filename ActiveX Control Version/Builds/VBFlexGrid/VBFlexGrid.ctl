@@ -5120,6 +5120,10 @@ Select Case Value
                 Next iRow
             End If
         Next iCol
+        If VBFlexGridSelectedRows > 0 Then
+            Erase VBFlexGridSelectedRowIndices()
+            VBFlexGridSelectedRows = 0
+        End If
         Dim RCP As TROWCOLPARAMS
         With RCP
         .Mask = RCPM_TOPROW
