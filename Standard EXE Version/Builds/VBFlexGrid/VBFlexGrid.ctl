@@ -23914,6 +23914,21 @@ Do
                         If Dragging = False Then
                             If PtInRect(DragRect, P.X, P.Y) = 0 Then
                                 Dragging = True
+                                LSet HTI.PT = P
+                                Call GetHitTestInfo(HTI)
+                                If Row > -1 Then
+                                    If HTI.MouseRow >= PropFixedRows Then
+                                        TrackIndex = HTI.MouseRow
+                                    Else
+                                        TrackIndex = PropFixedRows
+                                    End If
+                                ElseIf Col > -1 Then
+                                    If HTI.MouseCol >= PropFixedCols Then
+                                        TrackIndex = HTI.MouseCol
+                                    Else
+                                        TrackIndex = PropFixedCols
+                                    End If
+                                End If
                                 If PtInRect(WndRect, P.X, P.Y) <> 0 Then
                                     SetCursor FlexGetDragCursor(IDC_MOVE)
                                 Else
