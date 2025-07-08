@@ -9,9 +9,9 @@ Begin VB.UserControl VBFlexGrid
    DrawStyle       =   5  'Transparent
    HasDC           =   0   'False
    PropertyPages   =   "VBFlexGrid.ctx":0000
-   ScaleHeight     =   120
+   ScaleHeight     =   180
    ScaleMode       =   3  'Pixel
-   ScaleWidth      =   160
+   ScaleWidth      =   240
    ToolboxBitmap   =   "VBFlexGrid.ctx":0072
    Begin VB.Timer TimerIncrementalSearch 
       Enabled         =   0   'False
@@ -1969,7 +1969,7 @@ Private VBFlexGridComboBoxRect As RECT
 Private VBFlexGridComboMultiColumn As TCOMBOMULTICOLUMN
 Private VBFlexGridComboCalendarRegistered As Boolean
 Private VBFlexGridCheckBoxDrawMode As FlexCheckBoxDrawModeConstants
-Private VBFlexGridWheelScrollLines As Long
+Private VBFlexGridWheelScrollLinesSystem As Long
 Private VBFlexGridFocusBorder As SIZEAPI
 Private VBFlexGridFocused As Boolean
 Private VBFlexGridNoRedraw As Boolean
@@ -2116,6 +2116,7 @@ Private PropAlwaysAllowComboCues As Boolean
 Private PropUndoLimit As Long
 Private PropFontQuality As FlexFontQualityConstants
 Private PropMultiSelChangeTime As Long
+Private PropWheelScrollLines As Long
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -2328,7 +2329,7 @@ VBFlexGridComboButtonAlignment = FlexLeftRightAlignmentRight
 VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal
 VBFlexGridComboButtonWidth = -1
 VBFlexGridCheckBoxDrawMode = FlexCheckBoxDrawModeNormal
-SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VarPtr(VBFlexGridWheelScrollLines), 0
+SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VarPtr(VBFlexGridWheelScrollLinesSystem), 0
 If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VarPtr(VBFlexGridFocusBorder.CX), 0) = 0 Then VBFlexGridFocusBorder.CX = 1
 If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VarPtr(VBFlexGridFocusBorder.CY), 0) = 0 Then VBFlexGridFocusBorder.CY = 1
 VBFlexGridExtendLastCol = -1
@@ -2456,6 +2457,7 @@ PropAlwaysAllowComboCues = False
 PropUndoLimit = 0
 PropFontQuality = FlexFontQualityDefault
 PropMultiSelChangeTime = 0
+PropWheelScrollLines = -1
 Call CreateVBFlexGrid
 End Sub
 
@@ -2574,6 +2576,7 @@ PropAlwaysAllowComboCues = .ReadProperty("AlwaysAllowComboCues", False)
 PropUndoLimit = .ReadProperty("UndoLimit", 0)
 PropFontQuality = .ReadProperty("FontQuality", FlexFontQualityDefault)
 PropMultiSelChangeTime = .ReadProperty("MultiSelChangeTime", 0)
+PropWheelScrollLines = .ReadProperty("WheelScrollLines", -1)
 End With
 Call CreateVBFlexGrid
 End Sub
@@ -2688,6 +2691,7 @@ With PropBag
 .WriteProperty "UndoLimit", PropUndoLimit, 0
 .WriteProperty "FontQuality", PropFontQuality, FlexFontQualityDefault
 .WriteProperty "MultiSelChangeTime", PropMultiSelChangeTime, 0
+.WriteProperty "WheelScrollLines", PropWheelScrollLines, -1
 End With
 End Sub
 
@@ -5672,6 +5676,24 @@ If Value < 0 Or Value > 65535 Then
 End If
 PropMultiSelChangeTime = Value
 UserControl.PropertyChanged "MultiSelChangeTime"
+End Property
+
+Public Property Get WheelScrollLines() As Long
+Attribute WheelScrollLines.VB_Description = "Returns/sets the number of lines the mouse wheel should scroll the grid window. -1 = Use system setting."
+WheelScrollLines = PropWheelScrollLines
+End Property
+
+Public Property Let WheelScrollLines(ByVal Value As Long)
+If Value < -1 Or Value > 100 Then
+    If VBFlexGridDesignMode = True Then
+        MsgBox "Invalid property value", vbCritical + vbOKOnly
+        Exit Property
+    Else
+        Err.Raise 380
+    End If
+End If
+PropWheelScrollLines = Value
+UserControl.PropertyChanged "WheelScrollLines"
 End Property
 
 Private Sub CreateVBFlexGrid()
@@ -26183,7 +26205,7 @@ Select Case wMsg
             End If
         End If
     Case WM_SETTINGCHANGE
-        SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VarPtr(VBFlexGridWheelScrollLines), 0
+        SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VarPtr(VBFlexGridWheelScrollLinesSystem), 0
         If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VarPtr(VBFlexGridFocusBorder.CX), 0) = 0 Then VBFlexGridFocusBorder.CX = 1
         If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VarPtr(VBFlexGridFocusBorder.CY), 0) = 0 Then VBFlexGridFocusBorder.CY = 1
         If VBFlexGridFocusRectPen <> NULL_PTR Then
@@ -26200,7 +26222,7 @@ Select Case wMsg
             If VBFlexGridDoubleBufferDC <> NULL_PTR Then SetLayout VBFlexGridDoubleBufferDC, IIf(VBFlexGridRTLLayout, LAYOUT_RTL, 0)
         End If
     Case WM_MOUSEWHEEL
-        If VBFlexGridWheelScrollLines > 0 Then
+        If (PropWheelScrollLines > 0) Or (VBFlexGridSystemWheelScrollLines > 0) Then
             Static WheelDelta As Long, LastWheelDelta As Long
             Dim CurrWheelDelta As Long
             CurrWheelDelta = Get_Wheel_Delta_wParam(wParam)
@@ -26208,7 +26230,13 @@ Select Case wMsg
             WheelDelta = WheelDelta + CurrWheelDelta
             If Abs(WheelDelta) >= 120 Then
                 Dim WheelDeltaPerLine As Long
-                WheelDeltaPerLine = (WheelDelta \ VBFlexGridWheelScrollLines)
+                Dim WheelScrollLines As Long
+                If PropWheelScrollLines > -1 Then
+                    WheelScrollLines = PropWheelScrollLines
+                Else
+                    WheelScrollLines = VBFlexGridWheelScrollLines
+                End If
+                WheelDeltaPerLine = (WheelDelta \ WheelScrollLines)
                 If Sgn(WheelDelta) = -1 Then
                     While WheelDelta <= WheelDeltaPerLine
                         SendMessage hWnd, WM_VSCROLL, MakeDWord(SB_LINEDOWN, 0), ByVal 0&
