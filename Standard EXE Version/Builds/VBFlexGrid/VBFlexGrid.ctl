@@ -1970,6 +1970,7 @@ Private VBFlexGridComboMultiColumn As TCOMBOMULTICOLUMN
 Private VBFlexGridComboCalendarRegistered As Boolean
 Private VBFlexGridCheckBoxDrawMode As FlexCheckBoxDrawModeConstants
 Private VBFlexGridWheelScrollLines As Long
+Private VBFlexGridWheelScrollLinesSystem As Long
 Private VBFlexGridFocusBorder As SIZEAPI
 Private VBFlexGridFocused As Boolean
 Private VBFlexGridNoRedraw As Boolean
@@ -2328,7 +2329,8 @@ VBFlexGridComboButtonAlignment = FlexLeftRightAlignmentRight
 VBFlexGridComboButtonDrawMode = FlexComboButtonDrawModeNormal
 VBFlexGridComboButtonWidth = -1
 VBFlexGridCheckBoxDrawMode = FlexCheckBoxDrawModeNormal
-SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VarPtr(VBFlexGridWheelScrollLines), 0
+VBFlexGridWheelScrollLines = -1
+SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VarPtr(VBFlexGridWheelScrollLinesSystem), 0
 If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VarPtr(VBFlexGridFocusBorder.CX), 0) = 0 Then VBFlexGridFocusBorder.CX = 1
 If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VarPtr(VBFlexGridFocusBorder.CY), 0) = 0 Then VBFlexGridFocusBorder.CY = 1
 VBFlexGridExtendLastCol = -1
@@ -14678,6 +14680,17 @@ Select Case Value
 End Select
 End Property
 
+Public Property Get WheelScrollLines() As Long
+Attribute WheelScrollLines.VB_Description = "Returns/sets the number of lines the mouse wheel should scroll the flex grid. A value of -1 indicates that the system setting is used."
+Attribute WheelScrollLines.VB_MemberFlags = "400"
+WheelScrollLines = GetWheelScrollLines()
+End Property
+
+Public Property Let WheelScrollLines(ByVal Value As Long)
+If (Value < 0 Or Value > 100) And Not Value = -1 Then Err.Raise 380
+VBFlexGridWheelScrollLines = Value
+End Property
+
 Public Property Get IncrementalSearchString() As String
 Attribute IncrementalSearchString.VB_Description = "Returns the incremental search string, or an empty string if the flex grid is not in incremental search mode."
 Attribute IncrementalSearchString.VB_MemberFlags = "400"
@@ -21313,6 +21326,10 @@ If ImageIndex > 0 Then
 End If
 End Function
 
+Private Function GetWheelScrollLines() As Long
+If VBFlexGridWheelScrollLines = -1 Then GetWheelScrollLines = VBFlexGridWheelScrollLinesSystem Else GetWheelScrollLines = VBFlexGridWheelScrollLines
+End Function
+
 Private Function GetIncrementalSearchTime() As Long
 If VBFlexGridIncrementalSearch.Time = -1 Then GetIncrementalSearchTime = GetDoubleClickTime() * 2 Else GetIncrementalSearchTime = VBFlexGridIncrementalSearch.Time
 End Function
@@ -26183,7 +26200,7 @@ Select Case wMsg
             End If
         End If
     Case WM_SETTINGCHANGE
-        SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VarPtr(VBFlexGridWheelScrollLines), 0
+        SystemParametersInfo SPI_GETWHEELSCROLLLINES, 0, VarPtr(VBFlexGridWheelScrollLinesSystem), 0
         If SystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, VarPtr(VBFlexGridFocusBorder.CX), 0) = 0 Then VBFlexGridFocusBorder.CX = 1
         If SystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, VarPtr(VBFlexGridFocusBorder.CY), 0) = 0 Then VBFlexGridFocusBorder.CY = 1
         If VBFlexGridFocusRectPen <> NULL_PTR Then
@@ -26200,7 +26217,7 @@ Select Case wMsg
             If VBFlexGridDoubleBufferDC <> NULL_PTR Then SetLayout VBFlexGridDoubleBufferDC, IIf(VBFlexGridRTLLayout, LAYOUT_RTL, 0)
         End If
     Case WM_MOUSEWHEEL
-        If VBFlexGridWheelScrollLines > 0 Then
+        If GetWheelScrollLines() > 0 Then
             Static WheelDelta As Long, LastWheelDelta As Long
             Dim CurrWheelDelta As Long
             CurrWheelDelta = Get_Wheel_Delta_wParam(wParam)
@@ -26208,7 +26225,7 @@ Select Case wMsg
             WheelDelta = WheelDelta + CurrWheelDelta
             If Abs(WheelDelta) >= 120 Then
                 Dim WheelDeltaPerLine As Long
-                WheelDeltaPerLine = (WheelDelta \ VBFlexGridWheelScrollLines)
+                WheelDeltaPerLine = (WheelDelta \ GetWheelScrollLines())
                 If Sgn(WheelDelta) = -1 Then
                     While WheelDelta <= WheelDeltaPerLine
                         SendMessage hWnd, WM_VSCROLL, MakeDWord(SB_LINEDOWN, 0), ByVal 0&
