@@ -1,5 +1,8 @@
 List of revisions:
 
+16-Jul-2025
+- ToolTipText of a cell (ShowInfoTips = True) now includes check box hit result.
+
 11-Jul-2025
 - Included the WheelScrollLines run-time property.
 
