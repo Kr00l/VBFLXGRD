@@ -24876,8 +24876,22 @@ If VBFlexGridHandle <> NULL_PTR And VBFlexGridToolTipHandle <> NULL_PTR Then
             VBFlexGridToolTipHitResult = .HitResult
             SendMessage VBFlexGridToolTipHandle, TTM_POP, 0, ByVal 0&
         ElseIf VBFlexGridToolTipHitResult <> .HitResult Then
+            Dim NoPop As Boolean
+            Select Case VBFlexGridToolTipHitResult
+                Case FlexHitResultCell, FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
+                    Select Case .HitResult
+                        Case FlexHitResultCell, FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
+                            NoPop = True
+                    End Select
+                Case Else
+                    Select Case .HitResult
+                        Case FlexHitResultCell, FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
+                        Case Else
+                            NoPop = True
+                    End Select
+            End Select
             VBFlexGridToolTipHitResult = .HitResult
-            SendMessage VBFlexGridToolTipHandle, TTM_POP, 0, ByVal 0&
+            If NoPop = False Then SendMessage VBFlexGridToolTipHandle, TTM_POP, 0, ByVal 0&
         End If
     Else
         VBFlexGridToolTipRow = -1
@@ -26623,24 +26637,27 @@ Select Case wMsg
                     ScreenToClient hWnd, .PT
                     Call GetHitTestInfo(HTI4)
                     Dim Text As String
-                    If .HitRow > -1 And .HitCol > -1 And .HitResult = FlexHitResultCell Then
-                        If PropShowLabelTips = True Then Call GetLabelInfo(.HitRow, .HitCol, LBLI)
-                        If (LBLI.Flags And LBLI_VALID) = LBLI_VALID And Not (LBLI.Flags And LBLI_UNFOLDED) = LBLI_UNFOLDED And Not (LBLI.Flags And LBLI_HIDDEN) = LBLI_HIDDEN Then
-                            Call GetCellText(.HitRow, .HitCol, Text)
-                            Call GetTextDisplay(.HitRow, .HitCol, Text)
-                            If (LBLI.DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
-                                If InStr(Text, vbCr) Then Text = Replace$(Text, vbCr, vbNullString)
-                                If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbNullString)
-                            End If
-                            ShowTipRow = .HitRow
-                            ShowTipCol = .HitCol
-                            ShowInfoTip = False
-                        ElseIf PropShowInfoTips = True Then
-                            Call GetCellToolTipText(.HitRow, .HitCol, Text)
-                            ShowTipRow = .HitRow
-                            ShowTipCol = .HitCol
-                            ShowInfoTip = True
-                        End If
+                    If .HitRow > -1 And .HitCol > -1 Then
+                        Select Case .HitResult
+                            Case FlexHitResultCell, FlexHitResultCheckBox, FlexHitResultCheckBoxDisabled
+                                If PropShowLabelTips = True Then Call GetLabelInfo(.HitRow, .HitCol, LBLI)
+                                If (LBLI.Flags And LBLI_VALID) = LBLI_VALID And Not (LBLI.Flags And LBLI_UNFOLDED) = LBLI_UNFOLDED And Not (LBLI.Flags And LBLI_HIDDEN) = LBLI_HIDDEN Then
+                                    Call GetCellText(.HitRow, .HitCol, Text)
+                                    Call GetTextDisplay(.HitRow, .HitCol, Text)
+                                    If (LBLI.DrawFlags And DT_SINGLELINE) = DT_SINGLELINE Then
+                                        If InStr(Text, vbCr) Then Text = Replace$(Text, vbCr, vbNullString)
+                                        If InStr(Text, vbLf) Then Text = Replace$(Text, vbLf, vbNullString)
+                                    End If
+                                    ShowTipRow = .HitRow
+                                    ShowTipCol = .HitCol
+                                    ShowInfoTip = False
+                                ElseIf PropShowInfoTips = True Then
+                                    Call GetCellToolTipText(.HitRow, .HitCol, Text)
+                                    ShowTipRow = .HitRow
+                                    ShowTipCol = .HitCol
+                                    ShowInfoTip = True
+                                End If
+                        End Select
                     End If
                     End With
                     If Not Text = vbNullString Then
