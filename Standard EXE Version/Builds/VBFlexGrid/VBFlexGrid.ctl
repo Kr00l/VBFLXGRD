@@ -3058,6 +3058,26 @@ hWndUserControl = UserControl.hWnd
 End Property
 
 #If VBA7 Then
+Public Property Get hWndToolTip() As LongPtr
+Attribute hWndToolTip.VB_Description = "Returns a handle to a control."
+#Else
+Public Property Get hWndToolTip() As Long
+Attribute hWndToolTip.VB_Description = "Returns a handle to a control."
+#End If
+hWndToolTip = VBFlexGridToolTipHandle
+End Property
+
+#If VBA7 Then
+Public Property Get hWndScrollTip() As LongPtr
+Attribute hWndScrollTip.VB_Description = "Returns a handle to a control."
+#Else
+Public Property Get hWndScrollTip() As Long
+Attribute hWndScrollTip.VB_Description = "Returns a handle to a control."
+#End If
+hWndScrollTip = VBFlexGridScrollTipHandle
+End Property
+
+#If VBA7 Then
 Public Property Get hWndEdit() As LongPtr
 Attribute hWndEdit.VB_Description = "Returns a handle to a control."
 #Else
