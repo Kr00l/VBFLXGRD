@@ -1,5 +1,8 @@
 List of revisions:
 
+31-Oct-2025
+- Included hWndToolTip/hWndScrollTip read-only run-time property.
+
 16-Jul-2025
 - ToolTipText of a cell (ShowInfoTips = True) now includes check box hit result.
 
