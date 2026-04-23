@@ -45,6 +45,7 @@ Private Const PTR_SIZE As Long = 4
 
 #If False Then
 Private FlexOLEDropModeNone, FlexOLEDropModeManual
+Private FlexFontQualityDefault, FlexFontQualityDraft, FlexFontQualityProof, FlexFontQualityNonAntiAliased, FlexFontQualityAntiAliased, FlexFontQualityClearType, FlexFontQualityClearTypeNatural
 Private FlexMousePointerDefault, FlexMousePointerArrow, FlexMousePointerCrosshair, FlexMousePointerIbeam, FlexMousePointerHand, FlexMousePointerSizePointer, FlexMousePointerSizeNESW, FlexMousePointerSizeNS, FlexMousePointerSizeNWSE, FlexMousePointerSizeWE, FlexMousePointerUpArrow, FlexMousePointerHourglass, FlexMousePointerNoDrop, FlexMousePointerArrowHourglass, FlexMousePointerArrowQuestion, FlexMousePointerSizeAll, FlexMousePointerArrowCD, FlexMousePointerPin, FlexMousePointerPerson, FlexMousePointerPen, FlexMousePointerScrollN, FlexMousePointerScrollS, FlexMousePointerScrollE, FlexMousePointerScrollW, FlexMousePointerScrollNS, FlexMousePointerScrollWE, FlexMousePointerScrollNW, FlexMousePointerScrollNE, FlexMousePointerScrollSW, FlexMousePointerScrollSE, FlexMousePointerScrollAll, FlexMousePointerCustom
 Private FlexRightToLeftModeNoControl, FlexRightToLeftModeVBAME, FlexRightToLeftModeSystemLocale, FlexRightToLeftModeUserLocale, FlexRightToLeftModeOSLanguage
 Private FlexBorderStyleNone, FlexBorderStyleSingle, FlexBorderStyleThin, FlexBorderStyleSunken, FlexBorderStyleRaised
@@ -101,13 +102,21 @@ Private FlexCheckBoxAlignmentLeftTop, FlexCheckBoxAlignmentLeftCenter, FlexCheck
 Private FlexCheckBoxDrawModeNormal, FlexCheckBoxDrawModeOwnerDraw
 Private FlexBestFitModeTextOnly, FlexBestFitModeFull, FlexBestFitModeSortArrowText, FlexBestFitModeOtherText
 Private FlexWallPaperAlignmentLeftTop, FlexWallPaperAlignmentLeftCenter, FlexWallPaperAlignmentLeftBottom, FlexWallPaperAlignmentCenterTop, FlexWallPaperAlignmentCenterCenter, FlexWallPaperAlignmentCenterBottom, FlexWallPaperAlignmentRightTop, FlexWallPaperAlignmentRightCenter, FlexWallPaperAlignmentRightBottom, FlexWallPaperAlignmentStretch, FlexWallPaperAlignmentTile
-Private FlexFontQualityDefault, FlexFontQualityDraft, FlexFontQualityProof, FlexFontQualityNonAntiAliased, FlexFontQualityAntiAliased, FlexFontQualityClearType, FlexFontQualityClearTypeNatural
 Private FlexMetricDividerSpacing, FlexMetricTextPadding, FlexMetricCellSpacing, FlexMetricScrollBarSize, FlexMetricCheckBoxSize
 Private FlexDataSourceUnboundFixedColumns, FlexDataSourceNoData, FlexDataSourceNoFieldNames, FlexDataSourceToolTipText, FlexDataSourceChecked
 #End If
 Public Enum FlexOLEDropModeConstants
 FlexOLEDropModeNone = vbOLEDropNone
 FlexOLEDropModeManual = vbOLEDropManual
+End Enum
+Public Enum FlexFontQualityConstants
+FlexFontQualityDefault = 0
+FlexFontQualityDraft = 1
+FlexFontQualityProof = 2
+FlexFontQualityNonAntiAliased = 3
+FlexFontQualityAntiAliased = 4
+FlexFontQualityClearType = 5
+FlexFontQualityClearTypeNatural = 6
 End Enum
 Public Enum FlexMousePointerConstants
 FlexMousePointerDefault = 0
@@ -588,15 +597,6 @@ FlexWallPaperAlignmentRightCenter = 7
 FlexWallPaperAlignmentRightBottom = 8
 FlexWallPaperAlignmentStretch = 9
 FlexWallPaperAlignmentTile = 10
-End Enum
-Public Enum FlexFontQualityConstants
-FlexFontQualityDefault = 0
-FlexFontQualityDraft = 1
-FlexFontQualityProof = 2
-FlexFontQualityNonAntiAliased = 3
-FlexFontQualityAntiAliased = 4
-FlexFontQualityClearType = 5
-FlexFontQualityClearTypeNatural = 6
 End Enum
 Public Enum FlexMetricConstants
 FlexMetricDividerSpacing = 0
@@ -2024,6 +2024,7 @@ Private WithEvents PropFont As StdFont
 Attribute PropFont.VB_VarHelpID = -1
 Private WithEvents PropFontFixed As StdFont
 Attribute PropFontFixed.VB_VarHelpID = -1
+Private PropFontQuality As FlexFontQualityConstants
 Private PropVisualStyles As Boolean
 Private PropBackColor As OLE_COLOR
 Private PropBackColorAlt As OLE_COLOR
@@ -2116,7 +2117,6 @@ Private PropAllowIncrementalSearch As Boolean
 Private PropAllowReaderMode As Boolean
 Private PropAlwaysAllowComboCues As Boolean
 Private PropUndoLimit As Long
-Private PropFontQuality As FlexFontQualityConstants
 Private PropMultiSelChangeTime As Long
 
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(ByRef riid As OLEGuids.OLECLSID, ByRef pdwSupportedOptions As Long, ByRef pdwEnabledOptions As Long)
@@ -2361,6 +2361,7 @@ PropDataMember = vbNullString
 
 Set PropFont = Ambient.Font
 Set PropFontFixed = Nothing
+PropFontQuality = FlexFontQualityDefault
 PropVisualStyles = True
 PropBackColor = vbWindowBackground
 PropBackColorAlt = vbWindowBackground
@@ -2458,7 +2459,6 @@ PropAllowIncrementalSearch = False
 PropAllowReaderMode = False
 PropAlwaysAllowComboCues = False
 PropUndoLimit = 0
-PropFontQuality = FlexFontQualityDefault
 PropMultiSelChangeTime = 0
 Call CreateVBFlexGrid
 End Sub
@@ -2478,6 +2478,7 @@ PropDataMember = .ReadProperty("DataMember", vbNullString)
 
 Set PropFont = .ReadProperty("Font", Nothing)
 Set PropFontFixed = .ReadProperty("FontFixed", Nothing)
+PropFontQuality = .ReadProperty("FontQuality", FlexFontQualityDefault)
 PropVisualStyles = .ReadProperty("VisualStyles", True)
 PropBackColor = .ReadProperty("BackColor", vbWindowBackground)
 PropBackColorAlt = .ReadProperty("BackColorAlt", vbWindowBackground)
@@ -2577,7 +2578,6 @@ PropAllowIncrementalSearch = .ReadProperty("AllowIncrementalSearch", False)
 PropAllowReaderMode = .ReadProperty("AllowReaderMode", False)
 PropAlwaysAllowComboCues = .ReadProperty("AlwaysAllowComboCues", False)
 PropUndoLimit = .ReadProperty("UndoLimit", 0)
-PropFontQuality = .ReadProperty("FontQuality", FlexFontQualityDefault)
 PropMultiSelChangeTime = .ReadProperty("MultiSelChangeTime", 0)
 End With
 Call CreateVBFlexGrid
@@ -2594,6 +2594,7 @@ With PropBag
 
 .WriteProperty "Font", IIf(OLEFontIsEqual(PropFont, Ambient.Font) = False, PropFont, Nothing), Nothing
 .WriteProperty "FontFixed", PropFontFixed, Nothing
+.WriteProperty "FontQuality", PropFontQuality, FlexFontQualityDefault
 .WriteProperty "VisualStyles", PropVisualStyles, True
 .WriteProperty "BackColor", PropBackColor, vbWindowBackground
 .WriteProperty "BackColorAlt", PropBackColorAlt, vbWindowBackground
@@ -2692,7 +2693,6 @@ With PropBag
 .WriteProperty "AllowReaderMode", PropAllowReaderMode, False
 .WriteProperty "AlwaysAllowComboCues", PropAlwaysAllowComboCues, False
 .WriteProperty "UndoLimit", PropUndoLimit, 0
-.WriteProperty "FontQuality", PropFontQuality, FlexFontQualityDefault
 .WriteProperty "MultiSelChangeTime", PropMultiSelChangeTime, 0
 End With
 End Sub
@@ -3342,6 +3342,23 @@ Me.Refresh
 If OldFontHandle <> NULL_PTR Then DeleteObject OldFontHandle
 UserControl.PropertyChanged "FontFixed"
 End Sub
+
+Public Property Get FontQuality() As FlexFontQualityConstants
+Attribute FontQuality.VB_Description = "Returns/sets the font quality."
+FontQuality = PropFontQuality
+End Property
+
+Public Property Let FontQuality(ByVal Value As FlexFontQualityConstants)
+Select Case Value
+    Case FlexFontQualityDefault, FlexFontQualityDraft, FlexFontQualityProof, FlexFontQualityNonAntiAliased, FlexFontQualityAntiAliased, FlexFontQualityClearType, FlexFontQualityClearTypeNatural
+        PropFontQuality = Value
+    Case Else
+        Err.Raise 380
+End Select
+Set Me.Font = PropFont
+Set Me.FontFixed = PropFontFixed
+UserControl.PropertyChanged "FontQuality"
+End Property
 
 Public Property Get VisualStyles() As Boolean
 Attribute VisualStyles.VB_Description = "Returns/sets a value that determines whether the visual styles are enabled or not. Requires comctl32.dll version 6.0 or higher."
@@ -5674,23 +5691,6 @@ PropUndoLimit = Value
 Call ResetUndo
 Call ResetRedo
 UserControl.PropertyChanged "UndoLimit"
-End Property
-
-Public Property Get FontQuality() As FlexFontQualityConstants
-Attribute FontQuality.VB_Description = "Returns/sets the font quality."
-FontQuality = PropFontQuality
-End Property
-
-Public Property Let FontQuality(ByVal Value As FlexFontQualityConstants)
-Select Case Value
-    Case FlexFontQualityDefault, FlexFontQualityDraft, FlexFontQualityProof, FlexFontQualityNonAntiAliased, FlexFontQualityAntiAliased, FlexFontQualityClearType, FlexFontQualityClearTypeNatural
-        PropFontQuality = Value
-    Case Else
-        Err.Raise 380
-End Select
-Set Me.Font = PropFont
-Set Me.FontFixed = PropFontFixed
-UserControl.PropertyChanged "FontQuality"
 End Property
 
 Public Property Get MultiSelChangeTime() As Long
