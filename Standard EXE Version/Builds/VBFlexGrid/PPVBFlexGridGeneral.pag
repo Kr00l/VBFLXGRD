@@ -20,15 +20,15 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   51
-      Top             =   7680
+      TabIndex        =   7
+      Top             =   840
       Width           =   2235
    End
    Begin VB.TextBox TextUndoLimit 
       Height          =   315
       Left            =   1800
-      TabIndex        =   49
-      Top             =   7320
+      TabIndex        =   51
+      Top             =   7680
       Width           =   2235
    End
    Begin VB.CheckBox CheckAlwaysAllowComboCues 
@@ -59,8 +59,8 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   47
-      Top             =   6960
+      TabIndex        =   49
+      Top             =   7320
       Width           =   2235
    End
    Begin VB.CheckBox CheckScrollTipFollowThumb 
@@ -107,15 +107,15 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   31
-      Top             =   4080
+      TabIndex        =   33
+      Top             =   4440
       Width           =   2235
    End
    Begin VB.TextBox TextRowSortArrows 
       Height          =   315
       Left            =   1800
-      TabIndex        =   45
-      Top             =   6600
+      TabIndex        =   47
+      Top             =   6960
       Width           =   2235
    End
    Begin VB.CheckBox CheckExtendLastCol 
@@ -129,23 +129,23 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    Begin VB.TextBox TextFrozenRows 
       Height          =   315
       Left            =   1200
-      TabIndex        =   17
-      Top             =   1920
+      TabIndex        =   19
+      Top             =   2280
       Width           =   780
    End
    Begin VB.TextBox TextFrozenCols 
       Height          =   315
       Left            =   3240
-      TabIndex        =   19
-      Top             =   1920
+      TabIndex        =   21
+      Top             =   2280
       Width           =   780
    End
    Begin VB.ComboBox ComboDirectionAfterReturn 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   39
-      Top             =   5520
+      TabIndex        =   41
+      Top             =   5880
       Width           =   2235
    End
    Begin VB.CheckBox CheckWantReturn 
@@ -168,19 +168,27 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   43
-      Top             =   6240
+      TabIndex        =   45
+      Top             =   6600
       Width           =   2235
    End
    Begin VB.ComboBox ComboWrapCellBehavior 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   41
-      Top             =   5880
+      TabIndex        =   43
+      Top             =   6240
       Width           =   2235
    End
    Begin VB.ComboBox ComboTabBehavior 
+      Height          =   315
+      Left            =   1800
+      Style           =   2  'Dropdown List
+      TabIndex        =   39
+      Top             =   5520
+      Width           =   2235
+   End
+   Begin VB.ComboBox ComboRowSizingMode 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
@@ -188,7 +196,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Top             =   5160
       Width           =   2235
    End
-   Begin VB.ComboBox ComboRowSizingMode 
+   Begin VB.ComboBox ComboAllowUserResizing 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
@@ -196,15 +204,15 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Top             =   4800
       Width           =   2235
    End
-   Begin VB.ComboBox ComboAllowUserResizing 
+   Begin VB.ComboBox ComboSelectionMode 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   33
-      Top             =   4440
+      TabIndex        =   31
+      Top             =   4080
       Width           =   2235
    End
-   Begin VB.ComboBox ComboSelectionMode 
+   Begin VB.ComboBox ComboFillStyle 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
@@ -212,7 +220,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Top             =   3720
       Width           =   2235
    End
-   Begin VB.ComboBox ComboFillStyle 
+   Begin VB.ComboBox ComboFocusRect 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
@@ -220,7 +228,7 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Top             =   3360
       Width           =   2235
    End
-   Begin VB.ComboBox ComboFocusRect 
+   Begin VB.ComboBox ComboHighLight 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
@@ -228,20 +236,12 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Top             =   3000
       Width           =   2235
    End
-   Begin VB.ComboBox ComboHighLight 
+   Begin VB.ComboBox ComboScrollBars 
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
       TabIndex        =   23
       Top             =   2640
-      Width           =   2235
-   End
-   Begin VB.ComboBox ComboScrollBars 
-      Height          =   315
-      Left            =   1800
-      Style           =   2  'Dropdown List
-      TabIndex        =   21
-      Top             =   2280
       Width           =   2235
    End
    Begin VB.CheckBox CheckShowLabelTips 
@@ -295,29 +295,29 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
    Begin VB.TextBox TextFixedCols 
       Height          =   315
       Left            =   3240
-      TabIndex        =   15
-      Top             =   1560
+      TabIndex        =   17
+      Top             =   1920
       Width           =   780
    End
    Begin VB.TextBox TextCols 
       Height          =   315
       Left            =   3240
-      TabIndex        =   11
-      Top             =   1200
+      TabIndex        =   13
+      Top             =   1560
       Width           =   780
    End
    Begin VB.TextBox TextFixedRows 
       Height          =   315
       Left            =   1200
-      TabIndex        =   13
-      Top             =   1560
+      TabIndex        =   15
+      Top             =   1920
       Width           =   780
    End
    Begin VB.TextBox TextRows 
       Height          =   315
       Left            =   1200
-      TabIndex        =   9
-      Top             =   1200
+      TabIndex        =   11
+      Top             =   1560
       Width           =   780
    End
    Begin VB.CheckBox CheckMouseTrack 
@@ -350,8 +350,8 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Height          =   315
       Left            =   1800
       Style           =   2  'Dropdown List
-      TabIndex        =   7
-      Top             =   840
+      TabIndex        =   9
+      Top             =   1200
       Width           =   2235
    End
    Begin VB.CheckBox CheckEnabled 
@@ -382,176 +382,176 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "FontQuality:"
       Height          =   240
       Left            =   120
-      TabIndex        =   50
-      Top             =   7680
+      TabIndex        =   6
+      Top             =   840
       Width           =   1620
    End
    Begin VB.Label LabelUndoLimit 
       Caption         =   "UndoLimit:"
       Height          =   240
       Left            =   120
-      TabIndex        =   48
-      Top             =   7320
+      TabIndex        =   50
+      Top             =   7680
       Width           =   1620
    End
    Begin VB.Label LabelWallPaperAlignment 
       Caption         =   "WallPaperAlignment:"
       Height          =   240
       Left            =   120
-      TabIndex        =   46
-      Top             =   6960
+      TabIndex        =   48
+      Top             =   7320
       Width           =   1620
    End
    Begin VB.Label LabelAllowUserFreezing 
       Caption         =   "AllowUserFreezing:"
       Height          =   240
       Left            =   120
-      TabIndex        =   30
-      Top             =   4080
+      TabIndex        =   32
+      Top             =   4440
       Width           =   1620
    End
    Begin VB.Label LabelRowSortArrows 
       Caption         =   "RowSortArrows:"
       Height          =   240
       Left            =   120
-      TabIndex        =   44
-      Top             =   6600
+      TabIndex        =   46
+      Top             =   6960
       Width           =   1620
    End
    Begin VB.Label LabelFrozenRows 
       Caption         =   "FrozenRows:"
       Height          =   240
       Left            =   120
-      TabIndex        =   16
-      Top             =   1920
+      TabIndex        =   18
+      Top             =   2280
       Width           =   1020
    End
    Begin VB.Label LabelFrozenCols 
       Caption         =   "FrozenCols:"
       Height          =   240
       Left            =   2160
-      TabIndex        =   18
-      Top             =   1920
+      TabIndex        =   20
+      Top             =   2280
       Width           =   1020
    End
    Begin VB.Label LabelDirectionAfterReturn 
       Caption         =   "DirectionAfterReturn:"
       Height          =   240
       Left            =   120
-      TabIndex        =   38
-      Top             =   5520
+      TabIndex        =   40
+      Top             =   5880
       Width           =   1620
    End
    Begin VB.Label LabelIMEMode 
       Caption         =   "IMEMode:"
       Height          =   240
       Left            =   120
-      TabIndex        =   42
-      Top             =   6240
+      TabIndex        =   44
+      Top             =   6600
       Width           =   1620
    End
    Begin VB.Label LabelWrapCellBehavior 
       Caption         =   "WrapCellBehavior:"
       Height          =   240
       Left            =   120
-      TabIndex        =   40
-      Top             =   5880
+      TabIndex        =   42
+      Top             =   6240
       Width           =   1620
    End
    Begin VB.Label LabelTabBehavior 
       Caption         =   "TabBehavior:"
       Height          =   240
       Left            =   120
-      TabIndex        =   36
-      Top             =   5160
+      TabIndex        =   38
+      Top             =   5520
       Width           =   1620
    End
    Begin VB.Label LabelRowSizingMode 
       Caption         =   "RowSizingMode:"
       Height          =   240
       Left            =   120
-      TabIndex        =   34
-      Top             =   4800
+      TabIndex        =   36
+      Top             =   5160
       Width           =   1620
    End
    Begin VB.Label LabelAllowUserResizing 
       Caption         =   "AllowUserResizing:"
       Height          =   240
       Left            =   120
-      TabIndex        =   32
-      Top             =   4440
+      TabIndex        =   34
+      Top             =   4800
       Width           =   1620
    End
    Begin VB.Label LabelSelectionMode 
       Caption         =   "SelectionMode:"
       Height          =   240
       Left            =   120
-      TabIndex        =   28
-      Top             =   3720
+      TabIndex        =   30
+      Top             =   4080
       Width           =   1620
    End
    Begin VB.Label LabelFillStyle 
       Caption         =   "FillStyle:"
       Height          =   240
       Left            =   120
-      TabIndex        =   26
-      Top             =   3360
+      TabIndex        =   28
+      Top             =   3720
       Width           =   1620
    End
    Begin VB.Label LabelFocusRect 
       Caption         =   "FocusRect:"
       Height          =   240
       Left            =   120
-      TabIndex        =   24
-      Top             =   3000
+      TabIndex        =   26
+      Top             =   3360
       Width           =   1620
    End
    Begin VB.Label LabelHighLight 
       Caption         =   "HighLight:"
       Height          =   240
       Left            =   120
-      TabIndex        =   22
-      Top             =   2640
+      TabIndex        =   24
+      Top             =   3000
       Width           =   1620
    End
    Begin VB.Label LabelScrollBars 
       Caption         =   "ScrollBars:"
       Height          =   240
       Left            =   120
-      TabIndex        =   20
-      Top             =   2280
+      TabIndex        =   22
+      Top             =   2640
       Width           =   1620
    End
    Begin VB.Label LabelFixedCols 
       Caption         =   "FixedCols:"
       Height          =   240
       Left            =   2160
-      TabIndex        =   14
-      Top             =   1560
+      TabIndex        =   16
+      Top             =   1920
       Width           =   1020
    End
    Begin VB.Label LabelCols 
       Caption         =   "Cols:"
       Height          =   240
       Left            =   2160
-      TabIndex        =   10
-      Top             =   1200
+      TabIndex        =   12
+      Top             =   1560
       Width           =   1020
    End
    Begin VB.Label LabelFixedRows 
       Caption         =   "FixedRows:"
       Height          =   240
       Left            =   120
-      TabIndex        =   12
-      Top             =   1560
+      TabIndex        =   14
+      Top             =   1920
       Width           =   1020
    End
    Begin VB.Label LabelRows 
       Caption         =   "Rows:"
       Height          =   240
       Left            =   120
-      TabIndex        =   8
-      Top             =   1200
+      TabIndex        =   10
+      Top             =   1560
       Width           =   1020
    End
    Begin VB.Label LabelFontFixedName 
@@ -575,8 +575,8 @@ Begin VB.PropertyPage PPVBFlexGridGeneral
       Caption         =   "MousePointer:"
       Height          =   240
       Left            =   120
-      TabIndex        =   6
-      Top             =   840
+      TabIndex        =   8
+      Top             =   1200
       Width           =   1620
    End
 End
@@ -598,6 +598,22 @@ Private FreezeChanged As Boolean
 
 Private Sub PropertyPage_Initialize()
 SendMessage PropertyPage.hWnd, WM_UPDATEUISTATE, MakeDWord(UIS_CLEAR, UISF_HIDEFOCUS Or UISF_HIDEACCEL), ByVal 0&
+With ComboFontQuality
+.AddItem FlexFontQualityDefault & " - Default"
+.ItemData(.NewIndex) = FlexFontQualityDefault
+.AddItem FlexFontQualityDraft & " - Draft"
+.ItemData(.NewIndex) = FlexFontQualityDraft
+.AddItem FlexFontQualityProof & " - Proof"
+.ItemData(.NewIndex) = FlexFontQualityProof
+.AddItem FlexFontQualityNonAntiAliased & " - NonAntiAliased"
+.ItemData(.NewIndex) = FlexFontQualityNonAntiAliased
+.AddItem FlexFontQualityAntiAliased & " - AntiAliased"
+.ItemData(.NewIndex) = FlexFontQualityAntiAliased
+.AddItem FlexFontQualityClearType & " - ClearType"
+.ItemData(.NewIndex) = FlexFontQualityClearType
+.AddItem FlexFontQualityClearTypeNatural & " - ClearTypeNatural"
+.ItemData(.NewIndex) = FlexFontQualityClearTypeNatural
+End With
 With ComboMousePointer
 .AddItem FlexMousePointerDefault & " - Default"
 .ItemData(.NewIndex) = FlexMousePointerDefault
@@ -818,22 +834,6 @@ With ComboWallPaperAlignment
 .AddItem FlexWallPaperAlignmentTile & " - Tile"
 .ItemData(.NewIndex) = FlexWallPaperAlignmentTile
 End With
-With ComboFontQuality
-.AddItem FlexFontQualityDefault & " - Default"
-.ItemData(.NewIndex) = FlexFontQualityDefault
-.AddItem FlexFontQualityDraft & " - Draft"
-.ItemData(.NewIndex) = FlexFontQualityDraft
-.AddItem FlexFontQualityProof & " - Proof"
-.ItemData(.NewIndex) = FlexFontQualityProof
-.AddItem FlexFontQualityNonAntiAliased & " - NonAntiAliased"
-.ItemData(.NewIndex) = FlexFontQualityNonAntiAliased
-.AddItem FlexFontQualityAntiAliased & " - AntiAliased"
-.ItemData(.NewIndex) = FlexFontQualityAntiAliased
-.AddItem FlexFontQualityClearType & " - ClearType"
-.ItemData(.NewIndex) = FlexFontQualityClearType
-.AddItem FlexFontQualityClearTypeNatural & " - ClearTypeNatural"
-.ItemData(.NewIndex) = FlexFontQualityClearTypeNatural
-End With
 End Sub
 
 Private Sub PropertyPage_ApplyChanges()
@@ -859,6 +859,7 @@ If FontFixedCleared = True Then
     If Not .Font Is .FontFixed Then Set .FontFixed = Nothing
     FontFixedCleared = False
 End If
+.FontQuality = ComboFontQuality.ItemData(ComboFontQuality.ListIndex)
 .MousePointer = ComboMousePointer.ItemData(ComboMousePointer.ListIndex)
 .Rows = CLng(TextRows.Text)
 If .Rows > 0 Then
@@ -905,7 +906,6 @@ End If
 .RowSortArrows = CLng(TextRowSortArrows.Text)
 .WallPaperAlignment = ComboWallPaperAlignment.ItemData(ComboWallPaperAlignment.ListIndex)
 .UndoLimit = CLng(TextUndoLimit.Text)
-.FontQuality = ComboFontQuality.ItemData(ComboFontQuality.ListIndex)
 .MultiSelChangeTime = CLng(TextMultiSelChangeTime.Text)
 .MouseTrack = CBool(CheckMouseTrack.Value = vbChecked)
 .AllowBigSelection = CBool(CheckAllowBigSelection.Value = vbChecked)
@@ -943,6 +943,12 @@ Else
     LabelFontFixedName.Caption = .FontFixed.Name
     CommandFontFixedClear.Enabled = True
 End If
+For i = 0 To ComboFontQuality.ListCount - 1
+    If ComboFontQuality.ItemData(i) = .FontQuality Then
+        ComboFontQuality.ListIndex = i
+        Exit For
+    End If
+Next i
 For i = 0 To ComboMousePointer.ListCount - 1
     If ComboMousePointer.ItemData(i) = .MousePointer Then
         ComboMousePointer.ListIndex = i
@@ -1035,12 +1041,6 @@ For i = 0 To ComboWallPaperAlignment.ListCount - 1
     End If
 Next i
 TextUndoLimit.Text = CStr(.UndoLimit)
-For i = 0 To ComboFontQuality.ListCount - 1
-    If ComboFontQuality.ItemData(i) = .FontQuality Then
-        ComboFontQuality.ListIndex = i
-        Exit For
-    End If
-Next i
 TextMultiSelChangeTime.Text = CStr(.MultiSelChangeTime)
 CheckMouseTrack.Value = IIf(.MouseTrack = True, vbChecked, vbUnchecked)
 CheckAllowBigSelection.Value = IIf(.AllowBigSelection = True, vbChecked, vbUnchecked)
@@ -1083,6 +1083,11 @@ Private Sub CommandFontFixedClear_Click()
 CommandFontFixedClear.Enabled = False
 LabelFontFixedName.Caption = "(None)"
 FontFixedCleared = True
+PropertyPage.Changed = True
+End Sub
+
+Private Sub ComboFontQuality_Click()
+If FreezeChanged = True Then Exit Sub
 PropertyPage.Changed = True
 End Sub
 
@@ -1522,11 +1527,6 @@ Else
         TextUndoLimit.SetFocus
     End If
 End If
-End Sub
-
-Private Sub ComboFontQuality_Click()
-If FreezeChanged = True Then Exit Sub
-PropertyPage.Changed = True
 End Sub
 
 Private Sub TextMultiSelChangeTime_GotFocus()
