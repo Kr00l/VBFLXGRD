@@ -1721,6 +1721,7 @@ Private Const LBS_OWNERDRAWFIXED As Long = &H10
 Private Const LBS_HASSTRINGS As Long = &H40
 Private Const LBS_NOINTEGRALHEIGHT As Long = &H100
 Private Const LBN_SELCHANGE As Long = 1
+Private Const MCS_NOTODAY As Long = &H10
 Private Const MCM_FIRST As Long = &H1000
 Private Const MCM_GETCURSEL As Long = (MCM_FIRST + 1)
 Private Const MCM_SETCURSEL As Long = (MCM_FIRST + 2)
@@ -27728,7 +27729,19 @@ Select Case wMsg
     
 End Select
 WindowProcComboCalendar = FlexDefaultProc(hWnd, wMsg, wParam, lParam)
-If wMsg = WM_KILLFOCUS Then Call ComboShowDropDown(False, -1)
+Select Case wMsg
+    Case WM_KILLFOCUS
+        Call ComboShowDropDown(False, -1)
+    Case WM_THEMECHANGED, WM_STYLECHANGED
+        Dim ReqRect As RECT
+        SendMessage hWnd, MCM_GETMINREQRECT, 0, ByVal VarPtr(ReqRect)
+        If Not (GetWindowLong(hWnd, GWL_STYLE) And MCS_NOTODAY) = MCS_NOTODAY Then
+            Dim TodayWidth As Long
+            TodayWidth = CLng(SendMessage(hWnd, MCM_GETMAXTODAYWIDTH, 0, ByVal 0&))
+            If TodayWidth > (ReqRect.Right - ReqRect.Left) Then ReqRect.Right = ReqRect.Left + TodayWidth
+        End If
+        SetWindowPos hWnd, NULL_PTR, 0, 0, (ReqRect.Right - ReqRect.Left), (ReqRect.Bottom - ReqRect.Top), SWP_NOMOVE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE
+End Select
 End Function
 
 Private Function WindowProcUserControl(ByVal hWnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
