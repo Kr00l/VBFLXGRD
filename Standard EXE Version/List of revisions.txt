@@ -1,5 +1,9 @@
 List of revisions:
 
+03-May-2026
+- The drop-down calendar (FlexComboModeCalendar) will now resize upon WM_THEMECHANGED/WM_STYLECHANGED.
+  This allows to change theme/styles for the calendar on the EditSetupWindow event.
+
 03-Feb-2026
 - Cell flooding now has a padding in the size of the focus rect.
 
