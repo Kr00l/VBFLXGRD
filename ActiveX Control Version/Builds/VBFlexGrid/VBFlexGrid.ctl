@@ -25571,7 +25571,7 @@ If VBFlexGridComboListHandle <> NULL_PTR Then
         If SendMessage(VBFlexGridComboListHandle, LB_GETCOUNT, 0, ByVal 0&) > 0 Then
             If Index <> SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&) Then SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, Index, ByVal 0&
         Else
-            SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, -1, ByVal 0&
+            If Not SendMessage(VBFlexGridComboListHandle, LB_GETCURSEL, 0, ByVal 0&) = LB_ERR Then SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, -1, ByVal 0&
         End If
     End If
     ComboListSelFromPt = Index
@@ -26863,79 +26863,81 @@ Select Case wMsg
             Call ComboButtonDraw(VBFlexGridEditRow, VBFlexGridEditCol, DIS)
             WindowProcControl = 1
             Exit Function
-        ElseIf DIS.CtlType = ODT_LISTBOX And DIS.hWndItem = VBFlexGridComboListHandle And VBFlexGridComboListHandle <> NULL_PTR And DIS.ItemID > -1 Then
+        ElseIf DIS.CtlType = ODT_LISTBOX And DIS.hWndItem = VBFlexGridComboListHandle And VBFlexGridComboListHandle <> NULL_PTR Then
             If (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
                 Brush = GetSysColorBrush(COLOR_HIGHLIGHT)
             Else
                 Brush = GetSysColorBrush(COLOR_WINDOW)
             End If
             FillRect DIS.hDC, DIS.RCItem, Brush
-            Dim dwExStyle As Long, TextAlign As Long, OldTextAlign As Long, OldBkMode As Long, OldTextColor As Long
-            dwExStyle = GetWindowLong(VBFlexGridComboListHandle, GWL_EXSTYLE)
-            If (dwExStyle And WS_EX_RTLREADING) = WS_EX_RTLREADING Then TextAlign = TA_RTLREADING
-            If (dwExStyle And WS_EX_RIGHT) = WS_EX_RIGHT Then TextAlign = TextAlign Or TA_RIGHT
-            If TextAlign <> 0 Then OldTextAlign = SetTextAlign(DIS.hDC, TextAlign)
-            OldBkMode = SetBkMode(DIS.hDC, 1)
-            OldTextColor = GetTextColor(DIS.hDC)
-            Dim hPen As LongPtr, hPenOld As LongPtr, i As Long, ColumnRect As RECT, LinePoints(0 To 1) As POINTAPI
-            If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED And (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
-                hPen = CreatePen(PS_SOLID, 0, GetSysColor(COLOR_HIGHLIGHTTEXT))
-            Else
-                hPen = CreatePen(PS_SOLID, 0, &HC0C0C0)
-            End If
-            If hPen <> NULL_PTR Then hPenOld = SelectObject(DIS.hDC, hPen)
-            LSet ColumnRect = DIS.RCItem
-            With VBFlexGridComboMultiColumn
-            For i = 0 To (.Items(DIS.ItemID).Count - 1)
-                If i = .BoundColumn Then
-                    If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
-                        SetTextColor DIS.hDC, GetSysColor(COLOR_GRAYTEXT)
-                    ElseIf (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
-                        SetTextColor DIS.hDC, GetSysColor(COLOR_HIGHLIGHTTEXT)
-                    Else
-                        SetTextColor DIS.hDC, GetSysColor(COLOR_WINDOWTEXT)
-                    End If
+            If DIS.ItemID > -1 Then
+                Dim dwExStyle As Long, TextAlign As Long, OldTextAlign As Long, OldBkMode As Long, OldTextColor As Long
+                dwExStyle = GetWindowLong(VBFlexGridComboListHandle, GWL_EXSTYLE)
+                If (dwExStyle And WS_EX_RTLREADING) = WS_EX_RTLREADING Then TextAlign = TA_RTLREADING
+                If (dwExStyle And WS_EX_RIGHT) = WS_EX_RIGHT Then TextAlign = TextAlign Or TA_RIGHT
+                If TextAlign <> 0 Then OldTextAlign = SetTextAlign(DIS.hDC, TextAlign)
+                OldBkMode = SetBkMode(DIS.hDC, 1)
+                OldTextColor = GetTextColor(DIS.hDC)
+                Dim hPen As LongPtr, hPenOld As LongPtr, i As Long, ColumnRect As RECT, LinePoints(0 To 1) As POINTAPI
+                If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED And (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
+                    hPen = CreatePen(PS_SOLID, 0, GetSysColor(COLOR_HIGHLIGHTTEXT))
                 Else
-                    If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED And (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
-                        SetTextColor DIS.hDC, GetSysColor(COLOR_HIGHLIGHTTEXT)
+                    hPen = CreatePen(PS_SOLID, 0, &HC0C0C0)
+                End If
+                If hPen <> NULL_PTR Then hPenOld = SelectObject(DIS.hDC, hPen)
+                LSet ColumnRect = DIS.RCItem
+                With VBFlexGridComboMultiColumn
+                For i = 0 To (.Items(DIS.ItemID).Count - 1)
+                    If i = .BoundColumn Then
+                        If (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED Then
+                            SetTextColor DIS.hDC, GetSysColor(COLOR_GRAYTEXT)
+                        ElseIf (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
+                            SetTextColor DIS.hDC, GetSysColor(COLOR_HIGHLIGHTTEXT)
+                        Else
+                            SetTextColor DIS.hDC, GetSysColor(COLOR_WINDOWTEXT)
+                        End If
                     Else
-                        SetTextColor DIS.hDC, &H808080
+                        If Not (DIS.ItemState And ODS_DISABLED) = ODS_DISABLED And (DIS.ItemState And ODS_SELECTED) = ODS_SELECTED Then
+                            SetTextColor DIS.hDC, GetSysColor(COLOR_HIGHLIGHTTEXT)
+                        Else
+                            SetTextColor DIS.hDC, &H808080
+                        End If
                     End If
+                    If (TextAlign And TA_RIGHT) = 0 Then
+                        TextOut DIS.hDC, ColumnRect.Left + 2, ColumnRect.Top, StrPtr(.Items(DIS.ItemID).Column(i)), Len(.Items(DIS.ItemID).Column(i))
+                        If i < (.Items(DIS.ItemID).Count - 1) Then
+                            ColumnRect.Left = ColumnRect.Left + .MaxWidths(i) + 5
+                            LinePoints(0).X = ColumnRect.Left - 1
+                            LinePoints(0).Y = ColumnRect.Top
+                            LinePoints(1).X = ColumnRect.Left - 1
+                            LinePoints(1).Y = ColumnRect.Bottom
+                            Polyline DIS.hDC, LinePoints(0), 2
+                        End If
+                    Else
+                        TextOut DIS.hDC, ColumnRect.Right - 2, ColumnRect.Top, StrPtr(.Items(DIS.ItemID).Column(i)), Len(.Items(DIS.ItemID).Column(i))
+                        If i < (.Items(DIS.ItemID).Count - 1) Then
+                            ColumnRect.Right = ColumnRect.Right - .MaxWidths(i) - 5
+                            LinePoints(0).X = ColumnRect.Right + 1
+                            LinePoints(0).Y = ColumnRect.Top
+                            LinePoints(1).X = ColumnRect.Right + 1
+                            LinePoints(1).Y = ColumnRect.Bottom
+                            Polyline DIS.hDC, LinePoints(0), 2
+                        End If
+                    End If
+                Next i
+                End With
+                If hPenOld <> NULL_PTR Then
+                    SelectObject hDC, hPenOld
+                    hPenOld = NULL_PTR
                 End If
-                If (TextAlign And TA_RIGHT) = 0 Then
-                    TextOut DIS.hDC, ColumnRect.Left + 2, ColumnRect.Top, StrPtr(.Items(DIS.ItemID).Column(i)), Len(.Items(DIS.ItemID).Column(i))
-                    If i < (.Items(DIS.ItemID).Count - 1) Then
-                        ColumnRect.Left = ColumnRect.Left + .MaxWidths(i) + 5
-                        LinePoints(0).X = ColumnRect.Left - 1
-                        LinePoints(0).Y = ColumnRect.Top
-                        LinePoints(1).X = ColumnRect.Left - 1
-                        LinePoints(1).Y = ColumnRect.Bottom
-                        Polyline DIS.hDC, LinePoints(0), 2
-                    End If
-                Else
-                    TextOut DIS.hDC, ColumnRect.Right - 2, ColumnRect.Top, StrPtr(.Items(DIS.ItemID).Column(i)), Len(.Items(DIS.ItemID).Column(i))
-                    If i < (.Items(DIS.ItemID).Count - 1) Then
-                        ColumnRect.Right = ColumnRect.Right - .MaxWidths(i) - 5
-                        LinePoints(0).X = ColumnRect.Right + 1
-                        LinePoints(0).Y = ColumnRect.Top
-                        LinePoints(1).X = ColumnRect.Right + 1
-                        LinePoints(1).Y = ColumnRect.Bottom
-                        Polyline DIS.hDC, LinePoints(0), 2
-                    End If
+                If hPen <> NULL_PTR Then
+                    DeleteObject hPen
+                    hPen = NULL_PTR
                 End If
-            Next i
-            End With
-            If hPenOld <> NULL_PTR Then
-                SelectObject hDC, hPenOld
-                hPenOld = NULL_PTR
+                SetBkMode DIS.hDC, OldBkMode
+                SetTextColor DIS.hDC, OldTextColor
+                If TextAlign <> 0 Then SetTextAlign DIS.hDC, OldTextAlign
             End If
-            If hPen <> NULL_PTR Then
-                DeleteObject hPen
-                hPen = NULL_PTR
-            End If
-            SetBkMode DIS.hDC, OldBkMode
-            SetTextColor DIS.hDC, OldTextColor
-            If TextAlign <> 0 Then SetTextAlign DIS.hDC, OldTextAlign
             If (DIS.ItemState And ODS_FOCUS) = ODS_FOCUS Then
                 If Not (DIS.ItemState And ODS_NOFOCUSRECT) = ODS_NOFOCUSRECT Then DrawFocusRect DIS.hDC, DIS.RCItem
             End If
