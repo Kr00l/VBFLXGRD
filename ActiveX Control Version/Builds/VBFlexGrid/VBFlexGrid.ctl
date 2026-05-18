@@ -6246,7 +6246,6 @@ If VBFlexGridEditHandle <> NULL_PTR Then
                     VBFlexGridComboListHandle = CreateWindowEx(dwExStyle, StrPtr("ComboLBox"), NULL_PTR, dwStyle, WndRect.Left, WndRect.Bottom, WndRect.Right - WndRect.Left, WndRect.Bottom - WndRect.Top, VBFlexGridHandle, NULL_PTR, App.hInstance, ByVal NULL_PTR)
                     If VBFlexGridComboListHandle <> NULL_PTR Then
                         SendMessage VBFlexGridComboListHandle, WM_SETFONT, hFont, ByVal 0&
-                        If VBFlexGridComboModeActive = FlexComboModeDropDown Then SendMessage VBFlexGridComboListHandle, LB_CARETON, 0, ByVal 0&
                         Dim hDC As LongPtr, Size As SIZEAPI, CX As Long
                         hDC = GetDC(VBFlexGridComboListHandle)
                         SelectObject hDC, hFont
@@ -6426,6 +6425,7 @@ If VBFlexGridEditHandle <> NULL_PTR Then
     If VBFlexGridComboListHandle <> NULL_PTR Then
         If VBFlexGridComboMultiColumn.Header.Count > 0 Then SetWindowPos VBFlexGridComboListHandle, NULL_PTR, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOOWNERZORDER Or SWP_NOZORDER Or SWP_NOACTIVATE Or SWP_FRAMECHANGED
         SendMessage VBFlexGridComboListHandle, LB_SETCURSEL, SendMessage(VBFlexGridComboListHandle, LB_FINDSTRINGEXACT, -1, ByVal StrPtr(Text)), ByVal 0&
+        If VBFlexGridComboModeActive = FlexComboModeDropDown Then SendMessage VBFlexGridComboListHandle, LB_CARETON, 0, ByVal 0&
     End If
     RaiseEvent EditSetupWindow(VBFlexGridEditBackColor, VBFlexGridEditForeColor)
     VBFlexGridEditBackColorBrush = CreateSolidBrush(WinColor(VBFlexGridEditBackColor))
