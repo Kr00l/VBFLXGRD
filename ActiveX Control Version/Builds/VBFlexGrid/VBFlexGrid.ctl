@@ -16943,6 +16943,15 @@ If hPenOld <> NULL_PTR Then
     hPenOld = NULL_PTR
 End If
 If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT) = ODS_NOFOCUSRECT Then
+    If Not Text = vbNullString Then
+        If .BackColor = -1 Then
+            Color = SetBkColor(hDC, WinColor(PropBackColorFixed))
+        Else
+            Color = SetBkColor(hDC, WinColor(.BackColor))
+        End If
+    Else
+        Color = SetBkColor(hDC, GetSysColor(COLOR_BTNFACE))
+    End If
     Dim FocusRect As RECT
     With FocusRect
     .Left = CellRect.Left + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX
@@ -16990,6 +16999,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
             End If
     End Select
     End With
+    SetBkColor hDC, Color
 End If
 Dim Alignment As FlexAlignmentConstants
 If .Alignment = -1 Then
@@ -17809,6 +17819,23 @@ If hPenOld <> NULL_PTR Then
     hPenOld = NULL_PTR
 End If
 If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT) = ODS_NOFOCUSRECT Then
+    If Not Text = vbNullString Then
+        If .BackColor = -1 Then
+            If PropBackColor = PropBackColorAlt Then
+                Color = SetBkColor(hDC, WinColor(PropBackColor))
+            Else
+                If (iRow - PropFixedRows) Mod 2 = 0 Then
+                    Color = SetBkColor(hDC, WinColor(PropBackColor))
+                Else
+                    Color = SetBkColor(hDC, WinColor(PropBackColorAlt))
+                End If
+            End If
+        Else
+            Color = SetBkColor(hDC, WinColor(.BackColor))
+        End If
+    Else
+        Color = SetBkColor(hDC, GetSysColor(COLOR_WINDOW))
+    End If
     Dim FocusRect As RECT
     With FocusRect
     .Left = CellRect.Left + VBFlexGridDrawInfo.GridLineOffsets.LeftTop.CX
@@ -17856,6 +17883,7 @@ If (ItemState And ODS_FOCUS) = ODS_FOCUS And Not (ItemState And ODS_NOFOCUSRECT)
             End If
     End Select
     End With
+    SetBkColor hDC, Color
 End If
 If Not Text = vbNullString And TextRect.Right >= TextRect.Left And TextRect.Bottom >= TextRect.Top And HiddenText = False Then
     Dim TextStyle As FlexTextStyleConstants, Alignment As FlexAlignmentConstants, DrawFlags As Long
