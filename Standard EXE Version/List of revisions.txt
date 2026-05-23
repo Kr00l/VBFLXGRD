@@ -1,5 +1,8 @@
 List of revisions:
 
+23-May-2026
+- Usage of SetBkColor for the DrawFocusRect API so that it can work accurately.
+
 03-May-2026
 - The drop-down calendar (FlexComboModeCalendar) will now resize upon WM_THEMECHANGED/WM_STYLECHANGED.
   This allows to change theme/styles for the calendar on the EditSetupWindow event.
