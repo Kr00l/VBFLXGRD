@@ -1583,6 +1583,7 @@ Private Const MONITOR_DEFAULTTOPRIMARY As Long = &H1
 Private Const DCX_WINDOW As Long = &H1
 Private Const DCX_INTERSECTRGN As Long = &H80
 Private Const DCX_USESTYLE As Long = &H10000
+Private Const DCX_KEEPCLIPRGN As Long = &H40000
 Private Const MK_SHIFT As Long = &H4
 Private Const MK_CONTROL As Long = &H8
 Private Const TME_LEAVE As Long = &H2
@@ -27415,7 +27416,7 @@ Select Case wMsg
                 If wParam = 1 Then ' Alias for entire window
                     hDC = GetWindowDC(hWnd)
                 Else
-                    hDC = GetDCEx(hWnd, wParam, DCX_WINDOW Or DCX_INTERSECTRGN Or DCX_USESTYLE)
+                    hDC = GetDCEx(hWnd, wParam, DCX_WINDOW Or DCX_INTERSECTRGN Or DCX_USESTYLE Or DCX_KEEPCLIPRGN)
                 End If
                 If hDC <> NULL_PTR Then
                     Dim Brush As LongPtr
@@ -27603,7 +27604,7 @@ Select Case wMsg
                     If wParam = 1 Then ' Alias for entire window
                         hDC = GetWindowDC(hWnd)
                     Else
-                        hDC = GetDCEx(hWnd, wParam, DCX_WINDOW Or DCX_INTERSECTRGN Or DCX_USESTYLE)
+                        hDC = GetDCEx(hWnd, wParam, DCX_WINDOW Or DCX_INTERSECTRGN Or DCX_USESTYLE Or DCX_KEEPCLIPRGN)
                     End If
                     If hDC <> NULL_PTR Then
                         Dim Brush As LongPtr
