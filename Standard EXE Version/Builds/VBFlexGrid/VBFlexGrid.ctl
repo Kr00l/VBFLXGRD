@@ -10323,17 +10323,19 @@ End Property
 
 Public Property Let Cell(ByVal Setting As FlexCellSettings, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal RowSel As Long = -1, Optional ByVal ColSel As Long = -1, ByVal Value As Variant)
 If (Row < -1 Or Row > (PropRows - 1)) Or (Col < -1 Or Col > (PropCols - 1)) Or (RowSel < -1 Or RowSel > (PropRows - 1)) Or (ColSel < -1 Or ColSel > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
-Dim OldRow As Long, OldCol As Long, OldRowSel As Long, OldColSel As Long, OldNoRedraw As Boolean
+Dim OldRow As Long, OldCol As Long, OldRowSel As Long, OldColSel As Long, OldNoRedraw As Boolean, OldFillStyle As FlexFillStyleConstants
 OldRow = VBFlexGridRow
 OldCol = VBFlexGridCol
 OldRowSel = VBFlexGridRowSel
 OldColSel = VBFlexGridColSel
 OldNoRedraw = VBFlexGridNoRedraw
+OldFillStyle = PropFillStyle
 If Row > -1 Then VBFlexGridRow = Row
 If Col > -1 Then VBFlexGridCol = Col
 If RowSel > -1 Then VBFlexGridRowSel = RowSel Else VBFlexGridRowSel = VBFlexGridRow
 If ColSel > -1 Then VBFlexGridColSel = ColSel Else VBFlexGridColSel = VBFlexGridCol
 VBFlexGridNoRedraw = True
+If VBFlexGridRow = VBFlexGridRowSel And VBFlexGridCol = VBFlexGridColSel Then PropFillStyle = FlexFillStyleSingle Else PropFillStyle = FlexFillStyleRepeat
 VBFlexGridIndirectCellRef.InProc = True
 VBFlexGridIndirectCellRef.SetRCP = False
 On Error GoTo Cancel
@@ -10407,6 +10409,7 @@ VBFlexGridCol = OldCol
 VBFlexGridRowSel = OldRowSel
 VBFlexGridColSel = OldColSel
 VBFlexGridNoRedraw = OldNoRedraw
+PropFillStyle = OldFillStyle
 VBFlexGridIndirectCellRef.InProc = False
 If Err.Number = 0 Then
     If VBFlexGridIndirectCellRef.SetRCP = False Then
@@ -10424,17 +10427,19 @@ End Property
 
 Public Property Set Cell(ByVal Setting As FlexCellSettings, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal RowSel As Long = -1, Optional ByVal ColSel As Long = -1, ByVal Value As Variant)
 If (Row < -1 Or Row > (PropRows - 1)) Or (Col < -1 Or Col > (PropCols - 1)) Or (RowSel < -1 Or RowSel > (PropRows - 1)) Or (ColSel < -1 Or ColSel > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
-Dim OldRow As Long, OldCol As Long, OldRowSel As Long, OldColSel As Long, OldNoRedraw As Boolean
+Dim OldRow As Long, OldCol As Long, OldRowSel As Long, OldColSel As Long, OldNoRedraw As Boolean, OldFillStyle As FlexFillStyleConstants
 OldRow = VBFlexGridRow
 OldCol = VBFlexGridCol
 OldRowSel = VBFlexGridRowSel
 OldColSel = VBFlexGridColSel
 OldNoRedraw = VBFlexGridNoRedraw
+OldFillStyle = PropFillStyle
 If Row > -1 Then VBFlexGridRow = Row
 If Col > -1 Then VBFlexGridCol = Col
 If RowSel > -1 Then VBFlexGridRowSel = RowSel Else VBFlexGridRowSel = VBFlexGridRow
 If ColSel > -1 Then VBFlexGridColSel = ColSel Else VBFlexGridColSel = VBFlexGridCol
 VBFlexGridNoRedraw = True
+If VBFlexGridRow = VBFlexGridRowSel And VBFlexGridCol = VBFlexGridColSel Then PropFillStyle = FlexFillStyleSingle Else PropFillStyle = FlexFillStyleRepeat
 On Error GoTo Cancel
 Select Case Setting
     Case FlexCellPicture
@@ -10450,6 +10455,7 @@ VBFlexGridCol = OldCol
 VBFlexGridRowSel = OldRowSel
 VBFlexGridColSel = OldColSel
 VBFlexGridNoRedraw = OldNoRedraw
+PropFillStyle = OldFillStyle
 If Err.Number = 0 Then
     Call RedrawGrid
 Else
