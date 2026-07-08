@@ -1,5 +1,9 @@
 List of revisions:
 
+08-Jul-2026
+- The Cell property now overwrites the FillStyle property.
+  It's either FlexFillStyleRepeat for a selection or else FlexFillStyleSingle.
+
 25-May-2026
 - Some minor internal improvements.
 - Use of flag DCX_KEEPCLIPRGN in the WM_NCPAINT handler to solve a leak.
