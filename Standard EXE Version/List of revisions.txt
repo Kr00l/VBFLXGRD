@@ -1,5 +1,11 @@
 List of revisions:
 
+11-Jul-2026
+- Included the SaveArray function to write data into a variant or string array.
+  It's significantly faster for an Excel export or copying into another VBFlexGrid control.
+  Included new enum FlexArrayOrderConstants which is either FlexRowMajor or FlexColumnMajor.
+  The SaveArray function defaults to FlexColumnMajor to be in sync with the LoadArray function.
+
 08-Jul-2026
 - The Cell property now overwrites the FillStyle property.
   It's either FlexFillStyleRepeat for a selection or else FlexFillStyleSingle.
