@@ -1,5 +1,12 @@
 List of revisions:
 
+13-Jul-2026
+- Bugfix in the SaveArray function when ExcludeHidden is True.
+  When type conversion failed (UseColDataType = True) the variant item is now 'Null'.
+  It keeps being 'Empty' when the cell is vbNullString to protect the type conversion from false error.
+  This enables to distinguish between "no value" and "error value" and is the most interoperable approach.
+  ADO data types are now recognized as well as these are compatible with the numbering to the intrinsic data types.
+
 11-Jul-2026
 - Included the SaveArray function to write data into a variant or string array.
   It's significantly faster for an Excel export or copying into another VBFlexGrid control.
