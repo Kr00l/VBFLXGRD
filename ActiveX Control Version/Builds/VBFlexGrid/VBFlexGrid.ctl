@@ -8699,7 +8699,7 @@ RowPos = UserControl.ScaleY(Value, vbPixels, vbTwips)
 End Property
 
 Public Property Get RowPosition(ByVal Index As Long) As Long
-Attribute RowPosition.VB_Description = "Sets the position of an row, allowing you to move rows to specific positions."
+Attribute RowPosition.VB_Description = "Sets the position of a row, allowing you to move rows to specific positions."
 Attribute RowPosition.VB_MemberFlags = "400"
 Err.Raise Number:=394, Description:="Property is write-only"
 End Property
@@ -8734,6 +8734,38 @@ With RCP
 .TopRow = VBFlexGridTopRow
 Call SetRowColParams(RCP)
 End With
+End Property
+
+Public Property Get RowBasePosition(ByVal VisualPosition As Long) As Long
+Attribute RowBasePosition.VB_Description = "Returns the position of a row for the specified visual (non-hidden) row."
+If VisualPosition < 0 Or VisualPosition > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+RowBasePosition = -1
+Dim i As Long, Count As Long
+For i = 0 To (PropRows - 1)
+    If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_HIDDEN) = 0 Then
+        If Count = VisualPosition Then
+            RowBasePosition = i
+            Exit For
+        End If
+        Count = Count + 1
+    End If
+Next i
+End Property
+
+Public Property Get RowVisualPosition(ByVal Index As Long) As Long
+Attribute RowVisualPosition.VB_Description = "Returns the visual position for the specified row among visual (non-hidden) rows only."
+If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+RowVisualPosition = -1
+Dim i As Long, Count As Long
+For i = 0 To (PropRows - 1)
+    If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_HIDDEN) = 0 Then
+        If i = Index Then
+            RowVisualPosition = Count
+            Exit For
+        End If
+        Count = Count + 1
+    End If
+Next i
 End Property
 
 Public Property Get RowHeight(ByVal Index As Long) As Long
@@ -9211,7 +9243,7 @@ ColPos = UserControl.ScaleX(Value, vbPixels, vbTwips)
 End Property
 
 Public Property Get ColPosition(ByVal Index As Long) As Long
-Attribute ColPosition.VB_Description = "Sets the position of an column, allowing you to move columns to specific positions."
+Attribute ColPosition.VB_Description = "Sets the position of a column, allowing you to move columns to specific positions."
 Attribute ColPosition.VB_MemberFlags = "400"
 Err.Raise Number:=394, Description:="Property is write-only"
 End Property
@@ -9259,6 +9291,38 @@ With RCP
 .LeftCol = VBFlexGridLeftCol
 Call SetRowColParams(RCP)
 End With
+End Property
+
+Public Property Get ColBasePosition(ByVal VisualPosition As Long) As Long
+Attribute ColBasePosition.VB_Description = "Returns the position of a column for the specified visual (non-hidden) column."
+If VisualPosition < 0 Or VisualPosition > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColBasePosition = -1
+Dim i As Long, Count As Long
+For i = 0 To (PropCols - 1)
+    If (VBFlexGridColsInfo(i).State And CLIS_HIDDEN) = 0 Then
+        If Count = VisualPosition Then
+            ColBasePosition = i
+            Exit For
+        End If
+        Count = Count + 1
+    End If
+Next i
+End Property
+
+Public Property Get ColVisualPosition(ByVal Index As Long) As Long
+Attribute ColVisualPosition.VB_Description = "Returns the visual position for the specified column among visual (non-hidden) columns only."
+If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+ColVisualPosition = -1
+Dim i As Long, Count As Long
+For i = 0 To (PropCols - 1)
+    If (VBFlexGridColsInfo(i).State And CLIS_HIDDEN) = 0 Then
+        If i = Index Then
+            ColVisualPosition = Count
+            Exit For
+        End If
+        Count = Count + 1
+    End If
+Next i
 End Property
 
 Public Property Get ColWidth(ByVal Index As Long) As Long
