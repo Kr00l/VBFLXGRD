@@ -1,10 +1,11 @@
 List of revisions:
 
 16-Jul-2026
-- Included the Row/ColBasePosition and Row/ColVisualPosition read-only property,
-  which maps between real index and visual (non-hidden) position.
+- Included the Row/ColBasePosition and Row/ColNonHiddenPosition read-only property,
+  which maps between index and a non-hidden mapped position.
   Row/ColPosition (Property Get) could have been used instead of Row/ColBasePosition.
   But it remains write-only property to be fully compatible and to avoid confusion as Let would be different than Get.
+- Included Rows/ColsNonHidden read-only property.
 
 13-Jul-2026
 - Bugfix in the SaveArray function when ExcludeHidden is True.
