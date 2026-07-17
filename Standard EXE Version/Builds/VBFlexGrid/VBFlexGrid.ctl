@@ -8736,14 +8736,15 @@ Call SetRowColParams(RCP)
 End With
 End Property
 
-Public Property Get RowBasePosition(ByVal VisualPosition As Long) As Long
-Attribute RowBasePosition.VB_Description = "Returns the position of a row for the specified visual (non-hidden) row."
-If VisualPosition < 0 Or VisualPosition > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
+Public Property Get RowBasePosition(ByVal NonHiddenPosition As Long) As Long
+Attribute RowBasePosition.VB_Description = "Returns the position of a row for the specified non-hidden mapped position."
+Attribute RowBasePosition.VB_MemberFlags = "400"
+If NonHiddenPosition < 0 Or NonHiddenPosition > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
 RowBasePosition = -1
 Dim i As Long, Count As Long
 For i = 0 To (PropRows - 1)
     If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_HIDDEN) = 0 Then
-        If Count = VisualPosition Then
+        If Count = NonHiddenPosition Then
             RowBasePosition = i
             Exit For
         End If
@@ -8752,20 +8753,32 @@ For i = 0 To (PropRows - 1)
 Next i
 End Property
 
-Public Property Get RowVisualPosition(ByVal Index As Long) As Long
-Attribute RowVisualPosition.VB_Description = "Returns the visual position for the specified row among visual (non-hidden) rows only."
+Public Property Get RowNonHiddenPosition(ByVal Index As Long) As Long
+Attribute RowNonHiddenPosition.VB_Description = "Returns a mapped position for the specified row among non-hidden rows only."
+Attribute RowNonHiddenPosition.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
-RowVisualPosition = -1
+RowNonHiddenPosition = -1
+If (VBFlexGridCells.Rows(Index).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN Then Exit Property
 Dim i As Long, Count As Long
 For i = 0 To (PropRows - 1)
     If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_HIDDEN) = 0 Then
         If i = Index Then
-            RowVisualPosition = Count
+            RowNonHiddenPosition = Count
             Exit For
         End If
         Count = Count + 1
     End If
 Next i
+End Property
+
+Public Property Get RowsNonHidden() As Long
+Attribute RowsNonHidden.VB_Description = "Returns the number of non-hidden rows."
+Attribute RowsNonHidden.VB_MemberFlags = "400"
+Dim i As Long, Count As Long
+For i = 0 To (PropRows - 1)
+    If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_HIDDEN) = 0 Then Count = Count + 1
+Next i
+RowsNonHidden = Count
 End Property
 
 Public Property Get RowHeight(ByVal Index As Long) As Long
@@ -9048,15 +9061,14 @@ Public Property Get RowIndex(ByVal ID As Long) As Long
 Attribute RowIndex.VB_Description = "Returns a row index given its identification."
 Attribute RowIndex.VB_MemberFlags = "400"
 RowIndex = -1
+If ID = 0 Then Exit Property
 Dim i As Long
 With VBFlexGridCells
 For i = 0 To (PropRows - 1)
-    With .Rows(i).RowInfo
-    If .ID = ID And .ID <> 0 Then
+    If .Rows(i).RowInfo.ID = ID Then
         RowIndex = i
         Exit For
     End If
-    End With
 Next i
 End With
 End Property
@@ -9293,14 +9305,15 @@ Call SetRowColParams(RCP)
 End With
 End Property
 
-Public Property Get ColBasePosition(ByVal VisualPosition As Long) As Long
-Attribute ColBasePosition.VB_Description = "Returns the position of a column for the specified visual (non-hidden) column."
-If VisualPosition < 0 Or VisualPosition > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
+Public Property Get ColBasePosition(ByVal NonHiddenPosition As Long) As Long
+Attribute ColBasePosition.VB_Description = "Returns the position of a column for the specified non-hidden mapped position."
+Attribute ColBasePosition.VB_MemberFlags = "400"
+If NonHiddenPosition < 0 Or NonHiddenPosition > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
 ColBasePosition = -1
 Dim i As Long, Count As Long
 For i = 0 To (PropCols - 1)
     If (VBFlexGridColsInfo(i).State And CLIS_HIDDEN) = 0 Then
-        If Count = VisualPosition Then
+        If Count = NonHiddenPosition Then
             ColBasePosition = i
             Exit For
         End If
@@ -9309,20 +9322,32 @@ For i = 0 To (PropCols - 1)
 Next i
 End Property
 
-Public Property Get ColVisualPosition(ByVal Index As Long) As Long
-Attribute ColVisualPosition.VB_Description = "Returns the visual position for the specified column among visual (non-hidden) columns only."
+Public Property Get ColNonHiddenPosition(ByVal Index As Long) As Long
+Attribute ColNonHiddenPosition.VB_Description = "Returns a mapped position for the specified column among non-hidden columns only."
+Attribute ColNonHiddenPosition.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
-ColVisualPosition = -1
+ColNonHiddenPosition = -1
+If (VBFlexGridColsInfo(Index).State And CLIS_HIDDEN) = CLIS_HIDDEN Then Exit Property
 Dim i As Long, Count As Long
 For i = 0 To (PropCols - 1)
     If (VBFlexGridColsInfo(i).State And CLIS_HIDDEN) = 0 Then
         If i = Index Then
-            ColVisualPosition = Count
+            ColNonHiddenPosition = Count
             Exit For
         End If
         Count = Count + 1
     End If
 Next i
+End Property
+
+Public Property Get ColsNonHidden() As Long
+Attribute ColsNonHidden.VB_Description = "Returns the number of non-hidden columns."
+Attribute ColsNonHidden.VB_MemberFlags = "400"
+Dim i As Long, Count As Long
+For i = 0 To (PropCols - 1)
+    If (VBFlexGridColsInfo(i).State And CLIS_HIDDEN) = 0 Then Count = Count + 1
+Next i
+ColsNonHidden = Count
 End Property
 
 Public Property Get ColWidth(ByVal Index As Long) As Long
