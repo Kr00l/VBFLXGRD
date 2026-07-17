@@ -8736,16 +8736,16 @@ Call SetRowColParams(RCP)
 End With
 End Property
 
-Public Property Get RowBasePosition(ByVal NonHiddenPosition As Long) As Long
-Attribute RowBasePosition.VB_Description = "Returns the position of a row for the specified non-hidden mapped position."
-Attribute RowBasePosition.VB_MemberFlags = "400"
+Public Property Get RowPositionFromNonHidden(ByVal NonHiddenPosition As Long) As Long
+Attribute RowPositionFromNonHidden.VB_Description = "Returns the position of a row for the specified non-hidden mapped position."
+Attribute RowPositionFromNonHidden.VB_MemberFlags = "400"
 If NonHiddenPosition < 0 Or NonHiddenPosition > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
-RowBasePosition = -1
+RowPositionFromNonHidden = -1
 Dim i As Long, Count As Long
 For i = 0 To (PropRows - 1)
     If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_HIDDEN) = 0 Then
         If Count = NonHiddenPosition Then
-            RowBasePosition = i
+            RowPositionFromNonHidden = i
             Exit For
         End If
         Count = Count + 1
@@ -8769,16 +8769,6 @@ For i = 0 To (PropRows - 1)
         Count = Count + 1
     End If
 Next i
-End Property
-
-Public Property Get RowsNonHidden() As Long
-Attribute RowsNonHidden.VB_Description = "Returns the number of non-hidden rows."
-Attribute RowsNonHidden.VB_MemberFlags = "400"
-Dim i As Long, Count As Long
-For i = 0 To (PropRows - 1)
-    If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_HIDDEN) = 0 Then Count = Count + 1
-Next i
-RowsNonHidden = Count
 End Property
 
 Public Property Get RowHeight(ByVal Index As Long) As Long
@@ -9223,6 +9213,16 @@ FrozenRowsVisible = Count
 End With
 End Property
 
+Public Property Get RowsNonHidden() As Long
+Attribute RowsNonHidden.VB_Description = "Returns the number of non-hidden rows."
+Attribute RowsNonHidden.VB_MemberFlags = "400"
+Dim i As Long, Count As Long
+For i = 0 To (PropRows - 1)
+    If (VBFlexGridCells.Rows(i).RowInfo.State And RWIS_HIDDEN) = 0 Then Count = Count + 1
+Next i
+RowsNonHidden = Count
+End Property
+
 Public Property Get RowsPerPage() As Long
 Attribute RowsPerPage.VB_Description = "Returns the total number of non-fixed (scrollable) columns or rows displayed on the current page to scroll through in the flex grid."
 Attribute RowsPerPage.VB_MemberFlags = "400"
@@ -9305,16 +9305,16 @@ Call SetRowColParams(RCP)
 End With
 End Property
 
-Public Property Get ColBasePosition(ByVal NonHiddenPosition As Long) As Long
-Attribute ColBasePosition.VB_Description = "Returns the position of a column for the specified non-hidden mapped position."
-Attribute ColBasePosition.VB_MemberFlags = "400"
+Public Property Get ColPositionFromNonHidden(ByVal NonHiddenPosition As Long) As Long
+Attribute ColPositionFromNonHidden.VB_Description = "Returns the position of a column for the specified non-hidden mapped position."
+Attribute ColPositionFromNonHidden.VB_MemberFlags = "400"
 If NonHiddenPosition < 0 Or NonHiddenPosition > (PropCols - 1) Then Err.Raise Number:=30010, Description:="Invalid Col value"
-ColBasePosition = -1
+ColPositionFromNonHidden = -1
 Dim i As Long, Count As Long
 For i = 0 To (PropCols - 1)
     If (VBFlexGridColsInfo(i).State And CLIS_HIDDEN) = 0 Then
         If Count = NonHiddenPosition Then
-            ColBasePosition = i
+            ColPositionFromNonHidden = i
             Exit For
         End If
         Count = Count + 1
@@ -9338,16 +9338,6 @@ For i = 0 To (PropCols - 1)
         Count = Count + 1
     End If
 Next i
-End Property
-
-Public Property Get ColsNonHidden() As Long
-Attribute ColsNonHidden.VB_Description = "Returns the number of non-hidden columns."
-Attribute ColsNonHidden.VB_MemberFlags = "400"
-Dim i As Long, Count As Long
-For i = 0 To (PropCols - 1)
-    If (VBFlexGridColsInfo(i).State And CLIS_HIDDEN) = 0 Then Count = Count + 1
-Next i
-ColsNonHidden = Count
 End Property
 
 Public Property Get ColWidth(ByVal Index As Long) As Long
@@ -9599,6 +9589,16 @@ For iCol = PropFixedCols To ((PropFixedCols + PropFrozenCols) - 1)
 Next iCol
 FrozenColsVisible = Count
 End With
+End Property
+
+Public Property Get ColsNonHidden() As Long
+Attribute ColsNonHidden.VB_Description = "Returns the number of non-hidden columns."
+Attribute ColsNonHidden.VB_MemberFlags = "400"
+Dim i As Long, Count As Long
+For i = 0 To (PropCols - 1)
+    If (VBFlexGridColsInfo(i).State And CLIS_HIDDEN) = 0 Then Count = Count + 1
+Next i
+ColsNonHidden = Count
 End Property
 
 Public Property Get ColsPerPage() As Long
