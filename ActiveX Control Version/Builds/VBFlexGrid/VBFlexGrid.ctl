@@ -6930,7 +6930,7 @@ Else
 End If
 End Function
 
-Public Function SaveArray(Optional ByVal Order As FlexArrayOrderConstants = FlexColumnMajor, Optional ByVal Rows As Long = -1, Optional ByVal Cols As Long = -1, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal ExcludeHidden As Boolean, Optional ByVal TextDisplay As Boolean, Optional ByVal UseColDataType As Boolean) As Variant
+Public Function SaveArray(Optional ByVal Order As FlexArrayOrderConstants = FlexColumnMajor, Optional ByVal Rows As Long = -1, Optional ByVal Cols As Long = -1, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal ExcludeHidden As Boolean, Optional ByVal TextDisplay As Boolean, Optional ByVal UseColDataType As Boolean, Optional ByVal UseColNullable As Boolean) As Variant
 Attribute SaveArray.VB_Description = "Saves the flex grid content into an two-dimensional string or variant array."
 If Rows < -1 Then Err.Raise 380
 If Cols < -1 Then Err.Raise 380
@@ -6941,6 +6941,9 @@ Select Case Order
     Case Else
         Err.Raise 380
 End Select
+If UseColDataType = False Then
+    If UseColNullable = True Then Err.Raise 5
+End If
 If Row = -1 Then Row = PropFixedRows
 If Col = -1 Then Col = PropFixedCols
 If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
@@ -7035,7 +7038,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iRowArr, iColArr) = CByte(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iRowArr, iColArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iRowArr, iColArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iRowArr, iColArr) = Buffer
+                                                        Else
+                                                            VntArr(iRowArr, iColArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iRowArr, iColArr) = Buffer
@@ -7051,7 +7065,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iRowArr, iColArr) = CInt(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iRowArr, iColArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iRowArr, iColArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iRowArr, iColArr) = Buffer
+                                                        Else
+                                                            VntArr(iRowArr, iColArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iRowArr, iColArr) = Buffer
@@ -7067,7 +7092,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iRowArr, iColArr) = CLng(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iRowArr, iColArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iRowArr, iColArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iRowArr, iColArr) = Buffer
+                                                        Else
+                                                            VntArr(iRowArr, iColArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iRowArr, iColArr) = Buffer
@@ -7083,7 +7119,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iRowArr, iColArr) = CSng(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iRowArr, iColArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iRowArr, iColArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iRowArr, iColArr) = Buffer
+                                                        Else
+                                                            VntArr(iRowArr, iColArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iRowArr, iColArr) = Buffer
@@ -7099,7 +7146,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iRowArr, iColArr) = CDbl(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iRowArr, iColArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iRowArr, iColArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iRowArr, iColArr) = Buffer
+                                                        Else
+                                                            VntArr(iRowArr, iColArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iRowArr, iColArr) = Buffer
@@ -7115,7 +7173,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iRowArr, iColArr) = CCur(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iRowArr, iColArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iRowArr, iColArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iRowArr, iColArr) = Buffer
+                                                        Else
+                                                            VntArr(iRowArr, iColArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iRowArr, iColArr) = Buffer
@@ -7131,7 +7200,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iRowArr, iColArr) = CDec(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iRowArr, iColArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iRowArr, iColArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iRowArr, iColArr) = Buffer
+                                                        Else
+                                                            VntArr(iRowArr, iColArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iRowArr, iColArr) = Buffer
@@ -7147,7 +7227,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iRowArr, iColArr) = CDate(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iRowArr, iColArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iRowArr, iColArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iRowArr, iColArr) = Buffer
+                                                        Else
+                                                            VntArr(iRowArr, iColArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iRowArr, iColArr) = Buffer
@@ -7163,7 +7254,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iRowArr, iColArr) = CBool(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iRowArr, iColArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iRowArr, iColArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iRowArr, iColArr) = Buffer
+                                                        Else
+                                                            VntArr(iRowArr, iColArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iRowArr, iColArr) = Buffer
@@ -7210,7 +7312,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iColArr, iRowArr) = CByte(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iColArr, iRowArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iColArr, iRowArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iColArr, iRowArr) = Buffer
+                                                        Else
+                                                            VntArr(iColArr, iRowArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iColArr, iRowArr) = Buffer
@@ -7226,7 +7339,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iColArr, iRowArr) = CInt(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iColArr, iRowArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iColArr, iRowArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iColArr, iRowArr) = Buffer
+                                                        Else
+                                                            VntArr(iColArr, iRowArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iColArr, iRowArr) = Buffer
@@ -7242,7 +7366,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iColArr, iRowArr) = CLng(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iColArr, iRowArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iColArr, iRowArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iColArr, iRowArr) = Buffer
+                                                        Else
+                                                            VntArr(iColArr, iRowArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iColArr, iRowArr) = Buffer
@@ -7258,7 +7393,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iColArr, iRowArr) = CSng(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iColArr, iRowArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iColArr, iRowArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iColArr, iRowArr) = Buffer
+                                                        Else
+                                                            VntArr(iColArr, iRowArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iColArr, iRowArr) = Buffer
@@ -7274,7 +7420,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iColArr, iRowArr) = CDbl(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iColArr, iRowArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iColArr, iRowArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iColArr, iRowArr) = Buffer
+                                                        Else
+                                                            VntArr(iColArr, iRowArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iColArr, iRowArr) = Buffer
@@ -7290,7 +7447,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iColArr, iRowArr) = CCur(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iColArr, iRowArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iColArr, iRowArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iColArr, iRowArr) = Buffer
+                                                        Else
+                                                            VntArr(iColArr, iRowArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iColArr, iRowArr) = Buffer
@@ -7306,7 +7474,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iColArr, iRowArr) = CDec(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iColArr, iRowArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iColArr, iRowArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iColArr, iRowArr) = Buffer
+                                                        Else
+                                                            VntArr(iColArr, iRowArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iColArr, iRowArr) = Buffer
@@ -7322,7 +7501,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iColArr, iRowArr) = CDate(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iColArr, iRowArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iColArr, iRowArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iColArr, iRowArr) = Buffer
+                                                        Else
+                                                            VntArr(iColArr, iRowArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iColArr, iRowArr) = Buffer
@@ -7338,7 +7528,18 @@ If Rows > 0 And Cols > 0 Then
                                         If iRow >= PropFixedRows Then
                                             If Not Buffer = vbNullString Then
                                                 VntArr(iColArr, iRowArr) = CBool(Buffer)
-                                                If Err.Number <> 0 Then Err.Clear: VntArr(iColArr, iRowArr) = Null
+                                                If Err.Number <> 0 Then
+                                                    Err.Clear
+                                                    If UseColNullable = False Then
+                                                        VntArr(iColArr, iRowArr) = Null
+                                                    Else
+                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
+                                                            VntArr(iColArr, iRowArr) = Buffer
+                                                        Else
+                                                            VntArr(iColArr, iRowArr) = Null
+                                                        End If
+                                                    End If
+                                                End If
                                             End If
                                         Else
                                             VntArr(iColArr, iRowArr) = Buffer
