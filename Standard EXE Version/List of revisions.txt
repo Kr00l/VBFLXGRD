@@ -1,5 +1,11 @@
 List of revisions:
 
+18-Jul-2026
+- Included the UseColNullable argument in the SaveArray function.
+  When True and ColNullable is False then the variant item is not 'Null' anymore upon failed type conversion.
+  It is then simply the as a string. This can be useful for excel exports when a column is not strictly typed.
+- Some minor internal improvements.
+
 17-Jul-2026
 - Included the Row/ColPositionFromNonHidden and Row/ColNonHiddenPosition read-only property, which maps between index and a non-hidden mapped position.
 - Included Rows/ColsNonHidden read-only property.
