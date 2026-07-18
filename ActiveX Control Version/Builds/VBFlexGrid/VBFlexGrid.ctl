@@ -6988,10 +6988,10 @@ If Rows > 0 And Cols > 0 Then
             Else
                 If Order = FlexRowMajor Then
                     For iRow = Row To ((Row + Rows) - 1)
-                        If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                        If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                             iColArr = 0
                             For iCol = Col To ((Col + Cols) - 1)
-                                If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                     Call GetCellText(iRow, iCol, StrArr(iRowArr, iColArr))
                                     If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, StrArr(iRowArr, iColArr))
                                     iColArr = iColArr + 1
@@ -7002,10 +7002,10 @@ If Rows > 0 And Cols > 0 Then
                     Next iRow
                 ElseIf Order = FlexColumnMajor Then
                     For iRow = Row To ((Row + Rows) - 1)
-                        If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                        If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                             iColArr = 0
                             For iCol = Col To ((Col + Cols) - 1)
-                                If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                     Call GetCellText(iRow, iCol, StrArr(iColArr, iRowArr))
                                     If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, StrArr(iColArr, iRowArr))
                                     iColArr = iColArr + 1
@@ -7027,12 +7027,12 @@ If Rows > 0 And Cols > 0 Then
             On Error Resume Next
             If Order = FlexRowMajor Then
                 For iCol = Col To ((Col + Cols) - 1)
-                    If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                         iRowArr = 0
                         Select Case VBFlexGridColsInfo(iCol).DataType
                             Case vbByte ' adUnsignedTinyInt
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7040,14 +7040,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iRowArr, iColArr) = CByte(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iRowArr, iColArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iRowArr, iColArr) = Buffer
-                                                        Else
-                                                            VntArr(iRowArr, iColArr) = Null
-                                                        End If
+                                                        VntArr(iRowArr, iColArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7059,7 +7055,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbInteger, 16 ' adSmallInt, adTinyInt
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7067,14 +7063,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iRowArr, iColArr) = CInt(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iRowArr, iColArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iRowArr, iColArr) = Buffer
-                                                        Else
-                                                            VntArr(iRowArr, iColArr) = Null
-                                                        End If
+                                                        VntArr(iRowArr, iColArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7086,7 +7078,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbLong, 18 ' adInteger, adUnsignedSmallInt
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7094,14 +7086,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iRowArr, iColArr) = CLng(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iRowArr, iColArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iRowArr, iColArr) = Buffer
-                                                        Else
-                                                            VntArr(iRowArr, iColArr) = Null
-                                                        End If
+                                                        VntArr(iRowArr, iColArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7113,7 +7101,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbSingle ' adSingle
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7121,14 +7109,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iRowArr, iColArr) = CSng(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iRowArr, iColArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iRowArr, iColArr) = Buffer
-                                                        Else
-                                                            VntArr(iRowArr, iColArr) = Null
-                                                        End If
+                                                        VntArr(iRowArr, iColArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7140,7 +7124,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbDouble ' adDouble
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7148,14 +7132,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iRowArr, iColArr) = CDbl(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iRowArr, iColArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iRowArr, iColArr) = Buffer
-                                                        Else
-                                                            VntArr(iRowArr, iColArr) = Null
-                                                        End If
+                                                        VntArr(iRowArr, iColArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7167,7 +7147,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbCurrency ' adCurrency
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7175,14 +7155,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iRowArr, iColArr) = CCur(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iRowArr, iColArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iRowArr, iColArr) = Buffer
-                                                        Else
-                                                            VntArr(iRowArr, iColArr) = Null
-                                                        End If
+                                                        VntArr(iRowArr, iColArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7194,7 +7170,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbDecimal, 19, 20, 21, 131 ' adDecimal, adUnsignedInt, adBigInt, adUnsignedBigInt, adNumeric
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7202,14 +7178,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iRowArr, iColArr) = CDec(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iRowArr, iColArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iRowArr, iColArr) = Buffer
-                                                        Else
-                                                            VntArr(iRowArr, iColArr) = Null
-                                                        End If
+                                                        VntArr(iRowArr, iColArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7221,7 +7193,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbDate, 133, 134, 135 ' adDate, adDBDate, adDBTime, adDBTimeStamp
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7229,14 +7201,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iRowArr, iColArr) = CDate(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iRowArr, iColArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iRowArr, iColArr) = Buffer
-                                                        Else
-                                                            VntArr(iRowArr, iColArr) = Null
-                                                        End If
+                                                        VntArr(iRowArr, iColArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7248,7 +7216,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbBoolean ' adBoolean
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7256,14 +7224,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iRowArr, iColArr) = CBool(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iRowArr, iColArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iRowArr, iColArr) = Buffer
-                                                        Else
-                                                            VntArr(iRowArr, iColArr) = Null
-                                                        End If
+                                                        VntArr(iRowArr, iColArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7275,7 +7239,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbVariant ' adVariant
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7288,7 +7252,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case Else
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         VntArr(iRowArr, iColArr) = Buffer
@@ -7301,12 +7265,12 @@ If Rows > 0 And Cols > 0 Then
                 Next iCol
             ElseIf Order = FlexColumnMajor Then
                 For iCol = Col To ((Col + Cols) - 1)
-                    If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                         iRowArr = 0
                         Select Case VBFlexGridColsInfo(iCol).DataType
                             Case vbByte ' adUnsignedTinyInt
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7314,14 +7278,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iColArr, iRowArr) = CByte(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iColArr, iRowArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iColArr, iRowArr) = Buffer
-                                                        Else
-                                                            VntArr(iColArr, iRowArr) = Null
-                                                        End If
+                                                        VntArr(iColArr, iRowArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7333,7 +7293,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbInteger, 16 ' adSmallInt, adTinyInt
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7341,14 +7301,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iColArr, iRowArr) = CInt(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iColArr, iRowArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iColArr, iRowArr) = Buffer
-                                                        Else
-                                                            VntArr(iColArr, iRowArr) = Null
-                                                        End If
+                                                        VntArr(iColArr, iRowArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7360,7 +7316,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbLong, 18 ' adInteger, adUnsignedSmallInt
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7368,14 +7324,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iColArr, iRowArr) = CLng(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iColArr, iRowArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iColArr, iRowArr) = Buffer
-                                                        Else
-                                                            VntArr(iColArr, iRowArr) = Null
-                                                        End If
+                                                        VntArr(iColArr, iRowArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7387,7 +7339,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbSingle ' adSingle
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7395,14 +7347,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iColArr, iRowArr) = CSng(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iColArr, iRowArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iColArr, iRowArr) = Buffer
-                                                        Else
-                                                            VntArr(iColArr, iRowArr) = Null
-                                                        End If
+                                                        VntArr(iColArr, iRowArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7414,7 +7362,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbDouble ' adDouble
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7422,14 +7370,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iColArr, iRowArr) = CDbl(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iColArr, iRowArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iColArr, iRowArr) = Buffer
-                                                        Else
-                                                            VntArr(iColArr, iRowArr) = Null
-                                                        End If
+                                                        VntArr(iColArr, iRowArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7441,7 +7385,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbCurrency ' adCurrency
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7449,14 +7393,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iColArr, iRowArr) = CCur(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iColArr, iRowArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iColArr, iRowArr) = Buffer
-                                                        Else
-                                                            VntArr(iColArr, iRowArr) = Null
-                                                        End If
+                                                        VntArr(iColArr, iRowArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7468,7 +7408,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbDecimal, 19, 20, 21, 131 ' adDecimal, adUnsignedInt, adBigInt, adUnsignedBigInt, adNumeric
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7476,14 +7416,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iColArr, iRowArr) = CDec(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iColArr, iRowArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iColArr, iRowArr) = Buffer
-                                                        Else
-                                                            VntArr(iColArr, iRowArr) = Null
-                                                        End If
+                                                        VntArr(iColArr, iRowArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7495,7 +7431,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbDate, 133, 134, 135 ' adDate, adDBDate, adDBTime, adDBTimeStamp
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7503,14 +7439,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iColArr, iRowArr) = CDate(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iColArr, iRowArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iColArr, iRowArr) = Buffer
-                                                        Else
-                                                            VntArr(iColArr, iRowArr) = Null
-                                                        End If
+                                                        VntArr(iColArr, iRowArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7522,7 +7454,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbBoolean ' adBoolean
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7530,14 +7462,10 @@ If Rows > 0 And Cols > 0 Then
                                                 VntArr(iColArr, iRowArr) = CBool(Buffer)
                                                 If Err.Number <> 0 Then
                                                     Err.Clear
-                                                    If UseColNullable = False Then
+                                                    If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = CLIS_NULLABLE Or UseColNullable = False Then
                                                         VntArr(iColArr, iRowArr) = Null
                                                     Else
-                                                        If (VBFlexGridColsInfo(iCol).State And CLIS_NULLABLE) = 0 Then
-                                                            VntArr(iColArr, iRowArr) = Buffer
-                                                        Else
-                                                            VntArr(iColArr, iRowArr) = Null
-                                                        End If
+                                                        VntArr(iColArr, iRowArr) = Buffer
                                                     End If
                                                 End If
                                             End If
@@ -7549,7 +7477,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case vbVariant ' adVariant
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         If iRow >= PropFixedRows Then
@@ -7562,7 +7490,7 @@ If Rows > 0 And Cols > 0 Then
                                 Next iRow
                             Case Else
                                 For iRow = Row To ((Row + Rows) - 1)
-                                    If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                                    If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
                                         If TextDisplay = True Then Call GetTextDisplay(iRow, iCol, Buffer)
                                         VntArr(iColArr, iRowArr) = Buffer
@@ -14332,7 +14260,7 @@ Select Case Match
     Case FlexFindMatchExact
         If Direction <= FlexFindDirectionUp Then
             For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                     Call GetCellText(iRowOrCol, Col, Buffer)
                     If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
                     If StrComp(Buffer, Text, Compare) = 0 Then
@@ -14343,7 +14271,7 @@ Select Case Match
             Next iRowOrCol
         Else
             For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
-                If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                     Call GetCellText(Row, iRowOrCol, Buffer)
                     If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
                     If StrComp(Buffer, Text, Compare) = 0 Then
@@ -14356,7 +14284,7 @@ Select Case Match
     Case FlexFindMatchPartial
         If Direction <= FlexFindDirectionUp Then
             For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                     Call GetCellText(iRowOrCol, Col, Buffer)
                     If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
                     If InStr(1, Buffer, Text, Compare) > 0 Then
@@ -14367,7 +14295,7 @@ Select Case Match
             Next iRowOrCol
         Else
             For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
-                If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                     Call GetCellText(Row, iRowOrCol, Buffer)
                     If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
                     If InStr(1, Buffer, Text, Compare) > 0 Then
@@ -14380,7 +14308,7 @@ Select Case Match
     Case FlexFindMatchStartsWith
         If Direction <= FlexFindDirectionUp Then
             For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                     Call GetCellText(iRowOrCol, Col, Buffer)
                     If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
                     If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
@@ -14391,7 +14319,7 @@ Select Case Match
             Next iRowOrCol
         Else
             For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
-                If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                     Call GetCellText(Row, iRowOrCol, Buffer)
                     If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
                     If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
@@ -14404,7 +14332,7 @@ Select Case Match
     Case FlexFindMatchEndsWith
         If Direction <= FlexFindDirectionUp Then
             For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                     Call GetCellText(iRowOrCol, Col, Buffer)
                     If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
                     If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
@@ -14415,7 +14343,7 @@ Select Case Match
             Next iRowOrCol
         Else
             For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
-                If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                     Call GetCellText(Row, iRowOrCol, Buffer)
                     If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
                     If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
@@ -14436,7 +14364,7 @@ If Wrap = True And FindItem = -1 Then
         Case FlexFindMatchExact
             If Direction <= FlexFindDirectionUp Then
                 For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                    If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                         Call GetCellText(iRowOrCol, Col, Buffer)
                         If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
                         If StrComp(Buffer, Text, Compare) = 0 Then
@@ -14447,7 +14375,7 @@ If Wrap = True And FindItem = -1 Then
                 Next iRowOrCol
             Else
                 For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
-                    If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                         Call GetCellText(Row, iRowOrCol, Buffer)
                         If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
                         If StrComp(Buffer, Text, Compare) = 0 Then
@@ -14460,7 +14388,7 @@ If Wrap = True And FindItem = -1 Then
         Case FlexFindMatchPartial
             If Direction <= FlexFindDirectionUp Then
                 For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                    If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                         Call GetCellText(iRowOrCol, Col, Buffer)
                         If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
                         If InStr(1, Buffer, Text, Compare) > 0 Then
@@ -14471,7 +14399,7 @@ If Wrap = True And FindItem = -1 Then
                 Next iRowOrCol
             Else
                 For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
-                    If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                         Call GetCellText(Row, iRowOrCol, Buffer)
                         If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
                         If InStr(1, Buffer, Text, Compare) > 0 Then
@@ -14484,7 +14412,7 @@ If Wrap = True And FindItem = -1 Then
         Case FlexFindMatchStartsWith
             If Direction <= FlexFindDirectionUp Then
                 For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                    If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                         Call GetCellText(iRowOrCol, Col, Buffer)
                         If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
                         If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
@@ -14495,7 +14423,7 @@ If Wrap = True And FindItem = -1 Then
                 Next iRowOrCol
             Else
                 For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
-                    If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                         Call GetCellText(Row, iRowOrCol, Buffer)
                         If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
                         If StrComp(Left$(Buffer, Length), Text, Compare) = 0 Then
@@ -14508,7 +14436,7 @@ If Wrap = True And FindItem = -1 Then
         Case FlexFindMatchEndsWith
             If Direction <= FlexFindDirectionUp Then
                 For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
-                    If (CBool((VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                         Call GetCellText(iRowOrCol, Col, Buffer)
                         If TextDisplay = True Then Call GetTextDisplay(iRowOrCol, Col, Buffer)
                         If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
@@ -14519,7 +14447,7 @@ If Wrap = True And FindItem = -1 Then
                 Next iRowOrCol
             Else
                 For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
-                    If (CBool((VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                    If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                         Call GetCellText(Row, iRowOrCol, Buffer)
                         If TextDisplay = True Then Call GetTextDisplay(Row, iRowOrCol, Buffer)
                         If StrComp(Right$(Buffer, Length), Text, Compare) = 0 Then
@@ -14579,10 +14507,10 @@ If Mode = FlexAutoSizeModeColWidth Then
     End Select
     For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
         With VBFlexGridColsInfo(iCol)
-        If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+        If (.State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
             .Width = -1
             For iRow = RowOrColScope1 To RowOrColScope2
-                If (CBool((VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                     Call GetCellText(iRow, iCol, Text)
                     Call GetTextDisplay(iRow, iCol, Text)
                     Size.CX = GetBestWidth(iRow, iCol, Text, hDC)
@@ -14599,7 +14527,7 @@ If Mode = FlexAutoSizeModeColWidth Then
     If Equal = True Then
         For iCol = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
             With VBFlexGridColsInfo(iCol)
-            If (CBool((.State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then .Width = EqualSize.CX
+            If (.State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then .Width = EqualSize.CX
             End With
         Next iCol
     End If
@@ -14625,10 +14553,10 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
     End Select
     For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
         With VBFlexGridCells.Rows(iRow).RowInfo
-        If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+        If (.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
             .Height = -1
             For iCol = RowOrColScope1 To RowOrColScope2
-                If (CBool((VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = CLIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then
+                If (VBFlexGridColsInfo(iCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                     Call GetCellText(iRow, iCol, Text)
                     Call GetTextDisplay(iRow, iCol, Text)
                     Size.CY = GetBestHeight(iRow, iCol, Text, hDC)
@@ -14645,7 +14573,7 @@ ElseIf Mode = FlexAutoSizeModeRowHeight Then
     If Equal = True Then
         For iRow = RowOrCol1 To RowOrCol2 Step IIf(RowOrCol2 >= RowOrCol1, 1, -1)
             With VBFlexGridCells.Rows(iRow).RowInfo
-            If (CBool((.State And RWIS_HIDDEN) = RWIS_HIDDEN) Xor ExcludeHidden) Or ExcludeHidden = False Then .Height = EqualSize.CY
+            If (.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then .Height = EqualSize.CY
             End With
         Next iRow
     End If
