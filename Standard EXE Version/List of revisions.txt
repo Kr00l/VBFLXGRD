@@ -1,9 +1,12 @@
 List of revisions:
 
+20-Jul-2026
+- ColDataType(x) = vbError supported for the SaveArray function. (UseColDataType = True)
+
 18-Jul-2026
 - Included the UseColNullable argument in the SaveArray function.
-  When True and ColNullable is False then the variant item is not 'Null' anymore upon failed type conversion.
-  It is then simply the as a string. This can be useful for excel exports when a column is not strictly typed.
+  When True and ColNullable(x) is False then the variant item is not 'Null' anymore upon failed type conversion.
+  It is then simply the original text. This can be useful for excel exports when a column is not strictly typed.
 - Some minor internal improvements.
 
 17-Jul-2026

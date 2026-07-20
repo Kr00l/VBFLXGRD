@@ -1,6 +1,6 @@
 VERSION 5.00
 Begin VB.Form UserEditingForm 
-   Caption         =   "CellEditing Demo"
+   Caption         =   "UserEditing Demo"
    ClientHeight    =   6900
    ClientLeft      =   225
    ClientTop       =   570

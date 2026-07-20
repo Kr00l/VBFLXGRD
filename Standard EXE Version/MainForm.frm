@@ -19,6 +19,14 @@ Begin VB.Form MainForm
       TabStop         =   0   'False
       Top             =   5895
       Width           =   13830
+      Begin VB.CommandButton Command22 
+         Caption         =   "Export to Excel"
+         Height          =   315
+         Left            =   11640
+         TabIndex        =   26
+         Top             =   480
+         Width           =   2055
+      End
       Begin VB.PictureBox Picture2 
          BackColor       =   &H8000000D&
          ForeColor       =   &H8000000E&
@@ -26,7 +34,7 @@ Begin VB.Form MainForm
          Left            =   9480
          ScaleHeight     =   255
          ScaleWidth      =   1275
-         TabIndex        =   28
+         TabIndex        =   29
          TabStop         =   0   'False
          Top             =   1200
          Width           =   1335
@@ -35,7 +43,7 @@ Begin VB.Form MainForm
          Caption         =   "Paste"
          Height          =   315
          Left            =   10200
-         TabIndex        =   27
+         TabIndex        =   28
          Top             =   840
          Width           =   615
       End
@@ -43,7 +51,7 @@ Begin VB.Form MainForm
          Caption         =   "Partial Search"
          Height          =   255
          Left            =   10920
-         TabIndex        =   30
+         TabIndex        =   31
          Top             =   1200
          Width           =   1335
       End
@@ -51,7 +59,7 @@ Begin VB.Form MainForm
          Caption         =   "DragRowCol"
          Height          =   315
          Left            =   12360
-         TabIndex        =   32
+         TabIndex        =   33
          Top             =   1200
          Width           =   1335
       End
@@ -59,7 +67,7 @@ Begin VB.Form MainForm
          Caption         =   "Copy"
          Height          =   315
          Left            =   9480
-         TabIndex        =   26
+         TabIndex        =   27
          Top             =   840
          Width           =   615
       End
@@ -67,7 +75,7 @@ Begin VB.Form MainForm
          Caption         =   "FindItem"
          Height          =   315
          Left            =   10920
-         TabIndex        =   29
+         TabIndex        =   30
          Top             =   840
          Width           =   1335
       End
@@ -75,7 +83,7 @@ Begin VB.Form MainForm
          Caption         =   "RowHidden"
          Height          =   315
          Left            =   12360
-         TabIndex        =   31
+         TabIndex        =   32
          Top             =   840
          Width           =   1335
       End
@@ -88,7 +96,7 @@ Begin VB.Form MainForm
          Width           =   2055
       End
       Begin VB.CommandButton Command7 
-         Caption         =   "Printscreen To Clipboard"
+         Caption         =   "Printscreen to Clipboard"
          Height          =   315
          Left            =   11640
          TabIndex        =   24
@@ -96,12 +104,12 @@ Begin VB.Form MainForm
          Width           =   2055
       End
       Begin VB.CommandButton Command19 
-         Caption         =   "Open UserEditing Demo (in-cell editing)"
+         Caption         =   "Open UserEditing Demo"
          Height          =   315
          Left            =   9480
          TabIndex        =   25
          Top             =   480
-         Width           =   4215
+         Width           =   2055
       End
       Begin VB.Frame Frame3 
          Caption         =   "Sorting"
@@ -581,6 +589,62 @@ End Sub
 
 Private Sub Command19_Click()
 UserEditingForm.Show vbModal
+End Sub
+
+Private Sub Command22_Click()
+If VBFlexGrid1.Rows = 0 Or VBFlexGrid1.Cols = 0 Then
+    MsgBox "Nothing to export.", vbExclamation + vbOKOnly
+    Exit Sub
+End If
+Dim ObjExcel As Object
+On Error Resume Next
+Err.Clear
+Set ObjExcel = GetObject(, "Excel.Application")
+If Err.Number > 0 Then
+    Err.Clear
+    Set ObjExcel = CreateObject("Excel.Application")
+    If Err.Number > 0 Then
+        Err.Clear
+        Set ObjExcel = Nothing
+    End If
+End If
+Err.Clear
+On Error GoTo 0
+If ObjExcel Is Nothing Then
+    MsgBox "Connection to Microsoft Excel could not be established.", vbCritical + vbOKOnly
+    Exit Sub
+End If
+On Error GoTo CATCH_EXCEPTION
+Dim ObjWB As Object, ObjWS As Object
+Set ObjWB = ObjExcel.Workbooks.Add
+Set ObjWS = ObjWB.Worksheets(1)
+Dim ArrRows As Variant
+With VBFlexGrid1
+.ColDataType(-1) = vbDouble
+.ColDataType(0) = vbLong
+.ColDataType(1) = vbDate
+.ColNullable(-1) = False ' Ensure that we export as text when type conversion fails
+ArrRows = .SaveArray(FlexRowMajor, , , 0, 0, True, , True, True) ' UseColNullable must be True
+If Not IsEmpty(ArrRows) Then
+    Dim i As Long
+    For i = 0 To UBound(ArrRows, 2)
+        Select Case .ColDataType(.ColPositionFromNonHidden(i))
+            Case vbString
+                ObjWS.Columns(i + 1).NumberFormat = "@"
+            Case vbCurrency, vbDouble
+                ObjWS.Columns(i + 1).NumberFormat = "#,##0.00"
+            Case vbDate
+                ObjWS.Columns(i + 1).NumberFormat = "m/d/yyyy"
+        End Select
+    Next i
+    ObjWS.Cells(1, 1).Resize(UBound(ArrRows, 1) + 1, UBound(ArrRows, 2) + 1).Value = ArrRows
+End If
+End With
+ObjExcel.Visible = True
+ObjWB.Activate
+Exit Sub
+CATCH_EXCEPTION:
+MsgBox Err.Description, vbCritical + vbOKOnly
 End Sub
 
 Private Sub Command8_Click()
