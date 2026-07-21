@@ -611,7 +611,7 @@ End If
 Err.Clear
 On Error GoTo 0
 If ObjExcel Is Nothing Then
-    MsgBox "Connection to Microsoft Excel could not be established.", vbCritical + vbOKOnly
+    MsgBox "Connection to Microsoft Excel failed.", vbCritical + vbOKOnly
     Exit Sub
 End If
 On Error GoTo CATCH_EXCEPTION
