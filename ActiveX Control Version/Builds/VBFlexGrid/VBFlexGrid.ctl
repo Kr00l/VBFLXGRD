@@ -14507,6 +14507,363 @@ If Wrap = True And FindItem = -1 Then
 End If
 End Function
 
+Public Function FindTag(ByVal Value As Variant, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal Match As FlexFindMatchConstants, Optional ByVal CaseSensitive As Boolean, Optional ByVal ExcludeHidden As Boolean, Optional ByVal Wrap As Boolean, Optional ByVal Direction As FlexFindDirectionConstants, Optional ByVal AllowCoercing As Boolean) As Long
+Attribute FindTag.VB_Description = "Finds a user-defined tag in the flex grid and returns the index of that tag."
+If Row < -1 Then Err.Raise 380
+If Col < -1 Then Err.Raise 380
+Select Case Match
+    Case FlexFindMatchExact, FlexFindMatchPartial, FlexFindMatchStartsWith, FlexFindMatchEndsWith
+    Case vbTrue ' Compatibility
+        Match = FlexFindMatchPartial
+    Case Else
+        Err.Raise 380
+End Select
+Select Case Direction
+    Case FlexFindDirectionDown, FlexFindDirectionUp, FlexFindDirectionRight, FlexFindDirectionLeft
+    Case Else
+        Err.Raise 380
+End Select
+If Direction <= FlexFindDirectionUp Then
+    If Row = -1 Then Row = IIf(Direction = FlexFindDirectionDown, PropFixedRows, (PropRows - 1))
+    If Col = -1 Then Col = PropFixedCols
+Else
+    If Row = -1 Then Row = PropFixedRows
+    If Col = -1 Then Col = IIf(Direction = FlexFindDirectionRight, PropFixedCols, (PropCols - 1))
+End If
+If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+If Direction <= FlexFindDirectionUp Then
+    If Row < PropFixedRows Then Err.Raise Number:=30003, Description:="Cannot use FindTag on a fixed row"
+Else
+    If Col < PropFixedCols Then Err.Raise Number:=30003, Description:="Cannot use FindTag on a fixed column"
+End If
+Dim iRowOrCol As Long, iRowOrColTo As Long
+FindTag = -1
+If Direction <= FlexFindDirectionUp Then
+    If Direction = FlexFindDirectionDown Then iRowOrColTo = (PropRows - 1) Else iRowOrColTo = PropFixedRows
+Else
+    If Direction = FlexFindDirectionRight Then iRowOrColTo = (PropCols - 1) Else iRowOrColTo = PropFixedCols
+End If
+Const VT_BYREF As Integer = &H4000
+Dim VT As Integer, Compare As VbCompareMethod, Length As Long, Buffer As Variant, BufferVT As Integer
+CopyMemory VT, ByVal VarPtr(Value), 2
+If (VT And VT_BYREF) = VT_BYREF Then VT = VT And Not VT_BYREF
+If (VT And vbArray) = vbArray Then Err.Raise Number:=5, Description:="Array value is not supported"
+If VT = vbString Then
+    If CaseSensitive = False Then Compare = vbTextCompare Else Compare = vbBinaryCompare
+    Length = Len(Value)
+Else
+    Select Case Match
+        Case FlexFindMatchPartial, FlexFindMatchStartsWith, FlexFindMatchEndsWith
+            Err.Raise Number:=5, Description:="Non-string value cannot be used when Match is not 0 - Exact"
+    End Select
+End If
+If Direction <= FlexFindDirectionUp Then
+    Select Case Match
+        Case FlexFindMatchExact
+            For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                    Call GetCellTag(iRowOrCol, Col, Buffer)
+                    CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                    If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                    If BufferVT = VT Then
+                        If VT = vbString Then
+                            If StrComp(Buffer, Value, Compare) = 0 Then FindTag = iRowOrCol: Exit For
+                        ElseIf VT = vbObject Then
+                            If Buffer Is Value Then FindTag = iRowOrCol: Exit For
+                        ElseIf VT = vbNull Then
+                            FindTag = iRowOrCol: Exit For
+                        Else
+                            If Buffer = Value Then FindTag = iRowOrCol: Exit For
+                        End If
+                    ElseIf AllowCoercing = True Then
+                        If (BufferVT And vbArray) = 0 And Not (BufferVT = vbObject Or VT = vbObject) Then
+                            If BufferVT = vbString Then
+                                If CStr(Buffer) = Value Then FindTag = iRowOrCol: Exit For
+                            ElseIf VT = vbString Then
+                                If Buffer = CStr(Value) Then FindTag = iRowOrCol: Exit For
+                            Else
+                                If Buffer = Value Then FindTag = iRowOrCol: Exit For
+                            End If
+                        End If
+                    End If
+                End If
+            Next iRowOrCol
+        Case FlexFindMatchPartial
+            For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                    Call GetCellTag(iRowOrCol, Col, Buffer)
+                    CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                    If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                    If BufferVT = vbString Then
+                        If InStr(1, Buffer, Value, Compare) > 0 Then
+                            FindTag = iRowOrCol
+                            Exit For
+                        End If
+                    End If
+                End If
+            Next iRowOrCol
+        Case FlexFindMatchStartsWith
+            For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                    Call GetCellTag(iRowOrCol, Col, Buffer)
+                    CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                    If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                    If BufferVT = vbString Then
+                        If StrComp(Left$(Buffer, Length), Value, Compare) = 0 Then
+                            FindTag = iRowOrCol
+                            Exit For
+                        End If
+                    End If
+                End If
+            Next iRowOrCol
+        Case FlexFindMatchEndsWith
+            For iRowOrCol = Row To iRowOrColTo Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                    Call GetCellTag(iRowOrCol, Col, Buffer)
+                    CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                    If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                    If BufferVT = vbString Then
+                        If StrComp(Right$(Buffer, Length), Value, Compare) = 0 Then
+                            FindTag = iRowOrCol
+                            Exit For
+                        End If
+                    End If
+                End If
+            Next iRowOrCol
+    End Select
+Else
+    Select Case Match
+        Case FlexFindMatchExact
+            For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                    Call GetCellTag(Row, iRowOrCol, Buffer)
+                    CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                    If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                    If BufferVT = VT Then
+                        If VT = vbString Then
+                            If StrComp(Buffer, Value, Compare) = 0 Then FindTag = iRowOrCol: Exit For
+                        ElseIf VT = vbObject Then
+                            If Buffer Is Value Then FindTag = iRowOrCol: Exit For
+                        ElseIf VT = vbNull Then
+                            FindTag = iRowOrCol: Exit For
+                        Else
+                            If Buffer = Value Then FindTag = iRowOrCol: Exit For
+                        End If
+                    ElseIf AllowCoercing = True Then
+                        If (BufferVT And vbArray) = 0 And Not (BufferVT = vbObject Or VT = vbObject) Then
+                            If BufferVT = vbString Then
+                                If CStr(Buffer) = Value Then FindTag = iRowOrCol: Exit For
+                            ElseIf VT = vbString Then
+                                If Buffer = CStr(Value) Then FindTag = iRowOrCol: Exit For
+                            Else
+                                If Buffer = Value Then FindTag = iRowOrCol: Exit For
+                            End If
+                        End If
+                    End If
+                End If
+            Next iRowOrCol
+        Case FlexFindMatchPartial
+            For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                    Call GetCellTag(Row, iRowOrCol, Buffer)
+                    CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                    If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                    If BufferVT = vbString Then
+                        If InStr(1, Buffer, Value, Compare) > 0 Then
+                            FindTag = iRowOrCol
+                            Exit For
+                        End If
+                    End If
+                End If
+            Next iRowOrCol
+        Case FlexFindMatchStartsWith
+            For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                    Call GetCellTag(Row, iRowOrCol, Buffer)
+                    CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                    If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                    If BufferVT = vbString Then
+                        If StrComp(Left$(Buffer, Length), Tag, Compare) = 0 Then
+                            FindTag = iRowOrCol
+                            Exit For
+                        End If
+                    End If
+                End If
+            Next iRowOrCol
+        Case FlexFindMatchEndsWith
+            For iRowOrCol = Col To iRowOrColTo Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                    Call GetCellTag(Row, iRowOrCol, Buffer)
+                    CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                    If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                    If BufferVT = vbString Then
+                        If StrComp(Right$(Buffer, Length), Value, Compare) = 0 Then
+                            FindTag = iRowOrCol
+                            Exit For
+                        End If
+                    End If
+                End If
+            Next iRowOrCol
+    End Select
+End If
+If Wrap = True And FindTag = -1 Then
+    If Direction <= FlexFindDirectionUp Then
+        If Direction = FlexFindDirectionDown Then iRowOrColTo = PropFixedRows Else iRowOrColTo = (PropRows - 1)
+    Else
+        If Direction = FlexFindDirectionRight Then iRowOrColTo = PropFixedCols Else iRowOrColTo = (PropCols - 1)
+    End If
+    If Direction <= FlexFindDirectionUp Then
+        Select Case Match
+            Case FlexFindMatchExact
+                For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                    If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                        Call GetCellTag(iRowOrCol, Col, Buffer)
+                        CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                        If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                        If BufferVT = VT Then
+                            If VT = vbString Then
+                                If StrComp(Buffer, Value, Compare) = 0 Then FindTag = iRowOrCol: Exit For
+                            ElseIf VT = vbObject Then
+                                If Buffer Is Value Then FindTag = iRowOrCol: Exit For
+                            ElseIf VT = vbNull Then
+                                FindTag = iRowOrCol: Exit For
+                            Else
+                                If Buffer = Value Then FindTag = iRowOrCol: Exit For
+                            End If
+                        ElseIf AllowCoercing = True Then
+                            If (BufferVT And vbArray) = 0 And Not (BufferVT = vbObject Or VT = vbObject) Then
+                                If BufferVT = vbString Then
+                                    If CStr(Buffer) = Value Then FindTag = iRowOrCol: Exit For
+                                ElseIf VT = vbString Then
+                                    If Buffer = CStr(Value) Then FindTag = iRowOrCol: Exit For
+                                Else
+                                    If Buffer = Value Then FindTag = iRowOrCol: Exit For
+                                End If
+                            End If
+                        End If
+                    End If
+                Next iRowOrCol
+            Case FlexFindMatchPartial
+                For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                    If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                        Call GetCellTag(iRowOrCol, Col, Buffer)
+                        CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                        If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                        If BufferVT = vbString Then
+                            If InStr(1, Buffer, Value, Compare) > 0 Then
+                                FindTag = iRowOrCol
+                                Exit For
+                            End If
+                        End If
+                    End If
+                Next iRowOrCol
+            Case FlexFindMatchStartsWith
+                For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                    If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                        Call GetCellTag(iRowOrCol, Col, Buffer)
+                        CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                        If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                        If BufferVT = vbString Then
+                            If StrComp(Left$(Buffer, Length), Value, Compare) = 0 Then
+                                FindTag = iRowOrCol
+                                Exit For
+                            End If
+                        End If
+                    End If
+                Next iRowOrCol
+            Case FlexFindMatchEndsWith
+                For iRowOrCol = iRowOrColTo To (Row - IIf(Direction = FlexFindDirectionDown, 1, -1)) Step IIf(Direction = FlexFindDirectionDown, 1, -1)
+                    If (VBFlexGridCells.Rows(iRowOrCol).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                        Call GetCellTag(iRowOrCol, Col, Buffer)
+                        CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                        If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                        If BufferVT = vbString Then
+                            If StrComp(Right$(Buffer, Length), Value, Compare) = 0 Then
+                                FindTag = iRowOrCol
+                                Exit For
+                            End If
+                        End If
+                    End If
+                Next iRowOrCol
+        End Select
+    Else
+        Select Case Match
+            Case FlexFindMatchExact
+                For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                    If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                        Call GetCellTag(Row, iRowOrCol, Buffer)
+                        CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                        If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                        If BufferVT = VT Then
+                            If VT = vbString Then
+                                If StrComp(Buffer, Value, Compare) = 0 Then FindTag = iRowOrCol: Exit For
+                            ElseIf VT = vbObject Then
+                                If Buffer Is Value Then FindTag = iRowOrCol: Exit For
+                            ElseIf VT = vbNull Then
+                                FindTag = iRowOrCol: Exit For
+                            Else
+                                If Buffer = Value Then FindTag = iRowOrCol: Exit For
+                            End If
+                        ElseIf AllowCoercing = True Then
+                            If (BufferVT And vbArray) = 0 And Not (BufferVT = vbObject Or VT = vbObject) Then
+                                If BufferVT = vbString Then
+                                    If CStr(Buffer) = Value Then FindTag = iRowOrCol: Exit For
+                                ElseIf VT = vbString Then
+                                    If Buffer = CStr(Value) Then FindTag = iRowOrCol: Exit For
+                                Else
+                                    If Buffer = Value Then FindTag = iRowOrCol: Exit For
+                                End If
+                            End If
+                        End If
+                    End If
+                Next iRowOrCol
+            Case FlexFindMatchPartial
+                For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                    If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                        Call GetCellTag(Row, iRowOrCol, Buffer)
+                        CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                        If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                        If BufferVT = vbString Then
+                            If InStr(1, Buffer, Value, Compare) > 0 Then
+                                FindTag = iRowOrCol
+                                Exit For
+                            End If
+                        End If
+                    End If
+                Next iRowOrCol
+            Case FlexFindMatchStartsWith
+                For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                    If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                        Call GetCellTag(Row, iRowOrCol, Buffer)
+                        CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                        If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                        If BufferVT = vbString Then
+                            If StrComp(Left$(Buffer, Length), Value, Compare) = 0 Then
+                                FindTag = iRowOrCol
+                                Exit For
+                            End If
+                        End If
+                    End If
+                Next iRowOrCol
+            Case FlexFindMatchEndsWith
+                For iRowOrCol = iRowOrColTo To (Col - IIf(Direction = FlexFindDirectionRight, 1, -1)) Step IIf(Direction = FlexFindDirectionRight, 1, -1)
+                    If (VBFlexGridColsInfo(iRowOrCol).State And CLIS_HIDDEN) = 0 Or ExcludeHidden = False Then
+                        Call GetCellTag(Row, iRowOrCol, Buffer)
+                        CopyMemory BufferVT, ByVal VarPtr(Buffer), 2
+                        If (BufferVT And VT_BYREF) = VT_BYREF Then BufferVT = BufferVT And Not VT_BYREF
+                        If BufferVT = vbString Then
+                            If StrComp(Right$(Buffer, Length), Value, Compare) = 0 Then
+                                FindTag = iRowOrCol
+                                Exit For
+                            End If
+                        End If
+                    End If
+                Next iRowOrCol
+        End Select
+    End If
+End If
+End Function
+
 Public Sub AutoSize(ByVal RowOrCol1 As Long, Optional ByVal RowOrCol2 As Long = -1, Optional ByVal Mode As FlexAutoSizeModeConstants, Optional ByVal Scope As FlexAutoSizeScopeConstants, Optional ByVal Equal As Boolean, Optional ByVal ExtraSpace As Long, Optional ByVal ExcludeHidden As Boolean)
 Attribute AutoSize.VB_Description = "Automatically sizes column widths or row heights to fit cell contents."
 If VBFlexGridHandle = NULL_PTR Or (PropRows < 1 Or PropCols < 1) Then Exit Sub
