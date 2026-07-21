@@ -6977,13 +6977,13 @@ If Rows > 0 And Cols > 0 Then
             End If
             If ExcludeHidden = False And TextDisplay = False Then ' Optimization
                 If Order = FlexRowMajor Then
-                    For iRow = Row To ((Row + Rows) - 1)
-                        For iCol = Col To ((Col + Cols) - 1): Call GetCellText(iRow, iCol, StrArr(iRow + (0 - Row), iCol + (0 - Col))): Next iCol
-                    Next iRow
+                    For iRow = Row To ((Row + Rows) - 1): For iCol = Col To ((Col + Cols) - 1)
+                        Call GetCellText(iRow, iCol, StrArr(iRow + (0 - Row), iCol + (0 - Col)))
+                    Next iCol, iRow
                 ElseIf Order = FlexColumnMajor Then
-                    For iRow = Row To ((Row + Rows) - 1)
-                        For iCol = Col To ((Col + Cols) - 1): Call GetCellText(iRow, iCol, StrArr(iCol + (0 - Col), iRow + (0 - Row))): Next iCol
-                    Next iRow
+                    For iRow = Row To ((Row + Rows) - 1): For iCol = Col To ((Col + Cols) - 1)
+                        Call GetCellText(iRow, iCol, StrArr(iCol + (0 - Col), iRow + (0 - Row)))
+                    Next iCol, iRow
                 End If
             Else
                 If Order = FlexRowMajor Then
