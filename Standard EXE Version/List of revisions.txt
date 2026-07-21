@@ -1,5 +1,10 @@
 List of revisions:
 
+21-Jul-2026
+- Included the FindTag function similar to how the FindItem function works.
+  It has an optional AllowCoercing argument which defaults to False which means both data types must match exactly.
+  Searching a Null tag will work. (unlike vsFlexGrid)
+
 20-Jul-2026
 - ColDataType(x) = vbError supported for the SaveArray function. (UseColDataType = True)
 
