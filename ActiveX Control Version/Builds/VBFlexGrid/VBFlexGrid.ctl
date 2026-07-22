@@ -1209,6 +1209,7 @@ Private Declare PtrSafe Sub DragFinish Lib "shell32" (ByVal hDrop As LongPtr)
 Private Declare PtrSafe Sub VariantInit Lib "oleaut32" (ByRef pvarg As Any)
 Private Declare PtrSafe Function VariantClear Lib "oleaut32" (ByRef pvarg As Any) As Long
 Private Declare PtrSafe Function VariantCopy Lib "oleaut32" (ByRef pvargDest As Any, ByRef pvargSrc As Any) As Long
+Private Declare PtrSafe Function VarCmp Lib "oleaut32" (ByRef pvargLeft As Any, ByRef pvargRight As Any, ByVal LCID As Long, ByVal dwFlags As Long) As Long
 Private Declare PtrSafe Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As LongPtr, ByVal lpWindowName As LongPtr, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As LongPtr, ByVal hMenu As LongPtr, ByVal hInstance As LongPtr, ByRef lpParam As Any) As LongPtr
 Private Declare PtrSafe Function HeapAlloc Lib "kernel32" (ByVal hHeap As LongPtr, ByVal dwFlags As Long, ByVal dwBytes As LongPtr) As LongPtr
 Private Declare PtrSafe Function HeapFree Lib "kernel32" (ByVal hHeap As LongPtr, ByVal dwFlags As Long, ByVal lpMem As LongPtr) As Long
@@ -1358,6 +1359,7 @@ Private Declare Sub DragFinish Lib "shell32" (ByVal hDrop As Long)
 Private Declare Sub VariantInit Lib "oleaut32" (ByRef pvarg As Any)
 Private Declare Function VariantClear Lib "oleaut32" (ByRef pvarg As Any) As Long
 Private Declare Function VariantCopy Lib "oleaut32" (ByRef pvargDest As Any, ByRef pvargSrc As Any) As Long
+Private Declare Function VarCmp Lib "oleaut32" (ByRef pvargLeft As Any, ByRef pvargRight As Any, ByVal LCID As Long, ByVal dwFlags As Long) As Long
 Private Declare Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As Long, ByVal lpWindowName As Long, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As Long, ByVal hMenu As Long, ByVal hInstance As Long, ByRef lpParam As Any) As Long
 Private Declare Function HeapAlloc Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal dwBytes As Long) As Long
 Private Declare Function HeapFree Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal lpMem As Long) As Long
@@ -1567,9 +1569,7 @@ Private Const SWP_NOZORDER As Long = &H4
 Private Const SWP_NOACTIVATE As Long = &H10
 Private Const SWP_SHOWWINDOW As Long = &H40
 Private Const SWP_NOCOPYBITS As Long = &H100
-Private Const PAGE_READWRITE As Long = 4
-Private Const MEM_COMMIT As Long = &H1000
-Private Const MEM_RELEASE As Long = &H8000&
+Private Const VARCMP_EQ As Long = 1
 #If VBA7 Then
 Private Const HWND_DESKTOP As LongPtr = &H0
 #Else
@@ -14576,15 +14576,7 @@ If Direction <= FlexFindDirectionUp Then
                             If Buffer = Value Then FindTag = iRowOrCol: Exit For
                         End If
                     ElseIf AllowCoercing = True Then
-                        If (BufferVT And vbArray) = 0 And Not (BufferVT = vbObject Or VT = vbObject) Then
-                            If BufferVT = vbString Then
-                                If CStr(Buffer) = Value Then FindTag = iRowOrCol: Exit For
-                            ElseIf VT = vbString Then
-                                If Buffer = CStr(Value) Then FindTag = iRowOrCol: Exit For
-                            Else
-                                If Buffer = Value Then FindTag = iRowOrCol: Exit For
-                            End If
-                        End If
+                        If VarCmp(Buffer, Value, 0, 0) = VARCMP_EQ Then FindTag = iRowOrCol: Exit For
                     End If
                 End If
             Next iRowOrCol
@@ -14650,15 +14642,7 @@ Else
                             If Buffer = Value Then FindTag = iRowOrCol: Exit For
                         End If
                     ElseIf AllowCoercing = True Then
-                        If (BufferVT And vbArray) = 0 And Not (BufferVT = vbObject Or VT = vbObject) Then
-                            If BufferVT = vbString Then
-                                If CStr(Buffer) = Value Then FindTag = iRowOrCol: Exit For
-                            ElseIf VT = vbString Then
-                                If Buffer = CStr(Value) Then FindTag = iRowOrCol: Exit For
-                            Else
-                                If Buffer = Value Then FindTag = iRowOrCol: Exit For
-                            End If
-                        End If
+                        If VarCmp(Buffer, Value, 0, 0) = VARCMP_EQ Then FindTag = iRowOrCol: Exit For
                     End If
                 End If
             Next iRowOrCol
@@ -14731,15 +14715,7 @@ If Wrap = True And FindTag = -1 Then
                                 If Buffer = Value Then FindTag = iRowOrCol: Exit For
                             End If
                         ElseIf AllowCoercing = True Then
-                            If (BufferVT And vbArray) = 0 And Not (BufferVT = vbObject Or VT = vbObject) Then
-                                If BufferVT = vbString Then
-                                    If CStr(Buffer) = Value Then FindTag = iRowOrCol: Exit For
-                                ElseIf VT = vbString Then
-                                    If Buffer = CStr(Value) Then FindTag = iRowOrCol: Exit For
-                                Else
-                                    If Buffer = Value Then FindTag = iRowOrCol: Exit For
-                                End If
-                            End If
+                            If VarCmp(Buffer, Value, 0, 0) = VARCMP_EQ Then FindTag = iRowOrCol: Exit For
                         End If
                     End If
                 Next iRowOrCol
@@ -14805,15 +14781,7 @@ If Wrap = True And FindTag = -1 Then
                                 If Buffer = Value Then FindTag = iRowOrCol: Exit For
                             End If
                         ElseIf AllowCoercing = True Then
-                            If (BufferVT And vbArray) = 0 And Not (BufferVT = vbObject Or VT = vbObject) Then
-                                If BufferVT = vbString Then
-                                    If CStr(Buffer) = Value Then FindTag = iRowOrCol: Exit For
-                                ElseIf VT = vbString Then
-                                    If Buffer = CStr(Value) Then FindTag = iRowOrCol: Exit For
-                                Else
-                                    If Buffer = Value Then FindTag = iRowOrCol: Exit For
-                                End If
-                            End If
+                            If VarCmp(Buffer, Value, 0, 0) = VARCMP_EQ Then FindTag = iRowOrCol: Exit For
                         End If
                     End If
                 Next iRowOrCol
