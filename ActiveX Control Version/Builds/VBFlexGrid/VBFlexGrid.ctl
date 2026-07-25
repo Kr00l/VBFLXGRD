@@ -925,7 +925,7 @@ Private Type TROWINFO
 Height As Long
 Data As LongPtr
 State As Long
-ID As Long
+ID As Currency ' Int64
 End Type
 Private Type TIMAGELIST
 ObjectPointer As LongPtr
@@ -1210,6 +1210,8 @@ Private Declare PtrSafe Sub VariantInit Lib "oleaut32" (ByRef pvarg As Any)
 Private Declare PtrSafe Function VariantClear Lib "oleaut32" (ByRef pvarg As Any) As Long
 Private Declare PtrSafe Function VariantCopy Lib "oleaut32" (ByRef pvargDest As Any, ByRef pvargSrc As Any) As Long
 Private Declare PtrSafe Function VarCmp Lib "oleaut32" (ByRef pvargLeft As Any, ByRef pvargRight As Any, ByVal LCID As Long, ByVal dwFlags As Long) As Long
+Private Declare PtrSafe Function VarDecFromI8 Lib "oleaut32" (ByVal i64In As Currency, ByRef pDecOut As Variant) As Long
+Private Declare PtrSafe Function VarI8FromDec Lib "oleaut32" (ByRef iDecIn As Variant, ByRef i64Out As Currency) As Long
 Private Declare PtrSafe Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As LongPtr, ByVal lpWindowName As LongPtr, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As LongPtr, ByVal hMenu As LongPtr, ByVal hInstance As LongPtr, ByRef lpParam As Any) As LongPtr
 Private Declare PtrSafe Function HeapAlloc Lib "kernel32" (ByVal hHeap As LongPtr, ByVal dwFlags As Long, ByVal dwBytes As LongPtr) As LongPtr
 Private Declare PtrSafe Function HeapFree Lib "kernel32" (ByVal hHeap As LongPtr, ByVal dwFlags As Long, ByVal lpMem As LongPtr) As Long
@@ -1360,6 +1362,8 @@ Private Declare Sub VariantInit Lib "oleaut32" (ByRef pvarg As Any)
 Private Declare Function VariantClear Lib "oleaut32" (ByRef pvarg As Any) As Long
 Private Declare Function VariantCopy Lib "oleaut32" (ByRef pvargDest As Any, ByRef pvargSrc As Any) As Long
 Private Declare Function VarCmp Lib "oleaut32" (ByRef pvargLeft As Any, ByRef pvargRight As Any, ByVal LCID As Long, ByVal dwFlags As Long) As Long
+Private Declare Function VarDecFromI8 Lib "oleaut32" (ByVal i64In As Currency, ByRef pDecOut As Variant) As Long
+Private Declare Function VarI8FromDec Lib "oleaut32" (ByRef iDecIn As Variant, ByRef i64Out As Currency) As Long
 Private Declare Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As Long, ByVal lpWindowName As Long, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As Long, ByVal hMenu As Long, ByVal hInstance As Long, ByRef lpParam As Any) As Long
 Private Declare Function HeapAlloc Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal dwBytes As Long) As Long
 Private Declare Function HeapFree Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal lpMem As Long) As Long
@@ -1570,6 +1574,7 @@ Private Const SWP_NOACTIVATE As Long = &H10
 Private Const SWP_SHOWWINDOW As Long = &H40
 Private Const SWP_NOCOPYBITS As Long = &H100
 Private Const VARCMP_EQ As Long = 1
+Private Const VT_I8 As Integer = &H14
 #If VBA7 Then
 Private Const HWND_DESKTOP As LongPtr = &H0
 #Else
@@ -7168,7 +7173,7 @@ If Rows > 0 And Cols > 0 Then
                                         iRowArr = iRowArr + 1
                                     End If
                                 Next iRow
-                            Case vbDecimal, 19, 20, 21, 131 ' adDecimal, adUnsignedInt, adBigInt, adUnsignedBigInt, adNumeric
+                            Case vbDecimal, 19, VT_I8, 21, 131 ' adDecimal, adUnsignedInt, adBigInt, adUnsignedBigInt, adNumeric
                                 For iRow = Row To ((Row + Rows) - 1)
                                     If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
@@ -7429,7 +7434,7 @@ If Rows > 0 And Cols > 0 Then
                                         iRowArr = iRowArr + 1
                                     End If
                                 Next iRow
-                            Case vbDecimal, 19, 20, 21, 131 ' adDecimal, adUnsignedInt, adBigInt, adUnsignedBigInt, adNumeric
+                            Case vbDecimal, 19, VT_I8, 21, 131 ' adDecimal, adUnsignedInt, adBigInt, adUnsignedBigInt, adNumeric
                                 For iRow = Row To ((Row + Rows) - 1)
                                     If (VBFlexGridCells.Rows(iRow).RowInfo.State And RWIS_HIDDEN) = 0 Or ExcludeHidden = False Then
                                         Call GetCellText(iRow, iCol, Buffer)
@@ -9210,27 +9215,65 @@ End If
 SelectedRows = Count
 End Property
 
-Public Property Get RowID(ByVal Index As Long) As Long
+Public Property Get RowID(ByVal Index As Long) As Variant
 Attribute RowID.VB_Description = "Returns/sets an identification used to identify the specified row."
 Attribute RowID.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
-RowID = VBFlexGridCells.Rows(Index).RowInfo.ID
+With VBFlexGridCells.Rows(Index).RowInfo
+If .ID >= -214748.3648@ And .ID <= 214748.3647@ Then
+    RowID = CLng(.ID * 10000@)
+Else
+    RowID = CDec(0)
+    VarDecFromI8 .ID, RowID
+End If
+End With
 End Property
 
-Public Property Let RowID(ByVal Index As Long, ByVal Value As Long)
+Public Property Let RowID(ByVal Index As Long, ByVal Value As Variant)
 If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
-VBFlexGridCells.Rows(Index).RowInfo.ID = Value
+Dim VT As Integer
+VT = VarType(Value)
+Select Case VT
+    Case vbDecimal, vbCurrency, VT_I8, vbLong, vbInteger, vbByte
+        Dim Int64 As Currency
+        Select Case VT
+            Case vbDecimal
+                VarI8FromDec Value, Int64
+            Case vbCurrency
+                Int64 = Value / 10000@
+            Case VT_I8
+                CopyMemory Int64, ByVal UnsignedAdd(VarPtr(Value), 8), 8
+            Case vbLong, vbInteger, vbByte
+                Int64 = Value / 10000@
+        End Select
+        VBFlexGridCells.Rows(Index).RowInfo.ID = Int64
+    Case Else
+        Err.Raise 380
+End Select
 End Property
 
-Public Property Get RowIndex(ByVal ID As Long) As Long
+Public Property Get RowIndex(ByVal ID As Variant) As Long
 Attribute RowIndex.VB_Description = "Returns a row index given its identification."
 Attribute RowIndex.VB_MemberFlags = "400"
 RowIndex = -1
-If ID = 0 Then Exit Property
+Dim Int64 As Currency
+Select Case VarType(ID)
+    Case vbDecimal
+        VarI8FromDec ID, Int64
+    Case vbCurrency
+        Int64 = ID / 10000@
+    Case VT_I8
+        CopyMemory Int64, ByVal UnsignedAdd(VarPtr(ID), 8), 8
+    Case vbLong, vbInteger, vbByte
+        Int64 = ID / 10000@
+    Case Else
+        Err.Raise 13
+End Select
+If Int64 = 0@ Then Exit Property
 Dim i As Long
 With VBFlexGridCells
 For i = 0 To (PropRows - 1)
-    If .Rows(i).RowInfo.ID = ID Then
+    If .Rows(i).RowInfo.ID = Int64 Then
         RowIndex = i
         Exit For
     End If
@@ -9238,7 +9281,7 @@ Next i
 End With
 End Property
 
-Public Property Let RowIndex(ByVal ID As Long, ByVal Value As Long)
+Public Property Let RowIndex(ByVal ID As Variant, ByVal Value As Long)
 Err.Raise Number:=383, Description:="Property is read-only"
 End Property
 
