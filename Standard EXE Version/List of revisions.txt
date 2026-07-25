@@ -1,5 +1,10 @@
 List of revisions:
 
+25-Jul-2026
+- RowID(x) and RowIndex(x) now as Variant to accept BigInt values.
+  Internally the ID is saved and processed as Currency. (Int64)
+  The memory increase is 4 byte per row and the performance is optimal.
+
 21-Jul-2026
 - Included the FindTag function similar to how the FindItem function works.
   It has an optional AllowCoercing argument which defaults to False which means both data types must match exactly.
