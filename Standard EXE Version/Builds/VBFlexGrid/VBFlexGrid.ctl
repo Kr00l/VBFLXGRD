@@ -1211,7 +1211,8 @@ Private Declare PtrSafe Function VariantClear Lib "oleaut32" (ByRef pvarg As Any
 Private Declare PtrSafe Function VariantCopy Lib "oleaut32" (ByRef pvargDest As Any, ByRef pvargSrc As Any) As Long
 Private Declare PtrSafe Function VarCmp Lib "oleaut32" (ByRef pvargLeft As Any, ByRef pvargRight As Any, ByVal LCID As Long, ByVal dwFlags As Long) As Long
 Private Declare PtrSafe Function VarDecFromI8 Lib "oleaut32" (ByVal i64In As Currency, ByRef pDecOut As Variant) As Long
-Private Declare PtrSafe Function VarI8FromDec Lib "oleaut32" (ByRef iDecIn As Variant, ByRef i64Out As Currency) As Long
+Private Declare PtrSafe Function VarI8FromDec Lib "oleaut32" (ByRef pDecIn As Variant, ByRef i64Out As Currency) As Long
+Private Declare PtrSafe Function VarI8FromR8 Lib "oleaut32" (ByVal DblIn As Double, ByRef i64Out As Currency) As Long
 Private Declare PtrSafe Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As LongPtr, ByVal lpWindowName As LongPtr, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As LongPtr, ByVal hMenu As LongPtr, ByVal hInstance As LongPtr, ByRef lpParam As Any) As LongPtr
 Private Declare PtrSafe Function HeapAlloc Lib "kernel32" (ByVal hHeap As LongPtr, ByVal dwFlags As Long, ByVal dwBytes As LongPtr) As LongPtr
 Private Declare PtrSafe Function HeapFree Lib "kernel32" (ByVal hHeap As LongPtr, ByVal dwFlags As Long, ByVal lpMem As LongPtr) As Long
@@ -1363,7 +1364,8 @@ Private Declare Function VariantClear Lib "oleaut32" (ByRef pvarg As Any) As Lon
 Private Declare Function VariantCopy Lib "oleaut32" (ByRef pvargDest As Any, ByRef pvargSrc As Any) As Long
 Private Declare Function VarCmp Lib "oleaut32" (ByRef pvargLeft As Any, ByRef pvargRight As Any, ByVal LCID As Long, ByVal dwFlags As Long) As Long
 Private Declare Function VarDecFromI8 Lib "oleaut32" (ByVal i64In As Currency, ByRef pDecOut As Variant) As Long
-Private Declare Function VarI8FromDec Lib "oleaut32" (ByRef iDecIn As Variant, ByRef i64Out As Currency) As Long
+Private Declare Function VarI8FromDec Lib "oleaut32" (ByRef pDecIn As Variant, ByRef i64Out As Currency) As Long
+Private Declare Function VarI8FromR8 Lib "oleaut32" (ByVal DblIn As Double, ByRef i64Out As Currency) As Long
 Private Declare Function CreateWindowEx Lib "user32" Alias "CreateWindowExW" (ByVal dwExStyle As Long, ByVal lpClassName As Long, ByVal lpWindowName As Long, ByVal dwStyle As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hWndParent As Long, ByVal hMenu As Long, ByVal hInstance As Long, ByRef lpParam As Any) As Long
 Private Declare Function HeapAlloc Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal dwBytes As Long) As Long
 Private Declare Function HeapFree Lib "kernel32" (ByVal hHeap As Long, ByVal dwFlags As Long, ByVal lpMem As Long) As Long
@@ -1575,6 +1577,7 @@ Private Const SWP_SHOWWINDOW As Long = &H40
 Private Const SWP_NOCOPYBITS As Long = &H100
 Private Const VARCMP_EQ As Long = 1
 Private Const VT_I8 As Integer = &H14
+Private Const DISP_E_OVERFLOW As Long = &H8002000A
 #If VBA7 Then
 Private Const HWND_DESKTOP As LongPtr = &H0
 #Else
@@ -9231,25 +9234,24 @@ End Property
 
 Public Property Let RowID(ByVal Index As Long, ByVal Value As Variant)
 If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
-Dim VT As Integer
-VT = VarType(Value)
-Select Case VT
-    Case vbDecimal, vbCurrency, VT_I8, vbLong, vbInteger, vbByte
-        Dim Int64 As Currency
-        Select Case VT
-            Case vbDecimal
-                VarI8FromDec Value, Int64
-            Case vbCurrency
-                Int64 = Value / 10000@
-            Case VT_I8
-                CopyMemory Int64, ByVal UnsignedAdd(VarPtr(Value), 8), 8
-            Case vbLong, vbInteger, vbByte
-                Int64 = Value / 10000@
-        End Select
-        VBFlexGridCells.Rows(Index).RowInfo.ID = Int64
+Dim Int64 As Currency
+Select Case VarType(Value)
+    Case vbDecimal
+        If VarI8FromDec(Value, Int64) = DISP_E_OVERFLOW Then Err.Raise 6
+    Case vbCurrency
+        Int64 = Value / 10000@
+    Case VT_I8
+        CopyMemory Int64, ByVal UnsignedAdd(VarPtr(Value), 8), 8
+    Case vbLong, vbInteger, vbByte
+        Int64 = Value / 10000@
+    Case vbDouble
+        If VarI8FromR8(Value, Int64) = DISP_E_OVERFLOW Then Err.Raise 6
+    Case vbEmpty
+        Int64 = 0@
     Case Else
         Err.Raise 380
 End Select
+VBFlexGridCells.Rows(Index).RowInfo.ID = Int64
 End Property
 
 Public Property Get RowIndex(ByVal ID As Variant) As Long
@@ -9259,13 +9261,17 @@ RowIndex = -1
 Dim Int64 As Currency
 Select Case VarType(ID)
     Case vbDecimal
-        VarI8FromDec ID, Int64
+        If VarI8FromDec(ID, Int64) = DISP_E_OVERFLOW Then Err.Raise 6
     Case vbCurrency
         Int64 = ID / 10000@
     Case VT_I8
         CopyMemory Int64, ByVal UnsignedAdd(VarPtr(ID), 8), 8
     Case vbLong, vbInteger, vbByte
         Int64 = ID / 10000@
+    Case vbDouble
+        If VarI8FromR8(ID, Int64) = DISP_E_OVERFLOW Then Err.Raise 6
+    Case vbEmpty
+        Int64 = 0@
     Case Else
         Err.Raise 13
 End Select
@@ -9920,7 +9926,7 @@ If IsObject(Value) Then
     End If
 Else
     Select Case VarType(Value)
-        Case vbLong, &H14 ' vbLongLong
+        Case vbLong, VT_I8 ' vbLongLong
             Handle = Value
             Success = CBool(Handle <> NULL_PTR)
             If Success = True Then
