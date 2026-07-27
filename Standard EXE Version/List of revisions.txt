@@ -1,5 +1,9 @@
 List of revisions:
 
+27-Jul-2026
+- Included the optional OneDim argument in the SaveArray function to allow one-dimensional array output. (defaults to False)
+  It can also be FlexRowMajor or FlexColumnMajor.
+
 25-Jul-2026
 - RowID(x) and RowIndex(x) now as Variant to accept BigInt values.
   Internally the ID is saved and processed as Currency. (Int64)
