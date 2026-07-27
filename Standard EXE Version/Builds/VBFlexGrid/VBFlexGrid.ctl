@@ -6752,7 +6752,7 @@ If Row < -1 Then Err.Raise 380
 If Col < -1 Then Err.Raise 380
 If Row = -1 Then Row = PropFixedRows
 If Col = -1 Then Col = PropFixedCols
-If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+If (Row < 0 Or Row > IIf(RestrictRows = True, (PropRows - 1), 0)) Or (Col < 0 Or Col > IIf(RestrictColumns = True, (PropCols - 1), 0)) Then Err.Raise Number:=381, Description:="Subscript out of range"
 If IsArray(Data) Then
     Dim LBoundRows As Long, UBoundRows As Long, LBoundCols As Long, UBoundCols As Long
     UBoundRows = -1
@@ -6781,8 +6781,25 @@ If IsArray(Data) Then
             Else
                 Err.Raise Number:=5, Description:="Array has too many dimensions"
             End If
+        ElseIf DimensionCount = 1 Then
+            If RowDim > 0 And ColDim > 0 Then Err.Raise Number:=5, Description:="Array must be at least double dimensioned"
+            If (RowDim < IIf(ColDim > 0, 0, 1) Or RowDim > DimensionCount) Or (ColDim < IIf(RowDim > 0, 0, 1) Or ColDim > DimensionCount) Or (PageDim < 0 Or PageDim > DimensionCount) Then Err.Raise Number:=381, Description:="Invalid property array index"
+            Select Case VarType(Data)
+                Case (vbArray + vbVariant), (vbArray + vbString)
+                    If RowDim > 0 Then
+                        LBoundRows = LBound(Data, RowDim)
+                        UBoundRows = UBound(Data, RowDim)
+                        UBoundCols = 0
+                    ElseIf ColDim > 0 Then
+                        LBoundCols = LBound(Data, ColDim)
+                        UBoundCols = UBound(Data, ColDim)
+                        UBoundRows = 0
+                    End If
+                Case Else
+                    Err.Raise 13
+            End Select
         Else
-            Err.Raise Number:=5, Description:="Array must be at least double dimensioned"
+            Err.Raise Number:=5, Description:="Array must be at least single dimensioned"
         End If
     Else
         Err.Raise Number:=91, Description:="Array is not allocated"
@@ -6815,6 +6832,26 @@ If IsArray(Data) Then
             Select Case VarType(Data)
                 Case (vbArray + vbVariant)
                     Select Case DimensionCount
+                        Case 1
+                            If RowDim > 0 Then
+                                For iRow = LBoundRows To UBoundRows
+                                    ArrDim(RowDim) = iRow
+                                    If Not IsNull(Data(ArrDim(1))) Then
+                                        Call SetCellText((iRow - LBoundRows) + Row, Col, (Data(ArrDim(1))))
+                                    Else
+                                        Call SetCellText((iRow - LBoundRows) + Row, Col, vbNullString)
+                                    End If
+                                Next iRow
+                            ElseIf ColDim > 0 Then
+                                For iCol = LBoundCols To UBoundCols
+                                    ArrDim(ColDim) = iCol
+                                    If Not IsNull(Data(ArrDim(1))) Then
+                                        Call SetCellText(Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1))))
+                                    Else
+                                        Call SetCellText(Row, (iCol - LBoundCols) + Col, vbNullString)
+                                    End If
+                                Next iCol
+                            End If
                         Case 2
                             For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
                                 ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
@@ -6890,6 +6927,18 @@ If IsArray(Data) Then
                     End Select
                 Case (vbArray + vbString)
                     Select Case DimensionCount
+                        Case 1
+                            If RowDim > 0 Then
+                                For iRow = LBoundRows To UBoundRows
+                                    ArrDim(RowDim) = iRow
+                                    Call SetCellText((iRow - LBoundRows) + Row, Col, (Data(ArrDim(1))))
+                                Next iRow
+                            ElseIf ColDim > 0 Then
+                                For iCol = LBoundCols To UBoundCols
+                                    ArrDim(ColDim) = iCol
+                                    Call SetCellText(Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1))))
+                                Next iCol
+                            End If
                         Case 2
                             For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
                                 ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
