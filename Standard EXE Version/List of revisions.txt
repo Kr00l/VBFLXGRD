@@ -1,8 +1,11 @@
 List of revisions:
 
 27-Jul-2026
-- Included the optional OneDim argument in the SaveArray function to allow one-dimensional array output. (defaults to False)
-  It can also be FlexRowMajor or FlexColumnMajor.
+- Bugfix in the LoadArray function when applying on an empty grid. (related to RestrictRows/RestrictColumns)
+- LoadArray function can now handle a one-dimensional array.
+  For this either RowDim or ColDim must be set to 0. Otherwise an error is thrown that a two-dimensional array is expected.
+- Included the optional OneDim argument in the SaveArray function to allow one-dimensional array output.
+  The order (FlexRowMajor or FlexColumnMajor) is applied for this one-dimensional array.
 
 25-Jul-2026
 - RowID(x) and RowIndex(x) now as Variant to accept BigInt values.
