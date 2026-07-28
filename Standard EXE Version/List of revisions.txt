@@ -1,6 +1,11 @@
 List of revisions:
 
 28-Jul-2026
+- RowID(x) allows to assign a one-dimensional array where x is the start index.
+  The array can be longer than the distance between the start index and the last index of the grid.
+  Example for fast reading (1 mio. rows ~ 600 ms) of the first (usually fixed) column: (limit to 1 column)
+  .RowID(.FixedRows) = .SaveArray(FlexColumnMajor, Cols:=1, Col:=0, OneDim:=True)
+  The normal usage of RowID(x) is not slower as the var type must be anyhow checked.
 - Bugfix in the LoadArray function when applying on an empty grid. (related to RestrictRows/RestrictColumns)
 
 27-Jul-2026
