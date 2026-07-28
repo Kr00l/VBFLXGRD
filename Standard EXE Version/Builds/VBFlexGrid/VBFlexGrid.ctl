@@ -9281,7 +9281,7 @@ SelectedRows = Count
 End Property
 
 Public Property Get RowID(ByVal Index As Long) As Variant
-Attribute RowID.VB_Description = "Returns/sets an identification used to identify the specified row."
+Attribute RowID.VB_Description = "Returns/sets an identifier for the specified row. Alternatively, a one-dimensional array can be assigned to set multiple identifiers at once."
 Attribute RowID.VB_MemberFlags = "400"
 If Index < 0 Or Index > (PropRows - 1) Then Err.Raise Number:=30009, Description:="Invalid Row value"
 With VBFlexGridCells.Rows(Index).RowInfo
@@ -9317,6 +9317,103 @@ Select Case VarType(Value)
         End Select
     Case vbEmpty
         Int64 = 0@
+    Case (vbArray + vbDecimal), (vbArray + vbCurrency), (vbArray + VT_I8), _
+    (vbArray + vbLong), (vbArray + vbInteger), (vbArray + vbByte), _
+    (vbArray + vbDouble), (vbArray + vbString), (vbArray + vbVariant)
+        Dim LBoundArr As Long, UBoundArr As Long
+        UBoundArr = -1
+        Dim Ptr As LongPtr
+        CopyMemory Ptr, ByVal UnsignedAdd(VarPtr(Value), 8), PTR_SIZE
+        Const VT_BYREF As Integer = &H4000
+        Dim VT As Integer
+        CopyMemory VT, ByVal VarPtr(Value), 2
+        If (VT And VT_BYREF) = VT_BYREF Then CopyMemory Ptr, ByVal Ptr, PTR_SIZE
+        If Ptr <> NULL_PTR Then
+            Dim DimensionCount As Integer
+            CopyMemory DimensionCount, ByVal Ptr, 2
+            If DimensionCount = 1 Then
+                LBoundArr = LBound(Value)
+                UBoundArr = UBound(Value)
+            Else
+                Err.Raise Number:=5, Description:="Array must be single dimensioned"
+            End If
+        Else
+            Err.Raise Number:=91, Description:="Array is not allocated"
+        End If
+        If (UBoundArr - LBoundArr) > -1 Then
+            If (Index + (UBoundArr - LBoundArr)) > (PropRows - 1) Then UBoundArr = LBoundArr + ((PropRows - 1) - Index)
+            Dim i As Long
+            Select Case VarType(Value)
+                Case (vbArray + vbDecimal)
+                    For i = LBoundArr To UBoundArr
+                        If VarI8FromDec(Value(i), Int64) = DISP_E_OVERFLOW Then Err.Raise 6
+                        VBFlexGridCells.Rows(Index).RowInfo.ID = Int64
+                        Index = Index + 1
+                    Next i
+                Case (vbArray + vbCurrency)
+                    For i = LBoundArr To UBoundArr
+                        Int64 = Value(i) / 10000@
+                        VBFlexGridCells.Rows(Index).RowInfo.ID = Int64
+                        Index = Index + 1
+                    Next i
+                Case (vbArray + VT_I8)
+                    For i = LBoundArr To UBoundArr
+                        CopyMemory Int64, ByVal VarPtr(Value(i)), 8 ' Directly
+                        VBFlexGridCells.Rows(Index).RowInfo.ID = Int64
+                        Index = Index + 1
+                    Next i
+                Case (vbArray + vbLong), (vbArray + vbInteger), (vbArray + vbByte)
+                    For i = LBoundArr To UBoundArr
+                        Int64 = Value(i) / 10000@
+                        VBFlexGridCells.Rows(Index).RowInfo.ID = Int64
+                        Index = Index + 1
+                    Next i
+                Case (vbArray + vbDouble)
+                    For i = LBoundArr To UBoundArr
+                        If VarI8FromR8(Value(i), Int64) = DISP_E_OVERFLOW Then Err.Raise 6
+                        VBFlexGridCells.Rows(Index).RowInfo.ID = Int64
+                        Index = Index + 1
+                    Next i
+                Case (vbArray + vbString)
+                    For i = LBoundArr To UBoundArr
+                        Select Case VarI8FromStr(StrPtr(Value(i)), 0, 0, Int64)
+                            Case DISP_E_TYPEMISMATCH
+                                Err.Raise 13
+                            Case DISP_E_OVERFLOW
+                                Err.Raise 6
+                        End Select
+                        VBFlexGridCells.Rows(Index).RowInfo.ID = Int64
+                        Index = Index + 1
+                    Next i
+                Case (vbArray + vbVariant)
+                    For i = LBoundArr To UBoundArr
+                        Select Case VarType(Value(i))
+                            Case vbDecimal
+                                If VarI8FromDec(Value(i), Int64) = DISP_E_OVERFLOW Then Err.Raise 6
+                            Case vbCurrency
+                                Int64 = Value(i) / 10000@
+                            Case VT_I8
+                                CopyMemory Int64, ByVal UnsignedAdd(VarPtr(Value(i)), 8), 8
+                            Case vbLong, vbInteger, vbByte
+                                Int64 = Value(i) / 10000@
+                            Case vbDouble
+                                If VarI8FromR8(Value(i), Int64) = DISP_E_OVERFLOW Then Err.Raise 6
+                            Case vbString
+                                Select Case VarI8FromStr(StrPtr(Value(i)), 0, 0, Int64)
+                                    Case DISP_E_TYPEMISMATCH
+                                        Err.Raise 13
+                                    Case DISP_E_OVERFLOW
+                                        Err.Raise 6
+                                End Select
+                            Case vbEmpty
+                                Int64 = 0@
+                        End Select
+                        VBFlexGridCells.Rows(Index).RowInfo.ID = Int64
+                        Index = Index + 1
+                    Next i
+            End Select
+        End If
+        Exit Property
     Case Else
         Err.Raise 380
 End Select
@@ -9324,7 +9421,7 @@ VBFlexGridCells.Rows(Index).RowInfo.ID = Int64
 End Property
 
 Public Property Get RowIndex(ByVal ID As Variant) As Long
-Attribute RowIndex.VB_Description = "Returns a row index given its identification."
+Attribute RowIndex.VB_Description = "Returns a row index given its identifier."
 Attribute RowIndex.VB_MemberFlags = "400"
 RowIndex = -1
 Dim Int64 As Currency
