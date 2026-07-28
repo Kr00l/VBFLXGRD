@@ -1,7 +1,9 @@
 List of revisions:
 
-27-Jul-2026
+28-Jul-2026
 - Bugfix in the LoadArray function when applying on an empty grid. (related to RestrictRows/RestrictColumns)
+
+27-Jul-2026
 - LoadArray function can now handle a one-dimensional array.
   For this either RowDim or ColDim must be set to 0. Otherwise an error is thrown that a two-dimensional array is expected.
 - Included the optional OneDim argument in the SaveArray function to allow one-dimensional array output.
