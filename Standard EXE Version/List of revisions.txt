@@ -1,5 +1,9 @@
 List of revisions:
 
+29-Jul-2026
+- Included the optional Fields argument in the CopyFromRecordset function.
+  It works for DAO Recordset as well and functions exactly like the Fields argument in ADO.GetRows.
+
 28-Jul-2026
 - RowID(x) allows to assign a one-dimensional array where x is the start index.
   The array can be longer than the distance between the start index and the last index of the grid.
