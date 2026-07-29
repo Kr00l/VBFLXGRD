@@ -6703,7 +6703,7 @@ End Property
 
 #End If
 
-Public Function CopyFromRecordset(ByRef Data As Object, Optional ByVal Rows As Long = -1, Optional ByVal Cols As Long = -1, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1) As Long
+Public Function CopyFromRecordset(ByRef Data As Object, Optional ByVal Rows As Long = -1, Optional ByVal Cols As Long = -1, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal Fields As Variant) As Long
 Attribute CopyFromRecordset.VB_Description = "Copies the contents of an ADO or DAO Recordset onto the flex grid."
 If Data Is Nothing Then Err.Raise 5
 If Not TypeName(Data) = "Recordset" Then Err.Raise 430
@@ -6714,6 +6714,56 @@ If Col < -1 Then Err.Raise 380
 If Row = -1 Then Row = PropFixedRows
 If Col = -1 Then Col = PropFixedCols
 If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
+Dim LBoundFields As Long, UBoundFields As Long
+UBoundFields = -1
+If Not IsMissing(Fields) Then
+    Dim FieldIndices() As Long, i As Long, j As Long
+    If IsArray(Fields) Then
+        Dim Ptr As LongPtr
+        CopyMemory Ptr, ByVal UnsignedAdd(VarPtr(Fields), 8), PTR_SIZE
+        Const VT_BYREF As Integer = &H4000
+        Dim VT As Integer
+        CopyMemory VT, ByVal VarPtr(Fields), 2
+        If (VT And VT_BYREF) = VT_BYREF Then CopyMemory Ptr, ByVal Ptr, PTR_SIZE
+        If Ptr <> NULL_PTR Then
+            Dim DimensionCount As Integer
+            CopyMemory DimensionCount, ByVal Ptr, 2
+            If DimensionCount = 1 Then
+                LBoundFields = LBound(Fields)
+                UBoundFields = UBound(Fields)
+            Else
+                Err.Raise Number:=5, Description:="Array must be single dimensioned"
+            End If
+        Else
+            Err.Raise Number:=91, Description:="Array is not allocated"
+        End If
+        ReDim FieldIndices(LBoundFields To UBoundFields) As Long
+        For i = LBoundFields To UBoundFields
+            If VarType(Fields(i)) = vbString Then
+                For j = 0 To (Data.Fields.Count - 1)
+                    If Data.Fields(j).Name = Fields(i) Then FieldIndices(i) = j: Exit For
+                Next j
+                If j > (Data.Fields.Count - 1) Then Err.Raise 381
+            Else
+                FieldIndices(i) = Fields(i)
+                If FieldIndices(i) < 0 Or FieldIndices(i) > (Data.Fields.Count - 1) Then Err.Raise 381
+            End If
+        Next i
+    Else
+        LBoundFields = 0
+        UBoundFields = 0
+        ReDim FieldIndices(0) As Long
+        If VarType(Fields) = vbString Then
+            For j = 0 To (Data.Fields.Count - 1)
+                If Data.Fields(j).Name = Fields Then FieldIndices(0) = j: Exit For
+            Next j
+            If j > (Data.Fields.Count - 1) Then Err.Raise 381
+        Else
+            FieldIndices(0) = Fields
+            If FieldIndices(0) < 0 Or FieldIndices(0) > (Data.Fields.Count - 1) Then Err.Raise 381
+        End If
+    End If
+End If
 If Rows = -1 Then Rows = PropRows - Row
 If Cols = -1 Then Cols = PropCols - Col
 If Data.RecordCount > 0 And Rows > 0 And Cols > 0 Then
@@ -6728,16 +6778,30 @@ If Data.RecordCount > 0 And Rows > 0 And Cols > 0 Then
     LBoundRows = LBound(ArrRows, 2)
     UBoundRows = UBound(ArrRows, 2)
     Dim iRow As Long, iCol As Long
-    If (Col + (UBoundCols - LBoundCols)) > (Cols - 1) Then UBoundCols = LBoundCols + (Cols - 1)
-    For iRow = LBoundRows To UBoundRows
-        For iCol = LBoundCols To UBoundCols
+    If (UBoundFields - LBoundFields) > -1 Then
+        If (Col + (UBoundFields - LBoundFields)) > (Cols - 1) Then UBoundFields = LBoundFields + (Cols - 1)
+        For iCol = 0 To (UBoundFields - LBoundFields)
+            Select Case FieldIndices(LBoundFields + iCol)
+                Case LBoundCols To UBoundCols
+                    For iRow = LBoundRows To UBoundRows
+                        If Not IsNull(ArrRows(FieldIndices(LBoundFields + iCol), iRow)) Then
+                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (ArrRows(FieldIndices(LBoundFields + iCol), iRow)))
+                        Else
+                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, vbNullString)
+                        End If
+                    Next iRow
+            End Select
+        Next iCol
+    Else
+        If (Col + (UBoundCols - LBoundCols)) > (Cols - 1) Then UBoundCols = LBoundCols + (Cols - 1)
+        For iCol = LBoundCols To UBoundCols: For iRow = LBoundRows To UBoundRows
             If Not IsNull(ArrRows(iCol, iRow)) Then
                 Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (ArrRows(iCol, iRow)))
             Else
                 Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
             End If
-        Next iCol
-    Next iRow
+        Next iRow, iCol
+    End If
     Call RedrawGrid
     CopyFromRecordset = (UBoundRows - LBoundRows) + 1
 End If
