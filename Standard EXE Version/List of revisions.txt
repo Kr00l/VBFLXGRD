@@ -1,5 +1,9 @@
 List of revisions:
 
+30-Jul-2026
+- Included the optional DataCols argument in the LoadArray function.
+  It works like the Fields argument in the CopyFromRecordset function, except that only ordinals are allowed.
+
 29-Jul-2026
 - Included the optional Fields argument in the CopyFromRecordset function.
   It works for DAO Recordset as well and functions exactly like the Fields argument in ADO.GetRows.
