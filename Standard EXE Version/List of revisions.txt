@@ -3,6 +3,7 @@ List of revisions:
 30-Jul-2026
 - Included the optional DataCols argument in the LoadArray function.
   It works like the Fields argument in the CopyFromRecordset function, except that only ordinals are allowed.
+- Bugfix in the LoadArray function for the Rows/Cols arguments.
 
 29-Jul-2026
 - Included the optional Fields argument in the CopyFromRecordset function.
