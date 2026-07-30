@@ -6741,7 +6741,7 @@ If Not IsMissing(Fields) Then
         For i = LBoundFields To UBoundFields
             If VarType(Fields(i)) = vbString Then
                 For j = 0 To (Data.Fields.Count - 1)
-                    If Data.Fields(j).Name = Fields(i) Then FieldIndices(i) = j: Exit For
+                    If StrComp(Data.Fields(j).Name, Fields(i), vbTextCompare) = 0 Then FieldIndices(i) = j: Exit For
                 Next j
                 If j > (Data.Fields.Count - 1) Then Err.Raise 381
             Else
@@ -6755,7 +6755,7 @@ If Not IsMissing(Fields) Then
         ReDim FieldIndices(0) As Long
         If VarType(Fields) = vbString Then
             For j = 0 To (Data.Fields.Count - 1)
-                If Data.Fields(j).Name = Fields Then FieldIndices(0) = j: Exit For
+                If StrComp(Data.Fields(j).Name, Fields, vbTextCompare) = 0 Then FieldIndices(0) = j: Exit For
             Next j
             If j > (Data.Fields.Count - 1) Then Err.Raise 381
         Else
