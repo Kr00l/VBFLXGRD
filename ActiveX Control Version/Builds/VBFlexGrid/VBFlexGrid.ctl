@@ -6714,61 +6714,61 @@ If Col < -1 Then Err.Raise 380
 If Row = -1 Then Row = PropFixedRows
 If Col = -1 Then Col = PropFixedCols
 If (Row < 0 Or Row > (PropRows - 1)) Or (Col < 0 Or Col > (PropCols - 1)) Then Err.Raise Number:=381, Description:="Subscript out of range"
-Dim LBoundFields As Long, UBoundFields As Long
-UBoundFields = -1
-If Not IsMissing(Fields) Then
-    Dim FieldIndices() As Long, i As Long, j As Long
-    If IsArray(Fields) Then
-        Dim Ptr As LongPtr
-        CopyMemory Ptr, ByVal UnsignedAdd(VarPtr(Fields), 8), PTR_SIZE
-        Const VT_BYREF As Integer = &H4000
-        Dim VT As Integer
-        CopyMemory VT, ByVal VarPtr(Fields), 2
-        If (VT And VT_BYREF) = VT_BYREF Then CopyMemory Ptr, ByVal Ptr, PTR_SIZE
-        If Ptr <> NULL_PTR Then
-            Dim DimensionCount As Integer
-            CopyMemory DimensionCount, ByVal Ptr, 2
-            If DimensionCount = 1 Then
-                LBoundFields = LBound(Fields)
-                UBoundFields = UBound(Fields)
-            Else
-                Err.Raise Number:=5, Description:="Array must be single dimensioned"
-            End If
-        Else
-            Err.Raise Number:=91, Description:="Array is not allocated"
-        End If
-        ReDim FieldIndices(LBoundFields To UBoundFields) As Long
-        For i = LBoundFields To UBoundFields
-            If VarType(Fields(i)) = vbString Then
-                For j = 0 To (Data.Fields.Count - 1)
-                    If StrComp(Data.Fields(j).Name, Fields(i), vbTextCompare) = 0 Then FieldIndices(i) = j: Exit For
-                Next j
-                If j > (Data.Fields.Count - 1) Then Err.Raise 381
-            Else
-                FieldIndices(i) = Fields(i)
-                If FieldIndices(i) < 0 Or FieldIndices(i) > (Data.Fields.Count - 1) Then Err.Raise 381
-            End If
-        Next i
-    Else
-        LBoundFields = 0
-        UBoundFields = 0
-        ReDim FieldIndices(0) As Long
-        If VarType(Fields) = vbString Then
-            For j = 0 To (Data.Fields.Count - 1)
-                If StrComp(Data.Fields(j).Name, Fields, vbTextCompare) = 0 Then FieldIndices(0) = j: Exit For
-            Next j
-            If j > (Data.Fields.Count - 1) Then Err.Raise 381
-        Else
-            FieldIndices(0) = Fields
-            If FieldIndices(0) < 0 Or FieldIndices(0) > (Data.Fields.Count - 1) Then Err.Raise 381
-        End If
-    End If
-End If
 If Rows = -1 Then Rows = PropRows - Row
 If Cols = -1 Then Cols = PropCols - Col
 If Data.RecordCount > 0 And Rows > 0 And Cols > 0 Then
     If Rows > (PropRows - Row) Then Rows = PropRows - Row
     If Cols > (PropCols - Col) Then Cols = PropCols - Col
+    Dim LBoundFields As Long, UBoundFields As Long
+    UBoundFields = -1
+    If Not IsMissing(Fields) Then
+        Dim FieldIndices() As Long, i As Long, j As Long
+        If IsArray(Fields) Then
+            Dim Ptr As LongPtr
+            CopyMemory Ptr, ByVal UnsignedAdd(VarPtr(Fields), 8), PTR_SIZE
+            Const VT_BYREF As Integer = &H4000
+            Dim VT As Integer
+            CopyMemory VT, ByVal VarPtr(Fields), 2
+            If (VT And VT_BYREF) = VT_BYREF Then CopyMemory Ptr, ByVal Ptr, PTR_SIZE
+            If Ptr <> NULL_PTR Then
+                Dim DimensionCount As Integer
+                CopyMemory DimensionCount, ByVal Ptr, 2
+                If DimensionCount = 1 Then
+                    LBoundFields = LBound(Fields)
+                    UBoundFields = UBound(Fields)
+                Else
+                    Err.Raise Number:=5, Description:="Array must be single dimensioned"
+                End If
+            Else
+                Err.Raise Number:=91, Description:="Array is not allocated"
+            End If
+            ReDim FieldIndices(LBoundFields To UBoundFields) As Long
+            For i = LBoundFields To UBoundFields
+                If VarType(Fields(i)) = vbString Then
+                    For j = 0 To (Data.Fields.Count - 1)
+                        If StrComp(Data.Fields(j).Name, Fields(i), vbTextCompare) = 0 Then FieldIndices(i) = j: Exit For
+                    Next j
+                    If j > (Data.Fields.Count - 1) Then Err.Raise 381
+                Else
+                    FieldIndices(i) = Fields(i)
+                    If FieldIndices(i) < 0 Or FieldIndices(i) > (Data.Fields.Count - 1) Then Err.Raise 381
+                End If
+            Next i
+        Else
+            LBoundFields = 0
+            UBoundFields = 0
+            ReDim FieldIndices(0) As Long
+            If VarType(Fields) = vbString Then
+                For j = 0 To (Data.Fields.Count - 1)
+                    If StrComp(Data.Fields(j).Name, Fields, vbTextCompare) = 0 Then FieldIndices(0) = j: Exit For
+                Next j
+                If j > (Data.Fields.Count - 1) Then Err.Raise 381
+            Else
+                FieldIndices(0) = Fields
+                If FieldIndices(0) < 0 Or FieldIndices(0) > (Data.Fields.Count - 1) Then Err.Raise 381
+            End If
+        End If
+    End If
     Dim ArrRows As Variant
     ArrRows = Data.GetRows(Rows)
     Dim LBoundCols As Long, UBoundCols As Long
@@ -6780,18 +6780,13 @@ If Data.RecordCount > 0 And Rows > 0 And Cols > 0 Then
     Dim iRow As Long, iCol As Long
     If (UBoundFields - LBoundFields) > -1 Then
         If (Col + (UBoundFields - LBoundFields)) > (Cols - 1) Then UBoundFields = LBoundFields + (Cols - 1)
-        For iCol = 0 To (UBoundFields - LBoundFields)
-            Select Case FieldIndices(LBoundFields + iCol)
-                Case LBoundCols To UBoundCols
-                    For iRow = LBoundRows To UBoundRows
-                        If Not IsNull(ArrRows(FieldIndices(LBoundFields + iCol), iRow)) Then
-                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (ArrRows(FieldIndices(LBoundFields + iCol), iRow)))
-                        Else
-                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, vbNullString)
-                        End If
-                    Next iRow
-            End Select
-        Next iCol
+        For iCol = 0 To (UBoundFields - LBoundFields): For iRow = LBoundRows To UBoundRows
+            If Not IsNull(ArrRows(FieldIndices(LBoundFields + iCol), iRow)) Then
+                Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (ArrRows(FieldIndices(LBoundFields + iCol), iRow)))
+            Else
+                Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, vbNullString)
+            End If
+        Next iRow, iCol
     Else
         If (Col + (UBoundCols - LBoundCols)) > (Cols - 1) Then UBoundCols = LBoundCols + (Cols - 1)
         For iCol = LBoundCols To UBoundCols: For iRow = LBoundRows To UBoundRows
@@ -6807,7 +6802,7 @@ If Data.RecordCount > 0 And Rows > 0 And Cols > 0 Then
 End If
 End Function
 
-Public Function LoadArray(ByRef Data As Variant, Optional ByVal RowDim As Long = 2, Optional ByVal ColDim As Long = 1, Optional ByVal PageDim As Long = 0, Optional ByVal CurrentPage As Long, Optional ByVal Rows As Long = -1, Optional ByVal Cols As Long = -1, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal RestrictRows As Boolean, Optional ByVal RestrictColumns As Boolean) As Long
+Public Function LoadArray(ByRef Data As Variant, Optional ByVal RowDim As Long = 2, Optional ByVal ColDim As Long = 1, Optional ByVal PageDim As Long = 0, Optional ByVal CurrentPage As Long, Optional ByVal Rows As Long = -1, Optional ByVal Cols As Long = -1, Optional ByVal Row As Long = -1, Optional ByVal Col As Long = -1, Optional ByVal RestrictRows As Boolean, Optional ByVal RestrictColumns As Boolean, Optional ByVal DataCols As Variant) As Long
 Attribute LoadArray.VB_Description = "Loads the flex grid control with data from a variant or string array."
 If IsEmpty(Data) Then Exit Function
 If Rows < -1 Then Err.Raise 380
@@ -6869,15 +6864,58 @@ If IsArray(Data) Then
         Err.Raise Number:=91, Description:="Array is not allocated"
     End If
     If (UBoundRows - LBoundRows) > -1 And (UBoundCols - LBoundCols) > -1 Then
+        Dim LBoundDataCols As Long, UBoundDataCols As Long
+        UBoundDataCols = -1
+        If Not IsMissing(DataCols) Then
+            Dim DataColIndices() As Long, i As Long, j As Long
+            If IsArray(DataCols) Then
+                CopyMemory Ptr, ByVal UnsignedAdd(VarPtr(DataCols), 8), PTR_SIZE
+                CopyMemory VT, ByVal VarPtr(DataCols), 2
+                If (VT And VT_BYREF) = VT_BYREF Then CopyMemory Ptr, ByVal Ptr, PTR_SIZE
+                If Ptr <> NULL_PTR Then
+                    Dim DimensionCountDataCols As Integer
+                    CopyMemory DimensionCountDataCols, ByVal Ptr, 2
+                    If DimensionCountDataCols = 1 Then
+                        LBoundDataCols = LBound(DataCols)
+                        UBoundDataCols = UBound(DataCols)
+                    Else
+                        Err.Raise Number:=5, Description:="Array must be single dimensioned"
+                    End If
+                Else
+                    Err.Raise Number:=91, Description:="Array is not allocated"
+                End If
+                ReDim DataColIndices(LBoundDataCols To UBoundDataCols) As Long
+                For i = LBoundDataCols To UBoundDataCols
+                    DataColIndices(i) = DataCols(i)
+                    If DataColIndices(i) < LBoundCols Or DataColIndices(i) > UBoundCols Then Err.Raise 381
+                Next i
+            Else
+                LBoundDataCols = 0
+                UBoundDataCols = 0
+                ReDim DataColIndices(0) As Long
+                DataColIndices(0) = DataCols
+                If DataColIndices(0) < LBoundCols Or DataColIndices(0) > UBoundCols Then Err.Raise 381
+            End If
+        End If
         If RestrictRows = False Then Me.Rows = Row + (UBoundRows - LBoundRows) + 1
-        If RestrictColumns = False Then Me.Cols = Col + (UBoundCols - LBoundCols) + 1
+        If RestrictColumns = False Then
+            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                Me.Cols = Col + (UBoundDataCols - LBoundDataCols) + 1
+            Else
+                Me.Cols = Col + (UBoundCols - LBoundCols) + 1
+            End If
+        End If
         If Rows = -1 Then Rows = PropRows - Row
         If Cols = -1 Then Cols = PropCols - Col
         If Rows > 0 And Cols > 0 Then
             If Rows > (PropRows - Row) Then Rows = PropRows - Row
             If Cols > (PropCols - Col) Then Cols = PropCols - Col
             If (Row + (UBoundRows - LBoundRows)) > (Rows - 1) Then UBoundRows = LBoundRows + (Rows - 1)
-            If (Col + (UBoundCols - LBoundCols)) > (Cols - 1) Then UBoundCols = LBoundCols + (Cols - 1)
+            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                If (Col + (UBoundDataCols - LBoundDataCols)) > (Cols - 1) Then UBoundDataCols = LBoundDataCols + (Cols - 1)
+            Else
+                If (Col + (UBoundCols - LBoundCols)) > (Cols - 1) Then UBoundCols = LBoundCols + (Cols - 1)
+            End If
             Dim ArrDim() As Long, Index As Long
             ReDim ArrDim(1 To DimensionCount) As Long
             For Index = 1 To DimensionCount
@@ -6907,87 +6945,210 @@ If IsArray(Data) Then
                                     End If
                                 Next iRow
                             ElseIf ColDim > 0 Then
-                                For iCol = LBoundCols To UBoundCols
-                                    ArrDim(ColDim) = iCol
-                                    If Not IsNull(Data(ArrDim(1))) Then
-                                        Call SetCellText(Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1))))
-                                    Else
-                                        Call SetCellText(Row, (iCol - LBoundCols) + Col, vbNullString)
-                                    End If
-                                Next iCol
+                                If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                    For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                        ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                        If Not IsNull(Data(ArrDim(1))) Then
+                                            Call SetCellText(Row, iCol + Col, (Data(ArrDim(1))))
+                                        Else
+                                            Call SetCellText(Row, iCol + Col, vbNullString)
+                                        End If
+                                    Next iCol
+                                Else
+                                    For iCol = LBoundCols To UBoundCols
+                                        ArrDim(ColDim) = iCol
+                                        If Not IsNull(Data(ArrDim(1))) Then
+                                            Call SetCellText(Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1))))
+                                        Else
+                                            Call SetCellText(Row, (iCol - LBoundCols) + Col, vbNullString)
+                                        End If
+                                    Next iCol
+                                End If
                             End If
                         Case 2
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                If Not IsNull(Data(ArrDim(1), ArrDim(2))) Then
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2))))
-                                Else
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
-                                End If
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        If Not IsNull(Data(ArrDim(1), ArrDim(2))) Then
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2))))
+                                        Else
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, vbNullString)
+                                        End If
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    If Not IsNull(Data(ArrDim(1), ArrDim(2))) Then
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2))))
+                                    Else
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
+                                    End If
+                                Next iCol, iRow
+                            End If
                         Case 3
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3))) Then
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3))))
-                                Else
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
-                                End If
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3))) Then
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3))))
+                                        Else
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, vbNullString)
+                                        End If
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3))) Then
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3))))
+                                    Else
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
+                                    End If
+                                Next iCol, iRow
+                            End If
                         Case 4
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4))) Then
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4))))
-                                Else
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
-                                End If
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4))) Then
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4))))
+                                        Else
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, vbNullString)
+                                        End If
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4))) Then
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4))))
+                                    Else
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
+                                    End If
+                                Next iCol, iRow
+                            End If
                         Case 5
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5))) Then
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5))))
-                                Else
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
-                                End If
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5))) Then
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5))))
+                                        Else
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, vbNullString)
+                                        End If
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5))) Then
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5))))
+                                    Else
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
+                                    End If
+                                Next iCol, iRow
+                            End If
                         Case 6
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6))) Then
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6))))
-                                Else
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
-                                End If
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6))) Then
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6))))
+                                        Else
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, vbNullString)
+                                        End If
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6))) Then
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6))))
+                                    Else
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
+                                    End If
+                                Next iCol, iRow
+                            End If
                         Case 7
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7))) Then
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7))))
-                                Else
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
-                                End If
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7))) Then
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7))))
+                                        Else
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, vbNullString)
+                                        End If
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7))) Then
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7))))
+                                    Else
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
+                                    End If
+                                Next iCol, iRow
+                            End If
                         Case 8
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8))) Then
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8))))
-                                Else
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
-                                End If
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8))) Then
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8))))
+                                        Else
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, vbNullString)
+                                        End If
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8))) Then
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8))))
+                                    Else
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
+                                    End If
+                                Next iCol, iRow
+                            End If
                         Case 9
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8), ArrDim(9))) Then
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8), ArrDim(9))))
-                                Else
-                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
-                                End If
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8), ArrDim(9))) Then
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8), ArrDim(9))))
+                                        Else
+                                            Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, vbNullString)
+                                        End If
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    If Not IsNull(Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8), ArrDim(9))) Then
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8), ArrDim(9))))
+                                    Else
+                                        Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, vbNullString)
+                                    End If
+                                Next iCol, iRow
+                            End If
                     End Select
                 Case (vbArray + vbString)
                     Select Case DimensionCount
@@ -6998,51 +7159,138 @@ If IsArray(Data) Then
                                     Call SetCellText((iRow - LBoundRows) + Row, Col, (Data(ArrDim(1))))
                                 Next iRow
                             ElseIf ColDim > 0 Then
-                                For iCol = LBoundCols To UBoundCols
-                                    ArrDim(ColDim) = iCol
-                                    Call SetCellText(Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1))))
-                                Next iCol
+                                If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                    For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                        ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                        Call SetCellText(Row, iCol + Col, (Data(ArrDim(1))))
+                                    Next iCol
+                                Else
+                                    For iCol = LBoundCols To UBoundCols
+                                        ArrDim(ColDim) = iCol
+                                        Call SetCellText(Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1))))
+                                    Next iCol
+                                End If
                             End If
                         Case 2
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2))))
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2))))
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2))))
+                                Next iCol, iRow
+                            End If
                         Case 3
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3))))
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3))))
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3))))
+                                Next iCol, iRow
+                            End If
                         Case 4
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4))))
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4))))
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4))))
+                                Next iCol, iRow
+                            End If
                         Case 5
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5))))
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5))))
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5))))
+                                Next iCol, iRow
+                            End If
                         Case 6
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6))))
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6))))
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6))))
+                                Next iCol, iRow
+                            End If
                         Case 7
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7))))
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7))))
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7))))
+                                Next iCol, iRow
+                            End If
                         Case 8
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8))))
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8))))
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8))))
+                                Next iCol, iRow
+                            End If
                         Case 9
-                            For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
-                                ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
-                                Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8), ArrDim(9))))
-                            Next iCol, iRow
+                            If (UBoundDataCols - LBoundDataCols) > -1 Then
+                                For iCol = 0 To (UBoundDataCols - LBoundDataCols)
+                                    ArrDim(ColDim) = DataColIndices(LBoundDataCols + iCol)
+                                    For iRow = LBoundRows To UBoundRows
+                                        ArrDim(RowDim) = iRow
+                                        Call SetCellText((iRow - LBoundRows) + Row, iCol + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8), ArrDim(9))))
+                                    Next iRow
+                                Next iCol
+                            Else
+                                For iRow = LBoundRows To UBoundRows: For iCol = LBoundCols To UBoundCols
+                                    ArrDim(RowDim) = iRow: ArrDim(ColDim) = iCol
+                                    Call SetCellText((iRow - LBoundRows) + Row, (iCol - LBoundCols) + Col, (Data(ArrDim(1), ArrDim(2), ArrDim(3), ArrDim(4), ArrDim(5), ArrDim(6), ArrDim(7), ArrDim(8), ArrDim(9))))
+                                Next iCol, iRow
+                            End If
                     End Select
             End Select
             Call RedrawGrid
