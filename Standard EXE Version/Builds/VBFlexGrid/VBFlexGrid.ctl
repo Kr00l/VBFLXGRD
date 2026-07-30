@@ -6897,25 +6897,35 @@ If IsArray(Data) Then
                 If DataColIndices(0) < LBoundCols Or DataColIndices(0) > UBoundCols Then Err.Raise 381
             End If
         End If
-        If RestrictRows = False Then Me.Rows = Row + (UBoundRows - LBoundRows) + 1
+        If RestrictRows = False Then
+            If Rows = -1 Then Rows = (UBoundRows - LBoundRows) + 1
+            If (UBoundRows - LBoundRows) > (Rows - 1) Then UBoundRows = LBoundRows + (Rows - 1)
+            Me.Rows = Row + (UBoundRows - LBoundRows) + 1
+        Else
+            If Rows = -1 Then Rows = PropRows - Row
+            If Rows > (PropRows - Row) Then Rows = PropRows - Row
+            If (UBoundRows - LBoundRows) > (Rows - 1) Then UBoundRows = LBoundRows + (Rows - 1)
+        End If
         If RestrictColumns = False Then
             If (UBoundDataCols - LBoundDataCols) > -1 Then
+                If Cols = -1 Then Cols = (UBoundDataCols - LBoundDataCols) + 1
+                If (UBoundDataCols - LBoundDataCols) > (Cols - 1) Then UBoundDataCols = LBoundDataCols + (Cols - 1)
                 Me.Cols = Col + (UBoundDataCols - LBoundDataCols) + 1
             Else
+                If Cols = -1 Then Cols = (UBoundCols - LBoundCols) + 1
+                If (UBoundCols - LBoundCols) > (Cols - 1) Then UBoundCols = LBoundCols + (Cols - 1)
                 Me.Cols = Col + (UBoundCols - LBoundCols) + 1
             End If
-        End If
-        If Rows = -1 Then Rows = PropRows - Row
-        If Cols = -1 Then Cols = PropCols - Col
-        If Rows > 0 And Cols > 0 Then
-            If Rows > (PropRows - Row) Then Rows = PropRows - Row
+        Else
+            If Cols = -1 Then Cols = PropCols - Col
             If Cols > (PropCols - Col) Then Cols = PropCols - Col
-            If (Row + (UBoundRows - LBoundRows)) > (Rows - 1) Then UBoundRows = LBoundRows + (Rows - 1)
             If (UBoundDataCols - LBoundDataCols) > -1 Then
-                If (Col + (UBoundDataCols - LBoundDataCols)) > (Cols - 1) Then UBoundDataCols = LBoundDataCols + (Cols - 1)
+                If (UBoundDataCols - LBoundDataCols) > (Cols - 1) Then UBoundDataCols = LBoundDataCols + (Cols - 1)
             Else
-                If (Col + (UBoundCols - LBoundCols)) > (Cols - 1) Then UBoundCols = LBoundCols + (Cols - 1)
+                If (UBoundCols - LBoundCols) > (Cols - 1) Then UBoundCols = LBoundCols + (Cols - 1)
             End If
+        End If
+        If Rows > 0 And Cols > 0 Then
             Dim ArrDim() As Long, Index As Long
             ReDim ArrDim(1 To DimensionCount) As Long
             For Index = 1 To DimensionCount
