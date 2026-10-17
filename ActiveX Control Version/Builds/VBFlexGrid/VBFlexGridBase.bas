@@ -178,6 +178,7 @@ Private Const WM_CREATE As Long = &H1
 Private Const WM_DESTROY As Long = &H2
 Private Const WM_NCDESTROY As Long = &H82
 Private Const WM_UAHDESTROYWINDOW As Long = &H90
+Private Const ERROR_CLASS_ALREADY_EXISTS As Long = 1410
 Private Const CS_DBLCLKS As Long = &H8
 Private Const CS_DROPSHADOW As Long = &H20000
 Private Const IDC_ARROW As Long = 32512
@@ -354,6 +355,12 @@ If FlexClassAtom = 0 And FlexRefCount = 0 Then
     .lpszClassName = StrPtr(ClassName)
     End With
     FlexClassAtom = RegisterClassEx(WCEX)
+    If FlexClassAtom = 0 Then
+        If Err.LastDllError = ERROR_CLASS_ALREADY_EXISTS Then
+            UnregisterClass StrPtr(ClassName), App.hInstance
+            FlexClassAtom = RegisterClassEx(WCEX)
+        End If
+    End If
     If FlexSplitterBrush = NULL_PTR Then
         Dim Bmp As BITMAP, Pattern(0 To 3) As Long, hBmp As LongPtr
         Pattern(0) = &HAAAA5555
@@ -403,6 +410,12 @@ If FlexComboCalendarClassAtom = 0 And FlexComboCalendarRefCount = 0 Then
     .lpszClassName = StrPtr(ClassName)
     End With
     FlexComboCalendarClassAtom = RegisterClassEx(WCEX)
+    If FlexComboCalendarClassAtom = 0 Then
+        If Err.LastDllError = ERROR_CLASS_ALREADY_EXISTS Then
+            UnregisterClass StrPtr(ClassName), App.hInstance
+            FlexComboCalendarClassAtom = RegisterClassEx(WCEX)
+        End If
+    End If
 End If
 FlexComboCalendarRefCount = FlexComboCalendarRefCount + 1
 End Sub
@@ -649,6 +662,12 @@ If FlexReaderModeAnchorClassAtom = 0 And FlexReaderModeAnchorRefCount = 0 Then
     .lpszClassName = StrPtr(ClassName)
     End With
     FlexReaderModeAnchorClassAtom = RegisterClassEx(WCEX)
+    If FlexReaderModeAnchorClassAtom = 0 Then
+        If Err.LastDllError = ERROR_CLASS_ALREADY_EXISTS Then
+            UnregisterClass StrPtr(ClassName), App.hInstance
+            FlexReaderModeAnchorClassAtom = RegisterClassEx(WCEX)
+        End If
+    End If
 End If
 FlexReaderModeAnchorRefCount = FlexReaderModeAnchorRefCount + 1
 End Sub
