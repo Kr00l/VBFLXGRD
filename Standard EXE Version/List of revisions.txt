@@ -1,5 +1,9 @@
 List of revisions:
 
+17-Oct-2026
+- Improved class registrations in VBFlexGridBase.bas to re-register in case the class was already registered.
+  This is particular only a Std-EXE version issue (hatched UserControl) but does not harm to have in general.
+
 30-Jul-2026
 - Included the optional DataCols argument in the LoadArray function.
   It works like the Fields argument in the CopyFromRecordset function, except that only ordinals are allowed.
