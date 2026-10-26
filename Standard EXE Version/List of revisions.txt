@@ -1,5 +1,9 @@
 List of revisions:
 
+26-Oct-2026
+- ClipCursor does not extend anymore beyond the monitor where the window is located.
+  This avoids issues on multi-monitor setups with different DPIs and so on.
+
 17-Oct-2026
 - Improved class registrations in VBFlexGridBase.bas to re-register in case the class was already registered.
   This is particular only a Std-EXE version issue (hatched UserControl) but does not harm to have in general.
