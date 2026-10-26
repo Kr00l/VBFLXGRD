@@ -1650,10 +1650,6 @@ Private Const SM_CXEDGE As Long = 45
 Private Const SM_CYEDGE As Long = 46
 Private Const SM_CXDRAG As Long = 68
 Private Const SM_CYDRAG As Long = 69
-Private Const SM_XVIRTUALSCREEN As Long = 76
-Private Const SM_YVIRTUALSCREEN As Long = 77
-Private Const SM_CXVIRTUALSCREEN As Long = 78
-Private Const SM_CYVIRTUALSCREEN As Long = 79
 Private Const SIF_RANGE As Long = &H1
 Private Const SIF_PAGE As Long = &H2
 Private Const SIF_POS As Long = &H4
@@ -24683,13 +24679,17 @@ Select Case HTI.HitResult
                     End With
             End Select
             MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, ClipRect, 2
+            Dim hMonitor As LongPtr, MI As MONITORINFO
+            hMonitor = MonitorFromWindow(VBFlexGridHandle, MONITOR_DEFAULTTOPRIMARY)
+            MI.cbSize = LenB(MI)
+            GetMonitorInfo hMonitor, MI
             Select Case VBFlexGridCaptureHitResult
                 Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
-                    If iRow > -1 Then ClipRect.Bottom = GetSystemMetrics(SM_YVIRTUALSCREEN) + GetSystemMetrics(SM_CYVIRTUALSCREEN)
-                    If iCol > -1 Then ClipRect.Right = GetSystemMetrics(SM_XVIRTUALSCREEN) + GetSystemMetrics(SM_CXVIRTUALSCREEN)
+                    If iRow > -1 Then ClipRect.Bottom = MI.RCMonitor.Bottom
+                    If iCol > -1 Then ClipRect.Right = MI.RCMonitor.Right
                 Case FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
-                    If iRow > -1 Then ClipRect.Top = GetSystemMetrics(SM_YVIRTUALSCREEN)
-                    If iCol > -1 Then ClipRect.Left = GetSystemMetrics(SM_XVIRTUALSCREEN)
+                    If iRow > -1 Then ClipRect.Top = MI.RCMonitor.Top
+                    If iCol > -1 Then ClipRect.Left = MI.RCMonitor.Left
             End Select
             ClipCursor ClipRect
             VBFlexGridDividerDragOffset.X = HTI.PT.X - P.X
