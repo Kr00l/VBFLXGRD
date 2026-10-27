@@ -1,8 +1,9 @@
 List of revisions:
 
-26-Oct-2026
-- ClipCursor does not extend anymore beyond the monitor where the window is located.
-  This avoids issues on multi-monitor setups with different DPIs and so on.
+27-Oct-2026
+- ClipCursor issues fixed on multi-monitor setups with different DPIs.
+  The new conditional compiliation constant 'ImplementClipCursor' controls if the feature is turned on.
+  It defaults to True for now but might be changed to False in the future.
 
 17-Oct-2026
 - Improved class registrations in VBFlexGridBase.bas to re-register in case the class was already registered.
