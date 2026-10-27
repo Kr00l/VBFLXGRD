@@ -24658,25 +24658,27 @@ Select Case HTI.HitResult
                     End With
                 Case FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
                     With ClipRect
-                    For i = 0 To PropFixedRows - 1
-                        .Top = .Top + GetRowHeight(i)
-                    Next i
-                    For i = 0 To PropFixedCols - 1
-                        .Left = .Left + GetColWidth(i)
-                    Next i
+                    If iCol > -1 Then
+                        For i = 0 To PropFixedRows - 1
+                            .Top = .Top + GetRowHeight(i)
+                        Next i
+                    End If
                     If iRow > -1 Then
-                        P.Y = .Top
-                        For i = PropFixedRows To iRow
+                        For i = 0 To PropFixedCols - 1
+                            .Left = .Left + GetColWidth(i)
+                        Next i
+                    End If
+                    End With
+                    If iRow > -1 Then
+                        For i = 0 To iRow
                             P.Y = P.Y + GetRowHeight(i)
                         Next i
                     End If
                     If iCol > -1 Then
-                        P.X = .Left
-                        For i = PropFixedCols To iCol
+                        For i = 0 To iCol
                             P.X = P.X + GetColWidth(i)
                         Next i
                     End If
-                    End With
             End Select
             MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, ClipRect, 2
             Dim hMonitor As LongPtr, MI As MONITORINFO
@@ -24685,11 +24687,19 @@ Select Case HTI.HitResult
             GetMonitorInfo hMonitor, MI
             Select Case VBFlexGridCaptureHitResult
                 Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
-                    If iRow > -1 Then ClipRect.Bottom = MI.RCMonitor.Bottom
-                    If iCol > -1 Then ClipRect.Right = MI.RCMonitor.Right
+                    If iRow > -1 Then
+                        If ClipRect.Bottom < MI.RCMonitor.Bottom Then ClipRect.Bottom = MI.RCMonitor.Bottom
+                    End If
+                    If iCol > -1 Then
+                        If ClipRect.Right < MI.RCMonitor.Right Then ClipRect.Right = MI.RCMonitor.Right
+                    End If
                 Case FlexHitResultDividerFrozenRowTop, FlexHitResultDividerFrozenRowBottom, FlexHitResultDividerFrozenColumnLeft, FlexHitResultDividerFrozenColumnRight
-                    If iRow > -1 Then ClipRect.Top = MI.RCMonitor.Top
-                    If iCol > -1 Then ClipRect.Left = MI.RCMonitor.Left
+                    If iRow > -1 Then
+                        If ClipRect.Top > MI.RCMonitor.Top Then ClipRect.Top = MI.RCMonitor.Top
+                    End If
+                    If iCol > -1 Then
+                        If ClipRect.Left > MI.RCMonitor.Left Then ClipRect.Left = MI.RCMonitor.Left
+                    End If
             End Select
             ClipCursor ClipRect
             VBFlexGridDividerDragOffset.X = HTI.PT.X - P.X
