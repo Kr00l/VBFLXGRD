@@ -39,6 +39,7 @@ Private Const PTR_SIZE As Long = 4
 #End If
 
 #Const ImplementThemedControls = True
+#Const ImplementClipCursor = True
 #Const ImplementDataSource = True ' True = Required: msdatsrc.tlb
 #Const ImplementFlexDataSource = True ' True = Required: IVBFlexDataSource.cls
 #Const ImplementPreTranslateMsg = (VBFLXGRD_OCX <> 0)
@@ -1339,7 +1340,6 @@ Private Declare PtrSafe Function LoadCursor Lib "user32" Alias "LoadCursorW" (By
 Private Declare PtrSafe Function SetCursor Lib "user32" (ByVal hCursor As LongPtr) As LongPtr
 Private Declare PtrSafe Function GetCursorPos Lib "user32" (ByRef lpPoint As POINTAPI) As Long
 Private Declare PtrSafe Function GetCursor Lib "user32" () As LongPtr
-Private Declare PtrSafe Function ClipCursor Lib "user32" (ByRef lpRect As Any) As Long
 Private Declare PtrSafe Function GetCapture Lib "user32" () As LongPtr
 Private Declare PtrSafe Function SetCapture Lib "user32" (ByVal hWnd As LongPtr) As LongPtr
 Private Declare PtrSafe Function ReleaseCapture Lib "user32" () As Long
@@ -1488,7 +1488,6 @@ Private Declare Function LoadCursor Lib "user32" Alias "LoadCursorW" (ByVal hIns
 Private Declare Function SetCursor Lib "user32" (ByVal hCursor As Long) As Long
 Private Declare Function GetCursorPos Lib "user32" (ByRef lpPoint As POINTAPI) As Long
 Private Declare Function GetCursor Lib "user32" () As Long
-Private Declare Function ClipCursor Lib "user32" (ByRef lpRect As Any) As Long
 Private Declare Function GetCapture Lib "user32" () As Long
 Private Declare Function SetCapture Lib "user32" (ByVal hWnd As Long) As Long
 Private Declare Function ReleaseCapture Lib "user32" () As Long
@@ -1554,6 +1553,16 @@ Private Declare Function DrawThemeBackground Lib "uxtheme" (ByVal Theme As Long,
 Private Declare Function GetThemeBackgroundContentRect Lib "uxtheme" (ByVal Theme As Long, ByVal hDC As Long, ByVal iPartId As Long, ByVal iStateId As Long, ByRef pBoundingRect As RECT, ByRef pContentRect As RECT) As Long
 Private Declare Function OpenThemeData Lib "uxtheme" (ByVal hWnd As Long, ByVal lpszClassList As Long) As Long
 Private Declare Function CloseThemeData Lib "uxtheme" (ByVal Theme As Long) As Long
+#End If
+
+#End If
+
+#If ImplementClipCursor = True Then
+
+#If VBA7 Then
+Private Declare PtrSafe Function ClipCursor Lib "user32" (ByRef lpRect As Any) As Long
+#Else
+Private Declare Function ClipCursor Lib "user32" (ByRef lpRect As Any) As Long
 #End If
 
 #End If
@@ -1940,6 +1949,7 @@ Private VBFlexGridToolTipHitResult As FlexHitResultConstants
 Private VBFlexGridScrollTipTrack As Boolean
 Private VBFlexGridMouseMoveRow As Long, VBFlexGridMouseMoveCol As Long
 Private VBFlexGridMouseMoveChanged As Boolean
+Private VBFlexGridDividerDragMinPos As POINTAPI
 Private VBFlexGridDividerDragSplitterRect As RECT
 Private VBFlexGridDividerDragOffset As POINTAPI
 Private VBFlexGridDividerDragDirty As Boolean
@@ -24641,6 +24651,7 @@ Select Case HTI.HitResult
                                 .Top = .Top + GetRowHeight(i)
                             End If
                         Next i
+                        VBFlexGridDividerDragMinPos.Y = .Top + 1
                         P.Y = .Top + GetRowHeight(iRow)
                         .Top = .Top + (HTI.PT.Y - P.Y) + 1
                         .Bottom = .Bottom + (HTI.PT.Y - P.Y) - 1
@@ -24651,6 +24662,7 @@ Select Case HTI.HitResult
                                 .Left = .Left + GetColWidth(i)
                             End If
                         Next i
+                        VBFlexGridDividerDragMinPos.X = .Left + 1
                         P.X = .Left + GetColWidth(iCol)
                         .Left = .Left + (HTI.PT.X - P.X) + 1
                         .Right = .Right + (HTI.PT.X - P.X) - 1
@@ -24680,6 +24692,9 @@ Select Case HTI.HitResult
                         Next i
                     End If
             End Select
+            
+            #If ImplementClipCursor = True Then
+            
             MapWindowPoints VBFlexGridHandle, HWND_DESKTOP, ClipRect, 2
             Dim hMonitor As LongPtr, MI As MONITORINFO
             hMonitor = MonitorFromWindow(VBFlexGridHandle, MONITOR_DEFAULTTOPRIMARY)
@@ -24702,6 +24717,9 @@ Select Case HTI.HitResult
                     End If
             End Select
             ClipCursor ClipRect
+            
+            #End If
+            
             VBFlexGridDividerDragOffset.X = HTI.PT.X - P.X
             VBFlexGridDividerDragOffset.Y = HTI.PT.Y - P.Y
             VBFlexGridDividerDragDirty = True
@@ -24899,7 +24917,15 @@ If VBFlexGridCaptureDividerDrag = True Then
     Select Case VBFlexGridCaptureHitResult
         Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
             If VBFlexGridCaptureDividerMoved = False Then
+                
+                #If ImplementClipCursor = True Then
+                
                 ClipCursor ByVal NULL_PTR
+                
+                #End If
+                
+                VBFlexGridDividerDragMinPos.X = 0
+                VBFlexGridDividerDragMinPos.Y = 0
                 SetRect VBFlexGridDividerDragSplitterRect, 0, 0, 0, 0
                 VBFlexGridDividerDragOffset.X = 0
                 VBFlexGridDividerDragOffset.Y = 0
@@ -24957,7 +24983,15 @@ If VBFlexGridCaptureDividerDrag = True Then
                     VBFlexGridColsInfo(iCol).Width = .CX
                 End If
                 End With
+                
+                #If ImplementClipCursor = True Then
+                
                 ClipCursor ByVal NULL_PTR
+                
+                #End If
+                
+                VBFlexGridDividerDragMinPos.X = 0
+                VBFlexGridDividerDragMinPos.Y = 0
                 SetRect VBFlexGridDividerDragSplitterRect, 0, 0, 0, 0
                 VBFlexGridDividerDragOffset.X = 0
                 VBFlexGridDividerDragOffset.Y = 0
@@ -25047,7 +25081,15 @@ If VBFlexGridCaptureDividerDrag = True Then
                 End If
             End If
             End With
+            
+            #If ImplementClipCursor = True Then
+            
             ClipCursor ByVal NULL_PTR
+            
+            #End If
+            
+            VBFlexGridDividerDragMinPos.X = 0
+            VBFlexGridDividerDragMinPos.Y = 0
             SetRect VBFlexGridDividerDragSplitterRect, 0, 0, 0, 0
             VBFlexGridDividerDragOffset.X = 0
             VBFlexGridDividerDragOffset.Y = 0
@@ -26127,6 +26169,15 @@ End Sub
 
 Private Sub SetDividerDragSplitterRect(ByVal X As Long, ByVal Y As Long)
 If VBFlexGridHandle = NULL_PTR Or VBFlexGridCaptureDividerDrag = False Then Exit Sub
+Select Case VBFlexGridCaptureHitResult
+    Case FlexHitResultDividerRowTop, FlexHitResultDividerRowBottom, FlexHitResultDividerColumnLeft, FlexHitResultDividerColumnRight
+        If VBFlexGridCaptureDividerRow > -1 Then
+            If Y < VBFlexGridDividerDragMinPos.Y Then Y = VBFlexGridDividerDragMinPos.Y
+        End If
+        If VBFlexGridCaptureDividerCol > -1 Then
+            If X < VBFlexGridDividerDragMinPos.X Then X = VBFlexGridDividerDragMinPos.X
+        End If
+End Select
 LSet VBFlexGridDividerDragSplitterRect = VBFlexGridClientRect
 With VBFlexGridDividerDragSplitterRect
 Select Case VBFlexGridCaptureHitResult
@@ -28294,7 +28345,15 @@ Select Case wMsg
         VBFlexGridMouseMoveCol = -1
         VBFlexGridMouseMoveChanged = False
         If VBFlexGridDividerDragDirty = True Then
+            
+            #If ImplementClipCursor = True Then
+            
             ClipCursor ByVal NULL_PTR
+            
+            #End If
+            
+            VBFlexGridDividerDragMinPos.X = 0
+            VBFlexGridDividerDragMinPos.Y = 0
             SetRect VBFlexGridDividerDragSplitterRect, 0, 0, 0, 0
             VBFlexGridDividerDragOffset.X = 0
             VBFlexGridDividerDragOffset.Y = 0
