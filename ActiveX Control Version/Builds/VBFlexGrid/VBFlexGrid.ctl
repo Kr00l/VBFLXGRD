@@ -13410,7 +13410,7 @@ ElseIf PropFillStyle = FlexFillStyleRepeat Then
     Call GetSelRangeStruct(SelRange)
     For i = SelRange.TopRow To SelRange.BottomRow
         For j = SelRange.LeftCol To SelRange.RightCol
-            Call SetCellFmtg(VBFlexGridRow, VBFlexGridCol, CFM_TEXTSTYLE, CellFmtg)
+            Call SetCellFmtg(i, j, CFM_TEXTSTYLE, CellFmtg)
         Next j
     Next i
 End If
@@ -23387,7 +23387,7 @@ Select Case PropSelectionMode
                         Else
                             .RowSel = (PropRows - 1)
                         End If
-                        If GetRowHeight(.Row) = 0 Then Call MovePreviousRow(.Row)
+                        If GetRowHeight(.RowSel) = 0 Then Call MovePreviousRow(.RowSel)
                     ElseIf .RowSel > PropFixedRows Then
                         RowsPerPage = GetRowsPerPageRev(.RowSel)
                         If (.RowSel - RowsPerPage) > (PropFixedRows + PropFrozenRows) Then
@@ -23939,7 +23939,7 @@ Select Case PropSelectionMode
                         Else
                             .RowSel = (PropRows - 1)
                         End If
-                        If GetRowHeight(.Row) = 0 Then Call MovePreviousRow(.Row)
+                        If GetRowHeight(.RowSel) = 0 Then Call MovePreviousRow(.RowSel)
                     ElseIf .RowSel > PropFixedRows Then
                         RowsPerPage = GetRowsPerPageRev(.RowSel)
                         If (.RowSel - RowsPerPage) > (PropFixedRows + PropFrozenRows) Then
@@ -24499,9 +24499,9 @@ Select Case PropSelectionMode
                             End If
                         Case FlexDirectionAfterReturnRight
                             If .Col < GetLastMovableCol() Then
-                                Call MoveNextRow(.Col)
+                                Call MoveNextCol(.Col)
                             Else
-                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstRow(.Col)
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstCol(.Col)
                             End If
                     End Select
                     .RowSel = (PropRows - 1)
@@ -24531,9 +24531,9 @@ Select Case PropSelectionMode
                             End If
                         Case FlexDirectionAfterReturnLeft
                             If .Col < GetLastMovableCol() Then
-                                Call MoveNextRow(.Col)
+                                Call MoveNextCol(.Col)
                             Else
-                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstRow(.Col)
+                                If PropWrapCellBehavior = FlexWrapGrid Then Call MoveFirstCol(.Col)
                             End If
                         Case FlexDirectionAfterReturnRight
                             If .Col > GetFirstMovableCol() Then
