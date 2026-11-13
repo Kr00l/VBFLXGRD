@@ -1983,7 +1983,7 @@ Private VBFlexGridComboCueRow As Long, VBFlexGridComboCueCol As Long
 Private VBFlexGridComboCueClickRow As Long, VBFlexGridComboCueClickCol As Long
 Private VBFlexGridComboMode As FlexComboModeConstants, VBFlexGridComboModeActive As FlexComboModeConstants
 Private VBFlexGridComboButtonPicture As IPictureDisp, VBFlexGridComboButtonPictureRenderFlag As Integer
-Private VBFlexGridComboButtonAlignment As FlexRightToLeftModeConstants
+Private VBFlexGridComboButtonAlignment As FlexLeftRightAlignmentConstants
 Private VBFlexGridComboButtonDrawMode As FlexComboButtonDrawModeConstants
 Private VBFlexGridComboButtonWidth As Long
 Private VBFlexGridComboItems As String
